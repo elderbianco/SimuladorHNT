@@ -1,0 +1,77 @@
+{
+    "version": "1.0.0",
+    "last_updated": "2026-02-07T17:52:00Z",
+    "available_colors": [
+        {
+            "id": "preto",
+            "name": "Preto",
+            "hex": "#000000",
+            "category": "basicas"
+        },
+        {
+            "id": "branco",
+            "name": "Branco",
+            "hex": "#FFFFFF",
+            "category": "basicas"
+        },
+        {
+            "id": "vermelho",
+            "name": "Vermelho",
+            "hex": "#FF0000",
+            "category": "vibrantes"
+        },
+        {
+            "id": "azul",
+            "name": "Azul",
+            "hex": "#0000FF",
+            "category": "vibrantes"
+        },
+        {
+            "id": "verde",
+            "name": "Verde",
+            "hex": "#00FF00",
+            "category": "vibrantes"
+        },
+        {
+            "id": "amarelo",
+            "name": "Amarelo",
+            "hex": "#FFFF00",
+            "category": "vibrantes"
+        },
+        {
+            "id": "rosa",
+            "name": "Rosa",
+            "hex": "#FFC0CB",
+            "category": "pasteis"
+        },
+        {
+            "id": "cinza",
+            "name": "Cinza",
+            "hex": "#808080",
+            "category": "neutras"
+        }
+    ],
+    "disabled_colors": [],
+    "text_colors": [
+        {
+            "id": "branco",
+            "name": "Branco",
+            "hex": "#FFFFFF"
+        },
+        {
+            "id": "preto",
+            "name": "Preto",
+            "hex": "#000000"
+        },
+        {
+            "id": "dourado",
+            "name": "Dourado",
+            "hex": "#FFD700"
+        },
+        {
+            "id": "prateado",
+            "name": "Prateado",
+            "hex": "#C0C0C0"
+        }
+    ]
+}

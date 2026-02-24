@@ -1,0 +1,11 @@
+/**
+ * Simulator - Calça Legging
+ * Specific styles for the Calça Legging simulator
+ */
+
+/* Calça Legging specific scale/origin if needed */
+.page-calca .zoom-container {
+    transform-origin: center center !important;
+}
+
+/* Any specific Calça Legging overrides */

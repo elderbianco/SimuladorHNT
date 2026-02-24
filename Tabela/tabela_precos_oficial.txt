@@ -1,0 +1,177 @@
+# ========================================
+# TABELA OFICIAL DE PREÇOS - HANUTHAI
+# Última Atualização: Janeiro 2026
+# ========================================
+
+# ========================================
+# 1. FIGHT SHORTS
+# ========================================
+
+[FIGHT_SHORTS]
+# Preços Base
+basePrice = 149.90
+sizeModPrice = 0.00          # Adicional para GG, EXG, EXGG
+devFee = 0.00                # Taxa de desenvolvimento de logo
+
+# Personalização: Centro e Laterais
+logoCenterPrice = 29.90      # Logo Frente Centro
+textCenterPrice = 19.90      # Texto Frente Centro
+logoLatPrice = 14.90         # Logo Lateral (Dir/Esq)
+textLatPrice = 9.90          # Texto Lateral (Dir/Esq)
+
+# Personalização: Pernas (Zonas Especiais)
+legRightMidPrice = 14.90     # Perna Direita Centro
+legRightBottomPrice = 14.90  # Perna Direita Inferior
+legLeftPrice = 14.90         # Perna Esquerda
+
+# Extras e Acessórios
+extraLeggingPrice = 38.90    # Legging Interna
+extraLacoPrice = 14.90       # Laços
+extraCordaoPrice = 14.90     # Cordão Interno
+
+# Tabela de Preços por Quantidade
+price10 = 134.90             # A partir de 10 unidades
+price20 = 119.90             # A partir de 20 unidades
+price30 = 104.90             # A partir de 30 unidades
+
+# Configurações
+artWaiver = true             # Isentar 1 custo de arte acima de 10 peças
+
+
+# ========================================
+# 2. CALÇA LEGGING
+# ========================================
+
+[LEGGING]
+# Preços Base
+basePrice = 139.90
+sizeModPrice = 0.00
+devFee = 0.00
+
+# Personalização
+logoLatPrice = 29.90         # Logo Lateral
+textLatPrice = 9.90          # Texto Lateral
+logoLegPrice = 14.90         # Logo Perna
+textLegPrice = 0.00          # Texto Perna (Promocional)
+
+# Tabela de Preços por Quantidade
+price10 = 125.90
+price20 = 111.90
+price30 = 97.90
+
+# Configurações
+artWaiver = true
+
+
+# ========================================
+# 3. SHORTS LEGGING
+# ========================================
+
+[SHORTS_LEGGING]
+# Preços Base
+basePrice = 89.90
+sizeModPrice = 0.00
+devFee = 0.00
+
+# Personalização
+logoLatPrice = 29.90         # Logo Lateral
+textLatPrice = 9.90          # Texto Lateral
+logoLegPrice = 14.90         # Logo Perna
+textLegPrice = 9.90          # Texto Perna
+
+# Tabela de Preços por Quantidade
+price10 = 80.90
+price20 = 71.90
+price30 = 62.90
+
+# Configurações
+artWaiver = true
+
+
+# ========================================
+# 4. TOP
+# ========================================
+
+[TOP]
+# Preços Base
+basePrice = 89.90
+sizeModPrice = 0.00
+devFee = 0.00
+
+# Personalização Frente
+logoFrontPrice = 14.90       # Logo Frente
+textFrontPrice = 9.90        # Texto Frente
+
+# Personalização Costas
+logoBackPrice = 0.00         # Logo Costas (Promocional)
+textBackPrice = 0.00         # Texto Costas (Promocional)
+
+# Logos HNT
+logoHntFrontPrice = 0.00     # Logo HNT Frente (Promocional)
+logoHntBackPrice = 0.00      # Logo HNT Costas (Promocional)
+
+# Tabela de Preços por Quantidade
+price10 = 80.90
+price20 = 71.90
+price30 = 62.90
+
+# Configurações
+artWaiver = true
+
+
+# ========================================
+# 5. MOLETOM
+# ========================================
+
+[MOLETOM]
+# Preços Base
+basePrice = 189.90
+sizeModPrice = 0.00
+devFee = 0.00
+
+# Personalização Frente
+logoFrontPrice = 29.90       # Logo Frente
+textFrontPrice = 19.90       # Texto Frente
+
+# Personalização Costas
+logoBackPrice = 29.90        # Logo Costas
+textBackPrice = 19.90        # Texto Costas
+
+# Personalização Capuz
+logoHoodPrice = 14.90        # Logo Capuz
+textHoodPrice = 9.90         # Texto Capuz
+
+# Personalização Mangas
+logoSleevePrice = 14.90      # Logo Manga (cada)
+textSleevePrice = 9.90       # Texto Manga (cada)
+
+# Extras
+zipperUpgrade = 0.00         # Upgrade Zíper Premium (Promocional)
+pocketUpgrade = 0.00         # Bolso Adicional (Promocional)
+
+# Tabela de Preços por Quantidade
+price10 = 170.90
+price20 = 151.90
+price30 = 132.90
+
+# Configurações
+artWaiver = true
+
+
+# ========================================
+# NOTAS DE ATUALIZAÇÃO
+# ========================================
+
+# Como atualizar esta tabela:
+# 1. Edite os valores numéricos após o sinal de igual (=)
+# 2. Use 0.00 para itens promocionais/grátis
+# 3. Mantenha o formato: nomeCampo = valor
+# 4. Não remova os nomes dos campos
+# 5. Após editar, use o botão "Restaurar Preços da Tabela" no admin
+# 6. Ou atualize manualmente no admin.html
+
+# Campos booleanos:
+# - true = ativado
+# - false = desativado
+
+# Data da última atualização: 30/01/2026

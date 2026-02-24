@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pós-Venda - Hanuthai Fight</title>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&family=Roboto+Condensed:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/pos-venda.css">
+    <link rel="stylesheet" href="css/reviews-instagram.css">
+    <link rel="stylesheet" href="css/next-steps-adjustments.css">
+</head>
+
+<body>
+
+    <!-- HERO HEADER -->
+    <header class="hero-section">
+        <!-- Top Links for Easy Access -->
+        <div class="header-links-container" style="align-items: center; gap: 10px;">
+            <!-- Home -->
+            <a href="index.html" class="nav-icon" data-tooltip="Início">🏠</a>
+
+            <!-- Simulator Nav Group -->
+            <div class="header-icon-nav">
+                <a href="IndexFightShorts.html" class="nav-icon" data-tooltip="Fight Shorts">
+                    <img src="assets/ui-icons/icon-fight-shorts.png" alt="Fight Shorts">
+                </a>
+                <a href="IndexShortsLegging.html" class="nav-icon" data-tooltip="Shorts Legging">
+                    <img src="assets/ui-icons/icon-shorts-calca-legging.png" alt="Shorts Legging">
+                </a>
+                <a href="IndexCalcaLegging.html" class="nav-icon" data-tooltip="Calça Legging">
+                    <img src="assets/ui-icons/icon-calca-legging.png" alt="Calça Legging">
+                </a>
+                <a href="IndexMoletom.html" class="nav-icon" data-tooltip="Moletom">
+                    <img src="assets/ui-icons/icon-moletom.png" alt="Moletom">
+                </a>
+                <a href="IndexTop.html" class="nav-icon" data-tooltip="Top">
+                    <img src="assets/ui-icons/icon-top.png" alt="Top">
+                </a>
+            </div>
+
+            <!-- FAQ & Cart -->
+            <a href="IndexFaq.html" class="nav-icon" data-tooltip="Central de Ajuda">❓</a>
+            <a href="IndexPedidoSimulador.html" class="header-icon" style="text-decoration:none; color: inherit;">
+                🛒
+                <span class="cart-badge" id="cart-count">0</span>
+            </a>
+        </div>
+
+        <h1 class="hero-title" style="text-align: center;">Bem-Vindo à Família Hanuthai</h1>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="nav-container">
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-target="boas-vindas">Boas-Vindas</div>
+            <div class="nav-tab" data-target="quick-wins">Avaliação</div>
+            <div class="nav-tab" data-target="guia-cuidados">Guia de Cuidados</div>
+            <div class="nav-tab" data-target="historia">Nossa História</div>
+            <div class="nav-tab" data-target="proximos-passos">Próximos Passos</div>
+        </div>
+    </nav>
+
+    <!-- CONTENT CONTAINER -->
+    <main class="main-container">
+
+        <!-- ABA 1: BOAS-VINDAS -->
+        <section id="boas-vindas" class="content-section active">
+            <div class="welcome-hero">
+
+                <!-- Logo Grande Centralizada -->
+                <div class="hero-logo-container">
+                    <img src="assets/Galeria/HanuthaiLogo/logohnttexte.png" alt="Logo Hanuthai" class="hero-logo">
+                </div>
+
+                <!-- Medalha + Frase -->
+                <div class="hero-tagline">
+                    <span class="hero-medal">🥇</span>
+                    <h2 class="hero-tagline-text">O MELHOR DO MUAY THAI</h2>
+                </div>
+
+                <!-- 3 Carrosséis Lado a Lado -->
+                <div class="triple-carousel-container">
+
+                    <!-- CARROSSEL ESQUERDO -->
+                    <div class="mini-carousel left-carousel">
+                        <h3 class="mini-carousel-title">Shorts</h3>
+                        <div class="mini-carousel-wrapper">
+                            <div class="mini-carousel-track" id="leftCarousel">
+                                <div class="mini-slide">
+                                    <img src="Fotoscarrocel/shorts/618727812_18090610354989333_3188509929163615066_n.jpg"
+                                        alt="Shorts 1">
+                                </div>
+                                <div class="mini-slide">
+                                    <img src="Fotoscarrocel/shorts/624062733_18091628878989333_1353108171863477788_n.jpg"
+                                        alt="Shorts 2">
+                                </div>
+                                <div class="mini-slide">
+                                    <img src="Fotoscarrocel/shorts/628836111_18093365326989333_6022278949309564934_n.jpg"
+                                        alt="Shorts 3">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mini-indicators">
+                            <span class="mini-indicator active" data-carousel="left" data-slide="0"></span>
+                            <span class="mini-indicator" data-carousel="left" data-slide="1"></span>
+                            <span class="mini-indicator" data-carousel="left" data-slide="2"></span>
+                        </div>
+                    </div>
+
+                    <!-- CARROSSEL CENTRO -->
+                    <div class="mini-carousel center-carousel">
+                        <h3 class="mini-carousel-title">Conjunto Hanuthai</h3>
+                        <div class="mini-carousel-wrapper">
+                            <div class="mini-carousel-track" id="centerCarousel">
+                                <div class="mini-slide">
+                                    <img src="Fotoscarrocel/Conjunto/1.jpg" alt="Conjunto 1">
+                                </div>
+                                <div class="mini-slide">
+                                    <img src="Fotoscarrocel/Conjunto/2.jpg" alt="Conjunto 2">
+                                </div>
+                                <div class="mini-slide">
+                                    <img src="Fotoscarrocel/Conjunto/3.jpg" alt="Conjunto 3">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mini-indicators">
+                            <span class="mini-indicator active" data-carousel="center" data-slide="0"></span>
+                            <span class="mini-indicator" data-carousel="center" data-slide="1"></span>
+                            <span class="mini-indicator" data-carousel="center" data-slide="2"></span>
+                        </div>
+                    </div>
+
+                    <!-- CARROSSEL DIREITO -->
+                    <div class="mini-carousel right-carousel">
+                        <h3 class="mini-carousel-title">Top</h3>
+                        <div class="mini-carousel-wrapper">
+                            <div class="mini-carousel-track" id="rightCarousel">
+                                <div class="mini-slide">
+                                    <img src="Fotoscarrocel/Top/1.jpg" alt="Top 1">
+                                </div>
+                                <div class="mini-slide">
+                                    <img src="Fotoscarrocel/Top/2.jpg" alt="Top 2">
+                                </div>
+                                <div class="mini-slide">
+                                    <img src="Fotoscarrocel/Top/3.jpg" alt="Top 3">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mini-indicators">
+                            <span class="mini-indicator active" data-carousel="right" data-slide="0"></span>
+                            <span class="mini-indicator" data-carousel="right" data-slide="1"></span>
+                            <span class="mini-indicator" data-carousel="right" data-slide="2"></span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="welcome-cta">
+                    <button class="btn btn-primary" onclick="switchTab('quick-wins')">
+                        Comece Aqui →
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 2: QUICK WINS -->
+        <section id="quick-wins" class="content-section">
+
+            <!-- Título da Seção -->
+            <div class="reviews-main-title">
+                <h2>O QUE NOSSOS CLIENTES DIZEM E COMPARTILHAM</h2>
+            </div>
+
+            <!-- Layout em 2 Colunas -->
+            <div class="two-column-reviews-layout">
+
+                <!-- COLUNA ESQUERDA: Avaliações -->
+                <div class="reviews-column">
+                    <!-- Card de Avaliação -->
+                    <div class="quick-win-card">
+                        <div class="qw-icon"><img src="assets/Galeria/icone/avaliação.png" alt="Avaliação"
+                                style="width: 150px; height: auto; max-width: none;"></div>
+                        <h3>GOSTOU? NOS AVALIE NO GOOGLE!</h3>
+                        <p>Sua opinião é muito importante para nós! Conte como foi sua experiência.</p>
+                        <div class="qw-buttons">
+                            <a href="https://g.page/r/CQFMpUh1ZybXEBM/review" target="_blank"
+                                class="btn btn-primary btn-sm">Nos Avalie</a>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Avaliações (Estilo Botão Vertical) -->
+                    <div class="customer-reviews-list">
+
+                        <!-- Review 1 — Graziela De Jesus Oliveira -->
+                        <a href="https://maps.app.goo.gl/C33yNKFDB36XsKkN6" target="_blank" class="review-button-card">
+                            <div class="review-header-compact">
+                                <div class="review-avatar-small">G</div>
+                                <div class="review-meta">
+                                    <span class="review-author">Graziela De Jesus Oliveira</span>
+                                    <span class="review-stars-small">⭐⭐⭐⭐⭐</span>
+                                </div>
+                                <svg class="google-icon-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                                    width="22" height="22">
+                                    <path
+                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                        fill="#4285F4" />
+                                    <path
+                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                        fill="#34A853" />
+                                    <path
+                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                                        fill="#FBBC05" />
+                                    <path
+                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                        fill="#EA4335" />
+                                </svg>
+                            </div>
+                            <p class="review-snippet">"Eles são super atenciosos... meu short ficou simplesmente
+                                perfeito 💜"</p>
+                        </a>
+
+                        <!-- Review 2 — Ketlin Ieguer -->
+                        <a href="https://maps.app.goo.gl/hqnjKcoeKAWLsFbc7" target="_blank" class="review-button-card">
+                            <div class="review-header-compact">
+                                <div class="review-avatar-small">K</div>
+                                <div class="review-meta">
+                                    <span class="review-author">Ketlin Ieguer</span>
+                                    <span class="review-stars-small">⭐⭐⭐⭐⭐</span>
+                                </div>
+                                <svg class="google-icon-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                                    width="22" height="22">
+                                    <path
+                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                        fill="#4285F4" />
+                                    <path
+                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                        fill="#34A853" />
+                                    <path
+                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                                        fill="#FBBC05" />
+                                    <path
+                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                        fill="#EA4335" />
+                                </svg>
+                            </div>
+                            <p class="review-snippet">"Eu simplesmente ameiiii! 😍 A qualidade é incrível, o acabamento
+                                impecável..."</p>
+                        </a>
+
+                        <!-- Review 3 — Alice Lamounier -->
+                        <a href="https://maps.app.goo.gl/EDGvUhKg1QUg2DSN6" target="_blank" class="review-button-card">
+                            <div class="review-header-compact">
+                                <div class="review-avatar-small">A</div>
+                                <div class="review-meta">
+                                    <span class="review-author">Alice Lamounier</span>
+                                    <span class="review-stars-small">⭐⭐⭐⭐⭐</span>
+                                </div>
+                                <svg class="google-icon-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                                    width="22" height="22">
+                                    <path
+                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                        fill="#4285F4" />
+                                    <path
+                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                        fill="#34A853" />
+                                    <path
+                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                                        fill="#FBBC05" />
+                                    <path
+                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                        fill="#EA4335" />
+                                </svg>
+                            </div>
+                            <p class="review-snippet">"Os melhores short de Muay Thai que já usei! Vou comprar sempre!"
+                            </p>
+                        </a>
+
+                        <!-- Review 4 — Ana Valadares -->
+                        <a href="https://maps.app.goo.gl/t8Ut9qHcqfhzPoBm7" target="_blank" class="review-button-card">
+                            <div class="review-header-compact">
+                                <div class="review-avatar-small">A</div>
+                                <div class="review-meta">
+                                    <span class="review-author">Ana Valadares</span>
+                                    <span class="review-stars-small">⭐⭐⭐⭐⭐</span>
+                                </div>
+                                <svg class="google-icon-small" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                                    width="22" height="22">
+                                    <path
+                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                        fill="#4285F4" />
+                                    <path
+                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                        fill="#34A853" />
+                                    <path
+                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                                        fill="#FBBC05" />
+                                    <path
+                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                        fill="#EA4335" />
+                                </svg>
+                            </div>
+                            <p class="review-snippet">"Ótimo atendimento e o top e short ficaram maravilhosos, amei
+                                tudo!!"</p>
+                        </a>
+
+                    </div>
+
+                </div>
+                <!-- FIM COLUNA ESQUERDA -->
+
+                <!-- COLUNA DIREITA: Instagram -->
+                <div class="instagram-column">
+                    <!-- Card do Instagram -->
+                    <div class="quick-win-card">
+                        <div class="qw-icon"><img src="assets/Galeria/icone/postesuafoto.png" alt="Poste sua foto"
+                                style="width: 120px; height: 120px;"></div>
+                        <h3>Poste uma Foto e Nos Marque</h3>
+                        <p>Mostre sua HNT e marque @hanuthaifightstore no Instagram!</p>
+                        <div class="qw-buttons">
+                            <a href="https://www.instagram.com/hanuthaifightstore?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                                target="_blank" class="btn btn-primary btn-sm">Poste Aqui</a>
+                        </div>
+                    </div>
+
+                    <!-- Grid 2x2 de Posts do Instagram -->
+                    <div class="instagram-grid-2x2">
+
+                        <!-- FOTO 1 -->
+                        <a href="https://www.instagram.com/p/DI1PZe9uw8s/?igsh=MTlwaXN6cnRiYTR6NA==" target="_blank"
+                            class="instagram-post-box">
+                            <img src="Fotoscarrocel/Avaliação/imagem1.jpg" alt="Post Instagram 1">
+                            <div class="instagram-username">@hanuthaifightstore</div>
+                        </a>
+
+                        <!-- FOTO 2 -->
+                        <a href="https://www.instagram.com/p/DOL7Lv3jezu/?igsh=b3B0YmV4azFiMTZ0" target="_blank"
+                            class="instagram-post-box">
+                            <img src="Fotoscarrocel/Avaliação/imagem2.jpg" alt="Post Instagram 2">
+                            <div class="instagram-username">@hanuthaifightstore</div>
+                        </a>
+
+                        <!-- FOTO 3 -->
+                        <a href="https://www.instagram.com/p/DLGZtalxyaa/?igsh=MWFrcDY5emt3MjI0bA==" target="_blank"
+                            class="instagram-post-box">
+                            <img src="Fotoscarrocel/Avaliação/imagem3.jpg" alt="Post Instagram 3">
+                            <div class="instagram-username">@hanuthaifightstore</div>
+                        </a>
+
+                        <!-- FOTO 4 -->
+                        <a href="https://www.instagram.com/p/C6KO6uErTx-/?igsh=MWFpd2J5OTA5am90eg==" target="_blank"
+                            class="instagram-post-box">
+                            <img src="Fotoscarrocel/Avaliação/imagem4.jpg" alt="Post Instagram 4">
+                            <div class="instagram-username">@hanuthaifightstore</div>
+                        </a>
+                    </div>
+                </div>
+                <!-- FIM COLUNA DIREITA -->
+
+            </div>
+            <!-- FIM two-column-reviews-layout -->
+
+
+
+        </section>
+        <!-- FIM ABA 2: AVALIAÇÃO -->
+
+        <!-- ABA 3: GUIA DE CUIDADOS -->
+        <section id="guia-cuidados" class="content-section">
+            <div class="section-header">
+                <span class="section-icon">🧬</span>
+                <h2 class="section-title">Guia de Cuidados</h2>
+            </div>
+
+            <div class="intro-box">
+                <h3>Por Que Isso Importa?</h3>
+                <p>Sua peça HNT não é algodão comum. É tecnologia vestível, desenvolvida para:</p>
+                <ul class="benefits-list">
+                    <li>⚡ Absorver suor 3x mais rápido</li>
+                    <li>🌬️ Secar 5x mais rápido que algodão</li>
+                    <li>💪 Manter elasticidade por 500+ lavagens</li>
+                    <li>🎨 Cores vibrantes que não desbotam</li>
+                </ul>
+                <p><strong>Mas para isso funcionar, você precisa cuidar dela corretamente.</strong></p>
+            </div>
+
+            <div class="accordion-wrapper">
+                <!-- Passo 1: Preparação -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger" type="button">
+                        🔵 PASSO 1: Preparação
+                        <span>▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h4>❌ NUNCA misture com:</h4>
+                        <ul>
+                            <li>Roupas com zíper/velcro (causam bolinhas)</li>
+                            <li>Toalhas (soltam fiapos)</li>
+                            <li>Jeans (transferem cor)</li>
+                        </ul>
+
+                        <h4>✅ SEMPRE:</h4>
+                        <ul>
+                            <li>Vire do avesso (protege estampas)</li>
+                            <li>Feche todos os velcros</li>
+                            <li>Separe por cor (escuras/claras)</li>
+                        </ul>
+
+                        <div class="alert-box alert-info">
+                            <strong>💡 DICA PRO:</strong> Lave logo após o treino. Suor seco = odor permanente +
+                            manchas.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Passo 2: Lavagem -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger" type="button">
+                        🔵 PASSO 2: Lavagem
+                        <span>▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h4>🌡️ TEMPERATURA: Água fria (máx 30°C)</h4>
+                        <p><strong>Por quê?</strong> Água quente:</p>
+                        <ul>
+                            <li>Destrói elasticidade</li>
+                            <li>Desbota cores</li>
+                            <li>Encolhe o tecido</li>
+                        </ul>
+
+                        <h4>🧴 SABÃO: Neutro líquido (1 tampa)</h4>
+                        <p>✅ Use: Omo Líquido, Ypê Líquido</p>
+                        <p>❌ NUNCA: Amaciante, alvejante, sabão em pó</p>
+
+                        <h4>🔄 CICLO: Delicado ou manual</h4>
+                        <p>Centrifugação: Mínima (400 rpm)</p>
+                    </div>
+                </div>
+
+                <!-- Passo 3: Secagem -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger" type="button">
+                        🔵 PASSO 3: Secagem
+                        <span>▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h4>☀️ SECAR À SOMBRA (SEMPRE!)</h4>
+                        <p>Sol direto = cores desbotadas em 10 lavagens</p>
+
+                        <h4>🌬️ VENTILAÇÃO: Área arejada</h4>
+                        <p>Secar rápido = menos odor</p>
+
+                        <h4>❌ NUNCA use secadora</h4>
+                        <p>Calor intenso = fim da elasticidade</p>
+
+                        <h4>⏱️ TEMPO: 2-4 horas</h4>
+                        <p>(Tecido técnico seca rápido)</p>
+                    </div>
+                </div>
+
+                <!-- Passo 4: Armazenamento -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger" type="button">
+                        🔵 PASSO 4: Armazenamento
+                        <span>▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>👕 <strong>DOBRAR ou PENDURAR</strong> - Evite amassar estampas</p>
+                        <p>🚫 <strong>NÃO deixe em sacola de academia</strong> - Umidade + calor = mofo + odor</p>
+                        <p>💨 <strong>LOCAL:</strong> Seco e arejado</p>
+                    </div>
+                </div>
+
+                <!-- Troubleshooting -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger" type="button">
+                        🔧 TROUBLESHOOTING: Problemas Comuns
+                        <span>▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <h4>❓ Odor que não sai?</h4>
+                        <p><strong>Solução:</strong></p>
+                        <ol>
+                            <li>Deixe de molho 30min em água fria + 1 xícara de vinagre branco</li>
+                            <li>Lave normalmente</li>
+                            <li>Seque ao sol (só desta vez)</li>
+                        </ol>
+
+                        <h4>❓ Perdeu a elasticidade?</h4>
+                        <p><strong>Causas:</strong> Água quente, secadora, centrifugação forte</p>
+                        <p><strong>Solução:</strong> Infelizmente é irreversível 😢</p>
+                        <p><strong>Prevenção:</strong> Água fria SEMPRE, secar naturalmente</p>
+
+                        <h4>❓ Cores desbotadas?</h4>
+                        <p><strong>Solução:</strong></p>
+                        <ul>
+                            <li>Lave com sabão para roupas escuras</li>
+                            <li>Vire do avesso sempre</li>
+                        </ul>
+                        <p><strong>Prevenção:</strong> Sombra é sua melhor amiga. Primeira lavagem: adicione 1 colher de
+                            sal (fixa a cor)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 4: COMUNIDADE -->
+        <section id="comunidade" class="content-section">
+            <div class="section-header">
+                <span class="section-icon">👥</span>
+                <h2 class="section-title">Comunidade HNT</h2>
+            </div>
+
+            <div class="community-stats">
+                <div class="stat-card">
+                    <div class="stat-number">12.847</div>
+                    <div class="stat-label">Guerreiros HNT</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">23</div>
+                    <div class="stat-label">Estados do Brasil</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">4.9/5</div>
+                    <div class="stat-label">Avaliação Média</div>
+                </div>
+            </div>
+
+
+            <h3 class="subsection-title">🔥 Galeria de Guerreiros</h3>
+            <p class="subsection-desc">Veja como outros atletas arrasam dentro e fora do ringue:</p>
+
+            <div class="ugc-gallery">
+                <!-- Placeholder para fotos UGC -->
+                <div class="ugc-placeholder">
+                    <div class="ugc-icon">📸</div>
+                    <p>Em breve: Galeria de fotos dos nossos guerreiros!</p>
+                    <button class="btn btn-primary">Seja o Primeiro a Postar</button>
+                </div>
+            </div>
+
+            <div class="testimonials">
+                <h3 class="subsection-title">⭐ O Que Dizem Nossos Guerreiros</h3>
+                <div class="testimonial-grid">
+                    <div class="testimonial-card">
+                        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                        <p class="testimonial-text">"A qualidade surpreendeu! Já é minha 3ª peça"</p>
+                        <p class="testimonial-author">— @mariana.fighter</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                        <p class="testimonial-text">"Personalização ficou PERFEITA. Recebo elogios todo treino"</p>
+                        <p class="testimonial-author">— @carlos_muaythai</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                        <p class="testimonial-text">"Tecido não deforma, não desbota. Vale cada centavo!"</p>
+                        <p class="testimonial-author">— @juliana.combat</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 5: PROGRAMA VIP -->
+        <section id="programa-vip" class="content-section">
+            <div class="section-header">
+                <span class="section-icon">🏆</span>
+                <h2 class="section-title">HNT VIP Club</h2>
+            </div>
+
+            <p class="vip-intro">Sistema de Níveis e Recompensas</p>
+
+            <div class="vip-levels">
+                <!-- Bronze -->
+                <div class="vip-level-card bronze active">
+                    <div class="vip-badge">🥉</div>
+                    <h3>BRONZE</h3>
+                    <p class="vip-status">Você está aqui!</p>
+                    <ul class="vip-benefits">
+                        <li>✅ 1ª compra realizada</li>
+                        <li>✅ 5% OFF permanente</li>
+                        <li>✅ Acesso ao grupo VIP WhatsApp</li>
+                    </ul>
+                </div>
+
+                <!-- Prata -->
+                <div class="vip-level-card silver">
+                    <div class="vip-badge">🥈</div>
+                    <h3>PRATA</h3>
+                    <p class="vip-requirement">2 compras ou 1 indicação</p>
+                    <ul class="vip-benefits">
+                        <li>• 10% OFF permanente</li>
+                        <li>• Frete grátis acima de R$ 200</li>
+                        <li>• Preview de novos produtos</li>
+                    </ul>
+                </div>
+
+                <!-- Ouro -->
+                <div class="vip-level-card gold">
+                    <div class="vip-badge">🥇</div>
+                    <h3>OURO</h3>
+                    <p class="vip-requirement">5 compras ou 3 indicações</p>
+                    <ul class="vip-benefits">
+                        <li>• 15% OFF permanente</li>
+                        <li>• Frete grátis sempre</li>
+                        <li>• 1 brinde a cada 3 compras</li>
+                        <li>• Prioridade no atendimento</li>
+                    </ul>
+                </div>
+
+                <!-- Diamante -->
+                <div class="vip-level-card diamond">
+                    <div class="vip-badge">💎</div>
+                    <h3>DIAMANTE</h3>
+                    <p class="vip-requirement">10 compras ou 5 indicações</p>
+                    <ul class="vip-benefits">
+                        <li>• 20% OFF permanente</li>
+                        <li>• Peça exclusiva de aniversário</li>
+                        <li>• Acesso a coleções limitadas</li>
+                        <li>• Seu nome no Hall da Fama HNT</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="vip-progress">
+                <h3>Seu Progresso</h3>
+                <p>Você está a <strong>1 compra</strong> do nível PRATA! 🎯</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 50%;"></div>
+                </div>
+                <p class="progress-label">1 de 2 compras</p>
+            </div>
+        </section>
+
+        <!-- ABA 6: NOSSA HISTÓRIA -->
+        <section id="historia" class="content-section">
+            <div class="section-header">
+                <span class="section-icon">📖</span>
+                <h2 class="section-title">A História Por Trás da Sua Armadura</h2>
+            </div>
+
+            <div class="story-content">
+
+                <!-- Texto principal -->
+                <p class="story-intro">
+                    A Hanuthai nasceu da convergência entre a paixão pelas artes marciais e a busca incessante pela
+                    excelência em equipamentos esportivos. Fundada por atletas ativos, a marca surgiu de uma necessidade
+                    clara no mercado: a carência de vestuário que suportasse a exigência técnica e o rigor dos ringues.
+                </p>
+                <p class="story-text">
+                    Diferente de marcas convencionais, o desenvolvimento de nossos produtos ocorre de dentro para fora.
+                    Cada peça que leva a nossa assinatura foi exaustivamente testada em situações reais de luta, em
+                    ringues ao redor do mundo, onde o desempenho não aceita falhas. Através de sucessivas modificações e
+                    feedbacks técnicos, alcançamos um padrão de qualidade que equilibra perfeitamente conforto, estética
+                    e funcionalidade.
+                </p>
+
+                <!-- Acordeão 1: O Significado e o Legado -->
+                <div class="story-accordion">
+                    <button class="story-accordion-btn" onclick="toggleStoryAccordion(this)">
+                        <span>O Significado e o Legado: HNT</span>
+                        <span class="story-accordion-arrow">▼</span>
+                    </button>
+                    <div class="story-accordion-content">
+                        <p>O nome Hanuthai é uma homenagem direta a Hanuman, o general-macaco da mitologia tailandesa,
+                            que personifica a força indestrutível, a agilidade estratégica e a lealdade inabalável. Em
+                            nossa identidade visual, a cabeça do macaco é o selo de autenticidade que representa o
+                            espírito guerreiro presente em cada atleta.</p>
+                        <p>Para acompanhar o dinamismo do mercado e a evolução da nossa marca, adotamos a sigla HNT.
+                            Mais do que uma abreviação, HNT é hoje sinônimo de tecnologia aplicada ao combate e
+                            modernidade no design esportivo.</p>
+                    </div>
+                </div>
+
+                <!-- Acordeão 2: O Diferencial -->
+                <div class="story-accordion">
+                    <button class="story-accordion-btn" onclick="toggleStoryAccordion(this)">
+                        <span>O Diferencial da HNT: Personalização Exclusiva</span>
+                        <span class="story-accordion-arrow">▼</span>
+                    </button>
+                    <div class="story-accordion-content">
+                        <p>Na Hanuthai, acreditamos que a identidade de um atleta ou de uma equipe deve ser única. Por
+                            isso, consolidamos nosso diferencial através de um sistema de Personalização Total.
+                            Oferecemos aos nossos clientes o poder de decisão sobre cada detalhe do seu equipamento:</p>
+                        <ul class="story-list">
+                            <li>🎨 <strong>Customização Estrutural:</strong> Escolha completa de paleta de cores.</li>
+                            <li>🔤 <strong>Identidade Visual:</strong> Aplicação técnica de logos, tipografias e
+                                escritas personalizadas.</li>
+                            <li>🧵 <strong>Engenharia de Produto:</strong> Construção com costuras reforçadas de alta
+                                tração, garantindo máxima durabilidade e segurança durante o uso intensivo.</li>
+                            <li>📐 <strong>Padrão Ergonômico:</strong> Modelagem projetada especificamente para os
+                                movimentos do Muay Thai, garantindo que a vestimenta acompanhe a performance do atleta
+                                sem restrições.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Acordeão 3: Nosso Compromisso -->
+                <div class="story-accordion">
+                    <button class="story-accordion-btn" onclick="toggleStoryAccordion(this)">
+                        <span>Nosso Compromisso</span>
+                        <span class="story-accordion-arrow">▼</span>
+                    </button>
+                    <div class="story-accordion-content">
+                        <p>Hoje, a Hanuthai (HNT) entrega produtos de alta performance, unindo tradição e tecnologia.
+                            Nosso compromisso é fornecer ao mercado um material que não apenas suporte o combate, mas
+                            que eleve o nível de quem o utiliza.</p>
+                    </div>
+                </div>
+
+                <!-- Tagline final -->
+                <div class="story-tagline">
+                    <em>Hanuthai: Forjada no Ringue. Personalizada por você.</em>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ABA 7: PRÓXIMOS PASSOS -->
+        <section id="proximos-passos" class="content-section">
+
+            <div class="next-steps-grid">
+                <!-- Card 1: Complete seu Arsenal -->
+                <div class="next-step-card">
+                    <h3>Já vai pensando no próximo modelo</h3>
+                    <div class="product-suggestions">
+                        <a href="IndexFightShorts.html" class="btn btn-primary">
+                            <img src="Icons/ShortsFigth.png" alt="" class="btn-product-icon"> Fight Shorts
+                        </a>
+                        <a href="IndexShortsLegging.html" class="btn btn-primary">
+                            <img src="Icons/ShortsLegging.png" alt="" class="btn-product-icon"> Shorts Legging
+                        </a>
+                        <a href="IndexCalcaLegging.html" class="btn btn-primary">
+                            <img src="Icons/Legging.png" alt="" class="btn-product-icon"> Calça Legging
+                        </a>
+                        <a href="IndexMoletom.html" class="btn btn-primary">
+                            <img src="Icons/Moletom.png" alt="" class="btn-product-icon"> Moletom
+                        </a>
+                        <a href="IndexTop.html" class="btn btn-primary">
+                            <img src="Icons/Top.png" alt="" class="btn-product-icon"> Top
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 2: Rastreie seu Pedido -->
+                <div class="next-step-card">
+                    <h3>📦 Rastreie seu Pedido</h3>
+                    <div class="tracking-icon">
+                        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold);">
+                            <rect x="1" y="3" width="15" height="13"></rect>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                        </svg>
+                    </div>
+
+                    <!-- ⚠️ Aviso de Segurança -->
+                    <div class="tracking-warning">
+                        <span class="warning-icon">⚠️</span>
+                        <p class="warning-text">Atenção: Nenhuma transportadora cobra taxa extra para liberar o
+                            pedido.
+                            Não clique em links suspeitos!</p>
+                    </div>
+
+                    <a href="https://www.melhorrastreio.com.br/" target="_blank" class="btn btn-primary"
+                        style="display:flex; align-items:center; justify-content:center; width:100%; padding:14px 24px; text-decoration:none; font-weight:700; font-size:1rem; text-transform:uppercase; letter-spacing:1px; margin-top:15px; box-sizing:border-box; white-space:nowrap;">Rastrear
+                        Pedido</a>
+                </div>
+
+                <!-- Card 3: Redes Sociais -->
+                <div class="next-step-card">
+                    <h3>📱 Siga-nos nas Redes</h3>
+                    <p>Fique por dentro de promoções, novos produtos e histórias de guerreiros:</p>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/hanuthaifightstore?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                            target="_blank" class="social-btn instagram">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                            </svg>
+                            Instagram
+                        </a>
+                        <a href="https://wa.me/message/ZXDBBBWGSFMLP1" target="_blank" class="social-btn whatsapp">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                            </svg>
+                            WhatsApp
+                        </a>
+                        <a href="https://www.tiktok.com/@hanuthaifightstore?_r=1&_t=ZS-940dTkijoSj" target="_blank"
+                            class="social-btn tiktok">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
+                            </svg>
+                            TikTok
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+    </main>
+
+    <!-- Back to Top Button -->
+    <a href="#" class="back-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;">
+        ↑ Topo
+    </a>
+
+    <!-- JavaScript -->
+    <script src="js/pos-venda.js"></script>
+
+</body>
+
+</html>

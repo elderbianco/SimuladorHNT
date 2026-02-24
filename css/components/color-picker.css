@@ -1,0 +1,51 @@
+/**
+ * Color Picker Component
+ * Styles for color selection UI across all simulators
+ */
+
+/* Color Grid Container */
+.color-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+}
+
+/* Color Options Container */
+.color-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+/* --- COLOR OPTIONS: ROUNDED SQUARES --- */
+.color-option {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--color-border-simulator) !important;
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xs);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+    border-color: #fff !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.color-option.selected {
+    border: 2px solid #ffffff !important;
+    /* Reduced Mist Effect (Subtler) */
+    box-shadow:
+        var(--shadow-accent-ring),
+        /* Inner Cyan Ring */
+        var(--shadow-glow-white),
+        /* Soft White Mist */
+        var(--shadow-glow-cyan);
+    /* Outer Cyan Glow */
+    transform: scale(1.15) translateY(-2px);
+    z-index: 10;
+}

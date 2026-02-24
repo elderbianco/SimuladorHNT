@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-02-07T17:52:00Z",
+  "products": {
+    "shorts": {
+      "base_price": 120.00,
+      "logo_center_price": 15.00,
+      "logo_lat_price": 12.00,
+      "logo_leg_price": 10.00,
+      "text_price": 8.00,
+      "text_lat_price": 6.00,
+      "text_leg_price": 5.00,
+      "dev_fee": 25.00,
+      "extras": {
+        "cordao": 5.00,
+        "laco": 7.00,
+        "legging_interna": 15.00
+      },
+      "discount_tiers": [
+        {"min_qty": 10, "discount_pct": 5},
+        {"min_qty": 20, "discount_pct": 10},
+        {"min_qty": 50, "discount_pct": 15}
+      ]
+    },
+    "top": {
+      "base_price": 95.00,
+      "logo_center_price": 12.00,
+      "logo_lat_price": 10.00,
+      "text_price": 6.00,
+      "text_lat_price": 5.00,
+      "dev_fee": 20.00,
+      "extras": {
+        "cordao": 4.00,
+        "laco": 6.00
+      },
+      "discount_tiers": [
+        {"min_qty": 10, "discount_pct": 5},
+        {"min_qty": 20, "discount_pct": 10},
+        {"min_qty": 50, "discount_pct": 15}
+      ]
+    },
+    "legging": {
+      "base_price": 85.00,
+      "logo_leg_price": 8.00,
+      "text_leg_price": 5.00,
+      "dev_fee": 20.00,
+      "discount_tiers": [
+        {"min_qty": 10, "discount_pct": 5},
+        {"min_qty": 20, "discount_pct": 10},
+        {"min_qty": 50, "discount_pct": 15}
+      ]
+    },
+    "moletom": {
+      "base_price": 150.00,
+      "logo_center_price": 15.00,
+      "text_price": 8.00,
+      "dev_fee": 25.00,
+      "extras": {
+        "cordao": 5.00
+      },
+      "discount_tiers": [
+        {"min_qty": 10, "discount_pct": 5},
+        {"min_qty": 20, "discount_pct": 10},
+        {"min_qty": 50, "discount_pct": 15}
+      ]
+    }
+  }
+}

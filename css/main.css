@@ -1,0 +1,27 @@
+/**
+ * main.css
+ * Main entry point for the modular CSS architecture
+ */
+
+/* 1./* Base Styles */
+@import url('./base/reset.css');
+@import url('./base/variables.css');
+@import url('./base/typography.css');
+
+/* Layout */
+@import url('./layout/simulator-area.css');
+@import url('./layout/controls-area.css');
+@import url('./layout/header.css');
+
+/* Components */
+@import url('./components/buttons.css');
+@import url('./components/color-picker.css');
+
+/* Simulator Specific Overrides */
+@import url('./simulators/top.css');
+@import url('./simulators/shorts-legging.css');
+@import url('./simulators/calca-legging.css');
+@import url('./simulators/moletom.css');
+
+/* 4. Utilities */
+/* @import url('utils/helpers.css'); */

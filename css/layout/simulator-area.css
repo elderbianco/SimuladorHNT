@@ -1,0 +1,253 @@
+/**
+ * Layout - Simulator Area
+ * Styles for the 3D preview area
+ */
+
+.simulator-area {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: url('../../Icons/RingHNT.jpeg?v=3') no-repeat center bottom;
+    background-size: cover;
+    position: relative;
+}
+
+/* Main Container Grid */
+.app-container {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    /* Alinhado com a largura da sidebar */
+    gap: 20px;
+    height: calc(100vh - 50px);
+    /* Restaurado do backup */
+    overflow: hidden;
+    padding: 5px;
+    /* Restaurado do backup */
+}
+
+/* Simulator Viewport */
+.simulator-viewport {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: grab;
+    user-select: none;
+}
+
+.simulator-viewport.panning {
+    cursor: grabbing;
+}
+
+/* Zoom Container - Dinâmico para manter quadrado perfeito */
+.zoom-container {
+    transform-origin: center center;
+    width: min(950px, 94vw, 94vh);
+    height: min(950px, 94vw, 94vh);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    will-change: transform;
+}
+
+/* Simulator Wrapper */
+.simulator-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+/* Product Layer */
+.product-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.product-layer img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: translateZ(0);
+}
+
+/* Generic Layer */
+.layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    transform: translateZ(0);
+}
+
+.layer img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* Absolute Item */
+.absolute-item {
+    position: absolute;
+    transform: translateZ(0);
+}
+
+/* Customization Layer */
+.customization-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.custom-element {
+    position: absolute;
+    cursor: move;
+    transform-origin: center center;
+    transform: translateZ(0);
+    pointer-events: all;
+    transition: box-shadow 0.2s ease;
+}
+
+.custom-element.selected {
+    box-shadow: 0 0 0 2px #D4AF37;
+}
+
+.custom-element img {
+    max-width: 100%;
+    max-height: 100%;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.custom-text {
+    white-space: nowrap;
+    user-select: none;
+    text-align: center;
+}
+
+/* Zoom Controls */
+.zoom-controls {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 160px;
+}
+
+.zoom-btn {
+    width: 45px;
+    height: 45px;
+    border: none;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1a1a1a;
+    transition: all 0.3s ease;
+}
+
+.zoom-btn.zoom-reset {
+    width: auto;
+    padding: 10px 15px;
+    font-size: 0.75rem;
+    border-radius: 25px;
+}
+
+.zoom-btn:hover {
+    transform: scale(1.1);
+    background: #D4AF37;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .app-container {
+        grid-template-columns: 1fr;
+    }
+
+    .simulator-area {
+        height: 50vh;
+        min-height: 350px;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: unset;
+        height: auto;
+        overflow: visible;
+        padding: 0;
+        gap: 0;
+    }
+
+    .simulator-area {
+        height: 50vh;
+        min-height: 350px;
+        max-height: 600px;
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        border-radius: 0;
+        border: none;
+        border-bottom: 2px solid #e0e0e0;
+        padding: 5px;
+        background-position: center bottom;
+    }
+
+    .simulator-viewport {
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        align-items: flex-start;
+        padding-top: 10px;
+    }
+
+    .zoom-container {
+        max-width: 100%;
+        max-height: 100%;
+        aspect-ratio: unset;
+        height: 100%;
+    }
+
+    .zoom-controls {
+        bottom: 15px;
+        right: 15px;
+    }
+
+    .zoom-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 1.2rem;
+    }
+
+    .simulator-wrapper {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 3/4;
+    }
+}

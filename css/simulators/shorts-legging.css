@@ -1,0 +1,95 @@
+/**
+ * Simulator - Shorts Legging
+ * Specific styles for the Shorts Legging simulator
+ */
+
+/* Shift shorts up when legging is active to prevent cutoff */
+.page-shorts .simulator-wrapper.calca-legging-active {
+    transform: translateY(-12%) !important;
+}
+
+/* Scoped fix for Shorts layers */
+.page-shorts .layer img,
+.page-shorts .product-layer img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Specific Toggle Button for Legging Additive */
+.btn-toggle-extra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 14px 18px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: var(--radius-md);
+    color: #888;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-toggle-extra:hover {
+    border-color: #666;
+    color: #fff;
+    background: #111;
+}
+
+.btn-toggle-extra.active {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--color-cyan-accent);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3), inset 0 0 20px rgba(0, 240, 255, 0.1);
+}
+
+.btn-toggle-extra.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color-cyan-accent);
+    box-shadow: 0 0 8px var(--color-cyan-accent);
+}
+
+.btn-toggle-extra .toggle-icon {
+    font-size: 1.2rem;
+    margin-right: 12px;
+    display: inline-flex;
+    align-items: center;
+    color: #555;
+    transition: color 0.3s;
+}
+
+.btn-toggle-extra.active .toggle-icon {
+    color: var(--color-cyan-accent);
+    text-shadow: 0 0 8px var(--color-cyan-accent);
+}
+
+.btn-toggle-extra .price-tag {
+    font-size: 0.85rem;
+    background: #000;
+    border: 1px solid #333;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: #888;
+}
+
+.btn-toggle-extra.active .price-tag {
+    color: var(--color-cyan-accent);
+    border-color: var(--color-cyan-accent);
+    text-shadow: 0 0 5px var(--color-cyan-accent);
+    box-shadow: 0 0 5px rgba(0, 240, 255, 0.2);
+}

@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockups - Etiquetas HNT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #1a1a1a;
+            padding: 40px 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #D4AF37;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 50px;
+            font-size: 1.1rem;
+        }
+
+        .mockup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .mockup-card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .mockup-title {
+            color: #D4AF37;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .mockup-description {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* Etiqueta Container */
+        .tag {
+            width: 300px;
+            height: 450px;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* LAYOUT 1: MINIMALISTA PREMIUM */
+        .tag-minimal {
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 30px 20px;
+        }
+
+        .tag-minimal .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #D4AF37;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+        }
+
+        .tag-minimal .warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid #D4AF37;
+            border-radius: 6px;
+            padding: 12px 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tag-minimal .warning-icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .tag-minimal .warning-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tag-minimal .qr-code {
+            width: 140px;
+            height: 140px;
+            background: #fff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #000;
+            font-weight: 600;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .tag-minimal .benefits {
+            text-align: center;
+        }
+
+        .tag-minimal .benefits-title {
+            font-size: 0.75rem;
+            color: #D4AF37;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .tag-minimal .benefits-list {
+            list-style: none;
+            font-size: 0.7rem;
+            color: #ccc;
+            line-height: 1.8;
+        }
+
+        .tag-minimal .benefits-list li::before {
+            content: "• ";
+            color: #D4AF37;
+            font-weight: bold;
+        }
+
+        /* LAYOUT 2: GAMIFICADO */
+        .tag-gamified {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            padding: 20px;
+        }
+
+        .tag-gamified .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #333;
+        }
+
+        .tag-gamified .logo-small {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #D4AF37;
+            letter-spacing: 2px;
+        }
+
+        .tag-gamified .level-badge {
+            background: linear-gradient(135deg, #CD7F32, #B87333);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tag-gamified .mission {
+            background: rgba(212, 175, 55, 0.1);
+            border: 2px solid #D4AF37;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .tag-gamified .mission-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #D4AF37;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .tag-gamified .qr-code-glow {
+            width: 120px;
+            height: 120px;
+            background: #fff;
+            border-radius: 8px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: #000;
+            font-weight: 600;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+        }
+
+        .tag-gamified .rewards {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .tag-gamified .rewards-title {
+            font-size: 0.75rem;
+            color: #00f0ff;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .tag-gamified .rewards-list {
+            list-style: none;
+            font-size: 0.65rem;
+            color: #ccc;
+            line-height: 1.8;
+        }
+
+        .tag-gamified .rewards-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-gamified .urgency {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #ff6b6b;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        /* LAYOUT 3: STORYTELLING */
+        .tag-story {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)),
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23222" width="100" height="100"/></svg>');
+            background-size: cover;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .tag-story .quote {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tag-story .quote-text {
+            font-size: 0.8rem;
+            font-style: italic;
+            color: #fff;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .tag-story .logo-center {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #D4AF37;
+            letter-spacing: 3px;
+            text-align: center;
+        }
+
+        .tag-story .divider {
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+            margin: 15px auto;
+        }
+
+        .tag-story .journey {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .tag-story .journey-title {
+            font-size: 0.75rem;
+            color: #D4AF37;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .tag-story .journey-list {
+            list-style: none;
+            font-size: 0.65rem;
+            color: #ccc;
+            line-height: 1.8;
+        }
+
+        .tag-story .qr-section {
+            text-align: center;
+        }
+
+        .tag-story .qr-code-story {
+            width: 100px;
+            height: 100px;
+            background: #fff;
+            border-radius: 8px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .tag-story .qr-cta {
+            font-size: 0.7rem;
+            color: #D4AF37;
+            font-weight: 600;
+        }
+
+        /* Flip Animation */
+        .tag-wrapper {
+            perspective: 1000px;
+            margin-bottom: 20px;
+        }
+
+        .tag-flipper {
+            position: relative;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .tag-wrapper:hover .tag-flipper {
+            transform: rotateY(180deg);
+        }
+
+        .tag-front,
+        .tag-back {
+            backface-visibility: hidden;
+        }
+
+        .tag-back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: rotateY(180deg);
+            width: 100%;
+            height: 100%;
+            background: #000;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .tag-back .section-title {
+            font-size: 0.9rem;
+            color: #D4AF37;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #333;
+        }
+
+        .tag-back .care-list {
+            list-style: none;
+            margin-bottom: 15px;
+        }
+
+        .tag-back .care-list li {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-back .personalization {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid #D4AF37;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .tag-back .personalization p {
+            font-size: 0.7rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .tag-back .footer {
+            text-align: center;
+            font-size: 0.65rem;
+            color: #888;
+        }
+
+        .hover-hint {
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .download-section {
+            text-align: center;
+            margin-top: 60px;
+            padding: 40px;
+            background: #2a2a2a;
+            border-radius: 12px;
+        }
+
+        .download-section h2 {
+            color: #D4AF37;
+            margin-bottom: 20px;
+        }
+
+        .download-section p {
+            color: #aaa;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            color: #000;
+            padding: 15px 40px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            margin: 0 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .mockup-card {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🏷️ Mockups - Etiquetas HNT</h1>
+        <p class="subtitle">3 Versões Profissionais | Passe o mouse para ver o verso</p>
+
+        <div class="mockup-grid">
+
+            <!-- MOCKUP 1: MINIMALISTA PREMIUM -->
+            <div class="mockup-card">
+                <h3 class="mockup-title">Layout 1: Minimalista Premium</h3>
+                <p class="mockup-description">
+                    Foco total no QR code. Design limpo e elegante com máximo impacto visual.
+                    Ideal para conversão imediata.
+                </p>
+
+                <div class="tag-wrapper">
+                    <div class="tag-flipper">
+                        <div class="tag tag-minimal tag-front">
+                            <div class="logo">HNT</div>
+
+                            <div class="warning">
+                                <div class="warning-icon">⚠️</div>
+                                <div class="warning-text">Não lave antes de ver isto!</div>
+                            </div>
+
+                            <div class="qr-code">
+                                [QR CODE]<br>
+                                GRANDE
+                            </div>
+
+                            <div class="benefits">
+                                <div class="benefits-title">📱 Escaneie para:</div>
+                                <ul class="benefits-list">
+                                    <li>Guia completo de cuidados</li>
+                                    <li>Benefícios VIP exclusivos</li>
+                                    <li>10% OFF próxima compra</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="tag tag-back">
+                            <div>
+                                <h4 class="section-title">Cuidados Essenciais</h4>
+                                <ul class="care-list">
+                                    <li>💧 Água fria (máx 30°C)</li>
+                                    <li>🧴 Sabão neutro líquido</li>
+                                    <li>☀️ Secar à sombra</li>
+                                    <li>❌ Sem amaciante/secadora</li>
+                                </ul>
+                            </div>
+
+                            <div class="personalization">
+                                <p><strong>Olá, João Silva! 👋</strong></p>
+                                <p>Seu Fight Shorts foi feito especialmente para você.</p>
+                                <p style="margin-top: 10px; font-size: 0.65rem;">Pedido #12345 | 15/02/2026</p>
+                            </div>
+
+                            <div class="footer">
+                                <p>Você é o guerreiro #8.547 HNT 🥊</p>
+                                <p>@hanuthaifight | hanuthai.com.br</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="hover-hint">↑ Passe o mouse para ver o verso</p>
+            </div>
+
+            <!-- MOCKUP 2: GAMIFICADO -->
+            <div class="mockup-card">
+                <h3 class="mockup-title">Layout 2: Gamificado</h3>
+                <p class="mockup-description">
+                    Sistema de missões e recompensas. Engajamento máximo com elementos de gaming.
+                    Ideal para público jovem.
+                </p>
+
+                <div class="tag-wrapper">
+                    <div class="tag-flipper">
+                        <div class="tag tag-gamified tag-front">
+                            <div class="header">
+                                <div class="logo-small">HNT</div>
+                                <div class="level-badge">
+                                    <span>🥉</span>
+                                    <span>BRONZE</span>
+                                </div>
+                            </div>
+
+                            <div class="mission">
+                                <div class="mission-title">🎯 Missão 1: Escaneie este QR</div>
+                                <div class="qr-code-glow">
+                                    [QR CODE]
+                                </div>
+                            </div>
+
+                            <div class="rewards">
+                                <div class="rewards-title">RECOMPENSAS AO ESCANEAR:</div>
+                                <ul class="rewards-list">
+                                    <li>✅ +100 pontos XP</li>
+                                    <li>✅ Guia de cuidados premium</li>
+                                    <li>✅ 10% OFF próxima compra</li>
+                                    <li>✅ Acesso ao HNT VIP Club</li>
+                                </ul>
+                            </div>
+
+                            <div class="urgency">
+                                ⏱️ Escaneie em 24h para bônus!
+                            </div>
+                        </div>
+
+                        <div class="tag tag-back">
+                            <div>
+                                <h4 class="section-title">Cuidados Rápidos</h4>
+                                <ul class="care-list">
+                                    <li>💧 Água fria sempre</li>
+                                    <li>🧴 Sabão neutro</li>
+                                    <li>☀️ Sombra para secar</li>
+                                    <li>❌ Nunca use secadora</li>
+                                </ul>
+                            </div>
+
+                            <div class="personalization">
+                                <p><strong>Guerreiro João Silva</strong></p>
+                                <p>Fight Shorts Personalizado</p>
+                                <p style="margin-top: 10px; font-size: 0.65rem;">Pedido #12345</p>
+                            </div>
+
+                            <div class="footer">
+                                <p><strong>Progresso VIP: 50%</strong></p>
+                                <p>Falta 1 compra para PRATA 🥈</p>
+                                <p style="margin-top: 10px;">@hanuthaifight</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="hover-hint">↑ Passe o mouse para ver o verso</p>
+            </div>
+
+            <!-- MOCKUP 3: STORYTELLING -->
+            <div class="mockup-card">
+                <h3 class="mockup-title">Layout 3: Storytelling</h3>
+                <p class="mockup-description">
+                    Conexão emocional através da história da peça. Design artesanal e premium.
+                    Ideal para clientes que valorizam exclusividade.
+                </p>
+
+                <div class="tag-wrapper">
+                    <div class="tag-flipper">
+                        <div class="tag tag-story tag-front">
+                            <div class="quote">
+                                <p class="quote-text">
+                                    "Esta não é apenas uma peça.<br>
+                                    É a pele de quem não recua."
+                                </p>
+                                <div class="logo-center">HNT</div>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="journey">
+                                <div class="journey-title">A JORNADA DA SUA PEÇA:</div>
+                                <ul class="journey-list">
+                                    <li>✂️ Cortada à mão em 15/02/2026</li>
+                                    <li>🧵 Costurada por Artesão João</li>
+                                    <li>🎨 Personalizada para você</li>
+                                    <li>📦 Embalada com carinho</li>
+                                </ul>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <div class="qr-section">
+                                <div class="qr-code-story">
+                                    [QR CODE]
+                                </div>
+                                <p class="qr-cta">Escaneie para conhecer<br>toda a história</p>
+                            </div>
+                        </div>
+
+                        <div class="tag tag-back">
+                            <div>
+                                <h4 class="section-title">Preserve Sua Armadura</h4>
+                                <ul class="care-list">
+                                    <li>💧 Água fria (30°C)</li>
+                                    <li>🧴 Sabão neutro</li>
+                                    <li>☀️ Secar à sombra</li>
+                                    <li>❌ Sem amaciante</li>
+                                </ul>
+                            </div>
+
+                            <div class="personalization">
+                                <p><strong>Feito para: João Silva</strong></p>
+                                <p>Fight Shorts Premium</p>
+                                <p>Cor: Preto/Dourado</p>
+                                <p style="margin-top: 10px; font-size: 0.65rem;">Pedido #12345 | 15/02/2026</p>
+                            </div>
+
+                            <div class="footer">
+                                <p>"Cada ponto carrega nossa missão"</p>
+                                <p style="margin-top: 10px;">@hanuthaifight</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="hover-hint">↑ Passe o mouse para ver o verso</p>
+            </div>
+
+        </div>
+
+        <!-- Download Section -->
+        <div class="download-section">
+            <h2>📥 Próximos Passos</h2>
+            <p>
+                Escolha o layout que mais combina com sua marca e solicite os arquivos finais para impressão.<br>
+                Formatos disponíveis: PDF, AI, PNG (alta resolução 300 DPI)
+            </p>
+            <p style="color: #D4AF37; font-weight: 600;">
+                💡 Recomendação: Layout 1 (Minimalista Premium) tem o melhor custo-benefício<br>
+                com ROI estimado de 327% no primeiro ano.
+            </p>
+            <a href="#" class="btn" onclick="alert('Entre em contato com sua gráfica com este mockup!'); return false;">
+                Baixar Especificações
+            </a>
+            <a href="IndexPosVenda.html" class="btn" style="background: linear-gradient(135deg, #00f0ff, #00c8ff);">
+                Ver Página de Pós-Venda
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        // Print functionality
+        function printTag(tagId) {
+            window.print();
+        }
+
+        // Add print styles dynamically
+        console.log('✅ Mockups de etiquetas carregados');
+        console.log('💡 Passe o mouse sobre as etiquetas para ver o verso');
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,9 @@
+/**
+ * Simulator - Moletom
+ * Specific styles for the Moletom simulator
+ */
+
+/* Moletom specific scale/origin if needed */
+.page-moletom .zoom-container {
+    transform-origin: center center !important;
+}

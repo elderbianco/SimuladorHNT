@@ -1,0 +1,759 @@
+/**
+ * SimulatorHNT - Landing Page Styles (Premium Redesign)
+ */
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background-color: #000000;
+    /* Pure Black Background */
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+}
+
+.landing-container {
+    min-height: 100vh;
+    background: #000000;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Header */
+.landing-header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 80px 20px 40px;
+}
+
+.landing-logo {
+    max-width: 300px;
+    height: auto;
+    margin: 0 auto 20px;
+    display: block;
+    filter: drop-shadow(0 5px 15px rgba(212, 175, 55, 0.3));
+    transition: transform 0.3s ease;
+}
+
+.landing-logo:hover {
+    transform: scale(1.05);
+}
+
+.landing-logo-text {
+    font-size: 5rem;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -2px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.landing-subtitle {
+    font-size: 1rem;
+    color: #888;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+
+.landing-nav-link {
+    color: #00f0ff !important;
+    text-decoration: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    padding: 10px 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.landing-nav-link:hover {
+    color: #ffffff !important;
+    border-color: #00f0ff;
+    background: rgba(0, 240, 255, 0.1);
+}
+
+/* Main Content */
+.landing-content {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+}
+
+.section-title {
+    display: none;
+    /* Hidden per clean aesthetic */
+}
+
+/* Product Grid */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    padding: 0 20px;
+}
+
+/* Product Card - Minimalist Premium */
+.product-card {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+.card-image-wrapper {
+    position: relative;
+    background: #0a0a0a;
+    border-radius: 8px;
+    padding: 40px;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+    height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+}
+
+.product-card:hover .card-image-wrapper {
+    background: #111111;
+    border-color: rgba(212, 175, 55, 0.3);
+    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1);
+}
+
+.product-image {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.08);
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.status-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #28a745;
+    /* Green for available */
+    margin-bottom: 10px;
+    display: block;
+}
+
+.status-coming-soon {
+    color: #ffc107;
+}
+
+.product-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.product-description {
+    font-size: 0.9rem;
+    color: #888;
+    margin: 0 0 20px 0;
+    max-width: 80%;
+    line-height: 1.5;
+}
+
+.product-cta {
+    display: inline-block;
+    padding: 12px 30px;
+    background: #ffffff;
+    color: #000000;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid #ffffff;
+}
+
+.product-cta:hover {
+    background: transparent;
+    color: #ffffff;
+}
+
+/* Footer */
+.landing-footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 60px 20px;
+    color: #444;
+    border-top: 1px solid #1a1a1a;
+    margin-top: 40px;
+    background: #000000;
+}
+
+.landing-footer p {
+    margin: 5px 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .landing-header {
+        padding: 60px 20px 20px;
+    }
+
+    .landing-logo {
+        font-size: 2.8rem;
+        /* Using the more precise size from the main responsive block */
+    }
+
+    .card-image-wrapper {
+        height: 300px;
+    }
+}
+
+/* Specific Product Gradients */
+.gradient-shorts {
+    background: radial-gradient(circle at center, rgba(212, 175, 55, 0.2) 0%, #151515 70%);
+}
+
+.gradient-legging {
+    background: radial-gradient(circle at center, rgba(255, 105, 180, 0.15) 0%, #151515 70%);
+}
+
+.gradient-moletom {
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, #151515 70%);
+}
+
+.gradient-top {
+    background: radial-gradient(circle at center, rgba(255, 105, 180, 0.15) 0%, #151515 70%);
+}
+
+/* Info Section */
+.info-section {
+    margin-top: 100px;
+    padding: 60px 20px;
+    text-align: center;
+    background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.02));
+    border-radius: 30px;
+}
+
+.info-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 60px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.info-item {
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s ease;
+}
+
+.info-item:hover {
+    transform: translateY(-10px);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(212, 175, 55, 0.3);
+}
+
+.info-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.info-item h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.info-item p {
+    font-size: 0.9rem;
+    color: #888;
+    line-height: 1.6;
+}
+
+/* How It Works Section (New) */
+.how-it-works-section {
+    margin-top: 80px;
+    padding: 80px 20px;
+    background: #0f0f0f;
+    position: relative;
+}
+
+.how-it-works-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.section-subtitle {
+    text-align: center;
+    font-size: 1rem;
+    color: #D4AF37;
+    margin-bottom: 80px;
+    letter-spacing: 4px;
+    font-weight: 700;
+}
+
+.features-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 120px;
+}
+
+.feature-block {
+    display: flex;
+    align-items: center;
+    gap: 80px;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+}
+
+.feature-block:hover {
+    opacity: 1;
+}
+
+.feature-block.reverse {
+    flex-direction: row-reverse;
+}
+
+.feature-text {
+    flex: 1;
+}
+
+.feature-text h3 {
+    font-size: 2.5rem;
+    color: #fff;
+    margin-bottom: 25px;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+}
+
+.feature-text p {
+    font-size: 1.1rem;
+    color: #aaa;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 30px;
+}
+
+.feature-list li {
+    margin-bottom: 15px;
+    font-size: 1rem;
+    color: #ccc;
+    padding-left: 25px;
+    position: relative;
+}
+
+.feature-list li::before {
+    content: '•';
+    color: #D4AF37;
+    font-size: 1.5rem;
+    position: absolute;
+    left: 0;
+    top: -5px;
+}
+
+.feature-list strong {
+    color: #fff;
+}
+
+.feature-note {
+    font-size: 0.9rem;
+    color: #D4AF37;
+    background: rgba(212, 175, 55, 0.1);
+    padding: 15px 20px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.feature-visual {
+    flex: 1;
+    position: relative;
+}
+
+.feature-visual::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: -20px;
+    bottom: -20px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    z-index: 0;
+    border-radius: 20px;
+}
+
+.feature-img {
+    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 1;
+    transition: transform 0.5s ease;
+}
+
+.feature-block:hover .feature-img {
+    transform: scale(1.02);
+}
+
+/* Responsive Features */
+@media (max-width: 900px) {
+
+    .feature-block,
+    .feature-block.reverse {
+        flex-direction: column !important;
+        gap: 40px;
+        text-align: center;
+    }
+
+    .feature-list {
+        text-align: left;
+        display: inline-block;
+    }
+
+    .feature-visual::after {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .landing-logo {
+        font-size: 2.8rem;
+    }
+
+    .info-title {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+    }
+
+    .feature-text h3 {
+        font-size: 1.8rem;
+    }
+
+    .products-grid {
+        gap: 20px;
+        padding: 0 10px;
+    }
+
+    .card-image-wrapper {
+        height: 250px;
+        padding: 20px;
+    }
+}
+
+/* Quality Section */
+.quality-section {
+    padding: 100px 20px;
+    background: linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+    position: relative;
+}
+
+.quality-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+}
+
+.quality-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.quality-card {
+    background: rgba(212, 175, 55, 0.03);
+    padding: 40px 30px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid rgba(212, 175, 55, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.quality-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.quality-card:hover {
+    transform: translateY(-10px);
+    border-color: #D4AF37;
+    box-shadow: 0 15px 40px rgba(212, 175, 55, 0.2);
+    background: rgba(212, 175, 55, 0.05);
+}
+
+.quality-card:hover::before {
+    opacity: 1;
+}
+
+.quality-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    filter: grayscale(0.3);
+}
+
+.quality-card h3 {
+    color: #D4AF37;
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.quality-card p {
+    color: #aaa;
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+/* Why Us Section */
+.why-us-section {
+    padding: 100px 20px;
+    background: #0a0a0a;
+}
+
+/* Benefits Grid */
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Horizontal Scroll for Benefits on Mobile (Requested "Rolagem") */
+@media (max-width: 768px) {
+    .benefits-grid {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 20px;
+        padding-bottom: 20px;
+        /* Space for scrollbar */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .benefit-card {
+        min-width: 280px;
+        scroll-snap-align: center;
+        flex-shrink: 0;
+    }
+}
+
+
+.benefit-card {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 40px 30px;
+    border-radius: 20px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.benefit-card:hover {
+    transform: translateY(-10px);
+    border-color: #D4AF37;
+    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1);
+}
+
+.benefit-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.benefit-card h3 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.benefit-card p {
+    color: #888;
+    line-height: 1.6;
+}
+
+/* Specs Section */
+.specs-section {
+    padding: 100px 20px;
+    background: #0f0f0f;
+    position: relative;
+}
+
+.specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.spec-card {
+    background: #151515;
+    padding: 40px;
+    border-radius: 20px;
+    border-left: 4px solid #D4AF37;
+}
+
+.spec-card h3 {
+    color: #fff;
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+}
+
+.spec-list {
+    list-style: none;
+    padding: 0;
+}
+
+.spec-list li {
+    margin-bottom: 15px;
+    color: #bbb;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 10px;
+}
+
+.spec-list li:last-child {
+    border-bottom: none;
+}
+
+.spec-list strong {
+    color: #D4AF37;
+    margin-right: 10px;
+}
+
+/* FAQ Section */
+.faq-section {
+    padding: 100px 20px;
+    background: #0a0a0a;
+}
+
+.faq-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.faq-question {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 20px;
+    text-align: left;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: color 0.3s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.faq-question:hover {
+    color: #D4AF37;
+}
+
+.faq-question::after {
+    content: '+';
+    font-size: 1.5rem;
+    color: #D4AF37;
+    transition: transform 0.3s ease;
+}
+
+.faq-item.active .faq-question::after {
+    transform: rotate(45deg);
+}
+
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 0 20px;
+}
+
+.faq-item.active .faq-answer {
+    max-height: 200px;
+    /* Adjust if content is very long */
+    padding-bottom: 20px;
+}
+
+.faq-answer p {
+    color: #888;
+    line-height: 1.6;
+    margin: 0;
+}

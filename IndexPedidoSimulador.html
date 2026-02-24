@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Pedidos - Hanuthai</title>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=Bebas+Neue&family=Russo+One&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --dark-bg: #1a1a1a;
+            --card-bg: #252525;
+            --border: #333;
+            --text-muted: #888;
+        }
+
+        body {
+            background: #111;
+            color: #fff;
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        .premium-header {
+            background: #000;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #333;
+        }
+
+        .header-title {
+            color: var(--gold);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #ccc;
+            margin-left: 20px;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+        }
+
+        /* --- LAYOUT --- */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+            width: 100%;
+            box-sizing: border-box;
+            flex: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        h1 {
+            color: var(--gold);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        .stat-value.gold {
+            color: var(--gold);
+        }
+
+        /* --- ORDER CARDS --- */
+        #orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .order-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        /* Card Header (Summary) */
+        .card-header {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 80px 2fr 1fr 1fr 100px 50px;
+            gap: 20px;
+            align-items: center;
+            background: #2a2a2a;
+            cursor: pointer;
+        }
+
+        .card-header:hover {
+            background: #303030;
+        }
+
+        .thumb-placeholder {
+            width: 60px;
+            height: 60px;
+            background: #444;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.7rem;
+        }
+
+        .item-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .item-subtitle {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .expanded .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Card Details (Tabs) */
+        .card-details {
+            display: none;
+            border-top: 1px solid #333;
+            background: #1f1f1f;
+        }
+
+        .expanded .card-details {
+            display: block;
+        }
+
+        /* Tabs Navigation */
+        .tabs-nav {
+            display: flex;
+            border-bottom: 1px solid #333;
+            background: #222;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-weight: 500;
+            border-right: 1px solid #333;
+            transition: 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+            background: #2a2a2a;
+        }
+
+        .tab-btn.active {
+            color: var(--gold);
+            background: #1f1f1f;
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .tab-content {
+            padding: 25px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Content Styling */
+        .grid-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-grp {
+            margin-bottom: 15px;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .info-val {
+            font-size: 0.95rem;
+            color: #ddd;
+        }
+
+        .info-val strong {
+            color: #fff;
+        }
+
+        .size-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .size-box {
+            background: #333;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-align: center;
+            min-width: 40px;
+        }
+
+        .size-bx-label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .size-bx-val {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #b5952f;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #666;
+            color: #ccc;
+        }
+
+        .btn-outline:hover {
+            border-color: #fff;
+            color: #fff;
+        }
+
+        .btn-danger {
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+            background: transparent;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .modal-box {
+            background: #222;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid #444;
+        }
+
+        /* Quick-Access Navigator */
+        .quick-nav {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2000;
+            background: rgba(10, 10, 10, 0.8);
+            padding: 10px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+            border: 1px solid #333;
+        }
+
+        .quick-nav-item {
+            width: 40px;
+            height: 40px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1px solid #444;
+        }
+
+        .quick-nav-item:hover {
+            transform: scale(1.1);
+            background: #00f0ff;
+            border-color: #fff;
+        }
+
+        .quick-nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            right: 50px;
+            background: #000;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            border: 1px solid #00f0ff;
+        }
+
+        .quick-nav-item:hover::after {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+            }
+
+            .order-global-info>div {
+                grid-template-columns: 1fr !important;
+            }
+
+            .card-header {
+                grid-template-columns: 60px 1fr 50px;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .card-header>div:nth-child(3),
+            .card-header>div:nth-child(4),
+            .card-header>div:nth-child(5) {
+                display: none;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .quick-nav {
+                top: auto;
+                bottom: 15px;
+                right: 15px;
+                flex-direction: row;
+                border-radius: 40px;
+                padding: 8px;
+            }
+
+            .quick-nav-item::after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Quick Navigator -->
+    <div class="quick-nav">
+        <a href="IndexFightShorts.html" class="quick-nav-item" data-tooltip="Fight Shorts"><img
+                src="assets/ui-icons/icon-fight-shorts.png" alt="Fight Shorts"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexShortsLegging.html" class="quick-nav-item" data-tooltip="Shorts Legging"><img
+                src="assets/ui-icons/icon-shorts-calca-legging.png" alt="Shorts Legging"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexCalcaLegging.html" class="quick-nav-item" data-tooltip="Calça Legging"><img
+                src="assets/ui-icons/icon-calca-legging.png" alt="Calça Legging"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexMoletom.html" class="quick-nav-item" data-tooltip="Moletom"><img
+                src="assets/ui-icons/icon-moletom.png" alt="Moletom"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexTop.html" class="quick-nav-item" data-tooltip="Top"><img src="assets/ui-icons/icon-top.png"
+                alt="Top" style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexFaq.html" class="quick-nav-item" data-tooltip="Ajuda / FAQ"
+            style="background: #0066cc; font-weight: bold; font-family: sans-serif;">?</a>
+        <a href="index.html" class="quick-nav-item" data-tooltip="Início" style="background: #333;">🏠</a>
+    </div>
+
+    <header class="premium-header">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <a href="index.html" style="text-decoration:none; font-size:1.5rem;">🏠</a>
+            <div class="header-title">HANUTHAI - GESTÃO DE PEDIDOS</div>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+
+        <div class="page-header">
+            <div>
+                <h1>Gestão de Pedidos</h1>
+                <p style="color:#888; margin-top:5px;">Agrupamento inteligente por cliente e simulação</p>
+            </div>
+            <div class="actions">
+                <button id="btn-clear-all" class="btn btn-outline" style="margin-right: 10px;">🗑️ Limpar Tudo</button>
+                <button id="btn-export-db" class="btn btn-primary"
+                    onclick="if(typeof DatabaseManager !== 'undefined') DatabaseManager.exportToExcel(); else alert('Erro: DatabaseManager não carregado.');"
+                    style="background:#28a745; margin-right: 10px;">📊 Baixar Banco de Dados (Excel)</button>
+                <button id="btn-export-all" class="btn btn-primary">📤 Exportar Planilha de Produção</button>
+            </div>
+        </div>
+
+        <!-- NEW: Global Order Header (Editable if needed, or summary) -->
+        <div class="order-global-info"
+            style="background: #222; border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 30px; border-left: 5px solid var(--gold);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 20px; align-items: flex-end;">
+                <div>
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Número
+                        do Pedido (Geral)</label>
+                    <input type="text" id="global-order-id" placeholder="Ex: PED-2024-001"
+                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: var(--gold); font-size: 1.2rem; font-weight: bold; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px;">
+                </div>
+                <div>
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Nome
+                        do Cliente / Empresa</label>
+                    <input type="text" id="global-client-name" placeholder="Nome para o cliente..."
+                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: #fff; font-size: 1rem;">
+                </div>
+                <div>
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Telefone
+                        / WhatsApp</label>
+                    <input type="text" id="global-client-phone" placeholder="(00) 00000-0000"
+                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: #fff; font-size: 1rem;">
+                </div>
+                <div>
+                    <button class="btn btn-primary" style="height: 46px;" onclick="applyGlobalInfo()">✅ Aplicar aos
+                        Itens</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">Itens no Carrinho</div>
+                <div class="stat-value" id="st-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Quantidade de Peças</div>
+                <div class="stat-value" id="st-pieces">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Valor Total Estimado</div>
+                <div class="stat-value gold" id="st-total">R$ 0,00</div>
+            </div>
+        </div>
+
+        <div id="orders-list">
+            <!-- JS RENDERS CARDS HERE -->
+            <div class="empty-state">
+                <h2>Seu carrinho está vazio</h2>
+                <p>Nenhuma simulação encontrada.</p>
+                <br>
+                <a href="IndexFightShorts.html" class="btn btn-primary">Ir para Simulador</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+    <!-- Logic -->
+    <script src="js/modules/common/database-manager.js"></script>
+    <script src="js/modules/common/utils/migrate-cart-data.js"></script>
+    <script src="js/modules/cart/cart-ui.js"></script>
+    <script src="js/modules/cart/cart-controller.js"></script>
+    <script src="js/modules/common/ui/draggable-nav.js"></script>
+</body>
+
+</html>

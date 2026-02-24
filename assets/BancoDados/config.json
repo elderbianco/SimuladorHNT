@@ -1,0 +1,20 @@
+{
+  "basePrice": 149.9,
+  "sizeModPrice": 0,
+  "devFee": 0,
+  "logoCenterPrice": 29.9,
+  "textCenterPrice": 19.9,
+  "logoLatPrice": 14.9,
+  "textLatPrice": 9.9,
+  "legRightMidPrice": 14.9,
+  "legRightBottomPrice": 14.9,
+  "legLeftPrice": 14.9,
+  "extraLeggingPrice": 38.9,
+  "extraLacoPrice": 14.9,
+  "extraCordaoPrice": 14.9,
+  "price10": 134.9,
+  "price20": 119.9,
+  "price30": 104.9,
+  "artWaiver": true,
+  "whatsappNumber": ""
+}

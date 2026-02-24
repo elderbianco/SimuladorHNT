@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hanuthai - Painel Administrativo Unificado</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body>
+    <!-- Quick Navigator -->
+    <div class="quick-nav">
+        <a href="IndexFightShorts.html" class="quick-nav-item" data-tooltip="Fight Shorts"><img
+                src="assets/ui-icons/icon-fight-shorts.png" alt="Fight Shorts"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexShortsLegging.html" class="quick-nav-item" data-tooltip="Shorts Legging"><img
+                src="assets/ui-icons/icon-shorts-calca-legging.png" alt="Shorts Legging"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexCalcaLegging.html" class="quick-nav-item" data-tooltip="Calça Legging"><img
+                src="assets/ui-icons/icon-calca-legging.png" alt="Calça Legging"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexMoletom.html" class="quick-nav-item" data-tooltip="Moletom"><img
+                src="assets/ui-icons/icon-moletom.png" alt="Moletom"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexTop.html" class="quick-nav-item" data-tooltip="Top"><img src="assets/ui-icons/icon-top.png"
+                alt="Top" style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="index.html" class="quick-nav-item" data-tooltip="Início" style="background: #333;">🏠</a>
+    </div>
+    <!-- LOGIN SECTION -->
+    <div id="login-section">
+        <div class="login-container">
+            <h2>🔐 Acesso Administrativo</h2>
+            <div class="form-group">
+                <label>Usuário</label>
+                <input type="text" id="login-user" placeholder="Digite seu usuário">
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="login-pass" placeholder="Digite sua senha">
+            </div>
+            <button class="save-btn" onclick="login()">ENTRAR</button>
+            <div class="error-msg" id="login-error">Usuário ou senha inválidos.</div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD SECTION -->
+    <div id="dashboard-section" style="display:none;">
+        <div class="container">
+            <header>
+                <button class="logout-btn" onclick="logout()">Sair</button>
+                <h1>⚙️ Painel Administrativo Unificado</h1>
+                <p>Configuração centralizada de todos os simuladores Hanuthai</p>
+            </header>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('global', this)">🌐 Global</button>
+                <button class="tab" onclick="switchTab('shorts', this)">🩳 Fight Shorts</button>
+                <button class="tab" onclick="switchTab('shorts-legging', this)">🩳 Shorts Legging</button>
+                <button class="tab" onclick="switchTab('legging', this)">👖 Calça Legging</button>
+
+                <button class="tab" onclick="switchTab('moletom', this)">🧥 Moletom</button>
+                <button class="tab" onclick="switchTab('top', this)">👕 Top</button>
+                <button class="tab" onclick="switchTab('users', this)">👥 Usuários</button>
+            </div>
+
+            <!-- GLOBAL TAB -->
+            <div id="tab-global" class="tab-content active">
+                <div class="info-box">
+                    <p><strong>ℹ️ Configurações Globais:</strong> Estas configurações se aplicam a todos os simuladores.
+                    </p>
+                </div>
+
+                <div class="collapsible-header collapsed">🔤 Gerenciar Fontes (Sistema & Customizadas)</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <!-- PREFERRED FONTS -->
+                        <div class="subsection-title" style="color:#D4AF37; margin-bottom:15px;">⭐ Fontes Destaque (Top
+                            5)</div>
+                        <div class="hint" style="margin-bottom:15px;">Estas 5 fontes aparecerão no topo da lista em
+                            todos os simuladores.</div>
+                        <div class="grid"
+                            style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:25px;">
+                            <div class="form-group"><label>1ª Opção</label><select id="pref-font-1">
+                                    <option value="">-- Selecione --</option>
+                                </select></div>
+                            <div class="form-group"><label>2ª Opção</label><select id="pref-font-2">
+                                    <option value="">-- Selecione --</option>
+                                </select></div>
+                            <div class="form-group"><label>3ª Opção</label><select id="pref-font-3">
+                                    <option value="">-- Selecione --</option>
+                                </select></div>
+                            <div class="form-group"><label>4ª Opção</label><select id="pref-font-4">
+                                    <option value="">-- Selecione --</option>
+                                </select></div>
+                            <div class="form-group"><label>5ª Opção</label><select id="pref-font-5">
+                                    <option value="">-- Selecione --</option>
+                                </select></div>
+                        </div>
+
+                        <!-- UPLOAD ZONE -->
+                        <div class="subsection-title" style="color:#D4AF37; margin-top:20px; margin-bottom:15px;">📤
+                            Upload de Novas Fontes</div>
+                        <div class="upload-zone" id="font-drop-zone"
+                            onclick="document.getElementById('font-upload-input').click()"
+                            style="border: 2px dashed #D4AF37; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; cursor: pointer; transition: all 0.3s; background: rgba(212, 175, 55, 0.05);">
+                            <div style="font-size: 2rem; margin-bottom: 5px;">TPP / OTF</div>
+                            <h4 style="color: #D4AF37; margin-bottom: 5px;">Clique ou Arraste Fontes Aqui</h4>
+                            <input type="file" id="font-upload-input" multiple accept=".ttf,.otf" style="display: none;"
+                                onchange="handleFontUpload(this.files)">
+                        </div>
+
+                        <!-- FONT LIST -->
+                        <div class="subsection-title" style="color:#D4AF37; margin-top:20px; margin-bottom:15px;">📋
+                            Lista de Fontes</div>
+                        <div class="hint" style="margin-bottom: 10px;">Marque as fontes que deseja ativar no sistema.
+                            Fontes customizadas podem ser excluídas.</div>
+
+                        <div style="overflow-x:auto;">
+                            <table class="font-table" style="width:100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background:#333; color:#D4AF37;">
+                                        <th style="padding:10px; text-align:left;">Ativa</th>
+                                        <th style="padding:10px; text-align:left;">Nome</th>
+                                        <th style="padding:10px; text-align:left;">Preview</th>
+                                        <th style="padding:10px; text-align:center;">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="global-fonts-table">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible-header collapsed">🎨 Cores de Texto</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div class="hint" style="margin-bottom: 15px;">Selecione as cores disponíveis para textos em
+                            todos os simuladores</div>
+                        <div id="global-text-colors" class="color-grid"></div>
+                    </div>
+                </div>
+
+                <!-- REMOVED REDUNDANT OLD GALLERY SECTION -->
+
+                <!-- NOVA SEÇÃO: TEXTOS INFORMATIVOS -->
+
+
+                <div class="collapsible-header collapsed">Tempo de Produção</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div class="grid">
+                            <div class="form-group"><label>Mínimo Dias Úteis</label><input type="number"
+                                    id="global-min-days" min="1"></div>
+                            <div class="form-group"><label>Máximo Dias Úteis</label><input type="number"
+                                    id="global-max-days" min="1"></div>
+                        </div>
+                        <div class="form-group"><label>Feriados (DD/MM/AAAA) - Um por linha</label><textarea
+                                id="global-holidays" rows="5" placeholder="25/12/2024&#10;01/01/2025"></textarea></div>
+                    </div>
+                </div>
+
+                <div class="collapsible-header collapsed">📞 Contato & Suporte (Botão WhatsApp)</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div class="form-group">
+                            <label>Número do WhatsApp (Apenas números, com DDD)</label>
+                            <input type="text" id="whatsappNumber" placeholder="Ex: 5511999999999">
+                            <div class="hint">Este número será usado para o botão flutuante em todos os simuladores.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GALLERY TAB (NEW) -->
+                <div class="collapsible-header collapsed">🖼️ Gerenciar Galeria (Upload & Organização)</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div class="info-box">
+                            <p><strong>📂 Gestão de Galeria Local:</strong> Adicione ou remova imagens da galeria do
+                                simulador.</p>
+                            <p><em>Nota: Como o site roda localmente, as novas imagens são salvas no seu navegador.</em>
+                            </p>
+                        </div>
+
+                        <!-- Upload Area -->
+                        <!-- Upload Area -->
+                        <div class="form-group" style="max-width: 100%; margin-bottom: 15px;">
+                            <label style="color: #D4AF37;">📂 Passo 1: Selecione a Categoria de Destino</label>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="upload-category-select" style="flex: 1;"
+                                    onchange="toggleNewCategoryInput(this)">
+                                    <!-- Populated via JS -->
+                                </select>
+                                <input type="text" id="new-category-input" placeholder="Nome da Nova Categoria"
+                                    style="display: none; flex: 1;">
+                            </div>
+                            <div class="hint">Escolha onde salvar as imagens ou crie uma nova categoria.</div>
+                        </div>
+
+                        <div class="upload-zone" id="gallery-drop-zone"
+                            style="border: 2px dashed #444; padding: 30px; text-align: center; border-radius: 10px; margin-bottom: 30px; cursor: pointer; transition: all 0.3s;">
+                            <div style="font-size: 3rem; margin-bottom: 10px;">☁️</div>
+                            <h3 style="color: #D4AF37; margin-bottom: 10px;">Passo 2: Clique/Arraste as Imagens Aqui
+                            </h3>
+                            <p style="color: #888;">Suporta PNG, JPG, GIF (Max 2MB)</p>
+                            <input type="file" id="gallery-upload-input" multiple accept="image/*"
+                                style="display: none;">
+                        </div>
+
+                        <div style="text-align:right; margin-bottom:10px;">
+                            <button onclick="resetGalleryFactory()"
+                                style="background:none; border:none; color:#666; font-size:11px; text-decoration:underline; cursor:pointer;">[Resetar
+                                Galeria Padrão]</button>
+                        </div>
+
+                        <!-- Filter & Manage -->
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: end; margin-bottom: 20px;">
+                            <div class="form-group" style="margin-bottom: 0; flex: 1; max-width: 300px;">
+                                <label>Filtrar por Categoria</label>
+                                <select id="gallery-filter" onchange="renderGalleryAdmin()">
+                                    <option value="all">Todas as Categorias</option>
+                                </select>
+                            </div>
+                            <button onclick="deleteCurrentCategory()" class="logout-btn"
+                                style="position: static; background: rgba(220, 53, 69, 0.2); color: #ff6b6b; font-size: 0.8rem;">
+                                🗑️ Excluir Categoria Atual
+                            </button>
+                        </div>
+
+                        <!-- Gallery Grid -->
+                        <div id="admin-gallery-grid" class="grid"
+                            style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px;">
+                            <!-- Items generated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <!-- SHORTS TAB -->
+            <div id="tab-shorts" class="tab-content">
+                <div class="info-box"
+                    style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <p><strong>🩳 Configurações do Simulador de Fight Shorts</strong></p>
+                    <div style="display: flex; gap: 5px;">
+                        <button onclick="window.open('IndexFightShorts.html', '_blank')" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px; background: #28a745; color: white;">🔄
+                            Atualizar Simulador</button>
+                        <button onclick="resetShortsToTable()" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px;">📋 Restaurar Tabela</button>
+                    </div>
+                </div>
+
+                <!-- VALORES GROUP -->
+                <div class="collapsible-header collapsed">💰 Valores e Configurações</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div class="subsection-title">Preços Base</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Preço Base (R$)</label><input type="number"
+                                    id="shorts-base-price" step="0.01"></div>
+                            <div class="form-group"><label>Adicional Tamanho Grande (GG+) (R$)</label><input
+                                    type="number" id="shorts-size-mod" step="0.01">
+                                <div class="hint">Aplicado para GG, EXG, EXGG</div>
+                            </div>
+                            <div class="form-group"><label>Taxa Desenvolvimento de Logo (R$)</label><input type="number"
+                                    id="shorts-dev-fee" step="0.01">
+                                <div class="hint">Cobrado por upload de imagem customizada</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section">
+                        <div class="subsection-title">Personalização: Centro e Laterais</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Logo Frente Centro (R$)</label><input type="number"
+                                    id="shorts-logo-center" step="0.01"></div>
+                            <div class="form-group"><label>Texto Frente (R$)</label><input type="number"
+                                    id="shorts-text-center" step="0.01"></div>
+                            <div class="form-group"><label>Logo Lateral (Dir/Esq) (R$)</label><input type="number"
+                                    id="shorts-logo-lat" step="0.01">
+                                <div class="hint">Regra: Grátis se usado sozinho.</div>
+                            </div>
+                            <div class="form-group"><label>Texto Lateral (Dir/Esq) (R$)</label><input type="number"
+                                    id="shorts-text-lat" step="0.01">
+                                <div class="hint">Regra: Grátis se sozinho. Cobrado apenas se houver imagem E texto
+                                    juntos.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section">
+                        <div class="subsection-title">Personalização: Pernas (Zonas Especiais)</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Perna Direita Centro (R$)</label><input type="number"
+                                    id="shorts-leg-right-mid" step="0.01"></div>
+                            <div class="form-group"><label>Perna Direita Inferior (R$)</label><input type="number"
+                                    id="shorts-leg-right-bottom" step="0.01"></div>
+                            <div class="form-group"><label>Perna Esquerda (R$)</label><input type="number"
+                                    id="shorts-leg-left-mid" step="0.01"></div>
+
+                            <!-- <div style="grid-column: 1 / -1; color: #888; font-style: italic;">
+                                * As zonas de perna não possuem custo adicional de desbloqueio.
+                            </div> -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="subsection-title">Extras e Acessórios</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Legging Interna (R$)</label><input type="number"
+                                    id="shorts-extra-legging" step="0.01"></div>
+                            <div class="form-group"><label>Laços (R$)</label><input type="number" id="shorts-extra-laco"
+                                    step="0.01"></div>
+                            <div class="form-group"><label>Cordão Interno (R$)</label><input type="number"
+                                    id="shorts-extra-cordao" step="0.01"></div>
+                        </div>
+                    </div>
+                    <div class="section">
+                        <div class="subsection-title">Tabela de Preços por Quantidade</div>
+                        <div class="grid">
+                            <div class="form-group"><label>A partir de 10 unidades (R$)</label><input type="number"
+                                    id="shorts-price-10" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 20 unidades (R$)</label><input type="number"
+                                    id="shorts-price-20" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 30 unidades (R$)</label><input type="number"
+                                    id="shorts-price-30" step="0.01"></div>
+                            <div class="form-group"><label class="toggle-switch"><input type="checkbox"
+                                        id="shorts-art-waiver"><span>Isentar 1 custo de arte acima de 10
+                                        peças</span></label></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CORES GROUPS -->
+                <div class="collapsible-header collapsed">🎨 Cores Disponíveis (Global)</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div id="shorts-colors-global" class="color-grid"></div>
+                    </div>
+                </div>
+
+                <div class="collapsible-header collapsed">🎨 Cores por Parte do Shorts</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div id="shorts-part-colors"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SHORTS LEGGING TAB -->
+            <div id="tab-shorts-legging" class="tab-content">
+                <div class="info-box"
+                    style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <p><strong>🩳 Configurações do Simulador de Shorts Legging</strong></p>
+                    <div style="display: flex; gap: 5px;">
+                        <button onclick="window.open('IndexShortsLegging.html', '_blank')" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px; background: #28a745; color: white;">🔄
+                            Atualizar Simulador</button>
+                        <button onclick="resetShortsLeggingToTable()" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px;">📋 Restaurar Preços da Tabela</button>
+                    </div>
+                </div>
+
+                <div class="collapsible-header collapsed">💰 Valores e Configurações</div>
+                <div class="collapsible-content collapsed">
+                    <div class="subsection">
+                        <div class="subsection-title">Preços Base</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Preço Base (R$)</label><input type="number"
+                                    id="shorts-legging-base-price" step="0.01"></div>
+                            <div class="form-group"><label>Adicional Tamanho Grande (GG+) (R$)</label><input
+                                    type="number" id="shorts-legging-size-mod" step="0.01"></div>
+                            <div class="form-group"><label>Taxa Desenvolvimento de Logo (R$)</label><input type="number"
+                                    id="shorts-legging-dev-fee" step="0.01"></div>
+                        </div>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">Personalização</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Logo Lateral (Dir/Esq) (R$)</label><input type="number"
+                                    id="shorts-legging-logo-lat" step="0.01"></div>
+                            <div class="form-group"><label>Texto Lateral (Dir/Esq) (R$)</label><input type="number"
+                                    id="shorts-legging-text-lat" step="0.01"></div>
+                            <div class="form-group"><label>Logo Perna (R$)</label><input type="number"
+                                    id="shorts-legging-logo-leg" step="0.01"></div>
+                            <div class="form-group"><label>Texto Perna (R$)</label><input type="number"
+                                    id="shorts-legging-text-leg" step="0.01"></div>
+                        </div>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">Tabela de Preços por Quantidade (Atacado)</div>
+                        <div class="grid">
+                            <div class="form-group"><label>A partir de 10 unidades (R$)</label><input type="number"
+                                    id="shorts-legging-price-10" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 20 unidades (R$)</label><input type="number"
+                                    id="shorts-legging-price-20" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 30 unidades (R$)</label><input type="number"
+                                    id="shorts-legging-price-30" step="0.01"></div>
+                            <div class="form-group"><label class="toggle-switch"><input type="checkbox"
+                                        id="shorts-legging-art-waiver"><span>Isentar 1 custo de arte acima de 10
+                                        peças</span></label></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible-header collapsed">🎨 Cores por Parte do Shorts Legging</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div id="shorts-legging-part-colors"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEGGING TAB -->
+            <div id="tab-legging" class="tab-content">
+                <div class="info-box"
+                    style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <p><strong>👖 Configurações do Simulador de Calça Legging</strong></p>
+                    <div style="display: flex; gap: 5px;">
+                        <button onclick="window.open('IndexCalcaLegging.html', '_blank')" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px; background: #28a745; color: white;">🔄
+                            Atualizar Simulador</button>
+                        <button onclick="resetLeggingToTable()" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px;">📋
+                            Restaurar Preços da Tabela</button>
+                    </div>
+                </div>
+
+                <div class="collapsible-header collapsed">💰 Valores e Configurações</div>
+                <div class="collapsible-content collapsed">
+                    <div class="subsection">
+                        <div class="subsection-title">Preços Base</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Preço Base (R$)</label><input type="number"
+                                    id="legging-base-price" step="0.01"></div>
+                            <div class="form-group"><label>Adicional Tamanho Grande (GG+) (R$)</label><input
+                                    type="number" id="legging-size-mod" step="0.01"></div>
+                            <div class="form-group"><label>Taxa Desenvolvimento de Logo (R$)</label><input type="number"
+                                    id="legging-dev-fee" step="0.01"></div>
+                        </div>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">Personalização</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Logo Lateral (Dir/Esq) (R$)</label><input type="number"
+                                    id="legging-logo-lat" step="0.01"></div>
+                            <div class="form-group"><label>Texto Lateral (Dir/Esq) (R$)</label><input type="number"
+                                    id="legging-text-lat" step="0.01"></div>
+                            <div class="form-group"><label>Logo Perna Esq (R$)</label><input type="number"
+                                    id="legging-logo-leg" step="0.01"></div>
+                            <div class="form-group"><label>Texto Perna Esq (R$)</label><input type="number"
+                                    id="legging-text-leg" step="0.01"></div>
+                        </div>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">Tabela de Preços por Quantidade (Atacado)</div>
+                        <div class="grid">
+                            <div class="form-group"><label>A partir de 10 unidades (R$)</label><input type="number"
+                                    id="legging-price-10" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 20 unidades (R$)</label><input type="number"
+                                    id="legging-price-20" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 30 unidades (R$)</label><input type="number"
+                                    id="legging-price-30" step="0.01"></div>
+                            <div class="form-group"><label class="toggle-switch"><input type="checkbox"
+                                        id="legging-art-waiver"><span>Isentar 1 custo de arte acima de 10
+                                        peças</span></label></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible-header collapsed">🎨 Cores por Parte da Calça Legging</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div id="legging-part-colors"></div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- MOLETOM TAB -->
+            <div id="tab-moletom" class="tab-content">
+                <div class="info-box"
+                    style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <p><strong>🧥 Configurações do Simulador de Moletom</strong></p>
+                    <div style="display: flex; gap: 5px;">
+                        <button onclick="window.open('IndexMoletom.html', '_blank')" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px; background: #28a745; color: white;">🔄
+                            Atualizar Simulador</button>
+                        <button onclick="resetMoletomToTable()" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px;">📋 Restaurar Tabela</button>
+                    </div>
+                </div>
+
+                <div class="collapsible-header collapsed">💰 Valores e Configurações</div>
+                <div class="collapsible-content collapsed">
+                    <div class="subsection">
+                        <div class="subsection-title">Preços Base</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Preço Base (R$)</label><input type="number"
+                                    id="moletom-base-price" step="0.01"></div>
+                            <div class="form-group"><label>Adicional Tamanho Grande (GG+) (R$)</label><input
+                                    type="number" id="moletom-size-mod" step="0.01"></div>
+                            <div class="form-group"><label>Taxa Desenvolvimento de Logo (R$)</label><input type="number"
+                                    id="moletom-dev-fee" step="0.01"></div>
+                        </div>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">Personalização</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Logo Frente/Costas (R$)</label><input type="number"
+                                    id="moletom-logo-center" step="0.01"></div>
+                            <div class="form-group"><label>Texto Frente/Costas (R$)</label><input type="number"
+                                    id="moletom-text-center" step="0.01"></div>
+                            <div class="form-group"><label>Logo Manga (R$)</label><input type="number"
+                                    id="moletom-logo-leg" step="0.01"></div>
+                        </div>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">Tabela de Preços por Quantidade (Atacado)</div>
+                        <div class="grid">
+                            <div class="form-group"><label>A partir de 10 unidades (R$)</label><input type="number"
+                                    id="moletom-price-10" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 20 unidades (R$)</label><input type="number"
+                                    id="moletom-price-20" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 30 unidades (R$)</label><input type="number"
+                                    id="moletom-price-30" step="0.01"></div>
+                            <div class="form-group"><label class="toggle-switch"><input type="checkbox"
+                                        id="moletom-art-waiver"><span>Isentar 1 custo de arte acima de 10
+                                        peças</span></label></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="collapsible-header collapsed">🎨 Cores por Parte do Moletom</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div id="moletom-part-colors"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOP TAB -->
+            <div id="tab-top" class="tab-content">
+                <div class="info-box"
+                    style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <p><strong>👕 Configurações do Simulador de Top</strong></p>
+                    <div style="display: flex; gap: 5px;">
+                        <button onclick="window.open('IndexTop.html', '_blank')" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px; background: #28a745; color: white;">🔄
+                            Atualizar Simulador</button>
+                        <button onclick="resetTopToTable()" class="btn-outline"
+                            style="font-size: 0.8rem; padding: 5px 10px;">📋 Restaurar Preços da Tabela</button>
+                    </div>
+                </div>
+
+                <div class="collapsible-header collapsed">💰 Valores e Configurações</div>
+                <div class="collapsible-content collapsed">
+                    <div class="subsection">
+                        <div class="subsection-title">Preços Base</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Preço Base (R$)</label><input type="number"
+                                    id="top-base-price" step="0.01"></div>
+                            <div class="form-group"><label>Adicional Tamanho Grande (GG+) (R$)</label><input
+                                    type="number" id="top-size-mod" step="0.01"></div>
+                            <div class="form-group"><label>Taxa Desenvolvimento de Logo (R$)</label><input type="number"
+                                    id="top-dev-fee" step="0.01"></div>
+                        </div>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">Personalização</div>
+                        <div class="grid">
+                            <div class="form-group"><label>Logo Frente (R$)</label><input type="number"
+                                    id="top-logo-front" step="0.01"></div>
+                            <div class="form-group"><label>Texto Frente (R$)</label><input type="number"
+                                    id="top-text-front" step="0.01"></div>
+                            <div class="form-group"><label>Logo Costas (R$)</label><input type="number"
+                                    id="top-logo-back" step="0.01"></div>
+                            <div class="form-group"><label>Texto Costas (R$)</label><input type="number"
+                                    id="top-text-back" step="0.01"></div>
+                            <div class="form-group"><label>Logo Hanuthai Frente (R$)</label><input type="number"
+                                    id="top-logo-hnt-front" step="0.01"></div>
+                            <div class="form-group"><label>Logo Hanuthai Costas (R$)</label><input type="number"
+                                    id="top-logo-hnt-back" step="0.01"></div>
+                        </div>
+                    </div>
+                    <div class="subsection">
+                        <div class="subsection-title">Tabela de Preços por Quantidade (Atacado)</div>
+                        <div class="grid">
+                            <div class="form-group"><label>A partir de 10 unidades (R$)</label><input type="number"
+                                    id="top-price-10" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 20 unidades (R$)</label><input type="number"
+                                    id="top-price-20" step="0.01"></div>
+                            <div class="form-group"><label>A partir de 30 unidades (R$)</label><input type="number"
+                                    id="top-price-30" step="0.01"></div>
+                            <div class="form-group"><label class="toggle-switch"><input type="checkbox"
+                                        id="top-art-waiver"><span>Isentar 1 custo de arte acima de 10
+                                        peças</span></label></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="collapsible-header collapsed">🎨 Cores por Parte do Top</div>
+                <div class="collapsible-content collapsed">
+                    <div class="section">
+                        <div id="top-part-colors"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USERS TAB -->
+            <div id="tab-users" class="tab-content">
+                <div class="section">
+                    <div class="section-title">Gerenciamento de Usuários</div>
+                    <div class="hint" style="margin-bottom: 15px;">Você pode cadastrar até 10 usuários. O primeiro
+                        usuário 'Admin' não pode ser excluído, porém pode ter a senha alterada.</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Senha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+
+
+            <button class="save-btn" onclick="saveAll()">💾 SALVAR TODAS AS CONFIGURAÇÕES</button>
+        </div>
+    </div>
+
+    <script src="js/modules/shorts/data.js?v=<?php echo time(); ?>"></script>
+    <script src="js/modules/common/data/fonts-database.js"></script>
+    <script>
+        // Core Libs already loaded above
+    </script>
+
+    <!-- ADMIN MODULES -->
+    <script src="js/admin/auth.js"></script>
+    <script src="js/admin/save.js"></script>
+
+    <!-- VALIDATION MODULE (must load first) -->
+    <script src="js/admin/modules/validation.js"></script>
+
+    <!-- NEW MODULES -->
+    <script src="js/admin/modules/global.js"></script>
+    <script src="js/admin/modules/shorts.js"></script>
+    <script src="js/admin/modules/shorts-legging.js"></script>
+    <script src="js/admin/modules/legging.js"></script>
+    <script src="js/admin/modules/moletom.js"></script>
+    <script src="js/admin/modules/top.js"></script>
+    <script src="js/admin/modules/gallery.js"></script>
+
+    <!-- CORE -->
+    <script src="js/admin/main.js"></script>
+
+
+</body>
+
+</html>

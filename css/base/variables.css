@@ -1,0 +1,58 @@
+/**
+ * variables.css
+ * Central design tokens (Colors, Spacing, Shadows)
+ */
+
+:root {
+    /* Brand Colors */
+    --gold-primary: #D4AF37;
+    --gold-gradient: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
+    --primary-dark: #121212;
+    --primary-light: #f8f9fa;
+    --accent-blue: #00b4d8;
+    --accent-blue-hover: #0096c7;
+
+    /* Semantic Colors */
+    --text-dark: #212121;
+    --text-light: #666;
+    --text-muted: #888;
+    --border-color: #ddd;
+    --border-dark: #333;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+
+    /* Simulator-Specific Colors */
+    --color-cyan-accent: #00f0ff;
+    --color-bg-simulator: #1a1a1a;
+    --color-bg-controls: #2a2a2a;
+    --color-text-white: #ffffff;
+    --color-border-simulator: #444;
+    --shadow-glow-cyan: 0 0 10px 3px rgba(0, 240, 255, 0.3);
+    --shadow-glow-white: 0 0 6px 2px rgba(255, 255, 255, 0.15);
+    --shadow-accent-ring: 0 0 0 2px var(--color-cyan-accent);
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 15px 30px rgba(0, 0, 0, 0.2);
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}

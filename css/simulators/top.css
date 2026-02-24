@@ -1,0 +1,13 @@
+/**
+ * Simulator - Top
+ * Specific styles for the Top simulator
+ */
+
+.page-top .zoom-container {
+    transform-origin: center center !important;
+}
+
+/* Space items in Top sections specifically if needed */
+.page-top .customization-section {
+    margin-bottom: var(--spacing-lg);
+}
