@@ -1,9 +1,0 @@
-[dotenv@17.3.1] injecting env (4) from .env -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
-[dotenv@17.3.1] injecting env (0) from .env -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
-[dotenv@17.3.1] injecting env (0) from .env -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
-­ƒôª Cache inicializado para: BancoDados_Mestre.xlsx
-­ƒÜÇ Servidor Hanuthai rodando em http://localhost:3000
-­ƒôé Pedidos ser├úo salvos em: assets/BancoDados/PedidosPDF
-­ƒôè Banco de Dados Excel: assets/BancoDados/BancoDados_Mestre.xlsx
-­ƒôª Cache de banco de dados ativado
-Ô£¿ Arquitetura MVC ativa
