@@ -68,3 +68,5 @@ git push
 
 ---
 *Este documento foi criado para ajudar na gestão do projeto SimuladorHNT.*
+
+<!-- Teste do Script Automático - 20:17 -->
