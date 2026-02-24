@@ -60,7 +60,17 @@ git push
 
 ---
 
-## 4. Dicas Importantes
+## 4. Extensões Recomendadas (Opcional - Para Automatizar Mais)
+
+Se você quiser facilitar ainda mais a sua vida, procure por estas extensões na loja do seu editor (como o VS Code):
+
+* **GitDoc:** Transforma o Git em algo parecido com o Google Docs. Salva e envia tudo automaticamente para o GitHub enquanto você digita ou salva.
+* **GitLens:** A extensão mais completa. Mostra exatamente quem mudou cada linha do código e quando.
+* **GitHub Desktop:** Um programa visual do GitHub para quem não quer usar o terminal.
+
+---
+
+## 5. Dicas Importantes
 
 1. **Faça Commits pequenos:** É melhor salvar 5 vezes pequenas mudanças do que 1 vez só uma mudança gigante. Isso facilita encontrar erros.
 2. **Sempre dê um `push` ao final do dia:** Assim você garante que seu trabalho está seguro na internet.
@@ -69,4 +79,4 @@ git push
 ---
 *Este documento foi criado para ajudar na gestão do projeto SimuladorHNT.*
 
-<!-- Teste do Script Automático - 20:17 -->
+<!-- Última atualização: Extensões recomendadas adicionadas -->
