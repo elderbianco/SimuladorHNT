@@ -1,52 +1,38 @@
-# Plano de Implementação - Responsividade do SimulatorHNT ✅ CONCLUÍDO
+# Plano de Orquestração: Análise Completa do SimuladorHNT
 
-## Objetivo
+**Objetivo:** Elaborar um relatório exaustivo pontuando aspectos positivos, negativos, sugestões de melhoria e avaliação de funcionamento dos links da aplicação.
 
-Tornar todo o projeto SimulatorHNT (Simuladores, Admin, Carrinho) totalmente responsivo para Celular (320px+), Tablet (768px+) e Desktop.
+## Fase 1: Planejamento (Atual)
 
-## Revisão do Usuário Necessária
->
-> [!IMPORTANT]
-> Isso requer a modificação de arquivos CSS compartilhados. Tentarei ser aditivo (adicionando `media queries`) em vez de criar novos arquivos, para evitar complexidade desnecessária.
+- [x] O `project-planner` definiu este plano estrutural (PLAN.md).
+- [ ] Aguardar aprovação do usuário para iniciar a Fase 2.
 
-## Mudanças Propostas
+## Fase 2: Implementação (Análise Paralela Múltipla)
 
-### Global
+Assim que aprovado, ativaremos **3 agentes especialistas** em paralelo para avaliar o sistema em diferentes frentes:
 
-#### [MODIFY] [css/style.css] (ou folha de estilo principal)
+### 1. Agente: `frontend-specialist` (Frontend & UI/UX)
 
-- Adicionar `@media` queries para breakpoints padrão:
-  - Mobile: `max-width: 768px`
-  - Tablet: `min-width: 769px` e `max-width: 1024px`
-- Garantir que contêineres usem `%` ou `flex/grid` em vez de larguras fixas em `px`.
+- **Foco:** Analisar os arquivos `HTML` (ex: `index.html`, `IndexFaq.html`, `Index*.html`), a organização e padrão dos `CSS`, interações em `JS` e responsividade.
+- **Teste de Links:** Mapear todos os links internos (`<a href="...">`) para garantir que nenhum leve a páginas inexistentes (Erro 404).
 
-#### [MODIFY] [*.html]
+### 2. Agente: `security-auditor` (Segurança & Backend)
 
-- Verificar se `<meta name="viewport" content="width=device-width, initial-scale=1.0">` está presente em:
-  - `IndexTop.html`
-  - `IndexShortsLegging.html`
-  - `IndexCalcaLegging.html`
-  - `IndexFightShorts.html`
-  - `IndexMoletom.html`
-  - `admin.html`
-  - `cart.html`
+- **Foco:** Analisar o `server.js` e chamadas de API feitas pelo cliente (`fetch`). Verificar se há exposição de chaves no arquivo `.env` carregado no frontend ou vazamento de dados de configuração.
 
-### Específico por Componente
+### 3. Agente: `performance-optimizer` (Performance & Estrutura)
 
-#### [MODIFY] Interfaces dos Simuladores
+- **Foco:** Avaliar a carga de arquivos pesados (pastas `Gif/`, `UploadImagem/`, `Fotoscarrocel/`) e a estratégia de carregamento dos assets. Avaliar a integridade geral do repositório pós-limpeza.
 
-- Empilhar colunas de layout no mobile (Imagem do Produto | Controles -> Layout em Coluna).
-- Redimensionar áreas de canvas/visualização para caber na largura da tela.
-- Ajustar tamanhos de botões para toques (mínimo 44px).
+## Fase 3: Sintetização (Relatório Final)
 
-## Plano de Verificação
+O Orquestrador compilará as saídas dos 3 agentes no formato definitivo:
 
-### Testes Automatizados
+1. Pontos Positivos
+2. Pontos Negativos (Gargalos, segurança, etc)
+3. Avaliação de Links e Roteamento
+4. Sugestões de Melhoria (Código e Produto)
+5. Scripts de Validação/Lint (se aplicável ao ambiente)
 
-- Nenhum (Mudanças visuais requerem testes manuais, fora do escopo de scripts simples).
-
-### Verificação Manual
-
-- Abrir `IndexTop.html` no navegador.
-- Redimensionar a janela para < 500px. Verificar se o layout empilha.
-- Redimensionar a janela para > 1200px. Verificar layout original.
+---
+*Este plano requer aprovação explícita para seguir adiante.*
