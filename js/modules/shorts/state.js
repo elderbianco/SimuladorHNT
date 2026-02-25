@@ -3,8 +3,10 @@
  */
 
 function generateUUID() {
-    // Generate a random 6-digit number for the simulation part
-    const simNum = Math.floor(Math.random() * 100000).toString().padStart(6, '0');
+    // Generate a random 6-digit number for the simfunction generateUUID() {
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    const simNum = (array[0] % 100000).toString().padStart(6, '0');
     return simNum;
 }
 

@@ -197,7 +197,11 @@ function handlePhotoUpload(e) {
 }
 
 function generateReferralLink() {
-    const referralCode = 'HNT' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Melhoria de segurança: utilizar crypto para gerar hash seguro ao invés de Math.random()
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    const randomHash = array[0].toString(36).substring(0, 6).toUpperCase().padStart(6, 'X');
+    const referralCode = 'HNT' + randomHash;
     const referralLink = `${window.location.origin}/index.html?ref=${referralCode}`;
     navigator.clipboard.writeText(referralLink).then(() => {
         showToast('Link de indicação copiado! 🔗', 'success');

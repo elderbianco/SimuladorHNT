@@ -3,7 +3,9 @@
  */
 
 function generateUUID() {
-    return Math.floor(Math.random() * 100000).toString().padStart(6, '0');
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    return (array[0] % 100000).toString().padStart(6, '0');
 }
 
 const CONFIG = {
