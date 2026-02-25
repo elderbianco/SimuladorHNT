@@ -111,6 +111,18 @@ window.saveMoletomSettings = function () {
 
     console.log('✅ Configuração do Moletom salva com sucesso:', config);
 
+    // Part Colors
+    const partColors = {};
+    if (typeof DATA !== 'undefined' && DATA.colors) {
+        const partDisabled = [];
+        const validColors = ['branco', 'preto'];
+        DATA.colors.filter(c => validColors.includes(c.id)).forEach(c => {
+            const chk = document.getElementById(`moletom_part_main_${c.id}`);
+            if (chk && !chk.checked) partDisabled.push(c.id);
+        });
+        if (partDisabled.length > 0) partColors['main'] = partDisabled;
+    }
+
     localStorage.setItem('hnt_moletom_part_colors', JSON.stringify(partColors));
 
     // Sync to server

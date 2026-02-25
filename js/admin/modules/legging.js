@@ -98,6 +98,18 @@ window.saveLeggingSettings = function () {
 
     console.log('✅ Configuração da Legging salva com sucesso:', config);
 
+    // Part Colors
+    const partColors = {};
+    if (typeof DATA !== 'undefined' && DATA.colors) { // For simplicity, we assume one part 'main' for Legging
+        const partDisabled = [];
+        const validColors = ['preto', 'branco', 'vermelho', 'rosa_pink'];
+        DATA.colors.filter(c => validColors.includes(c.id)).forEach(c => {
+            const chk = document.getElementById(`legging_part_main_${c.id}`);
+            if (chk && !chk.checked) partDisabled.push(c.id);
+        });
+        if (partDisabled.length > 0) partColors['main'] = partDisabled;
+    }
+
     localStorage.setItem('hnt_legging_part_colors', JSON.stringify(partColors));
 
     // Sync to server

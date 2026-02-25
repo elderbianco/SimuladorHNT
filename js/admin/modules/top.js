@@ -107,6 +107,18 @@ window.saveTopSettings = function () {
 
     console.log('✅ Configuração do Top salva com sucesso:', config);
 
+    // Part Colors
+    const partColors = {};
+    if (typeof DATA !== 'undefined' && DATA.colors) {
+        const partDisabled = [];
+        const validColors = ['branco', 'preto', 'rosa_pink', 'vermelho'];
+        DATA.colors.filter(c => validColors.includes(c.id)).forEach(c => {
+            const chk = document.getElementById(`top_part_main_${c.id}`);
+            if (chk && !chk.checked) partDisabled.push(c.id);
+        });
+        if (partDisabled.length > 0) partColors['main'] = partDisabled;
+    }
+
     localStorage.setItem('hnt_top_part_colors', JSON.stringify(partColors));
 
     // Sync to server
