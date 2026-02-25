@@ -105,11 +105,11 @@ class BaseSimulator {
                 const groupContent = document.createElement('div');
                 groupContent.className = 'category-group-content';
 
-                // Parts (Legacy/Colors)
-                this.renderCategoryParts(cat, groupContent);
-
-                // Custom Hooks (Sizes, Product Specific)
+                // Custom Hooks (Sizes, Product Specific) - PRIMEIRO
                 this.renderCategorySections(cat, groupContent);
+
+                // Parts (Legacy/Colors) - DEPOIS
+                this.renderCategoryParts(cat, groupContent);
 
                 // Extras
                 this.renderCategoryExtras(cat, groupContent);
