@@ -156,9 +156,24 @@ window.saveShortsSettings = function () {
             if (chk && !chk.checked) disabledColors.push(c.id);
         });
     }
+
+    // Part Colors
+    const partColors = {};
+    if (typeof DATA !== 'undefined' && DATA.parts) {
+        DATA.parts.forEach(p => {
+            const partDisabled = [];
+            DATA.colors.forEach(c => {
+                const chk = document.getElementById(`shorts_part_${p.id}_${c.id}`);
+                if (chk && !chk.checked) partDisabled.push(c.id);
+            });
+            if (partDisabled.length > 0) partColors[p.id] = partDisabled;
+        });
+    }
+
+    localStorage.setItem('hnt_disabled_colors', JSON.stringify(disabledColors));
     localStorage.setItem('hnt_part_colors', JSON.stringify(partColors));
 
-    // Sync colors to server
+    // Sync to server
     const sync = (key, data) => {
         fetch(`/api/admin/config/${key}`, {
             method: 'POST',
