@@ -9,44 +9,87 @@ const PRICING_TABLE_MAP = {
     'hnt_moletom_config': 'precos_moletom'
 };
 
-// Mapping between Frontend (camelCase) and DB (snake_case)
+// Mapping between Frontend (camelCase) and DB (snake_case - Intuitive)
 const FIELD_MAPS = {
     'precos_shorts': {
-        basePrice: 'base', sizeModPrice: 'mod_tam', devFee: 'taxa_desenv',
-        logoCenterPrice: 'l_centro', textCenterPrice: 't_centro',
-        logoLatPrice: 'l_lat', textLatPrice: 't_lat',
-        legRightMidPrice: 'p_dir_meio', legRightBottomPrice: 'p_dir_inf', legLeftPrice: 'p_esq',
-        extraLeggingPrice: 'ex_legging', extraLacoPrice: 'ex_laco', extraCordaoPrice: 'ex_cordao',
-        price10: 'p10', price20: 'p20', price30: 'p30',
-        artWaiver: 'disp_arte', whatsappNumber: 'whatsapp'
+        basePrice: 'preco_base',
+        sizeModPrice: 'adicional_tamanho',
+        devFee: 'taxa_desenvolvimento',
+        logoCenterPrice: 'logo_centro',
+        textCenterPrice: 'texto_centro',
+        logoLatPrice: 'logo_lateral',
+        textLatPrice: 'texto_lateral',
+        legRightMidPrice: 'perna_dir_meio',
+        legRightBottomPrice: 'perna_dir_inferior',
+        legLeftPrice: 'perna_esquerda',
+        extraLeggingPrice: 'extra_legging',
+        extraLacoPrice: 'extra_laco',
+        extraCordaoPrice: 'extra_cordao',
+        price10: 'preco_10_unid',
+        price20: 'preco_20_unid',
+        price30: 'preco_30_unid',
+        artWaiver: 'disponibilidade_arte',
+        whatsappNumber: 'contato_whatsapp'
     },
     'precos_legging': {
-        basePrice: 'base', sizeModPrice: 'mod_tam', devFee: 'taxa_desenv',
-        logoLatPrice: 'l_lat', textLatPrice: 't_lat',
-        logoLegPrice: 'l_perna', textLegPrice: 't_perna',
-        price10: 'p10', price20: 'p20', price30: 'p30', artWaiver: 'disp_arte'
+        basePrice: 'preco_base',
+        sizeModPrice: 'adicional_tamanho',
+        devFee: 'taxa_desenvolvimento',
+        logoLatPrice: 'logo_lateral',
+        textLatPrice: 'texto_lateral',
+        logoLegPrice: 'logo_perna',
+        textLegPrice: 'texto_perna',
+        price10: 'preco_10_unid',
+        price20: 'preco_20_unid',
+        price30: 'preco_30_unid',
+        artWaiver: 'disponibilidade_arte'
     },
     'precos_shorts_legging': {
-        basePrice: 'base', sizeModPrice: 'mod_tam', devFee: 'taxa_desenv',
-        logoLatPrice: 'l_lat', textLatPrice: 't_lat',
-        logoLegPrice: 'l_perna', textLegPrice: 't_perna',
-        price10: 'p10', price20: 'p20', price30: 'p30', artWaiver: 'disp_arte'
+        basePrice: 'preco_base',
+        sizeModPrice: 'adicional_tamanho',
+        devFee: 'taxa_desenvolvimento',
+        logoLatPrice: 'logo_lateral',
+        textLatPrice: 'texto_lateral',
+        logoLegPrice: 'logo_perna',
+        textLegPrice: 'texto_perna',
+        price10: 'preco_10_unid',
+        price20: 'preco_20_unid',
+        price30: 'preco_30_unid',
+        artWaiver: 'disponibilidade_arte'
     },
     'precos_top': {
-        basePrice: 'base', sizeModPrice: 'mod_tam', devFee: 'taxa_desenv',
-        logoFrontPrice: 'l_frente', textFrontPrice: 't_frente',
-        logoBackPrice: 'l_costas', textBackPrice: 't_costas',
-        logoHntFrontPrice: 'l_hnt_frente', logoHntBackPrice: 'l_hnt_costas',
-        price10: 'p10', price20: 'p20', price30: 'p30', artWaiver: 'disp_arte'
+        basePrice: 'preco_base',
+        sizeModPrice: 'adicional_tamanho',
+        devFee: 'taxa_desenvolvimento',
+        logoFrontPrice: 'logo_frente',
+        textFrontPrice: 'texto_frente',
+        logoBackPrice: 'logo_costas',
+        textBackPrice: 'texto_costas',
+        logoHntFrontPrice: 'logo_hnt_frente',
+        logoHntBackPrice: 'logo_hnt_costas',
+        price10: 'preco_10_unid',
+        price20: 'preco_20_unid',
+        price30: 'preco_30_unid',
+        artWaiver: 'disponibilidade_arte'
     },
     'precos_moletom': {
-        basePrice: 'base', sizeModPrice: 'mod_tam', devFee: 'taxa_desenv',
-        logoFrontPrice: 'l_frente', textFrontPrice: 't_frente',
-        logoBackPrice: 'l_costas', textBackPrice: 't_costas',
-        logoHoodPrice: 'l_capuz', textHoodPrice: 't_capuz',
-        logoSleevePrice: 'l_manga', textSleevePrice: 't_manga',
-        zipperUpgrade: 'u_zipper', pocketUpgrade: 'u_bolso',
-        price10: 'p10', price20: 'p20', price30: 'p30', artWaiver: 'disp_arte'
+        basePrice: 'preco_base',
+        sizeModPrice: 'adicional_tamanho',
+        devFee: 'taxa_desenvolvimento',
+        logoFrontPrice: 'logo_frente',
+        textFrontPrice: 'texto_frente',
+        logoBackPrice: 'logo_costas',
+        textBackPrice: 'texto_costas',
+        logoHoodPrice: 'logo_capuz',
+        textHoodPrice: 'texto_capuz',
+        logoSleevePrice: 'logo_manga',
+        textSleevePrice: 'texto_manga',
+        zipperUpgrade: 'up_zipper',
+        pocketUpgrade: 'up_bolso',
+        price10: 'preco_10_unid',
+        price20: 'preco_20_unid',
+        price30: 'preco_30_unid',
+        artWaiver: 'disponibilidade_arte'
     }
 };
 
@@ -105,7 +148,7 @@ const ConfigController = {
 
                 const { error } = await supabase.from(table).upsert(dbPayload, { onConflict: 'id' });
                 if (error) throw error;
-                console.log(`✅ Relational Pricing saved: ${table}`);
+                console.log(`✅ Relational Pricing saved (Intuitive Names): ${table}`);
             } else {
                 // Generic save in adm_cfg
                 const { error } = await supabase.from('adm_cfg').upsert({
