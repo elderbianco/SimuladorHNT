@@ -561,8 +561,8 @@ function renderControls() {
     container.appendChild(actionBtns);
 
     // === SEÇÕES MODULARES ===
-    container.appendChild(renderColorSection());
     container.appendChild(renderSizesSection());
+    container.appendChild(renderColorSection());
     container.appendChild(renderLogoSection()); // Logo customization (Nenhum + Colors)
     container.appendChild(renderHntBarraSection()); // Barra HNT
     container.appendChild(renderCustomizationSection()); // Uploads & Texts
