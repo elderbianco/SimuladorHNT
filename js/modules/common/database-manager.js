@@ -92,9 +92,16 @@ const DatabaseManager = {
      */
     async _syncWithServer(data) {
         try {
-            const res = await fetch('http://localhost:3000/api/save-db', {
+            // Try to get Supabase session/token if available
+            let headers = { 'Content-Type': 'application/json' };
+            if (window.authApi && window.authApi.getToken) {
+                const token = await window.authApi.getToken();
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const res = await fetch('/api/save-db', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify(data)
             });
             const json = await res.json();
@@ -115,7 +122,7 @@ const DatabaseManager = {
      */
     async loadFromServer(options = { silent: false, reload: true }) {
         try {
-            const res = await fetch('http://localhost:3000/api/load-db');
+            const res = await fetch('/api/load-db');
             if (!res.ok) throw new Error("Erro na resposta do servidor");
 
             const serverData = await res.json();

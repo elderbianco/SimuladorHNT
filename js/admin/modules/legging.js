@@ -86,19 +86,26 @@ window.saveLeggingSettings = function () {
     // === FIM VALIDAÇÃO ===
 
     localStorage.setItem('hnt_legging_config', JSON.stringify(config));
+
+    // --- SERVER SYNC ---
+    if (typeof fetch !== 'undefined') {
+        fetch('/api/admin/config/hnt_legging_config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        }).catch(e => console.error('❌ Failed to sync config:', e));
+    }
+
     console.log('✅ Configuração da Legging salva com sucesso:', config);
 
-    // Part Colors
-    const partColors = {};
-    if (typeof DATA !== 'undefined' && DATA.colors) {
-        const disabled = [];
-        DATA.colors.forEach(c => {
-            const chk = document.getElementById(`legging_part_main_${c.id}`);
-            if (chk && !chk.checked) disabled.push(c.id);
-        });
-        if (disabled.length > 0) partColors['main'] = disabled;
-    }
     localStorage.setItem('hnt_legging_part_colors', JSON.stringify(partColors));
+
+    // Sync to server
+    fetch('/api/admin/config/hnt_legging_part_colors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(partColors)
+    }).catch(e => console.error('❌ Failed to sync legging colors:', e));
 };
 
 window.resetLeggingToTable = function () {

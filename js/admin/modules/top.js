@@ -95,19 +95,26 @@ window.saveTopSettings = function () {
     // === FIM VALIDAÇÃO ===
 
     localStorage.setItem('hnt_top_config', JSON.stringify(config));
+
+    // --- SERVER SYNC ---
+    if (typeof fetch !== 'undefined') {
+        fetch('/api/admin/config/hnt_top_config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        }).catch(e => console.error('❌ Failed to sync config:', e));
+    }
+
     console.log('✅ Configuração do Top salva com sucesso:', config);
 
-    // Part Colors
-    const partColors = {};
-    if (typeof DATA !== 'undefined' && DATA.colors) {
-        const disabled = [];
-        DATA.colors.forEach(c => {
-            const chk = document.getElementById(`top_part_main_${c.id}`);
-            if (chk && !chk.checked) disabled.push(c.id);
-        });
-        if (disabled.length > 0) partColors['main'] = disabled;
-    }
     localStorage.setItem('hnt_top_part_colors', JSON.stringify(partColors));
+
+    // Sync to server
+    fetch('/api/admin/config/hnt_top_part_colors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(partColors)
+    }).catch(e => console.error('❌ Failed to sync top colors:', e));
 };
 
 window.resetTopToTable = function () {

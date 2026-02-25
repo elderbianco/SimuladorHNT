@@ -124,7 +124,7 @@ window.saveShortsSettings = function () {
     localStorage.setItem('hnt_pricing_config', JSON.stringify(config));
 
     // --- SERVER SYNC ---
-    fetch('/api/admin/config', {
+    fetch('/api/admin/config/hnt_pricing_config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
@@ -156,21 +156,18 @@ window.saveShortsSettings = function () {
             if (chk && !chk.checked) disabledColors.push(c.id);
         });
     }
-    localStorage.setItem('hnt_disabled_colors', JSON.stringify(disabledColors));
-
-    // Part Colors
-    const partColors = {};
-    if (typeof DATA !== 'undefined' && DATA.parts) {
-        DATA.parts.forEach(p => {
-            const disabled = [];
-            DATA.colors.forEach(c => {
-                const chk = document.getElementById(`shorts_part_${p.id}_${c.id}`);
-                if (chk && !chk.checked) disabled.push(c.id);
-            });
-            if (disabled.length > 0) partColors[p.id] = disabled;
-        });
-    }
     localStorage.setItem('hnt_part_colors', JSON.stringify(partColors));
+
+    // Sync colors to server
+    const sync = (key, data) => {
+        fetch(`/api/admin/config/${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).catch(e => console.error(`❌ Failed to sync ${key}:`, e));
+    };
+    sync('hnt_disabled_colors', disabledColors);
+    sync('hnt_part_colors', partColors);
 };
 
 window.resetShortsToTable = function () {

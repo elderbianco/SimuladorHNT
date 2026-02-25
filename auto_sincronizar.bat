@@ -14,9 +14,9 @@ echo ======================================================
 cd /d "%PROJECT_DIR%"
 
 :loop
-:: Verifica se há alterações
-git status --porcelain > nul 2>&1
-if %errorlevel% equ 0 (
+:: Verifica se ha alterações (se a saída do porcelain não for vazia)
+git status --porcelain | findstr /r /c:"." > nul 2>&1
+if %errorlevel% neq 0 (
     echo [%time%] Nenhuma alteracao detectada.
 ) else (
     echo [%time%] Alteracoes detectadas! Sincronizando...
@@ -28,7 +28,7 @@ if %errorlevel% equ 0 (
     if %errorlevel% equ 0 (
         echo [%time%] Sincronizado com sucesso! ✅
     ) else (
-        echo [%time%] Erro ao sincronizar. Verifique sua internet ou conflitos. ❌
+        echo [%time%] Erro ao sincronizar. Verifique sua internet, credenciais ou conflitos. ❌
     )
 )
 

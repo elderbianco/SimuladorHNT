@@ -4,8 +4,52 @@
 // INITIALIZATION - Auto-populate on first run
 // =============================================
 
-function initializeDefaultConfigs() {
-    // Official table values (Jan 2026)
+// Hydrate local storage from Supabase
+async function hydrateConfigsFromServer() {
+    const configKeys = [
+        'hnt_pricing_config',
+        'hnt_legging_config',
+        'hnt_shorts_legging_config',
+        'hnt_top_config',
+        'hnt_moletom_config',
+        'hnt_production_config',
+        'hnt_production_costs',
+        'hnt_active_fonts',
+        'hnt_preferred_fonts',
+        'hnt_custom_fonts_data',
+        'hnt_text_colors',
+        'hnt_admin_users',
+        'hnt_gallery_custom',
+        'hnt_gallery_deleted',
+        'hnt_disabled_colors',
+        'hnt_part_colors',
+        'hnt_legging_part_colors',
+        'hnt_shorts_legging_part_colors',
+        'hnt_moletom_part_colors',
+        'hnt_top_part_colors'
+    ];
+
+    console.log('🔄 Hydrating configs from server...');
+
+    for (const key of configKeys) {
+        try {
+            const response = await fetch(`/api/admin/config/${key}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data && Object.keys(data).length > 0) {
+                    localStorage.setItem(key, JSON.stringify(data));
+                    console.log(`✅ ${key} hydrated from server`);
+                }
+            }
+        } catch (error) {
+            console.error(`❌ Error hydrating ${key}:`, error);
+        }
+    }
+}
+
+// Run initialization
+async function initializeAdmin() {
+    // 1. First, set defaults if empty
     const configs = {
         'hnt_pricing_config': {
             basePrice: 149.90,
@@ -89,45 +133,27 @@ function initializeDefaultConfigs() {
         }
     };
 
-    // Initialize each config
     Object.keys(configs).forEach(key => {
-        const existing = localStorage.getItem(key);
-        if (!existing) {
-            // First time: populate with defaults
+        if (!localStorage.getItem(key)) {
             localStorage.setItem(key, JSON.stringify(configs[key]));
-            console.log(`✅ Initialized ${key} with default values`);
-        } else {
-            // Check if existing config has missing fields
-            try {
-                const parsed = JSON.parse(existing);
-                let needsUpdate = false;
-
-                // Add missing fields from defaults
-                Object.keys(configs[key]).forEach(field => {
-                    if (parsed[field] === undefined) {
-                        parsed[field] = configs[key][field];
-                        needsUpdate = true;
-                    }
-                });
-
-                if (needsUpdate) {
-                    localStorage.setItem(key, JSON.stringify(parsed));
-                    console.log(`✅ Updated ${key} with missing fields`);
-                } else {
-                    console.log(`✅ ${key} already complete`);
-                }
-            } catch (e) {
-                console.error(`❌ Error parsing ${key}, resetting to defaults`);
-                localStorage.setItem(key, JSON.stringify(configs[key]));
-            }
         }
     });
 
-    console.log('✅ Configuration initialization complete');
+    // 2. Hydrate from server (Overwrites if exists)
+    await hydrateConfigsFromServer();
+
+    // 3. Hydrate Orders from Server
+    if (typeof DatabaseManager !== 'undefined' && DatabaseManager.loadFromServer) {
+        console.log('📦 Loading orders from database...');
+        await DatabaseManager.loadFromServer({ silent: true, reload: false });
+    }
+
+    console.log('✅ Admin initialization complete');
 }
 
-// Run initialization immediately
-initializeDefaultConfigs();
+// Global initialization call is now managed inside DOMContentLoaded or Auth Success
+// initializeAdmin(); // We will call this after login success or session check
+
 
 // =============================================
 // TAB SWITCHING

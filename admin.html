@@ -6,6 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hanuthai - Painel Administrativo Unificado</title>
     <link rel="stylesheet" href="css/admin.css">
+
+    <!-- Supabase SDK e Proteção de Rota -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/modules/auth/supabase-client.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { session } = await window.authApi.getSession();
+            if (!session) {
+                // Ao contrário do pedidos, o admin.html tinha um login in-page.
+                // Agora redirecionamos para centralizar.
+                window.location.replace('Login.html');
+            } else {
+                // Caso já esteja logado, inicializamos o dashboard
+                if (window.initializeAdmin) {
+                    await window.initializeAdmin();
+                    if (window.initDashboard) window.initDashboard();
+                }
+            }
+        });
+    </script>
 </head>
 
 <body>
@@ -27,28 +47,13 @@
                 alt="Top" style="width:24px;height:24px;object-fit:contain;"></a>
         <a href="index.html" class="quick-nav-item" data-tooltip="Início" style="background: #333;">🏠</a>
     </div>
-    <!-- LOGIN SECTION -->
-    <div id="login-section">
-        <div class="login-container">
-            <h2>🔐 Acesso Administrativo</h2>
-            <div class="form-group">
-                <label>Usuário</label>
-                <input type="text" id="login-user" placeholder="Digite seu usuário">
-            </div>
-            <div class="form-group">
-                <label>Senha</label>
-                <input type="password" id="login-pass" placeholder="Digite sua senha">
-            </div>
-            <button class="save-btn" onclick="login()">ENTRAR</button>
-            <div class="error-msg" id="login-error">Usuário ou senha inválidos.</div>
-        </div>
-    </div>
-
-    <!-- DASHBOARD SECTION -->
-    <div id="dashboard-section" style="display:none;">
+    <!-- DASHBOARD SECTION (Always hidden until auth check if we used the same pattern as Pedidos, 
+         but here we'll just let the script handle display) -->
+    <div id="dashboard-section">
         <div class="container">
             <header>
-                <button class="logout-btn" onclick="logout()">Sair</button>
+                <button class="logout-btn"
+                    onclick="window.authApi.signOut().then(() => window.location.reload())">Sair</button>
                 <h1>⚙️ Painel Administrativo Unificado</h1>
                 <p>Configuração centralizada de todos os simuladores Hanuthai</p>
             </header>

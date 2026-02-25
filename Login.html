@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Administrativo - SimuladorHNT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .login-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .login-container h2 {
+            color: var(--gold);
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 0.9em;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-radius: 6px;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s;
+        }
+
+        .submit-btn:hover {
+            background-color: #e5b838;
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        #loginError {
+            color: #ff4d4d;
+            margin-top: 15px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        #loginLoader {
+            display: none;
+            color: var(--gold);
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="main-container">
+        <div class="login-container">
+            <h2>Área Administrativa</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" required placeholder="admin@hanuthai.com.br">
+                </div>
+                <div class="input-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" required placeholder="Sua senha secreta">
+                </div>
+                <button type="submit" class="submit-btn" id="loginBtn">Entrar</button>
+            </form>
+            <div id="loginError">Credenciais inválidas. Tente novamente.</div>
+            <div id="loginLoader">Verificando...</div>
+        </div>
+    </main>
+
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/modules/auth/supabase-client.js"></script>
+    <script src="js/login.js"></script>
+
+</body>
+
+</html>

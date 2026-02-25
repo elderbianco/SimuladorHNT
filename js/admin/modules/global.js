@@ -189,14 +189,21 @@ window.saveGlobalSettings = function () {
     localStorage.setItem('hnt_text_colors', JSON.stringify(textColors));
 
     // Production
-    const prodConfig = {
-        minDays: parseInt(document.getElementById('global-min-days')?.value) || 15,
-        maxDays: parseInt(document.getElementById('global-max-days')?.value) || 25,
-        holidays: document.getElementById('global-holidays')?.value.split('\n').map(l => l.trim()).filter(l => l) || []
-    };
     localStorage.setItem('hnt_production_config', JSON.stringify(prodConfig));
 
+    // --- SERVER SYNC ---
+    const sync = (key, data) => {
+        fetch(`/api/admin/config/${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).catch(e => console.error(`❌ Failed to sync ${key}:`, e));
+    };
 
+    sync('hnt_active_fonts', activeFonts);
+    sync('hnt_preferred_fonts', preferredFonts);
+    sync('hnt_text_colors', textColors);
+    sync('hnt_production_config', prodConfig);
 };
 
 
@@ -230,6 +237,13 @@ window.handleFontUpload = function (files) {
             const customFonts = JSON.parse(localStorage.getItem('hnt_custom_fonts_data') || '[]');
             customFonts.push(newFont);
             localStorage.setItem('hnt_custom_fonts_data', JSON.stringify(customFonts));
+
+            // Sync to server
+            fetch('/api/admin/config/hnt_custom_fonts_data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(customFonts)
+            }).catch(e => console.error('❌ Failed to sync custom fonts:', e));
         };
         reader.readAsDataURL(file);
     });

@@ -279,6 +279,14 @@ function saveGalleryItemsBatch(items) {
     });
 
     localStorage.setItem('hnt_gallery_custom', JSON.stringify(customGallery));
+
+    // Sync to server
+    fetch('/api/admin/config/hnt_gallery_custom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customGallery)
+    }).catch(e => console.error('❌ Failed to sync gallery custom:', e));
+
     renderGalleryAdmin();
     alert(`${items.length} imagem(ns) adicionada(s) à categoria "${items[0].category}"!`);
 }
@@ -301,7 +309,23 @@ window.removeGalleryItem = function (src, silent = false) {
         if (!deletedItems.includes(src)) {
             deletedItems.push(src);
             localStorage.setItem('hnt_gallery_deleted', JSON.stringify(deletedItems));
+
+            // Sync to server
+            fetch('/api/admin/config/hnt_gallery_deleted', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(deletedItems)
+            }).catch(e => console.error('❌ Failed to sync gallery deleted:', e));
         }
+    }
+
+    if (customGallery.length < initialLen) {
+        // Sync custom if it was updated
+        fetch('/api/admin/config/hnt_gallery_custom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(customGallery)
+        }).catch(e => console.error('❌ Failed to sync gallery custom:', e));
     }
 
     // Update Runtime Array (Critical for display)

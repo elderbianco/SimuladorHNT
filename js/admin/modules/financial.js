@@ -144,11 +144,23 @@ function loadProductionCosts() {
 }
 
 /**
- * Save production costs to localStorage
+ * Save production costs to localStorage & Supabase
  */
 function saveProductionCosts(costs) {
     try {
         localStorage.setItem(COSTS_STORAGE_KEY, JSON.stringify(costs));
+
+        // --- SERVER SYNC ---
+        if (typeof fetch !== 'undefined') {
+            fetch(`/api/admin/config/${COSTS_STORAGE_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(costs)
+            }).then(r => r.json())
+                .then(d => console.log('☁️ Financial Costs synced to Supabase:', d))
+                .catch(e => console.error('❌ Failed to sync financial costs:', e));
+        }
+
         return true;
     } catch (e) {
         console.error('Error saving production costs:', e);

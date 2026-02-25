@@ -12,6 +12,20 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/common.css">
+
+    <!-- Supabase SDK e Proteção de Rota -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/modules/auth/supabase-client.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { session } = await window.authApi.getSession();
+            if (!session) {
+                window.location.replace('Login.html');
+            } else {
+                document.body.style.display = 'flex'; // Exibe o corpo após validação
+            }
+        });
+    </script>
     <style>
         :root {
             --gold: #D4AF37;
@@ -368,7 +382,7 @@
     </style>
 </head>
 
-<body>
+<body style="display: none;">
 
     <header class="premium-header">
         <div style="display:flex; align-items:center; gap:15px;">
@@ -376,6 +390,9 @@
             <div class="header-title">ADMINISTRADOR DE PEDIDOS</div>
         </div>
         <div>
+            <button id="btn-logout" class="btn btn-outline"
+                style="margin-right:10px; font-size:0.8rem; color: #ff4d4d; border-color: #ff4d4d;"
+                onclick="window.authApi.signOut().then(() => window.location.href='Login.html')">🚪 Sair</button>
             <button id="btn-force-sync" class="btn btn-outline" style="margin-right:10px; font-size:0.8rem;">🔄 Forçar
                 Atualização</button>
             <button id="btn-import-demo" class="btn btn-warning"

@@ -1,65 +1,48 @@
-const XLSX = require('xlsx');
 const path = require('path');
+const supabase = require('../utils/supabase');
 const BackupManager = require('../../js/modules/common/backup-manager');
 const DataValidator = require('../../js/modules/common/data-validator');
 const DBCache = require('../../js/modules/common/db-cache');
 
-// Priority Columns (Expanded Schema - 107 Columns)
+// Priority Columns mapeados no array DB original
 const priorityCols = [
-    // 1. IDENTIFICAÇÃO
     "ID_PEDIDO", "ID_SIMULACAO", "TIPO_PRODUTO", "DATA_CRIACAO", "DATA_ATUALIZACAO",
-    "DATA_PEDIDO", "STATUS_PEDIDO", "NUMERO_ITEM",
-
-    // 2. DADOS DO CLIENTE
-    "NOME_CLIENTE", "EMAIL_CLIENTE", "TELEFONE_CLIENTE", "CPF_CNPJ_CLIENTE",
-    "ENDERECO_ENTREGA", "CIDADE_ENTREGA", "ESTADO_ENTREGA", "CEP_ENTREGA",
-
-    // 3. CONFIGURAÇÃO DO PRODUTO
-    "TAMANHO", "QUANTIDADE", "COR_BASE", "COR_SECUNDARIA", "COR_TERCIARIA",
-    "ESTAMPA_PRINCIPAL", "ESTAMPA_SECUNDARIA", "TECIDO_TIPO", "TECIDO_GRAMATURA",
-
-    // 4. PERSONALIZAÇÃO DE TEXTO
-    "Texto_Frente_Conteudo", "Texto_Frente_Fonte", "Texto_Frente_Cor", "Texto_Frente_Tamanho", "Texto_Frente_Posicao_X", "Texto_Frente_Posicao_Y", "Texto_Frente_Rotacao",
-    "Texto_Costas_Conteudo", "Texto_Costas_Fonte", "Texto_Costas_Cor", "Texto_Costas_Tamanho", "Texto_Costas_Posicao_X", "Texto_Costas_Posicao_Y", "Texto_Costas_Rotacao",
-    "Texto_Lateral_Esq_Conteudo", "Texto_Lateral_Esq_Fonte", "Texto_Lateral_Esq_Cor", "Texto_Lateral_Esq_Tamanho", "Texto_Lateral_Esq_Posicao_X", "Texto_Lateral_Esq_Posicao_Y", "Texto_Lateral_Esq_Rotacao",
-    "Texto_Lateral_Dir_Conteudo", "Texto_Lateral_Dir_Fonte", "Texto_Lateral_Dir_Cor", "Texto_Lateral_Dir_Tamanho", "Texto_Lateral_Dir_Posicao_X", "Texto_Lateral_Dir_Posicao_Y", "Texto_Lateral_Dir_Rotacao",
-
-    // 5. LOGOS E IMAGENS
-    "Logo_Frente_Arquivo", "Logo_Frente_Posicao_X", "Logo_Frente_Posicao_Y", "Logo_Frente_Escala", "Logo_Frente_Rotacao",
-    "Logo_Costas_Arquivo", "Logo_Costas_Posicao_X", "Logo_Costas_Posicao_Y", "Logo_Costas_Escala", "Logo_Costas_Rotacao",
-    "Logo_Lateral_Dir_Arquivo", "Logo_Lateral_Dir_Posicao_X", "Logo_Lateral_Dir_Posicao_Y", "Logo_Lateral_Dir_Escala", "Logo_Lateral_Dir_Rotacao",
-    "Logo_Lateral_Esq_Arquivo", "Logo_Lateral_Esq_Posicao_X", "Logo_Lateral_Esq_Posicao_Y", "Logo_Lateral_Esq_Escala", "Logo_Lateral_Esq_Rotacao",
-
-    "Logo_Perna_Dir_Meio_Arquivo", "Logo_Perna_Dir_Meio_Posicao_X", "Logo_Perna_Dir_Meio_Posicao_Y", "Logo_Perna_Dir_Meio_Escala", "Logo_Perna_Dir_Meio_Rotacao",
-    "Logo_Perna_Esq_Meio_Arquivo", "Logo_Perna_Esq_Meio_Posicao_X", "Logo_Perna_Esq_Meio_Posicao_Y", "Logo_Perna_Esq_Meio_Escala", "Logo_Perna_Esq_Meio_Rotacao",
-
-    // 6. EXTRAS E ACESSÓRIOS
-    "EXTRAS_SELECIONADOS", "ACESSORIOS_INCLUSOS", "PERSONALIZACAO_ESPECIAL",
-
-    // 7. BORDADOS E DETALHES
-    "BORDADO_TIPO", "BORDADO_COR", "BORDADO_POSICAO", "BORDADO_TEXTO",
-
-    // 8. FINANCEIRO
-    "PRECO_UNITARIO", "PRECO_BASE_ATACADO", "CUSTO_PERSONALIZACAO", "CUSTO_EXTRAS",
-    "VALOR_DESCONTOS", "PRECO_TOTAL", "MARGEM_LUCRO_PCT", "MARGEM_LUCRO_VALOR", "PRECO_FINAL",
-
-    // 9. PRODUÇÃO
-    "CUSTO_PRODUCAO_UNITARIO", "CUSTO_PRODUCAO_TOTAL", "STATUS_PRODUCAO",
-    "DATA_INICIO_PRODUCAO", "DATA_FIM_PRODUCAO",
-    "PREVISAO_ENTREGA_MIN", "PREVISAO_ENTREGA_MAX", "OBSERVACOES_PRODUCAO",
-
-    // 10. SYSTEM (Hidden)
-    "DADOS_TECNICOS_JSON"
+    "DATA_PEDIDO", "STATUS_PEDIDO", "NUMERO_ITEM", "NOME_CLIENTE", "EMAIL_CLIENTE",
+    "TELEFONE_CLIENTE", "CPF_CNPJ_CLIENTE", "ENDERECO_ENTREGA", "CIDADE_ENTREGA",
+    "ESTADO_ENTREGA", "CEP_ENTREGA", "TAMANHO", "QUANTIDADE", "COR_BASE",
+    "COR_SECUNDARIA", "COR_TERCIARIA", "ESTAMPA_PRINCIPAL", "ESTAMPA_SECUNDARIA",
+    "TECIDO_TIPO", "TECIDO_GRAMATURA", "Texto_Frente_Conteudo", "Texto_Frente_Fonte",
+    "Texto_Frente_Cor", "Texto_Frente_Tamanho", "Texto_Frente_Posicao_X",
+    "Texto_Frente_Posicao_Y", "Texto_Frente_Rotacao", "Texto_Costas_Conteudo",
+    "Texto_Costas_Fonte", "Texto_Costas_Cor", "Texto_Costas_Tamanho",
+    "Texto_Costas_Posicao_X", "Texto_Costas_Posicao_Y", "Texto_Costas_Rotacao",
+    "Texto_Lateral_Esq_Conteudo", "Texto_Lateral_Esq_Fonte", "Texto_Lateral_Esq_Cor",
+    "Texto_Lateral_Esq_Tamanho", "Texto_Lateral_Esq_Posicao_X", "Texto_Lateral_Esq_Posicao_Y",
+    "Texto_Lateral_Esq_Rotacao", "Texto_Lateral_Dir_Conteudo", "Texto_Lateral_Dir_Fonte",
+    "Texto_Lateral_Dir_Cor", "Texto_Lateral_Dir_Tamanho", "Texto_Lateral_Dir_Posicao_X",
+    "Texto_Lateral_Dir_Posicao_Y", "Texto_Lateral_Dir_Rotacao", "Logo_Frente_Arquivo",
+    "Logo_Frente_Posicao_X", "Logo_Frente_Posicao_Y", "Logo_Frente_Escala",
+    "Logo_Frente_Rotacao", "Logo_Costas_Arquivo", "Logo_Costas_Posicao_X",
+    "Logo_Costas_Posicao_Y", "Logo_Costas_Escala", "Logo_Costas_Rotacao",
+    "Logo_Lateral_Dir_Arquivo", "Logo_Lateral_Dir_Posicao_X", "Logo_Lateral_Dir_Posicao_Y",
+    "Logo_Lateral_Dir_Escala", "Logo_Lateral_Dir_Rotacao", "Logo_Lateral_Esq_Arquivo",
+    "Logo_Lateral_Esq_Posicao_X", "Logo_Lateral_Esq_Posicao_Y", "Logo_Lateral_Esq_Escala",
+    "Logo_Lateral_Esq_Rotacao", "Logo_Perna_Dir_Meio_Arquivo", "Logo_Perna_Dir_Meio_Posicao_X",
+    "Logo_Perna_Dir_Meio_Posicao_Y", "Logo_Perna_Dir_Meio_Escala", "Logo_Perna_Dir_Meio_Rotacao",
+    "Logo_Perna_Esq_Meio_Arquivo", "Logo_Perna_Esq_Meio_Posicao_X", "Logo_Perna_Esq_Meio_Posicao_Y",
+    "Logo_Perna_Esq_Meio_Escala", "Logo_Perna_Esq_Meio_Rotacao", "EXTRAS_SELECIONADOS",
+    "ACESSORIOS_INCLUSOS", "PERSONALIZACAO_ESPECIAL", "BORDADO_TIPO", "BORDADO_COR",
+    "BORDADO_POSICAO", "BORDADO_TEXTO", "PRECO_UNITARIO", "PRECO_BASE_ATACADO",
+    "CUSTO_PERSONALIZACAO", "CUSTO_EXTRAS", "VALOR_DESCONTOS", "PRECO_TOTAL",
+    "MARGEM_LUCRO_PCT", "MARGEM_LUCRO_VALOR", "PRECO_FINAL", "CUSTO_PRODUCAO_UNITARIO",
+    "CUSTO_PRODUCAO_TOTAL", "STATUS_PRODUCAO", "DATA_INICIO_PRODUCAO", "DATA_FIM_PRODUCAO",
+    "PREVISAO_ENTREGA_MIN", "PREVISAO_ENTREGA_MAX", "OBSERVACOES_PRODUCAO", "json_tec"
 ];
 
-/**
- * DatabaseController
- * Gerencia banco de dados Excel/JSON
- */
 class DatabaseController {
     /**
      * POST /api/save-db
-     * Salva dados no banco de dados Excel
+     * Upsert records in Supabase 'peds' table
      */
     async saveDatabase(req, res) {
         try {
@@ -68,12 +51,11 @@ class DatabaseController {
                 return res.status(400).json({ error: "Data must be an array" });
             }
 
-            // Validação de dados
-            console.log('🔍 Validando dados...');
+            console.log('🔍 Validating data...');
             const validation = DataValidator.validateBatch(newData);
 
             if (!validation.valid) {
-                console.error('❌ Validação falhou:', validation.summary);
+                console.error('❌ Validation failed:', validation.summary);
                 return res.status(400).json({
                     error: 'Dados inválidos',
                     validation: {
@@ -86,53 +68,45 @@ class DatabaseController {
                 });
             }
 
-            if (validation.ordersWithWarnings.length > 0) {
-                console.warn(`⚠️ ${validation.ordersWithWarnings.length} pedido(s) com avisos`);
-            }
+            console.log(`✅ Supabase Saving: ${validation.validOrders} orders`);
 
-            console.log(`✅ Validação passou: ${validation.validOrders}/${validation.totalOrders} pedidos válidos`);
+            // Clean up and format records to ensure they match Supabase expected keys exactly
+            const payload = newData.map(item => {
+                let formatted = {};
+                priorityCols.forEach(col => {
+                    formatted[col] = item[col] !== undefined ? item[col] : null;
+                });
 
-            // Backup automático
-            console.log('💾 Criando backup antes de salvar...');
-            try {
-                await BackupManager.createBackup();
-            } catch (backupError) {
-                console.warn('⚠️ Erro ao criar backup (continuando):', backupError.message);
-            }
+                // Explicitly cast JSON correctly to avoid PG type casting errors
+                if (formatted.json_tec && typeof formatted.json_tec === 'string') {
+                    try { formatted.json_tec = JSON.parse(formatted.json_tec); } catch (e) { }
+                }
 
-            const wb = XLSX.utils.book_new();
+                // Ensure ID_PEDIDO is never null since it's UNIQUE NOT NULL
+                if (!formatted.ID_PEDIDO && formatted.ID_SIMULACAO) {
+                    formatted.ID_PEDIDO = formatted.ID_SIMULACAO;
+                }
 
-            // 1. Central Tab
-            const wsCentral = XLSX.utils.json_to_sheet(newData, { header: priorityCols });
-            XLSX.utils.book_append_sheet(wb, wsCentral, "CENTRAL_PEDIDOS");
-
-            // 2. Product Tabs
-            const productMap = {
-                'SHORTS': 'SHORTS', 'TOP': 'TOP', 'LEGGING': 'LEGGING',
-                'SHORTS_SAIA': 'SHORTS_SAIA', 'MOLETOM': 'MOLETOM'
-            };
-
-            const presentTypes = [...new Set(newData.map(d => d.TIPO_PRODUTO))];
-            const allTypes = [...new Set([...Object.keys(productMap), ...presentTypes])];
-
-            allTypes.forEach(pType => {
-                const filtered = newData.filter(d => (d.TIPO_PRODUTO || "").toUpperCase() === pType.toUpperCase());
-                let sheetName = (productMap[pType] || pType).replace(/[\\/?*[\]]/g, "").substring(0, 31);
-                const wsProd = XLSX.utils.json_to_sheet(filtered, { header: priorityCols });
-                XLSX.utils.book_append_sheet(wb, wsProd, sheetName);
+                return formatted;
             });
 
-            const dbPath = path.join(process.cwd(), 'assets', 'BancoDados', 'BancoDados_Mestre.xlsx');
-            XLSX.writeFile(wb, dbPath);
+            // Upsert na tabela 'peds' no Supabase usando 'ID_PEDIDO'
+            const { data, error } = await supabase
+                .from('pedidos')
+                .upsert(payload, { onConflict: 'ID_PEDIDO' })
+                .select();
 
-            console.log(`✅ Banco de Dados Excel atualizado! (${newData.length} registros)`);
+            if (error) {
+                console.error('❌ Supabase Upsert Error:', error);
+                throw error;
+            }
 
-            // Invalidar cache
+            console.log(`✅ Banco de Dados Supabase atualizado! (${payload.length} registros)`);
             DBCache.invalidate();
 
             res.json({
                 success: true,
-                count: newData.length,
+                count: payload.length,
                 validation: {
                     warnings: validation.ordersWithWarnings.length
                 }
@@ -146,28 +120,42 @@ class DatabaseController {
 
     /**
      * GET /api/load-db
-     * Carrega dados do banco de dados Excel
+     * Fetches all records from Supabase 'pedidos' table
      */
     async loadDatabase(req, res) {
         try {
-            const data = await DBCache.getData();
-            res.json(data);
+            const { data, error } = await supabase
+                .from('pedidos')
+                .select('*')
+                .order('criado_em', { ascending: false });
+
+            if (error) throw error;
+            res.json(data || []);
         } catch (e) {
-            console.error("❌ Erro ao carregar banco:", e);
+            console.error("❌ Erro ao carregar banco do Supabase:", e);
             res.status(500).json({ error: e.message });
         }
     }
 
     /**
      * GET /api/cache/stats
-     * Retorna estatísticas do cache
+     * Used by SSE connection / Dashboard stat counting
      */
     async getCacheStats(req, res) {
         try {
-            const stats = DBCache.getStats();
-            res.json(stats);
+            // Count rows from Supabase directly
+            const { count, error } = await supabase
+                .from('pedidos')
+                .select('*', { count: 'exact', head: true });
+
+            if (error) throw error;
+
+            res.json({
+                total: count || 0,
+                lastUpdate: new Date().toISOString()
+            });
         } catch (e) {
-            console.error("❌ Erro ao obter stats:", e);
+            console.error("❌ Erro ao obter stats Supabase:", e);
             res.status(500).json({ error: e.message });
         }
     }
@@ -181,13 +169,13 @@ class DatabaseController {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        const sendUpdate = () => {
-            const stats = DBCache.getStats();
-            res.write(`data: ${JSON.stringify(stats)}\n\n`);
+        const sendUpdate = async () => {
+            const { count } = await supabase.from('peds').select('*', { count: 'exact', head: true });
+            res.write(`data: ${JSON.stringify({ total: count || 0, lastUpdate: new Date().toISOString() })}\n\n`);
         };
 
         sendUpdate();
-        const interval = setInterval(sendUpdate, 5000);
+        const interval = setInterval(sendUpdate, 15000); // 15s to be polite with Supabase instances
 
         req.on('close', () => {
             clearInterval(interval);
