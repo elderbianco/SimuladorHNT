@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const ConfigController = require('../controllers/ConfigController');
 
-// GET /api/admin/config/:key?
-router.get('/admin/config/:key?', ConfigController.getConfig);
+// Express 5: parâmetro opcional separado em duas rotas explícitas
+router.get('/admin/config', ConfigController.getConfig);
+router.get('/admin/config/:key', ConfigController.getConfig);
 
-// POST /api/admin/config/:key?
-router.post('/admin/config/:key?', ConfigController.saveConfig);
+router.post('/admin/config', ConfigController.saveConfig);
+router.post('/admin/config/:key', ConfigController.saveConfig);
 
 module.exports = router;
