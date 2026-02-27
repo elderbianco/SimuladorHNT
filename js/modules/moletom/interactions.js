@@ -2,6 +2,11 @@
  * Módulo de Interações - Moletom
  */
 
+// Helper: detecta se está em dispositivo mobile/touch
+function isMobile() {
+    return window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window && window.innerWidth <= 768);
+}
+
 function setZoom(val) {
     if (val < 0.5) val = 0.5; if (val > 2.5) val = 2.5;
     state.zoom = val; currentZoom = val; applyZoomAndPan();
@@ -71,5 +76,8 @@ function setupGlobalDrag() {
         if (zid && state.texts[zid]) { state.texts[zid].x = px; state.texts[zid].y = py; }
     };
     vp.addEventListener('mousedown', (e) => start(e, false)); window.addEventListener('mousemove', (e) => move(e, false)); window.addEventListener('mouseup', () => dragItem = null);
-    vp.addEventListener('touchstart', (e) => start(e, true), { passive: false }); window.addEventListener('touchmove', (e) => move(e, true), { passive: false }); window.addEventListener('touchend', () => dragItem = null);
+    // No mobile, imagens são estáticas — drag por touch desabilitado
+    if (!isMobile()) {
+        vp.addEventListener('touchstart', (e) => start(e, true), { passive: false }); window.addEventListener('touchmove', (e) => move(e, true), { passive: false }); window.addEventListener('touchend', () => dragItem = null);
+    }
 }
