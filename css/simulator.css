@@ -64,11 +64,8 @@ body {
         min-height: 350px;
         max-height: 600px;
         position: relative;
-        /* Change from sticky */
         top: auto;
-        /* Remove top offset */
         z-index: 10;
-        /* Lower z-index since it's not sticky anymore */
         border-radius: 0;
         border: none;
         border-bottom: 2px solid #e0e0e0;
