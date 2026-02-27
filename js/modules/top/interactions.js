@@ -2,6 +2,11 @@
  * Módulo de Interações - Top
  */
 
+// Helper: detecta se está em dispositivo mobile/touch
+function isMobile() {
+    return window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window && window.innerWidth <= 768);
+}
+
 function setZoom(val) {
     if (val < 0.5) val = 0.5; if (val > 2.0) val = 2.0;
     state.zoom = val; currentZoom = val; applyZoomAndPan();
@@ -94,7 +99,10 @@ function setupGlobalDrag() {
     vp.addEventListener('mousedown', (e) => onStart(e, false));
     window.addEventListener('mousemove', (e) => onMove(e, false));
     window.addEventListener('mouseup', onEnd);
-    vp.addEventListener('touchstart', (e) => onStart(e, true), { passive: false });
-    window.addEventListener('touchmove', (e) => onMove(e, true), { passive: false });
-    window.addEventListener('touchend', onEnd);
+    // No mobile, imagens são estáticas — drag por touch desabilitado
+    if (!isMobile()) {
+        vp.addEventListener('touchstart', (e) => onStart(e, true), { passive: false });
+        window.addEventListener('touchmove', (e) => onMove(e, true), { passive: false });
+        window.addEventListener('touchend', onEnd);
+    }
 }
