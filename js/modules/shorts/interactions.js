@@ -2,6 +2,11 @@
  * Módulo de Interações (Arrastar, Zoom e Pan) - Shorts
  */
 
+// Helper: detecta se está em dispositivo mobile/touch
+function isMobile() {
+    return window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window && window.innerWidth <= 768);
+}
+
 function setZoom(val) {
     if (val < 0.5) val = 0.5;
     if (val > 6.0) val = 6.0;
@@ -320,59 +325,61 @@ function setupDragDrop() {
 
     window.addEventListener('mouseup', () => { dragItem = null; });
 
-    wrap.addEventListener('touchstart', (e) => {
-        const draggable = e.target.closest('.draggable');
-        if (draggable) {
-            dragItem = draggable;
+    // No mobile, imagens são estáticas — drag por touch desabilitado
+    if (!isMobile()) {
+        wrap.addEventListener('touchstart', (e) => {
+            const draggable = e.target.closest('.draggable');
+            if (draggable) {
+                dragItem = draggable;
+                const touch = e.touches[0];
+                const rect = dragItem.getBoundingClientRect();
+                dragStartPos = { x: touch.clientX, y: touch.clientY };
+                isDraggingConfirmed = false;
+                dragItemDims = { width: rect.width, height: rect.height };
+                dragOffset.x = touch.clientX - rect.left;
+                dragOffset.y = touch.clientY - rect.top;
+                currentWrapperRect = document.querySelector('.simulator-wrapper').getBoundingClientRect();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!dragItem) return;
             const touch = e.touches[0];
-            const rect = dragItem.getBoundingClientRect();
-            dragStartPos = { x: touch.clientX, y: touch.clientY };
-            isDraggingConfirmed = false;
-            dragItemDims = { width: rect.width, height: rect.height };
-            dragOffset.x = touch.clientX - rect.left;
-            dragOffset.y = touch.clientY - rect.top;
-            currentWrapperRect = document.querySelector('.simulator-wrapper').getBoundingClientRect();
-        }
-    }, { passive: false });
+            if (!isDraggingConfirmed) {
+                const dx = Math.abs(touch.clientX - dragStartPos.x);
+                const dy = Math.abs(touch.clientY - dragStartPos.y);
+                if (dx < 3 && dy < 3) return;
+                isDraggingConfirmed = true;
+            }
+            e.preventDefault();
 
-    window.addEventListener('touchmove', (e) => {
-        if (!dragItem) return;
-        const touch = e.touches[0];
-        if (!isDraggingConfirmed) {
-            const dx = Math.abs(touch.clientX - dragStartPos.x);
-            const dy = Math.abs(touch.clientY - dragStartPos.y);
-            if (dx < 3 && dy < 3) return;
-            isDraggingConfirmed = true;
-        }
-        e.preventDefault();
+            let x = touch.clientX - currentWrapperRect.left - dragOffset.x + (dragItemDims.width / 2);
+            let y = touch.clientY - currentWrapperRect.top - dragOffset.y + (dragItemDims.height / 2);
+            let pctX = (x / currentWrapperRect.width) * 100;
+            let pctY = (y / currentWrapperRect.height) * 100;
 
-        let x = touch.clientX - currentWrapperRect.left - dragOffset.x + (dragItemDims.width / 2);
-        let y = touch.clientY - currentWrapperRect.top - dragOffset.y + (dragItemDims.height / 2);
-        let pctX = (x / currentWrapperRect.width) * 100;
-        let pctY = (y / currentWrapperRect.height) * 100;
+            const type = dragItem.dataset.type;
+            const id = dragItem.dataset.id;
 
-        const type = dragItem.dataset.type;
-        const id = dragItem.dataset.id;
+            const isZooming = type === 'upload' && state.uploads[id] && state.uploads[id].scale > 1.0;
 
-        // 🎯 DETECTAR SE ESTÁ EM MODO ZOOM para permitir expansão de limites
-        const isZooming = type === 'upload' && state.uploads[id] && state.uploads[id].scale > 1.0;
+            const bounded = applyBoundaryLimits(
+                pctX,
+                pctY,
+                (dragItemDims.width / currentWrapperRect.width) * 100,
+                (dragItemDims.height / currentWrapperRect.height) * 100,
+                dragItem.dataset.id,
+                dragItem.dataset.category,
+                isZooming
+            );
 
-        const bounded = applyBoundaryLimits(
-            pctX,
-            pctY,
-            (dragItemDims.width / currentWrapperRect.width) * 100,
-            (dragItemDims.height / currentWrapperRect.height) * 100,
-            dragItem.dataset.id,
-            dragItem.dataset.category,
-            isZooming  // ✨ Permite expansão de 20% quando ampliado
-        );
+            dragItem.style.left = bounded.x + '%';
+            dragItem.style.top = bounded.y + '%';
 
-        dragItem.style.left = bounded.x + '%';
-        dragItem.style.top = bounded.y + '%';
+            if (type === 'text') { state.texts[id].x = bounded.x + '%'; state.texts[id].y = bounded.y + '%'; }
+            if (type === 'upload') { state.uploads[id].x = bounded.x + '%'; state.uploads[id].y = bounded.y + '%'; }
+        }, { passive: false });
 
-        if (type === 'text') { state.texts[id].x = bounded.x + '%'; state.texts[id].y = bounded.y + '%'; }
-        if (type === 'upload') { state.uploads[id].x = bounded.x + '%'; state.uploads[id].y = bounded.y + '%'; }
-    }, { passive: false });
-
-    window.addEventListener('touchend', () => { dragItem = null; });
+        window.addEventListener('touchend', () => { dragItem = null; });
+    }
 }
