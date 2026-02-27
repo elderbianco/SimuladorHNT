@@ -543,9 +543,9 @@ option {
         /* Increased for mobile */
         min-height: 350px;
         max-height: 600px;
-        position: sticky;
-        top: 0;
-        z-index: 900;
+        position: relative;
+        top: auto;
+        z-index: 10;
         border-radius: 0;
         border: none;
         border-bottom: 2px solid #e0e0e0;
