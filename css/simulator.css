@@ -61,17 +61,18 @@ body {
     /* ... */
     .simulator-area {
         height: 50vh;
-        /* Increased for mobile */
         min-height: 350px;
         max-height: 600px;
-        position: sticky;
-        top: 0;
-        z-index: 900;
+        position: relative;
+        /* Change from sticky */
+        top: auto;
+        /* Remove top offset */
+        z-index: 10;
+        /* Lower z-index since it's not sticky anymore */
         border-radius: 0;
         border: none;
         border-bottom: 2px solid #e0e0e0;
         padding: 5px;
-        /* Reduced padding */
         background-position: center bottom;
     }
 
@@ -622,19 +623,20 @@ option {
         /* Prevent it from taking too much vertical space */
     }
 
-    /* Fix controls area scrolling on mobile */
+    /* Fix controls area scrolling on mobile - ENABLE PAGE SCROLL */
     .app-container {
-        height: 100vh;
-        /* Use full viewport height */
-        overflow: hidden;
-        /* Prevent body scroll */
+        height: auto;
+        /* Allow content to determine height */
+        overflow: visible;
+        /* Allow page scroll */
     }
 
     .controls-area {
-        flex: 1;
-        overflow-y: auto;
-        padding-bottom: 80px;
-        /* Space for bottom actions if needed */
+        height: auto;
+        overflow: visible;
+        /* No internal scroll */
+        padding-bottom: 120px;
+        /* Extra space for floating action bar */
     }
 
     /* Action bar fixed at bottom for mobile */
