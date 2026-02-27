@@ -2,6 +2,11 @@
  * Módulo de Interações (Arrastar, Zoom e Pan) - Shorts Legging
  */
 
+// Helper: detecta se está em dispositivo mobile/touch
+function isMobile() {
+    return window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window && window.innerWidth <= 768);
+}
+
 /**
  * Atualiza o nível de zoom
  */
@@ -159,7 +164,10 @@ function setupGlobalDrag() {
     window.addEventListener('mousemove', (e) => moveDrag(e));
     window.addEventListener('mouseup', endDrag);
 
-    wrap.addEventListener('touchstart', (e) => startDrag(e, true), { passive: false });
-    window.addEventListener('touchmove', (e) => moveDrag(e, true), { passive: false });
-    window.addEventListener('touchend', endDrag);
+    // No mobile, imagens são estáticas — drag por touch desabilitado
+    if (!isMobile()) {
+        wrap.addEventListener('touchstart', (e) => startDrag(e, true), { passive: false });
+        window.addEventListener('touchmove', (e) => moveDrag(e, true), { passive: false });
+        window.addEventListener('touchend', endDrag);
+    }
 }

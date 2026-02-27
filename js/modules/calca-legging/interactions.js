@@ -2,6 +2,11 @@
  * Módulo de Interações - Legging
  */
 
+// Helper: detecta se está em dispositivo mobile/touch
+function isMobile() {
+    return window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window && window.innerWidth <= 768);
+}
+
 function setZoom(val) {
     if (val < 0.5) val = 0.5;
     if (val > 2.0) val = 2.0;
@@ -146,7 +151,10 @@ function setupGlobalDrag() {
     window.addEventListener('mousemove', moveDrag);
     window.addEventListener('mouseup', endDrag);
 
-    wrap.addEventListener('touchstart', (e) => startDrag(e, true), { passive: false });
-    window.addEventListener('touchmove', (e) => moveDrag(e, true), { passive: false });
-    window.addEventListener('touchend', endDrag);
+    // No mobile, imagens são estáticas — drag por touch desabilitado
+    if (!isMobile()) {
+        wrap.addEventListener('touchstart', (e) => startDrag(e, true), { passive: false });
+        window.addEventListener('touchmove', (e) => moveDrag(e, true), { passive: false });
+        window.addEventListener('touchend', endDrag);
+    }
 }
