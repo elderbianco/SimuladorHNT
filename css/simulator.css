@@ -618,9 +618,9 @@ option {
 
     /* Fix controls area scrolling on mobile - ENABLE PAGE SCROLL */
     .app-container {
-        height: auto;
+        height: auto !important;
         /* Allow content to determine height */
-        overflow: visible;
+        overflow: visible !important;
         /* Allow page scroll */
     }
 
@@ -639,8 +639,10 @@ option {
         left: 0;
         width: 100%;
         z-index: 1000;
-        background: white;
-        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        background: #000;
+        /* Dark theme */
+        border-top: 1px solid #333;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.8);
         padding: 10px;
     }
 

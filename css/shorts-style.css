@@ -906,13 +906,16 @@ input:checked+.slider:before {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .app-container {
         display: flex;
         flex-direction: column;
         grid-template-columns: unset;
-        height: auto;
-        overflow: visible;
+        height: auto !important;
+        /* Force auto height to prevent cutoff */
+        min-height: 100vh;
+        /* Ensure it covers at least the screen */
+        overflow: visible !important;
         padding: 0;
         gap: 0;
     }
