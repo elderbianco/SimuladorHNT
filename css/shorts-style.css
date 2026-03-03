@@ -949,7 +949,7 @@ input:checked+.slider:before {
     }
 
     .price-header {
-        position: static;
+        position: static !important;
         padding: 10px;
     }
 

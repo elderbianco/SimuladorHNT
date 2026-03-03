@@ -579,7 +579,7 @@ option {
     }
 
     .price-header {
-        position: static;
+        position: static !important;
         padding: 15px;
     }
 
