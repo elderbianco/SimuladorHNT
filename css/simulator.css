@@ -578,11 +578,6 @@ option {
         flex: 1;
     }
 
-    .price-header {
-        position: static !important;
-        padding: 15px;
-    }
-
     .price-value {
         font-size: 1.8rem;
     }
