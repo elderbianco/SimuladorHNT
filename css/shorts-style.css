@@ -132,9 +132,11 @@ body {
         height: 55vh;
         min-height: 350px;
         max-height: 600px;
-        position: sticky;
-        top: 0;
-        z-index: 900;
+        position: relative;
+        /* Remove sticky to allow natural scroll */
+        top: auto;
+        z-index: 10;
+        /* Lower z-index */
         border-radius: 0;
         border: none;
         border-bottom: 2px solid var(--border);
