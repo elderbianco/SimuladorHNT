@@ -63,9 +63,9 @@ async function init() {
     // Zoom Inicial
     const applyInitialZoom = () => {
         if (window.innerWidth <= 768) {
-            currentZoom = 1.22; // Aumentado
+            currentZoom = 1.35; // Aumentado para o mobile
         } else {
-            currentZoom = 1.65; // Aumentado para ocupar melhor a tela
+            currentZoom = 1.50; // Reduzido levemente no desktop
         }
         state.zoom = currentZoom;
         panOffset = { x: 0, y: 0 };
