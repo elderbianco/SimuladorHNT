@@ -39,6 +39,8 @@ function updatePrice() {
  * Obtém o preço de uma zona específica
  */
 function getZonePrice(zoneId, type = 'logo') {
+    if (!state.config) return 0;
+
     const isText = type === 'text';
     if (zoneId.includes('lateral')) {
         return isText ? (state.config.textLatPrice || 0) : (state.config.logoLatPrice || 0);
