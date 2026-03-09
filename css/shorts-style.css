@@ -170,6 +170,13 @@ body {
     /* background: radial-gradient(circle at center, #d0d0d0 0%, #ffffff 100%); */
     background: transparent;
     cursor: grab;
+    pointer-events: none;
+    /* Allow clicks to pass through to .zoom-controls */
+}
+
+.simulator-wrapper {
+    pointer-events: auto;
+    /* Re-enable for drag/pan/image interaction */
 }
 
 .simulator-viewport:active {
