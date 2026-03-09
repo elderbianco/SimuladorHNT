@@ -127,6 +127,14 @@ body {
 
 @media (max-width: 768px) {
 
+    .app-container {
+        display: block;
+        /* Stack on mobile */
+        height: auto;
+        overflow: visible !important;
+        padding: 0;
+    }
+
     .simulator-area {
         height: 45vh;
         /* Reduced from 55vh to show more controls */
