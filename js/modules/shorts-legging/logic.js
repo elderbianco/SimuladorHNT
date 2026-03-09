@@ -75,13 +75,8 @@ function loadAdminConfig() {
     const d20 = 0;
     const d40 = 0;
 
-    const getVal = (val, def) => {
-        const v = parseFloat(val);
-        // If v is NaN, undefined or null, use def.
-        // If v is 0, we generally want to accept it EXCEPT for basePrice which shouldn't be 0.
-        // But for generic helper, let's keep it simple and handle basePrice validity specifically.
-        return (val !== undefined && val !== null && !isNaN(v)) ? v : def;
-    };
+    const getVal = (val, def) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : def;
+    const getAdminVal = (val) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : undefined;
 
     state.config = {
         // Enforce fallback if basePrice comes as 0 from Admin (which implies unconfigured/error for base price)
@@ -89,12 +84,12 @@ function loadAdminConfig() {
 
         product: 'Shorts Legging',
         sizeModPrice: getVal(prices.sizeModPrice, 10.00), // Default to 10.00 to match others
-        devFee: getVal(prices.devFee, 0),
+        devFee: getVal(prices.devFee, 30.00), // Standard fee
 
         logoLatPrice: getVal(prices.logoLatPrice, 29.90),
         textLatPrice: getVal(prices.textLatPrice, 9.90),
         logoLegPrice: getVal(prices.logoLegPrice, 14.90),
-        textLegPrice: getVal(prices.textLegPrice, 0),
+        textLegPrice: getVal(prices.textLegPrice, 9.90), // Fixed from 0 to 9.90
 
         // Wholesale Tiers
         price10: getVal(prices.price10, 80.90),
@@ -104,7 +99,7 @@ function loadAdminConfig() {
         // Legacy
         discount20: d20,
         discount40: d40,
-        artWaiver: prices.artWaiver !== undefined ? prices.artWaiver : (globalConfig.artWaiver !== undefined ? globalConfig.artWaiver : CONFIG.artWaiver),
+        artWaiver: prices.artWaiver !== undefined ? prices.artWaiver : (globalConfig.artWaiver !== undefined ? globalConfig.artWaiver : (CONFIG.artWaiver !== undefined ? CONFIG.artWaiver : true)),
         partColors: JSON.parse(localStorage.getItem('hnt_shorts_legging_part_colors') || '{}'),
         activeFonts: JSON.parse(localStorage.getItem('hnt_active_fonts') || '[]'),
         textColors: JSON.parse(localStorage.getItem('hnt_text_colors') || '[]')
