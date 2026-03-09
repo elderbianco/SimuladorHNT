@@ -517,7 +517,7 @@ const PDFGenerator = {
 
         try {
             // Tenta enviar para o servidor local (server.js)
-            const response = await fetch('http://localhost:3000/api/save-pedido', {
+            const response = await fetch('/api/save-pedido', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

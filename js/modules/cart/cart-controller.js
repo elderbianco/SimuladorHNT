@@ -177,7 +177,7 @@ async function deleteOrder(index) {
     // Delete PDF from server if simulationId exists
     if (simulationId) {
         try {
-            const response = await fetch(`http://localhost:3000/api/delete-pdf/${simulationId}`, {
+            const response = await fetch(`/api/delete-pdf/${simulationId}`, {
                 method: 'DELETE'
             });
             if (response.ok) {
