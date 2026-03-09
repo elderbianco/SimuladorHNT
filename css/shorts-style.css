@@ -184,23 +184,18 @@ body {
 }
 
 /* Conflict Fix: !important used to override simulator.css loaded later - SCOPED TO SHORTS ONLY */
-/* Conflict Fix: !important used to override simulator.css loaded later - SCOPED TO SHORTS ONLY */
 .page-shorts .zoom-container {
     transform-origin: center center !important;
-    height: 100% !important;
-    /* Changed from 90vh to match container */
-    width: 100% !important;
-    /* aspect-ratio removido para não cortar imagem achatada */
-    max-width: 100% !important;
-    max-height: 100% !important;
-    /* Ensure vertical centering */
+    height: 90vh !important;
+    width: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    max-width: 95vw !important;
+    max-height: 95vh !important;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     will-change: transform;
-    margin: 0 auto;
-    /* Ensure horizontal centering */
 }
 
 /* Original rule for other pages */

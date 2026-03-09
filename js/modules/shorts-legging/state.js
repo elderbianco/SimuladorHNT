@@ -29,9 +29,9 @@ const CONFIG = {
         { id: 'rosa_pink', name: 'Rosa Pink', file: 'SLgPrRosaPink.png', hex: '#FF00CC' }
     ],
     zones: {
-        lateral_direita: { id: 'lateral_direita', x: 20.12, y: 46.64, width: 7, height: 8, name: 'Lateral Dir.' },
-        lateral_esquerda: { id: 'lateral_esquerda', x: 72.20, y: 46.68, width: 6.83, height: 8, name: 'Lateral Esq.' },
-        perna_esquerda: { id: 'perna_esquerda', x: 56.95, y: 52.00, width: 5.83, height: 5, name: 'Perna Esq.' }
+        lateral_direita: { id: 'lateral_direita', x: 23.62, y: 50.64, width: 7, height: 8, name: 'Lateral Dir.' },
+        lateral_esquerda: { id: 'lateral_esquerda', x: 75.62, y: 50.68, width: 6.83, height: 8, name: 'Lateral Esq.' },
+        perna_esquerda: { id: 'perna_esquerda', x: 56.95, y: 56.47, width: 5.83, height: 5, name: 'Perna Esq.' }
     },
     sizes: [
         { label: "6", priceMod: 0 }, { label: "8", priceMod: 0 }, { label: "10", priceMod: 0 },
@@ -40,9 +40,9 @@ const CONFIG = {
         { label: "GG", priceMod: 10.00 }, { label: "EXG", priceMod: 10.00 }, { label: "EXGG", priceMod: 10.00 }
     ],
     textZones: [
-        { id: 'text_lat_dir', name: 'Texto Lat. Dir.', parentZone: 'lateral_direita', x: 20.12, y: 46.64 },
-        { id: 'text_lat_esq', name: 'Texto Lat. Esq.', parentZone: 'lateral_esquerda', x: 72.20, y: 46.68 },
-        { id: 'text_perna', name: 'Texto Perna Esq.', parentZone: 'perna_esquerda', x: 56.95, y: 52.00 }
+        { id: 'text_lat_dir', name: 'Texto Lat. Dir.', parentZone: 'lateral_direita', x: 23.62, y: 50.64 },
+        { id: 'text_lat_esq', name: 'Texto Lat. Esq.', parentZone: 'lateral_esquerda', x: 75.62, y: 50.68 },
+        { id: 'text_perna', name: 'Texto Perna Esq.', parentZone: 'perna_esquerda', x: 56.95, y: 56.47 }
     ]
 };
 
