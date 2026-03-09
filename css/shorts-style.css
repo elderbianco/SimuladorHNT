@@ -183,7 +183,7 @@ body {
     height: 100% !important;
     /* Changed from 90vh to match container */
     width: 100% !important;
-    aspect-ratio: 1 / 1 !important;
+    /* aspect-ratio removido para não cortar imagem achatada */
     max-width: 100% !important;
     max-height: 100% !important;
     /* Ensure vertical centering */

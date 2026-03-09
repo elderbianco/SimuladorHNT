@@ -137,9 +137,9 @@ function init() {
     // 5. Ajustar Zoom Inicial
     const applyInitialZoom = () => {
         if (window.innerWidth <= 768) {
-            currentZoom = 1.22; // Otimizado para ocupar mais espaço no mobile
+            currentZoom = 1.1; // Reduced from 1.22
         } else {
-            currentZoom = 1.75; // Otimizado para visualização principal no desktop
+            currentZoom = 1.45; // Reduced back to 1.45 to prevent clipping
         }
         state.zoom = currentZoom;
         panOffset = { x: 0, y: 0 };
