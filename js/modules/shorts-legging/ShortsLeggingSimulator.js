@@ -20,7 +20,7 @@ class ShortsLeggingSimulator extends BaseSimulator {
             label: 'Tamanhos',
             type: 'size',
             category: 'Geral',
-            sizes: window.DATA.sizes,
+            sizes: CONFIG.sizes, // Use CONFIG.sizes to match pricing logic
             selectedSizes: this.state.sizes,
             onUpdate: (label, newVal) => {
                 this.state.sizes[label] = newVal;
@@ -29,13 +29,13 @@ class ShortsLeggingSimulator extends BaseSimulator {
         });
 
         // 2. Main Color
-        const cObj = window.DATA.colors.find(c => c.id === this.state.color);
+        const cObj = CONFIG.colors.find(c => c.id === this.state.color);
         sections.push({
             id: 'cor_principal',
             label: `COR DO SHORTS: ${cObj ? cObj.name.toUpperCase() : ''}`,
             type: 'color',
             category: 'Geral',
-            colors: window.DATA.colors,
+            colors: CONFIG.colors, // Use CONFIG.colors
             selectedColor: this.state.color,
             onSelect: (newId) => {
                 this.state.color = newId;
@@ -50,12 +50,13 @@ class ShortsLeggingSimulator extends BaseSimulator {
             label: 'Logo Hanuthai',
             type: 'color',
             category: 'Personalizacao',
-            colors: window.DATA.colors,
-            selectedColor: this.state.logoColor || 'branco',
+            colors: HNT_LOGO_COLORS, // Use appropriate colors
+            selectedColor: this.state.hntLogoColor || 'preto',
             onSelect: (newId) => {
-                this.state.logoColor = newId;
-                if (typeof window.setLogoColor === 'function') window.setLogoColor(newId);
-                else this.onStateUpdate();
+                this.state.hntLogoColor = newId;
+                if (typeof window.updateHntLayer === 'function') window.updateHntLayer();
+                this.onStateUpdate();
+                this.render(); // Re-render to update contrast titles/opacity
             }
         });
 
