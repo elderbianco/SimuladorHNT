@@ -274,10 +274,20 @@ function setupMainEvents() {
 
     // Controles de Zoom
     const zoomIn = document.getElementById('zoom-in');
-    if (zoomIn) zoomIn.onclick = () => setZoom(state.zoom + 0.1);
+    if (zoomIn) {
+        zoomIn.onclick = () => {
+            if (state.isLocked) return;
+            setZoom(state.zoom + 0.1);
+        };
+    }
 
     const zoomOut = document.getElementById('zoom-out');
-    if (zoomOut) zoomOut.onclick = () => setZoom(state.zoom - 0.1);
+    if (zoomOut) {
+        zoomOut.onclick = () => {
+            if (state.isLocked) return;
+            setZoom(state.zoom - 0.1);
+        };
+    }
 
     // Trava de Interação
     const btnLock = document.getElementById('lock-interaction');
@@ -285,6 +295,11 @@ function setupMainEvents() {
         btnLock.onclick = () => {
             state.isLocked = !state.isLocked;
             btnLock.classList.toggle('locked', state.isLocked);
+
+            // Sincronizar botões de zoom com o cadeado
+            zoomIn?.classList.toggle('locked', state.isLocked);
+            zoomOut?.classList.toggle('locked', state.isLocked);
+
             btnLock.innerHTML = state.isLocked ? '🔒' : '🔓';
 
             // Log para feedback

@@ -207,6 +207,14 @@ body {
     transition: all 0.3s ease;
 }
 
+.zoom-btn.locked {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+    filter: grayscale(1);
+    background: #f0f0f0 !important;
+}
+
 .zoom-btn.zoom-reset {
     width: auto;
     padding: 10px 15px;
