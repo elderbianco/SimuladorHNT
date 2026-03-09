@@ -34,7 +34,8 @@ const CONFIG = {
         perna_esquerda: { id: 'perna_esquerda', x: 56.95, y: 56.47, width: 5.83, height: 5, name: 'Perna Esq.' }
     },
     sizes: [
-        { label: "PP", priceMod: 0 },
+        { label: "6", priceMod: 0 }, { label: "8", priceMod: 0 }, { label: "10", priceMod: 0 },
+        { label: "12", priceMod: 0 }, { label: "14", priceMod: 0 }, { label: "PP", priceMod: 0 },
         { label: "P", priceMod: 0 }, { label: "M", priceMod: 0 }, { label: "G", priceMod: 0 },
         { label: "GG", priceMod: 10.00 }, { label: "EXG", priceMod: 10.00 }, { label: "EXGG", priceMod: 10.00 }
     ],
