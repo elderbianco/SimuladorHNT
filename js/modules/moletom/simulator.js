@@ -131,10 +131,34 @@ function setupMainEvents() {
         // ... (existing btnCart logic)
     }
 
-    // Trava de Interação
+    // Controles de interacao e zoom
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
     const btnLock = document.getElementById('lock-interaction');
+
+    if (zoomIn) {
+        zoomIn.onclick = () => {
+            if (state.isLocked) return;
+            if (typeof setZoom === 'function') {
+                setZoom(state.zoom + 0.1);
+            } else {
+                state.zoom += 0.1;
+                if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+            }
+        };
+    }
+
+    if (zoomOut) {
+        zoomOut.onclick = () => {
+            if (state.isLocked) return;
+            if (typeof setZoom === 'function') {
+                setZoom(state.zoom - 0.1);
+            } else {
+                state.zoom -= 0.1;
+                if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+            }
+        };
+    }
 
     if (btnLock) {
         btnLock.onclick = () => {
