@@ -137,9 +137,9 @@ function init() {
     // 5. Ajustar Zoom Inicial
     const applyInitialZoom = () => {
         if (window.innerWidth <= 768) {
-            currentZoom = 1.25; // Aumentado para melhor preenchimento no mobile
+            currentZoom = 1.30; // Aumentado para preenchimento máximo no mobile
         } else {
-            currentZoom = 1.70; // Aumentado para melhor preenchimento no desktop
+            currentZoom = 1.85; // Aumentado para preenchimento máximo no desktop
         }
         state.zoom = currentZoom;
         panOffset = { x: 0, y: 0 };
