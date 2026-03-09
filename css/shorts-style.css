@@ -127,24 +127,52 @@ body {
 
 @media (max-width: 768px) {
 
-    /* ... */
+    body.page-shorts,
+    body.page-top,
+    body.page-legging,
+    body.page-moletom {
+        overflow: hidden;
+        /* Stop global page scroll on mobile */
+    }
+
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100dvh - 41px);
+        /* Exact screen height minus header */
+        overflow: hidden;
+    }
+
     .simulator-area {
-        height: 45vh;
-        /* Reduced from 55vh to show more controls */
-        min-height: 300px;
-        max-height: 500px;
-        position: sticky;
-        top: 41px;
-        /* Height of the sticky premium-header on mobile */
-        z-index: 100;
+        height: 45dvh;
+        /* Use dynamic viewport height */
+        min-height: 250px;
+        flex: 0 0 45dvh;
+        /* Fixed flex item */
+        position: relative;
+        /* No longer sticky, it's just the top section */
+        top: 0;
+        z-index: 10;
         border-radius: 0;
         border: none;
         border-bottom: 2px solid var(--border);
-        padding: 10px;
-        background-position: center center;
-        /* Center background better */
-        touch-action: pan-x pan-y !important;
-        /* Lock pinch-to-zoom */
+        padding: 5px;
+        background-position: center bottom;
+        touch-action: none !important;
+        /* Lock entirely from any scrolling */
+        overflow: hidden;
+    }
+
+    .controls-area {
+        flex: 1;
+        /* Take remaining space */
+        height: auto;
+        /* Let flex handle it */
+        overflow-y: auto;
+        /* Enable vertical scrolling */
+        -webkit-overflow-scrolling: touch;
+        /* Smooth scroll on iOS */
+        padding-bottom: 20px;
     }
 
     /* ... */
