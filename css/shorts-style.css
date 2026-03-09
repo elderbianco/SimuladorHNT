@@ -935,7 +935,8 @@ input:checked+.slider:before {
         min-height: 300px;
         max-height: 500px;
         position: sticky;
-        top: 0;
+        top: 42px;
+        /* Sticky below header */
         z-index: 900;
         border-radius: 0;
         border: none;

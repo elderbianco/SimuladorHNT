@@ -634,6 +634,11 @@ h4 {
 
 @media (max-width: 768px) {
     .premium-header {
+        position: sticky;
+        top: 0;
+        z-index: 2000;
+        background: #000;
+        /* Ensure opacity */
         padding: 5px 10px;
         flex-wrap: wrap;
         justify-content: space-between;
