@@ -529,28 +529,28 @@ option {
 
 @media (max-width: 768px) {
     .app-container {
-        display: flex;
-        flex-direction: column;
-        grid-template-columns: unset;
-        height: auto;
-        overflow: visible;
+        display: block;
+        /* Stack on mobile */
+        height: auto !important;
+        overflow: visible !important;
         padding: 0;
         gap: 0;
     }
 
     .simulator-area {
-        height: 50vh;
-        /* Increased for mobile */
-        min-height: 350px;
-        max-height: 600px;
-        position: relative;
-        top: auto;
-        z-index: 10;
+        height: 45vh;
+        /* Proportional height */
+        min-height: 300px;
+        max-height: 550px;
+        position: sticky;
+        /* Global Sticky */
+        top: 41px;
+        /* Below premium-header */
+        z-index: 100;
         border-radius: 0;
         border: none;
         border-bottom: 2px solid #e0e0e0;
         padding: 5px;
-        /* Reduced padding */
     }
 
     .simulator-viewport {
