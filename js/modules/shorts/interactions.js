@@ -28,7 +28,7 @@ function setupViewportPan() {
 
     viewport.addEventListener('mousedown', (e) => {
         if (state.isLocked) return;
-        if (e.target.closest('.draggable')) return;
+        if (e.target.closest('.draggable') || e.target.closest('.zoom-btn')) return;
         isPanning = true;
         panStart.x = e.clientX - panOffset.x;
         panStart.y = e.clientY - panOffset.y;
@@ -45,7 +45,7 @@ function setupViewportPan() {
 
     viewport.addEventListener('touchstart', (e) => {
         if (state.isLocked) return;
-        if (e.target.closest('.draggable')) return;
+        if (e.target.closest('.draggable') || e.target.closest('.zoom-btn')) return;
         if (e.touches.length === 1) {
             isPanning = true;
             const touch = e.touches[0];

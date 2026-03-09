@@ -586,12 +586,19 @@ option {
     .zoom-controls {
         bottom: 15px;
         right: 15px;
+        z-index: 2000 !important;
+        /* Ensure it's above everything */
+        pointer-events: auto !important;
+        display: flex;
+        gap: 10px;
     }
 
     .zoom-btn {
         width: 35px;
         height: 35px;
         font-size: 1.2rem;
+        touch-action: manipulation !important;
+        /* Prevents delay and improves tap accuracy */
     }
 
     .control-group {
