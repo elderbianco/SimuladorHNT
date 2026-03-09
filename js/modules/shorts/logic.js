@@ -152,9 +152,9 @@ function initDefaults() {
         defaultState.parts[p.id] = defaultColors[p.id] || "preto";
     });
     DATA.extras.forEach(e => defaultState.extras[e.id] = { enabled: false, color: e.restrictedColors ? e.restrictedColors[0] : "preto" });
-    DATA.uploadZones.forEach(u => defaultState.uploads[u.id] = { src: null, scale: 1, rotation: u.defaultRotation || 0, x: u.cssLeft, y: u.cssTop, filename: "", isCustom: false, unlocked: false });
+    DATA.uploadZones.forEach(u => defaultState.uploads[u.id] = { src: null, scale: 1, rotation: u.defaultRotation || 0, x: u.cssLeft, y: u.cssTop, filename: "", isCustom: false, unlocked: true });
     DATA.textZones.forEach(t => defaultState.texts[t.id] = {
-        enabled: false, content: "", fontFamily: 'Outfit', color: "#FF0000", scale: 1.0, maxLines: 1, x: t.cssLeft, y: t.cssTop, unlocked: false
+        enabled: false, content: "", fontFamily: 'Outfit', color: "#FF0000", scale: 1.0, maxLines: 1, x: t.cssLeft, y: t.cssTop, unlocked: true
     });
 
     Object.assign(state, defaultState);
@@ -466,7 +466,7 @@ function resetSimulatorData() {
             maxLines: 1,
             x: t.cssLeft,
             y: t.cssTop,
-            unlocked: false
+            unlocked: true
         };
     });
 
@@ -480,7 +480,7 @@ function resetSimulatorData() {
             y: u.cssTop,
             filename: "",
             isCustom: false,
-            unlocked: false
+            unlocked: true
         };
     });
 
