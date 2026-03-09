@@ -680,8 +680,78 @@ h4 {
     }
 
     .header-icon-nav {
-        display: none;
-        /* Hide product nav icons on small screens to save vertical space */
+        display: flex;
+        /* Restored display, but hidden by parent logic below */
+        gap: 8px;
+        align-items: center;
+    }
+
+    /* Mobile-Specific Menu Wrapper */
+    .mobile-menu-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .mobile-menu-trigger {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        color: #D4AF37;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        height: 32px;
+    }
+
+    .mobile-menu-trigger:hover {
+        background: #222;
+        border-color: #D4AF37;
+    }
+
+    /* Vertical Navbar on Mobile (hidden by default) */
+    @media (max-width: 768px) {
+        .header-icon-nav {
+            display: none !important;
+        }
+
+        .mobile-menu-container .header-icon-nav {
+            display: none !important;
+            /* Default hidden */
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            flex-direction: column;
+            padding: 12px;
+            gap: 12px;
+            border: 1px solid #333;
+            border-top: 2px solid #D4AF37;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+            z-index: 2001;
+            margin-top: 5px;
+            min-width: 60px;
+        }
+
+        /* Show menu on hover or active class */
+        .mobile-menu-container:hover .header-icon-nav,
+        .mobile-menu-container.active .header-icon-nav {
+            display: flex !important;
+        }
+
+        .mobile-menu-container .nav-icon {
+            display: flex !important;
+            /* Force show icons inside vertical menu */
+            width: 32px;
+            height: 32px;
+        }
     }
 
     .nav-icon {
