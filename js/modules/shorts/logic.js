@@ -9,6 +9,7 @@ function loadAdminConfig() {
     const savedConfig = JSON.parse(localStorage.getItem('hnt_pricing_config') || '{}');
 
     const getVal = (val, def) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : def;
+    const getAdminVal = (val) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : undefined;
 
     // Calculate Dynamic Discounts based on Admin Prices
     const base = (getVal(savedConfig.basePrice, 149.90) || 149.90);
@@ -82,11 +83,11 @@ function loadAdminConfig() {
         'leg_left_mid': getVal(savedConfig.legLeftPrice, 0)
     };
 
-    // Preços de Extras (Admin salva na raiz do config, não em objeto separado)
+    // Preços de Extras (Usar getAdminVal para permitir fallback no pricing.js)
     state.config.extraPrices = {
-        'calca_legging': getVal(savedConfig.extraLeggingPrice, 0),
-        'laco': getVal(savedConfig.extraLacoPrice, 0),
-        'cordao': getVal(savedConfig.extraCordaoPrice, 0)
+        'calca_legging': getAdminVal(savedConfig.extraLeggingPrice),
+        'laco': getAdminVal(savedConfig.extraLacoPrice),
+        'cordao': getAdminVal(savedConfig.extraCordaoPrice)
     };
 
     const hidden = JSON.parse(localStorage.getItem('hnt_disabled_colors') || '[]');
