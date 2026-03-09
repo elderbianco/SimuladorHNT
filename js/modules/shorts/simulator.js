@@ -111,7 +111,7 @@ async function init() {
         if (window.innerWidth <= 768) {
             currentZoom = 1.1; // Otimizado mas não corta
         } else {
-            currentZoom = 1.45; // Ajustado para não cortar as bordas (equilíbrio ideal)
+            currentZoom = 1.35; // Reduzido para garantir que Shorts Fight (amarras) nunca corte nas bordas laterais
         }
         state.zoom = currentZoom;
         panOffset = { x: 0, y: 0 };

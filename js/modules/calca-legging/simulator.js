@@ -63,9 +63,9 @@ async function init() {
     // Zoom Inicial
     const applyInitialZoom = () => {
         if (window.innerWidth <= 768) {
-            currentZoom = 1.1; // Reduced from 1.22
+            currentZoom = 1.22; // Aumentado
         } else {
-            currentZoom = 1.45; // Reduced back to 1.45 from 1.75
+            currentZoom = 1.65; // Aumentado para ocupar melhor a tela
         }
         state.zoom = currentZoom;
         panOffset = { x: 0, y: 0 };

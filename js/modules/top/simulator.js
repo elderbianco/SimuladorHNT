@@ -55,9 +55,9 @@ function init() {
     // Zoom Inicial
     const applyInitialZoom = () => {
         if (window.innerWidth <= 768) {
-            currentZoom = 1.1; // Reduced from 1.2
+            currentZoom = 1.2;
         } else {
-            currentZoom = 1.45; // Reduced back to 1.45
+            currentZoom = 1.55;
         }
         state.zoom = currentZoom;
         panOffset = { x: 0, y: 0 };
