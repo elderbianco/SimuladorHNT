@@ -27,6 +27,7 @@ function setupViewportPan() {
     if (!viewport) return;
 
     viewport.addEventListener('mousedown', (e) => {
+        if (state.isLocked) return;
         if (e.target.closest('.draggable')) return;
         isPanning = true;
         panStart.x = e.clientX - panOffset.x;
@@ -43,6 +44,7 @@ function setupViewportPan() {
     window.addEventListener('mouseup', () => { isPanning = false; });
 
     viewport.addEventListener('touchstart', (e) => {
+        if (state.isLocked) return;
         if (e.target.closest('.draggable')) return;
         if (e.touches.length === 1) {
             isPanning = true;
@@ -64,7 +66,7 @@ function setupViewportPan() {
     window.addEventListener('touchend', () => { isPanning = false; });
 
     viewport.addEventListener('wheel', (e) => {
-        if (isMobile()) return; // Lock zoom scroll on mobile
+        if (state.isLocked || isMobile()) return; // Lock zoom scroll
         e.preventDefault();
         const zoomSpeed = 0.1;
         const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed;

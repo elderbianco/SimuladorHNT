@@ -29,6 +29,7 @@ const state = {
     phone: "",
     termsAccepted: false,
     limits: { right: false, left: false },
+    isLocked: false,
     embFiles: [] // Array de {filename, size, zones: []}
 };
 

@@ -410,6 +410,13 @@ h4 {
     z-index: 1000;
 }
 
+.lock-btn.locked {
+    background: #ff4d4d !important;
+    color: white !important;
+    border-color: #cc0000 !important;
+    box-shadow: 0 0 10px rgba(255, 77, 77, 0.5) !important;
+}
+
 .header-left {
     display: flex;
     gap: 15px;
