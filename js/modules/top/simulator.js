@@ -20,8 +20,11 @@ function init() {
 
     // Auto-fetch sequence
     if (!state.orderNumber) {
-        fetch('http://localhost:3000/api/next-order-id')
-            .then(r => r.json())
+        fetch('/api/next-order-id')
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+                return r.json();
+            })
             .then(d => {
                 if (d.number) {
                     state.orderNumber = d.number.toString();
@@ -30,7 +33,7 @@ function init() {
                     renderControls();
                 }
             })
-            .catch(e => console.warn('Seq API fail', e));
+            .catch(e => console.warn('Seq API fail (expected if server is offline):', e.message));
     }
 
     initLayers();
