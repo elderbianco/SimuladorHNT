@@ -211,7 +211,7 @@ function renderCustomizationSection() {
         const uploader = window.UIComponents.createImageUploader({
             zone: z,
             uploadState: uploadState,
-            limitEnabled: state.zoneLimits[z.id] !== false,
+            limitEnabled: state.zoneLimits[z.id] === true,
             config: state.config,
             isCoveredByEmb: false,
             callbacks: {
@@ -345,7 +345,7 @@ function renderCustomizationSection() {
         const uploader = window.UIComponents.createImageUploader({
             zone: z,
             uploadState: uploadState,
-            limitEnabled: state.zoneLimits[z.id] !== false,
+            limitEnabled: state.zoneLimits[z.id] === true,
             config: state.config,
             isCoveredByEmb: false,
             callbacks: {
