@@ -279,6 +279,22 @@ function setupMainEvents() {
     const zoomOut = document.getElementById('zoom-out');
     if (zoomOut) zoomOut.onclick = () => setZoom(state.zoom - 0.1);
 
+    // Trava de Interação
+    const btnLock = document.getElementById('lock-interaction');
+    if (btnLock) {
+        btnLock.onclick = () => {
+            state.isLocked = !state.isLocked;
+            btnLock.classList.toggle('locked', state.isLocked);
+            btnLock.innerHTML = state.isLocked ? '🔒' : '🔓';
+
+            // Log para feedback
+            console.log(state.isLocked ? "🔒 Interação Bloqueada" : "🔓 Interação Liberada");
+
+            // Se bloqueou, garante que o panning parou
+            if (state.isLocked) isPanning = false;
+        };
+    }
+
     // Fechar menus ao clicar fora
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.custom-dropdown')) {

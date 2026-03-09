@@ -127,7 +127,8 @@ const state = {
     logoCostasColor: 'Preto',
     observations: "",
     phone: "",
-    termsAccepted: false
+    termsAccepted: false,
+    isLocked: false
 };
 
 state.simulationId = getFormattedId();
