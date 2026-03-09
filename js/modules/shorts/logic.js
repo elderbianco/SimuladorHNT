@@ -34,14 +34,14 @@ function loadAdminConfig() {
         sizeModPrice: getVal(savedConfig.sizeModPrice, 0),
         devFee: getVal(savedConfig.devFee, 0),
 
-        // Mapeamento correto dos preços granulares do Admin (sem padrões fixos)
-        logoCenterPrice: getVal(savedConfig.logoCenterPrice, 0),
-        textPrice: getVal(savedConfig.textCenterPrice, 0),
+        // Mapeamento correto dos preços granulares do Admin (com padrões de negócio)
+        logoCenterPrice: getVal(savedConfig.logoCenterPrice, 29.90),
+        textPrice: getVal(savedConfig.textCenterPrice, 19.90),
 
         logoLatPrice: getVal(savedConfig.logoLatPrice, 0),
-        textLatPrice: getVal(savedConfig.textLatPrice, 0),
+        textLatPrice: getVal(savedConfig.textLatPrice, 9.90),
 
-        legZoneAddonPrice: getVal(savedConfig.legRightMidPrice, 0),
+        legZoneAddonPrice: getVal(savedConfig.legRightMidPrice, 14.90),
 
         discount20: d20,
         discount40: d40,
@@ -75,12 +75,12 @@ function loadAdminConfig() {
         'logo_centro': state.config.logoCenterPrice,
         'logo_lat_dir': state.config.logoLatPrice,
         'logo_lat_esq': state.config.logoLatPrice,
-        // Pernas (buscando do admin)
-        'leg_right_mid_ie': getVal(savedConfig.legRightMidPrice, 0),
-        'leg_right_mid_ii': getVal(savedConfig.legRightMidPrice, 0),
-        'leg_right_bottom_ie': getVal(savedConfig.legRightBottomPrice, 0),
-        'leg_right_bottom_ii': getVal(savedConfig.legRightBottomPrice, 0),
-        'leg_left_mid': getVal(savedConfig.legLeftPrice, 0)
+        // Pernas (buscando do admin com fallback)
+        'leg_right_mid_ie': getVal(savedConfig.legRightMidPrice, 14.90),
+        'leg_right_mid_ii': getVal(savedConfig.legRightMidPrice, 14.90),
+        'leg_right_bottom_ie': getVal(savedConfig.legRightBottomPrice, 14.90),
+        'leg_right_bottom_ii': getVal(savedConfig.legRightBottomPrice, 14.90),
+        'leg_left_mid': getVal(savedConfig.legLeftPrice, 14.90)
     };
 
     // Preços de Extras (Usar getAdminVal para permitir fallback no pricing.js)
