@@ -165,6 +165,7 @@ async function init() {
     }
 
     console.log("Maestro: Pronto! Zoom:", currentZoom);
+    state.isLocked = false;
 }
 
 /**

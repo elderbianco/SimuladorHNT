@@ -20,6 +20,7 @@ function init() {
     const editingIndex = localStorage.getItem('editingOrderIndex');
     if (!editingIndex) {
         loadState(); // Only load if NOT editing
+        state.isLocked = false;
     } else {
         console.log('⏭️ Pulando loadState() - Modo de edição detectado');
     }

@@ -12,6 +12,7 @@ async function init() {
     initDataCache();
     loadAdminConfig();
     loadState();
+    state.isLocked = false;
 
     // Restoration Override
     if (typeof checkForRestoration === 'function') {
