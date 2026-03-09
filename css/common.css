@@ -644,11 +644,12 @@ h4 {
     align-items: center;
 }
 
+/* Mobile Menu Trigger - HIDDEN BY DEFAULT (Desktop/Tablet) */
 .mobile-menu-trigger {
     display: none !important;
-    /* Strictly hidden on desktop */
 }
 
+/* Mobile-Specific Logic (<= 768px) */
 @media (max-width: 768px) {
     .premium-header {
         position: sticky;
@@ -692,10 +693,16 @@ h4 {
         flex: 0 0 auto;
     }
 
-    /* Mobile Menu Logic */
+    /* Mobile Menu Implementation */
+    .mobile-menu-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
     .mobile-menu-trigger {
         display: flex !important;
-        /* Show only on mobile */
+        /* Show ONLY on Mobile */
         background: #1a1a1a;
         border: 1px solid #333;
         color: #D4AF37;
@@ -716,12 +723,12 @@ h4 {
         border-color: #D4AF37;
     }
 
-    /* Hide standard horizontal nav on mobile */
+    /* Hide horizontal nav on mobile */
     .header-icon-nav {
         display: none !important;
     }
 
-    /* Vertical Dropdown Styles when menu is active/hovered */
+    /* Vertical Dropdown when active/hovered */
     .mobile-menu-container .header-icon-nav {
         display: none !important;
         /* Default hidden */
@@ -748,10 +755,15 @@ h4 {
 
     .mobile-menu-container .nav-icon {
         display: flex !important;
+        /* Force show icons inside vertical menu */
         width: 32px;
         height: 32px;
         background: #111;
         border-radius: 6px;
+    }
+
+    .mobile-env-title {
+        display: none;
     }
 
     .nav-icon {
@@ -759,36 +771,11 @@ h4 {
         height: 28px;
         font-size: 0.9rem;
     }
-}
 
-.mobile-menu-container:hover .header-icon-nav,
-.mobile-menu-container.active .header-icon-nav {
-    display: flex !important;
-}
-
-.mobile-menu-container .nav-icon {
-    display: flex !important;
-    /* Force show icons inside vertical menu */
-    width: 32px;
-    height: 32px;
-    background: #111;
-    border-radius: 6px;
-}
-
-.mobile-env-title {
-    display: none;
-}
-
-.nav-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 0.9rem;
-}
-
-.nav-icon img {
-    width: 16px;
-    height: 16px;
-}
+    .nav-icon img {
+        width: 16px;
+        height: 16px;
+    }
 }
 
 /* Legacy top-nav (keeping for backwards compatibility) */
