@@ -63,7 +63,7 @@ async function init() {
     // Zoom Inicial
     const applyInitialZoom = () => {
         if (window.innerWidth <= 768) {
-            currentZoom = 1.35; // Aumentado para o mobile
+            currentZoom = 1.45; // Aumentado um pouco mais para o mobile
         } else {
             currentZoom = 1.50; // Reduzido levemente no desktop
         }
