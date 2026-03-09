@@ -224,8 +224,9 @@ const DatabaseManager = {
             PRECO_TOTAL: pricing.total_price || 0,
             PRECO_FINAL: pricing.total_price || 0,
 
-            // Backup
-            DADOS_TECNICOS_JSON: JSON.stringify(record)
+            // Backup e PDF
+            DADOS_TECNICOS_JSON: JSON.stringify(record),
+            LINK_PDF: record.pdfUrl || ""
         };
 
         // --- MAPPING (Simplified for restoration) ---
