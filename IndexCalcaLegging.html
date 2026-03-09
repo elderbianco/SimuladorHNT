@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Calça Legging - Hanuthai</title>
+    <title>Simulador CalÃ§a Legging - Hanuthai</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Advent+Pro:wght@400;700&family=Alex+Brush&family=Alfa+Slab+One&family=Allerta+Stencil&family=Allura&family=Anton&family=Archivo:wght@400;700&family=Bebas+Neue&family=Black+Ops+One&family=Cabin:wght@400;700&family=Cinzel:wght@400;700&family=Creepster&family=DM+Sans:wght@400;700&family=Dancing+Script:wght@400;700&family=Exo+2:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Merienda:wght@400;700&family=Montserrat:wght@400;700&family=Nunito:wght@400;700&family=Open+Sans:wght@400;700&family=Orbitron:wght@400;700&family=Oswald:wght@400;700&family=Outfit:wght@300;400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Playwrite+Magyarorszag:wght@100..400&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Rubik:wght@400;700&family=Russo+One&family=Sacramento&family=Satisfy&family=Stardos+Stencil:wght@400;700&family=Teko:wght@400;700&family=Ubuntu:wght@400;700&family=Work+Sans:wght@400;700&family=Yellowtail&family=Zilla+Slab:wght@400;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/shorts-style.css?v=400">
     <link rel="stylesheet" href="css/shorts-gallery.css">
-    <link rel="stylesheet" href="css/simulator.css?v=20260226">
+    <link rel="stylesheet" href="css/simulator.css?v=20260309">
 
     <!-- Action Library (XLSX) -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -21,37 +21,37 @@
     <!-- Premium Header -->
     <header class="premium-header">
         <div class="header-left">
-            <a href="index.html" class="nav-icon" data-tooltip="Início">🏠</a>
+            <a href="index.html" class="nav-icon" data-tooltip="InÃ­cio">ðŸ </a>
             <div class="header-logo-container">
                 <img src="assets/Galeria/HanuthaiLogo/LogoHanuthai.jpg" alt="Hanuthai Logo" class="header-logo-img">
             </div>
         </div>
 
         <div class="header-center">
-            <div class="header-env-title">HANUTHAI SIMULADOR CALÇA LEGGING</div>
+            <div class="header-env-title">HANUTHAI SIMULADOR CALÃ‡A LEGGING</div>
         </div>
 
         <div class="header-right">
             <div class="mobile-menu-container" id="mobile-sim-menu">
                 <button class="mobile-menu-trigger" onclick="this.parentElement.classList.toggle('active')">
-                    👕 <small>SIMULADORES</small>
+                    ðŸ‘• <small>SIMULADORES</small>
                 </button>
                 <div class="header-icon-nav">
                     <a href="IndexFightShorts.html" class="nav-icon" data-tooltip="Fight Shorts"><img
                             src="assets/ui-icons/icon-fight-shorts.png" alt="Fight Shorts"></a>
                     <a href="IndexShortsLegging.html" class="nav-icon" data-tooltip="Shorts Legging"><img
                             src="assets/ui-icons/icon-shorts-calca-legging.png" alt="Shorts Legging"></a>
-                    <a href="IndexCalcaLegging.html" class="nav-icon active" data-tooltip="Calça Legging"><img
-                            src="assets/ui-icons/icon-calca-legging.png" alt="Calça Legging"></a>
+                    <a href="IndexCalcaLegging.html" class="nav-icon active" data-tooltip="CalÃ§a Legging"><img
+                            src="assets/ui-icons/icon-calca-legging.png" alt="CalÃ§a Legging"></a>
                     <a href="IndexMoletom.html" class="nav-icon" data-tooltip="Moletom"><img
                             src="assets/ui-icons/icon-moletom.png" alt="Moletom"></a>
                     <a href="IndexTop.html" class="nav-icon" data-tooltip="Top"><img src="assets/ui-icons/icon-top.png"
                             alt="Top"></a>
-                    <a href="IndexFaq.html" class="nav-icon" data-tooltip="FAQ">❓</a>
+                    <a href="IndexFaq.html" class="nav-icon" data-tooltip="FAQ">â“</a>
                 </div>
             </div>
             <span class="header-icon">
-                🛒
+                ðŸ›’
                 <span class="cart-badge">0</span>
             </span>
         </div>
@@ -65,7 +65,7 @@
                     <div class="simulator-wrapper">
                         <!-- Base Product Image -->
                         <div class="product-layer">
-                            <img id="product-image" src="" alt="Calça Legging">
+                            <img id="product-image" src="" alt="CalÃ§a Legging">
                         </div>
 
                         <div id="limits-layer" class="product-layer"
@@ -83,7 +83,7 @@
             <div class="zoom-controls">
                 <button id="zoom-out" class="zoom-btn">-</button>
                 <button id="zoom-in" class="zoom-btn">+</button>
-                <button id="lock-interaction" class="zoom-btn lock-btn" title="Bloquear/Liberar Interação">🔓</button>
+                <button id="lock-interaction" class="zoom-btn lock-btn" title="Bloquear/Liberar InteraÃ§Ã£o">ðŸ”“</button>
             </div>
         </div>
 
@@ -100,8 +100,8 @@
 
             <div class="action-bar" style="padding:10px; display:flex; gap:10px;">
                 <button id="btn-add-cart" class="btn-primary"
-                    style="flex:1; background-color: #28a745; border-color: #28a745;">🛒 Adicionar ao Carrinho</button>
-                <button id="btn-pdf" class="btn-primary" style="flex:1;">🖨️ Salvar PDF</button>
+                    style="flex:1; background-color: #28a745; border-color: #28a745;">ðŸ›’ Adicionar ao Carrinho</button>
+                <button id="btn-pdf" class="btn-primary" style="flex:1;">ðŸ–¨ï¸ Salvar PDF</button>
             </div>
 
             <!-- Resumo do Pedido (Inline) -->
@@ -141,7 +141,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Adicionar Texto</h3>
-                <button class="modal-close" onclick="closeTextModal()">×</button>
+                <button class="modal-close" onclick="closeTextModal()">Ã—</button>
             </div>
             <div style="padding: 25px;">
                 <label class="control-label">Digite o Texto</label>
@@ -174,7 +174,7 @@
                 <button onclick="closeGallery()">X</button>
             </div>
             <div style="padding: 0 15px 10px 15px;">
-                <input type="text" id="gallery-search" placeholder="🔍 Buscar imagem pelo nome..."
+                <input type="text" id="gallery-search" placeholder="ðŸ” Buscar imagem pelo nome..."
                     class="gallery-search-bar">
             </div>
             <div id="gallery-grid" class="gallery-grid">
@@ -204,7 +204,7 @@
                     </tbody>
                 </table>
                 <div style="margin-top: 20px; text-align: right;">
-                    <button class="btn-action btn-primary-action" onclick="PDFGenerator.generate()">🖨️ Imprimir /
+                    <button class="btn-action btn-primary-action" onclick="PDFGenerator.generate()">ðŸ–¨ï¸ Imprimir /
                         PDF</button>
                 </div>
             </div>
