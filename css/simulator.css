@@ -96,15 +96,13 @@ body {
     transform-origin: center center;
     width: min(950px, 94vw, 94vh);
     height: min(950px, 94vw, 94vh);
-    /* aspect-ratio: 1 / 1 removido para flexibilidade em todos os produtos */
-display: flex;
-align-items: center;
-justify-content: center;
-position: relative;
-will-change: transform;
-}
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    will-change: transform;
+} */
 
-*/
 /* .simulator-wrapper {
     position: relative;
     width: 100%;
