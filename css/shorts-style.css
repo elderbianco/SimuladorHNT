@@ -136,25 +136,17 @@ body {
     }
 
     .simulator-area {
-        height: 45vh;
-        /* Proportional height */
-        min-height: 300px;
-        max-height: 550px;
-        position: -webkit-sticky;
+        height: 55vh;
+        min-height: 350px;
+        max-height: 600px;
         position: sticky;
-        /* Global Sticky */
-        top: 42px !important;
-        /* Below premium-header */
-        z-index: 100;
+        top: 0;
+        z-index: 900;
         border-radius: 0;
         border: none;
-        border-bottom: 2px solid #e0e0e0;
-        padding: 0;
-        /* Removido padding para ganhar espaço */
-        background-position: center center;
-        /* Center background better */
-        touch-action: pan-x pan-y !important;
-        /* Lock pinch-to-zoom */
+        border-bottom: 2px solid var(--border);
+        padding: 15px 10px;
+        background-position: center bottom;
     }
 
     /* ... */
