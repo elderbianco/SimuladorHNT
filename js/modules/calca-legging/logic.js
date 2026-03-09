@@ -117,12 +117,8 @@ function loadAdminConfig() {
     const prices = JSON.parse(localStorage.getItem('hnt_legging_config') || '{}');
     const globalConfig = JSON.parse(localStorage.getItem('hnt_pricing_config') || '{}');
 
-    const getVal = (val, def) => {
-        const v = parseFloat(val);
-        // If v is NaN, undefined or null, use def.
-        // If v is 0, we generally want to allow it EXCEPT for basePrice.
-        return (val !== undefined && val !== null && !isNaN(v)) ? v : def;
-    };
+    const getVal = (val, def) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : def;
+    const getAdminVal = (val) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : undefined;
 
     // 1. Resolve Base Price (Legging Specific > Default)
     // Force fallback if 0
@@ -161,7 +157,7 @@ function loadAdminConfig() {
         // Legacy
         discount20: d20,
         discount40: d40,
-        artWaiver: prices.artWaiver !== undefined ? prices.artWaiver : (globalConfig.artWaiver !== undefined ? globalConfig.artWaiver : CONFIG.artWaiver),
+        artWaiver: prices.artWaiver !== undefined ? prices.artWaiver : (globalConfig.artWaiver !== undefined ? globalConfig.artWaiver : (CONFIG.artWaiver !== undefined ? CONFIG.artWaiver : true)),
         partColors: JSON.parse(localStorage.getItem('hnt_legging_part_colors') || '{}'),
         activeFonts: JSON.parse(localStorage.getItem('hnt_active_fonts') || '[]'),
         textColors: JSON.parse(localStorage.getItem('hnt_text_colors') || '[]')

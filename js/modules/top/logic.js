@@ -99,10 +99,8 @@ function generateFormattedFilename(zoneId, originalName, source = 'EXT') {
 function loadAdminConfig() {
     const prices = JSON.parse(localStorage.getItem('hnt_top_config') || '{}');
     const globalConfig = JSON.parse(localStorage.getItem('hnt_pricing_config') || '{}');
-    const getVal = (val, def) => {
-        const v = parseFloat(val);
-        return (val !== undefined && val !== null && !isNaN(v)) ? v : def;
-    };
+    const getVal = (val, def) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : def;
+    const getAdminVal = (val) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : undefined;
 
     // 1. Resolve Base Price (Top Specific > Default)
     const base = getVal(prices.basePrice, 129.90);
@@ -146,7 +144,7 @@ function loadAdminConfig() {
         textPrice: getVal(prices.textFrontPrice, 15.00),
         discount20: d20,
         discount40: d40,
-        artWaiver: prices.artWaiver !== undefined ? prices.artWaiver : (globalConfig.artWaiver !== undefined ? globalConfig.artWaiver : CONFIG.artWaiver),
+        artWaiver: prices.artWaiver !== undefined ? prices.artWaiver : (globalConfig.artWaiver !== undefined ? globalConfig.artWaiver : (CONFIG.artWaiver !== undefined ? CONFIG.artWaiver : true)),
         partColors: JSON.parse(localStorage.getItem('hnt_top_part_colors') || '{}'),
         activeFonts: JSON.parse(localStorage.getItem('hnt_active_fonts') || '[]'),
         textColors: JSON.parse(localStorage.getItem('hnt_text_colors') || '[]')
