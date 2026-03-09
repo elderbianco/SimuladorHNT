@@ -749,7 +749,7 @@ h4 {
         min-width: 60px;
     }
 
-    .mobile-menu-container:hover .header-icon-nav {
+    .mobile-menu-container.active .header-icon-nav {
         display: flex !important;
     }
 
