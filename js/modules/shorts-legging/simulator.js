@@ -123,11 +123,11 @@ function init() {
     // 3. Renderização Inicial (agora com estado correto)
     renderControls();
     renderFixedTexts();
-    const pricing = calculateFullPrice();
-    updatePrice(pricing);
+    updatePrice();
     updateCartCount();
 
     if (typeof PDFGenerator !== 'undefined') {
+        const pricing = calculateFullPrice();
         PDFGenerator.prepareDraft(state, pricing, CONFIG);
     }
 
