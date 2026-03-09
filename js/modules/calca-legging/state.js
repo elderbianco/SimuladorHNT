@@ -115,7 +115,8 @@ const state = {
     hntLogoColor: 'preto',
     observations: "",
     phone: "",
-    termsAccepted: false
+    termsAccepted: false,
+    isLocked: false
 };
 
 state.simulationId = getFormattedId();

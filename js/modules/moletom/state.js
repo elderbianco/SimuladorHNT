@@ -35,7 +35,8 @@ window.state = {
     logoPunho: { enabled: true, color: 'preto' }, // New Feature State
     observations: "",
     phone: "",
-    termsAccepted: false
+    termsAccepted: false,
+    isLocked: false
 };
 
 // Global reference using both window and globalThis for maximum reliability

@@ -15,6 +15,7 @@ function setZoom(val) {
 function setupViewportPan() {
     const vp = document.querySelector('.simulator-viewport'); if (!vp) return;
     vp.addEventListener('mousedown', (e) => {
+        if (state.isLocked) return;
         if (e.target.closest('.custom-element')) return;
         isPanning = true; panStart.x = e.clientX - panOffset.x; panStart.y = e.clientY - panOffset.y;
     });
@@ -26,6 +27,7 @@ function setupViewportPan() {
 
     // TOUCH PANNING
     vp.addEventListener('touchstart', (e) => {
+        if (state.isLocked) return;
         if (e.target.closest('.custom-element')) return;
         if (e.touches.length === 1) {
             isPanning = true; const t = e.touches[0];
@@ -40,7 +42,7 @@ function setupViewportPan() {
     }, { passive: false });
     window.addEventListener('touchend', () => { isPanning = false; });
     vp.addEventListener('wheel', (e) => {
-        if (isMobile()) return; // Lock zoom scroll on mobile
+        if (state.isLocked || isMobile()) return; // Lock zoom scroll on mobile
         e.preventDefault(); const delta = e.deltaY > 0 ? -0.1 : 0.1;
         const old = currentZoom; currentZoom = Math.max(0.5, Math.min(2.5, currentZoom + delta));
         const rect = vp.getBoundingClientRect();
