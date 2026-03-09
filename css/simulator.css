@@ -190,6 +190,8 @@ body {
     flex-wrap: wrap;
     justify-content: flex-end;
     max-width: 160px;
+    z-index: 2000 !important;
+    pointer-events: auto !important;
 }
 
 .zoom-btn {
