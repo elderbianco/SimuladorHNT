@@ -132,13 +132,21 @@ function setupMainEvents() {
     }
 
     // Trava de Interação
+    const zoomIn = document.getElementById('zoom-in');
+    const zoomOut = document.getElementById('zoom-out');
     const btnLock = document.getElementById('lock-interaction');
+
     if (btnLock) {
         btnLock.onclick = () => {
             state.isLocked = !state.isLocked;
             btnLock.classList.toggle('locked', state.isLocked);
+
+            // Sincronizar botões de zoom com o cadeado
+            zoomIn?.classList.toggle('zoom-disabled', state.isLocked);
+            zoomOut?.classList.toggle('zoom-disabled', state.isLocked);
+
             btnLock.innerHTML = state.isLocked ? '🔒' : '🔓';
-            if (state.isLocked) isPanning = false;
+            if (state.isLocked && typeof isPanning !== 'undefined') isPanning = false;
         };
     }
 }
