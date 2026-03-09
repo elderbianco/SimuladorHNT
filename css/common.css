@@ -686,33 +686,43 @@ h4 {
         align-items: center;
     }
 
-    /* Mobile-Specific Menu Wrapper */
+    /* Mobile-Specific Menu Wrapper - Hidden on Desktop */
     .mobile-menu-container {
-        position: relative;
-        display: flex;
-        align-items: center;
+        display: none;
     }
 
     .mobile-menu-trigger {
-        background: #1a1a1a;
-        border: 1px solid #333;
-        color: #D4AF37;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        cursor: pointer;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        height: 32px;
+        display: none;
     }
 
-    .mobile-menu-trigger:hover {
-        background: #222;
-        border-color: #D4AF37;
+    @media (max-width: 768px) {
+        .mobile-menu-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .mobile-menu-trigger {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #D4AF37;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            height: 32px;
+        }
+
+        .mobile-menu-trigger:hover {
+            background: #222;
+            border-color: #D4AF37;
+        }
     }
 
     /* Vertical Navbar on Mobile (hidden by default) */
