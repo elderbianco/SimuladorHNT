@@ -11,27 +11,27 @@ function updatePrice() {
     const display = document.getElementById('price-display');
     const totalQty = Object.values(state.sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
 
+    const infoT = (typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_total_geral') : '';
+    const infoM = (typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_matriz') : '';
+
     if (display) {
-        const infoT = (typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_total_geral') : '';
-        const infoM = (typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_matriz') : '';
-
         display.innerHTML = `
-        <div style="font-size:2.5rem; font-weight:bold; color:#D4AF37;">R$ ${fmtMoney(p.total)} ${infoT}</div>
-        ${totalQty > 1 ? `<div style="font-size:1rem; color:#aaa; margin-top:-5px; margin-bottom:10px;">(Média: R$ ${fmtMoney(p.total / totalQty)}/un)</div>` : ''}
-        <div style="font-size:0.8rem; color:#666; font-weight:normal; margin-top:5px; line-height: 1.2;">
-            ${totalQty} ${totalQty === 1 ? 'Peça' : 'Peças'}<br>
-            Desc: ${fmtMoney(p.discountPercent)}% (-R$ ${fmtMoney(p.discountValue)})<br>
-            ${p.waiver > 0 ? 'Isenção 1 Arte: SIM <br>' : ''}
-            ${p.devFeesCount > 0 ? `+ R$ ${fmtMoney(p.devFeesCount * state.config.devFee)} (Dev. Matriz) ${infoM}` : ''}
-        </div>
-    `;
+            <div style="font-size:2.5rem; font-weight:bold; color:#D4AF37;">R$ ${fmtMoney(p.total)} ${infoT}</div>
+            ${totalQty > 1 ? `<div style="font-size:1rem; color:#aaa; margin-top:-5px; margin-bottom:10px;">(Média: R$ ${fmtMoney(p.total / totalQty)}/un)</div>` : ''}
+            <div style="font-size:0.8rem; color:#666; font-weight:normal; margin-top:5px; line-height: 1.2;">
+                ${totalQty} ${totalQty === 1 ? 'Peça' : 'Peças'}<br>
+                Desc: ${fmtMoney(p.discountPercent)}% (-R$ ${fmtMoney(p.discountValue)})<br>
+                ${p.waiver > 0 ? 'Isenção 1 Arte: SIM <br>' : ''}
+                ${p.devFees > 0 ? `+ R$ ${fmtMoney(p.devFees)} (Taxa Vetorização) ${infoM}` : ''}
+            </div>
+        `;
+    }
 
-        updateReport(p.total, totalQty, p.discountPercent, p.discountValue, p.waiver, p.devFeesCount * state.config.devFee);
+    updateReport(p.total, totalQty, p.discountPercent, p.discountValue, p.waiver, p.devFees);
 
-        // Preparação paralela do PDF/Resumo
-        if (typeof PDFGenerator !== 'undefined') {
-            PDFGenerator.prepareDraft(state, p, CONFIG);
-        }
+    // Preparação paralela do PDF/Resumo
+    if (typeof PDFGenerator !== 'undefined') {
+        PDFGenerator.prepareDraft(state, p, CONFIG);
     }
 }
 
@@ -53,7 +53,7 @@ function getZonePrice(zoneId, type = 'logo') {
  * Calcula o preço total considerando quantidades, descontos e taxas
  */
 function calculateFullPrice() {
-    let unitBase = state.config.basePrice;
+    let unitBase = state.config.basePrice || 0;
     let textCount = 0;
     let customImagesCost = 0;
     let customUploadsCount = 0;
@@ -66,7 +66,6 @@ function calculateFullPrice() {
                 const isCustom = el.dataset.isCustom === 'true';
                 if (isCustom) {
                     uniqueCustomLogos.add(el.dataset.filename || 'custom');
-                    // FIX: Charge zone price even for custom images
                     customImagesCost += getZonePrice(key, 'logo');
                 } else {
                     customImagesCost += getZonePrice(key, 'logo');
@@ -83,47 +82,46 @@ function calculateFullPrice() {
         if (t.enabled && t.content) {
             textCount++;
             const zoneId = CONFIG.textZones.find(tz => tz.id === key)?.parentZone || key;
-            const price = getZonePrice(zoneId, 'text');
-            customTextCost += price;
+            customTextCost += getZonePrice(zoneId, 'text');
         }
     });
 
-    // 1. Define Base Price (Raw)
-    const baseGarmentPrice = state.config.basePrice;
+    let totalQty = 0;
+    Object.values(state.sizes).forEach(q => totalQty += (parseInt(q) || 0));
 
-    // 2. Calculate Total Quantity FIRST (needed for tier logic)
-    const totalQty = Object.values(state.sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
+    // Wholesale Price Logic (Tiers)
+    const baseGarmentPrice = state.config.basePrice || 0;
+    let tierBasePrice = baseGarmentPrice;
+    if (totalQty >= 30 && state.config.price30 > 0) tierBasePrice = state.config.price30;
+    else if (totalQty >= 20 && state.config.price20 > 0) tierBasePrice = state.config.price20;
+    else if (totalQty >= 10 && state.config.price10 > 0) tierBasePrice = state.config.price10;
 
-    // 3. Define Tier Base Price (Raw)
-    let currentTierBase = baseGarmentPrice;
-    if (totalQty >= 30 && state.config.price30 > 0) currentTierBase = state.config.price30;
-    else if (totalQty >= 20 && state.config.price20 > 0) currentTierBase = state.config.price20;
-    else if (totalQty >= 10 && state.config.price10 > 0) currentTierBase = state.config.price10;
-
-    // 4. Calculate "Full" Unit Price (Base + Customs) for Subtotal
+    // Customization Adds on top
     let fullUnitBase = baseGarmentPrice + customTextCost + customImagesCost;
 
-    // 5. Calculate SubTotal based on FULL Price
     let subTotal = 0;
     Object.entries(state.sizes).forEach(([sz, q]) => {
         if (q > 0) {
             const sizeData = CONFIG.sizes.find(s => s.label === sz);
-            const extraCost = (sizeData && sizeData.priceMod > 0) ? (state.config.sizeModPrice || 0) : 0;
-            subTotal += (fullUnitBase + extraCost) * q;
+            const mod = (sizeData && sizeData.priceMod > 0) ? (state.config.sizeModPrice || 0) : 0;
+            subTotal += (fullUnitBase + mod) * q;
         }
     });
 
-    // 5. Calculate Discount Value: (Base - TierBase) * Qty
-    let baseDiscountPerUnit = Math.max(0, baseGarmentPrice - currentTierBase);
+    // Calculate Discount: (OriginalBase - TierBase) * Qty
+    let baseDiscountPerUnit = Math.max(0, baseGarmentPrice - tierBasePrice);
     let discountVal = baseDiscountPerUnit * totalQty;
 
-    // 6. Calculate Effective Percentage (for display)
+    // Effective Percent based on FULL SubTotal (Base + Customs)
     let appliedDiscount = 0;
     if (subTotal > 0) {
         appliedDiscount = (discountVal / subTotal) * 100;
     }
 
-    let devFees = customUploadsCount * state.config.devFee;
+    // Taxas de Desenvolvimento
+    const devFees = customUploadsCount * (state.config.devFee || 0);
+
+    // Isenção de Arte (Waiver)
     let waiver = 0;
     if (state.config.artWaiver && totalQty > 10) {
         if (customUploadsCount > 0 || textCount > 0) waiver = (state.config.devFee || 0);
@@ -134,7 +132,7 @@ function calculateFullPrice() {
         discountPercent: appliedDiscount,
         discountValue: discountVal,
         devFeesCount: customUploadsCount,
-        devFees: devFees, // Valor total das taxas de desenvolvimento
+        devFees: devFees,
         waiver: waiver
     };
 }
