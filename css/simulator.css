@@ -93,18 +93,18 @@ body {
 }
 
 /* .zoom-container {
-    transform-origin: center;
-    transition: none;
-    width: 100%;
-    max-width: 1200px;
-    aspect-ratio: 1 / 1;
-    max-height: 85vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    will-change: transform;
-} */
+    transform-origin: center center;
+    width: min(950px, 94vw, 94vh);
+    height: min(950px, 94vw, 94vh);
+    /* aspect-ratio: 1 / 1 removido para flexibilidade em todos os produtos */
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+will-change: transform;
+}
 
+*/
 /* .simulator-wrapper {
     position: relative;
     width: 100%;
