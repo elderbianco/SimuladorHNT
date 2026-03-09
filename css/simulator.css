@@ -542,9 +542,10 @@ option {
         /* Proportional height */
         min-height: 300px;
         max-height: 550px;
+        position: -webkit-sticky;
         position: sticky;
         /* Global Sticky */
-        top: 41px;
+        top: 42px !important;
         /* Below premium-header */
         z-index: 100;
         border-radius: 0;

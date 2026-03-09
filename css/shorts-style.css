@@ -137,17 +137,19 @@ body {
 
     .simulator-area {
         height: 45vh;
-        /* Reduced from 55vh to show more controls */
+        /* Proportional height */
         min-height: 300px;
-        max-height: 500px;
+        max-height: 550px;
+        position: -webkit-sticky;
         position: sticky;
-        top: 41px;
-        /* Height of the sticky premium-header on mobile */
+        /* Global Sticky */
+        top: 42px !important;
+        /* Below premium-header */
         z-index: 100;
         border-radius: 0;
         border: none;
-        border-bottom: 2px solid var(--border);
-        padding: 10px;
+        border-bottom: 2px solid #e0e0e0;
+        padding: 5px;
         background-position: center center;
         /* Center background better */
         touch-action: pan-x pan-y !important;
