@@ -129,7 +129,8 @@ body {
 
     /* ... */
     .simulator-area {
-        height: 45vh; /* Reduced from 55vh to show more controls */
+        height: 45vh;
+        /* Reduced from 55vh to show more controls */
         min-height: 300px;
         max-height: 500px;
         position: relative;
@@ -139,7 +140,10 @@ body {
         border: none;
         border-bottom: 2px solid var(--border);
         padding: 10px;
-        background-position: center center; /* Center background better */
+        background-position: center center;
+        /* Center background better */
+        touch-action: pan-x pan-y !important;
+        /* Lock pinch-to-zoom */
     }
 
     /* ... */
@@ -165,17 +169,20 @@ body {
 /* Conflict Fix: !important used to override simulator.css loaded later - SCOPED TO SHORTS ONLY */
 .page-shorts .zoom-container {
     transform-origin: center center !important;
-    height: 100% !important; /* Changed from 90vh to match container */
+    height: 100% !important;
+    /* Changed from 90vh to match container */
     width: 100% !important;
     aspect-ratio: 1 / 1 !important;
     max-width: 95vw !important;
-    max-height: 95% !important; /* Ensure vertical centering */
+    max-height: 95% !important;
+    /* Ensure vertical centering */
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     will-change: transform;
-    margin: 0 auto; /* Ensure horizontal centering */
+    margin: 0 auto;
+    /* Ensure horizontal centering */
 }
 
 /* Original rule for other pages */
@@ -923,7 +930,8 @@ input:checked+.slider:before {
     }
 
     .simulator-area {
-        height: 45vh; /* Unified height */
+        height: 45vh;
+        /* Unified height */
         min-height: 300px;
         max-height: 500px;
         position: sticky;
@@ -932,7 +940,8 @@ input:checked+.slider:before {
         border-radius: 0;
         border: none;
         border-bottom: 2px solid var(--border);
-        padding: 5px; /* Minimal padding */
+        padding: 5px;
+        /* Minimal padding */
     }
 
     .simulator-viewport {

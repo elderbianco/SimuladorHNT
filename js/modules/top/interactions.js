@@ -41,6 +41,7 @@ function setupViewportPan() {
     }, { passive: false });
     window.addEventListener('touchend', () => { isPanning = false; });
     vp.addEventListener('wheel', (e) => {
+        if (isMobile()) return; // Lock zoom scroll on mobile
         e.preventDefault();
         const delta = e.deltaY > 0 ? -0.1 : 0.1;
         const old = currentZoom; currentZoom = Math.max(0.5, Math.min(2.0, currentZoom + delta));
