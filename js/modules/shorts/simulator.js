@@ -296,14 +296,14 @@ function setupMainEvents() {
             state.isLocked = !state.isLocked;
             btnLock.classList.toggle('locked', state.isLocked);
 
-            // Sincronizar botões de zoom com o cadeado
-            zoomIn?.classList.toggle('locked', state.isLocked);
-            zoomOut?.classList.toggle('locked', state.isLocked);
+            // Sincronizar botões de zoom com o cadeado (desabilita apenas os botões de +/-)
+            zoomIn?.classList.toggle('zoom-disabled', state.isLocked);
+            zoomOut?.classList.toggle('zoom-disabled', state.isLocked);
 
             btnLock.innerHTML = state.isLocked ? '🔒' : '🔓';
 
             // Log para feedback
-            console.log(state.isLocked ? "🔒 Interação Bloqueada" : "🔓 Interação Liberada");
+            console.log(state.isLocked ? "🔒 Interação Bloqueada (Zoom desabilitado)" : "🔓 Interação Liberada");
 
             // Se bloqueou, garante que o panning parou
             if (state.isLocked) isPanning = false;
