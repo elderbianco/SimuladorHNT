@@ -70,33 +70,41 @@ function loadAdminConfig() {
     const prices = JSON.parse(localStorage.getItem('hnt_shorts_legging_config') || '{}');
     const globalConfig = JSON.parse(localStorage.getItem('hnt_pricing_config') || '{}');
 
-    // Calculate Global Discount % from Shorts Config (Reference)
-    // We now use specific tier prices if available, so these legacy discounts are just fallbacks or 0.
-    const d20 = 0;
-    const d40 = 0;
-
     const getVal = (val, def) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : def;
     const getAdminVal = (val) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : undefined;
 
+    // 1. Resolve Base Price (Shorts Legging Specific > Default)
+    const base = (getVal(prices.basePrice, 89.90) || 89.90);
+
+    // 2. Resolve Wholesale Prices (Standard Tiers)
+    const p10 = getVal(prices.price10, 80.90);
+    const p20 = getVal(prices.price20, 71.90);
+    const p30 = getVal(prices.price30, 62.90);
+
+    // 3. Calculate Discounts Dynamically
+    let d20 = 0;
+    let d40 = 0;
+    if (p10 > 0 && p10 < base) d20 = ((base - p10) / base) * 100;
+    if (p20 > 0 && p20 < base) d40 = ((base - p20) / base) * 100;
+
     state.config = {
-        // Enforce fallback if basePrice comes as 0 from Admin (which implies unconfigured/error for base price)
-        basePrice: (getVal(prices.basePrice, 89.90) || 89.90),
-
+        basePrice: base,
         product: 'Shorts Legging',
-        sizeModPrice: getVal(prices.sizeModPrice, 10.00), // Default to 10.00 to match others
-        devFee: getVal(prices.devFee, 30.00), // Standard fee
+        sizeModPrice: getVal(prices.sizeModPrice, 10.00),
+        devFee: getVal(prices.devFee, 30.00),
 
-        logoLatPrice: getVal(prices.logoLatPrice, 29.90),
-        textLatPrice: getVal(prices.textLatPrice, 9.90),
-        logoLegPrice: getVal(prices.logoLegPrice, 14.90),
-        textLegPrice: getVal(prices.textLegPrice, 9.90), // Fixed from 0 to 9.90
+        // Use Global fallbacks for zone prices if local is missing
+        logoLatPrice: getVal(prices.logoLatPrice || globalConfig.logoLatPrice, 29.90),
+        textLatPrice: getVal(prices.textLatPrice || globalConfig.textLatPrice, 9.90),
+        logoLegPrice: getVal(prices.logoLegPrice || globalConfig.legLeftPrice, 14.90),
+        textLegPrice: getVal(prices.textLegPrice || globalConfig.textLatPrice, 9.90),
 
         // Wholesale Tiers
-        price10: getVal(prices.price10, 80.90),
-        price20: getVal(prices.price20, 71.90),
-        price30: getVal(prices.price30, 62.90),
+        price10: p10,
+        price20: p20,
+        price30: p30,
 
-        // Legacy
+        // Legacy/Misc
         discount20: d20,
         discount40: d40,
         artWaiver: prices.artWaiver !== undefined ? prices.artWaiver : (globalConfig.artWaiver !== undefined ? globalConfig.artWaiver : (CONFIG.artWaiver !== undefined ? CONFIG.artWaiver : true)),
@@ -113,7 +121,7 @@ function loadAdminConfig() {
     targets.forEach(sizeArray => {
         sizeArray.forEach(s => {
             if (['GG', 'EXG', 'EXGG', 'G1', 'G2', 'G3'].includes(s.label)) {
-                s.priceMod = getVal(state.config.sizeModPrice, 10.00);
+                s.priceMod = state.config.sizeModPrice;
             }
         });
     });
@@ -134,15 +142,16 @@ function loadAdminConfig() {
                 fontFamily: defaultFontFamily,
                 color: "#000000",
                 scale: 1.0,
-                maxLines: 1
+                maxLines: 1,
+                unlocked: true // PADLOCK DEFAULT OPEN
             };
         } else {
-            // Garante que propriedades básicas existem mesmo em objetos parciais carregados
             if (state.texts[z.id].enabled === undefined) state.texts[z.id].enabled = false;
             if (state.texts[z.id].content === undefined) state.texts[z.id].content = "";
             if (!state.texts[z.id].fontFamily) state.texts[z.id].fontFamily = defaultFontFamily;
             if (!state.texts[z.id].color) state.texts[z.id].color = "#000000";
             if (state.texts[z.id].scale === undefined) state.texts[z.id].scale = 1.0;
+            if (state.texts[z.id].unlocked === undefined) state.texts[z.id].unlocked = true;
         }
     });
 
