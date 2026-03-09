@@ -68,8 +68,12 @@ async function init() {
 
     // Auto-fetch sequence
     if (!state.orderNumber) {
-        fetch('http://localhost:3000/api/next-order-id')
-            .then(r => r.json())
+        const apiUrl = '/api/next-order-id'; // Relative path for both local and Render
+        fetch(apiUrl)
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+                return r.json();
+            })
             .then(d => {
                 if (d.number) {
                     state.orderNumber = d.number.toString();
@@ -78,7 +82,9 @@ async function init() {
                     scheduleRender(true);
                 }
             })
-            .catch(e => console.warn('Seq API fail', e));
+            .catch(e => {
+                console.warn('Seq API fail (expected if server is offline):', e.message);
+            });
     }
 
     // 3. Preparar Visual
