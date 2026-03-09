@@ -211,8 +211,12 @@ function setupMainEvents() {
     if (zoomIn) {
         zoomIn.onclick = () => {
             if (state.isLocked) return;
-            state.zoom += 0.1;
-            if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+            if (typeof setZoom === 'function') {
+                setZoom(state.zoom + 0.1);
+            } else {
+                state.zoom += 0.1;
+                if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+            }
         };
     }
 
@@ -220,8 +224,12 @@ function setupMainEvents() {
     if (zoomOut) {
         zoomOut.onclick = () => {
             if (state.isLocked) return;
-            state.zoom -= 0.1;
-            if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+            if (typeof setZoom === 'function') {
+                setZoom(state.zoom - 0.1);
+            } else {
+                state.zoom -= 0.1;
+                if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+            }
         };
     }
 
