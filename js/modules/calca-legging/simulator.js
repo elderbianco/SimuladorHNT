@@ -205,6 +205,37 @@ function setupMainEvents() {
             }
         };
     }
+
+    // Controles de interacao e zoom
+    const zoomIn = document.getElementById('zoom-in');
+    if (zoomIn) {
+        zoomIn.onclick = () => {
+            if (state.isLocked) return;
+            state.zoom += 0.1;
+            if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+        };
+    }
+
+    const zoomOut = document.getElementById('zoom-out');
+    if (zoomOut) {
+        zoomOut.onclick = () => {
+            if (state.isLocked) return;
+            state.zoom -= 0.1;
+            if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+        };
+    }
+
+    const btnLock = document.getElementById('lock-interaction');
+    if (btnLock) {
+        btnLock.onclick = () => {
+            state.isLocked = !state.isLocked;
+            btnLock.classList.toggle('locked', state.isLocked);
+            zoomIn?.classList.toggle('zoom-disabled', state.isLocked);
+            zoomOut?.classList.toggle('zoom-disabled', state.isLocked);
+            btnLock.innerHTML = state.isLocked ? '🔒' : '🔓';
+            if (state.isLocked && typeof isPanning !== 'undefined') isPanning = false;
+        };
+    }
 }
 
 function copyToClipboard() {
