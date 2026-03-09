@@ -132,9 +132,10 @@ body {
         /* Reduced from 55vh to show more controls */
         min-height: 300px;
         max-height: 500px;
-        position: relative;
-        top: auto;
-        z-index: 10;
+        position: sticky;
+        top: 41px;
+        /* Height of the sticky premium-header on mobile */
+        z-index: 100;
         border-radius: 0;
         border: none;
         border-bottom: 2px solid var(--border);
