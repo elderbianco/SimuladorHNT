@@ -738,6 +738,8 @@ h4 {
         background: rgba(0, 0, 0, 0.95);
         flex-direction: column;
         padding: 12px;
+        padding-top: 15px;
+        /* Spacing from the top instead of margin */
         gap: 12px;
         border: 1px solid #333;
         border-top: 2px solid #D4AF37;
@@ -745,11 +747,9 @@ h4 {
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
         z-index: 2001;
         min-width: 60px;
-        margin-top: 5px;
-        /* Revert spacing */
     }
 
-    .mobile-menu-container.active .header-icon-nav {
+    .mobile-menu-container:hover .header-icon-nav {
         display: flex !important;
     }
 
