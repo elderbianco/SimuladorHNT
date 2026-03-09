@@ -614,43 +614,73 @@ h4 {
 /* Responsive Premium Header */
 @media (max-width: 1024px) {
     .premium-header {
-        flex-direction: column;
-        gap: 15px;
-        padding: 15px 20px;
+        padding: 10px 15px;
+        gap: 10px;
     }
 
-    .header-center {
-        position: static;
-        transform: none;
-        order: -1;
-    }
-
-    .header-left,
-    .header-right {
-        gap: 15px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .header-logo-text {
-        font-size: 2rem;
+    .header-env-title {
+        font-size: 0.9rem;
+        padding-left: 10px;
+        margin-left: 10px;
     }
 }
 
 @media (max-width: 768px) {
+    .premium-header {
+        padding: 5px 10px;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
 
-    .header-left,
+    .header-left {
+        gap: 8px;
+        flex: 0 0 auto;
+        /* Don't grow */
+    }
+
+    .header-center {
+        flex: 1;
+        /* Take remaining space */
+        justify-content: flex-start;
+        padding: 0;
+        margin-left: 5px;
+    }
+
+    .header-env-title {
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+        padding-left: 8px;
+        margin-left: 0;
+        border-left: 1px solid rgba(212, 175, 55, 0.3);
+        white-space: normal;
+        line-height: 1.1;
+        max-width: 140px;
+    }
+
+    .header-logo-container {
+        height: 32px;
+        /* Smaller logo */
+    }
+
     .header-right {
-        gap: 10px;
+        gap: 8px;
+        flex: 0 0 auto;
     }
 
-    .header-nav-link {
-        font-size: 0.8rem;
-        padding: 6px 12px;
+    .header-icon-nav {
+        display: none;
+        /* Hide product nav icons on small screens to save vertical space */
     }
 
-    .header-logo-text {
-        font-size: 1.5rem;
+    .nav-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 0.9rem;
+    }
+
+    .nav-icon img {
+        width: 16px;
+        height: 16px;
     }
 }
 
