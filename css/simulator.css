@@ -69,7 +69,8 @@ body {
         border-radius: 0;
         border: none;
         border-bottom: 2px solid #e0e0e0;
-        padding: 5px;
+        padding: 0;
+        /* Espaço total */
         background-position: center bottom;
     }
 
@@ -552,10 +553,10 @@ option {
     }
 
     .simulator-area {
-        height: 45vh;
-        /* Proportional height */
-        min-height: 300px;
-        max-height: 550px;
+        height: 60vh;
+        /* Aumentado para dar mais destaque ao produto no mobile */
+        min-height: 350px;
+        max-height: 650px;
         position: -webkit-sticky;
         position: sticky;
         /* Global Sticky */

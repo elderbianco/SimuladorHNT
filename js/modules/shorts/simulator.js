@@ -109,9 +109,9 @@ async function init() {
     // 6. Ajustar Zoom e Pan Inicial (Aumento Automático)
     const applyInitialZoom = () => {
         if (window.innerWidth <= 768) {
-            currentZoom = 1.0;
+            currentZoom = 1.2; // Otimizado para ocupar mais espaço no mobile
         } else {
-            currentZoom = 1.45; // Ajustado para não cortar as bordas (equilíbrio ideal)
+            currentZoom = 1.65; // Otimizado para visualização principal no desktop
         }
         state.zoom = currentZoom;
         panOffset = { x: 0, y: 0 };
