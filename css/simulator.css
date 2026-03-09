@@ -208,6 +208,12 @@ body {
 }
 
 .zoom-btn.locked {
+    background: #D4AF37 !important;
+    color: white !important;
+    border-color: #D4AF37 !important;
+}
+
+.zoom-btn.zoom-disabled {
     opacity: 0.5 !important;
     pointer-events: none !important;
     cursor: not-allowed !important;
