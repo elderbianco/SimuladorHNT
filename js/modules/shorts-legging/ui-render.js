@@ -16,6 +16,7 @@ function renderSizesSection() {
     const sizeComponent = window.UIComponents.createSizeSelector(
         CONFIG.sizes,
         state.sizes,
+        state.config,
         (label, newVal) => {
             state.sizes[label] = newVal;
             updatePrice();
@@ -227,8 +228,8 @@ function renderCustomizationSection() {
                 config: state.config,
                 fonts: avalFonts,
                 colors: (state.config.textColors && state.config.textColors.length > 0)
-                    ? DATA.colors.filter(c => state.config.textColors.includes(c.id))
-                    : DATA.colors,
+                    ? CONFIG.colors.filter(c => state.config.textColors.includes(c.id))
+                    : CONFIG.colors,
                 callbacks: {
                     onToggle: (zoneId, enabled) => {
                         tState.enabled = enabled;
