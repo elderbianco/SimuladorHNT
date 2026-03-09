@@ -751,6 +751,12 @@ h4 {
             /* Force show icons inside vertical menu */
             width: 32px;
             height: 32px;
+            background: #111;
+            border-radius: 6px;
+        }
+
+        .mobile-env-title {
+            display: none;
         }
     }
 
