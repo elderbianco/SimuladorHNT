@@ -86,12 +86,8 @@ function loadAdminConfig() {
     const d20 = 0;
     const d40 = 0;
 
-    const getVal = (val, def) => {
-        const v = parseFloat(val);
-        // If v is NaN, undefined or null, use def.
-        // If v is 0, we generally want to allow it EXCEPT for basePrice.
-        return (val !== undefined && val !== null && !isNaN(v)) ? v : def;
-    };
+    const getVal = (val, def) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : def;
+    const getAdminVal = (val) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : undefined;
 
     state.config = {
         basePrice: (getVal(prices.basePrice, 189.90) || 189.90), // Force fallback if 0
@@ -109,9 +105,9 @@ function loadAdminConfig() {
         logoHoodPrice: getVal(prices.logoHoodPrice, 14.90),
         textHoodPrice: getVal(prices.textHoodPrice, 9.90),
 
-        // Extras
-        zipperUpgrade: getVal(prices.zipperUpgrade, 15.00),
-        pocketUpgrade: getVal(prices.pocketUpgrade, 10.00),
+        // Extras (Usar getAdminVal para permitir fallback no pricing.js se necessário)
+        zipperUpgrade: getAdminVal(prices.zipperUpgrade),
+        pocketUpgrade: getAdminVal(prices.pocketUpgrade),
 
         // Wholesale Tiers
         price10: getVal(prices.price10, 170.90),

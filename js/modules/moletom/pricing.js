@@ -119,13 +119,23 @@ function calculateFullPrice() {
     const df = customUploadsCount * (state.config.devFee || 0);
     let wv = (state.config.artWaiver && totalQty > 10 && (customUploadsCount > 0 || textCount > 0)) ? (state.config.devFee || 0) : 0;
 
+    // 12. Upgrades (Zíper e Bolso)
+    let upgradesCost = 0;
+    if (state.zipper && state.zipper.enabled) {
+        upgradesCost += (state.config.zipperUpgrade !== undefined) ? state.config.zipperUpgrade : 15.00;
+    }
+    if (state.pocket && state.pocket.enabled) {
+        upgradesCost += (state.config.pocketUpgrade !== undefined) ? state.config.pocketUpgrade : 10.00;
+    }
+
     return {
-        total: subTotal - dVal - wv + df,
+        total: subTotal - dVal - wv + df + (upgradesCost * totalQty),
         discountPercent: dPct,
         discountValue: dVal,
         devFees: df,
         waiver: wv,
-        logoRemovalFee: logoRemovalFee
+        logoRemovalFee: logoRemovalFee,
+        upgradesCost: upgradesCost
     };
 }
 
