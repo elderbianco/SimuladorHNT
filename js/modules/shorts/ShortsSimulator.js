@@ -116,7 +116,7 @@ class ShortsSimulator extends BaseSimulator {
                         isCustom: el?.dataset.isCustom === 'true' || this.state.uploads?.[u.id]?.isCustom === true,
                         scale: el?.style.width ? (parseFloat(el.style.width) / (u.width || 20)) : 1.0
                     },
-                    limitEnabled: this.state.zoneLimits?.[u.id] !== false,
+                    limitEnabled: this.state.zoneLimits?.[u.id] === true,
                     config: window.CONFIG || {},
                     callbacks: {
                         onUpload: (zid, file) => { if (window.handleImageUpload) window.handleImageUpload({ target: { files: [file] } }, zid); },
