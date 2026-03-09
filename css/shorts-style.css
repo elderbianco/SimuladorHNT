@@ -149,7 +149,8 @@ body {
         border-radius: 0;
         border: none;
         border-bottom: 2px solid #e0e0e0;
-        padding: 5px;
+        padding: 0;
+        /* Removido padding para ganhar espaço */
         background-position: center center;
         /* Center background better */
         touch-action: pan-x pan-y !important;
@@ -183,8 +184,8 @@ body {
     /* Changed from 90vh to match container */
     width: 100% !important;
     aspect-ratio: 1 / 1 !important;
-    max-width: 95vw !important;
-    max-height: 95% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
     /* Ensure vertical centering */
     display: flex;
     align-items: center;
