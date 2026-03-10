@@ -42,7 +42,9 @@ window.CartUI = {
     
                 <div style="text-align:right; margin-left: 20px; display:flex; gap:15px; align-items:center;">
                     <button class="btn btn-danger" style="padding: 8px 12px; font-size: 0.7rem;" onclick="deleteGroup([${group.items.map(i => i._index).join(',')}])">🗑️ Excluir Pedido</button>
-                    <span class="toggle-icon" onclick="CartUI.toggleCard(this.parentElement.parentElement)" style="cursor:pointer;">▼</span>
+                    <div class="toggle-wrapper" onclick="CartUI.toggleCard(this.parentElement.parentElement)" style="cursor:pointer; width:35px; height:35px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; transition:0.3s;">
+                        <span class="toggle-icon" style="color:var(--gold); font-size: 0.8rem; display:inline-block; transition: transform 0.3s; transform: rotate(0deg);">▼</span>
+                    </div>
                 </div>
             </div>
     
@@ -77,8 +79,12 @@ window.CartUI = {
         <div class="sub-item-rich" style="background: #252525; border: 1px solid #333; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
             <!-- Sub Header -->
             <div class="card-header" onclick="CartUI.toggleSubTabs('${uid}')" style="background: #2a2a2a; padding: 15px 20px; border-bottom: 1px solid #333; cursor:pointer; display:flex; align-items:center;">
-                 <div class="thumb-placeholder" style="width: 50px; height: 50px; flex-shrink:0;">${item.simulator_type || 'IMG'}</div>
-                 <span class="toggle-icon" style="margin-left: 10px; font-size: 0.8rem; color: #666;">▼</span>
+                 <div class="product-icon-container" style="width: 50px; height: 50px; flex-shrink:0; background: #333; border-radius: 8px; display:flex; align-items:center; justify-content:center; border: 1px solid #444;">
+                    ${this.getProductIconElement(item, order)}
+                 </div>
+                 <div class="toggle-wrapper" style="margin-left: 10px; width:24px; height:24px; border-radius:50%; border:1px solid #555; display:flex; align-items:center; justify-content:center;">
+                    <span class="toggle-icon" style="font-size: 0.6rem; color: #888; transition: transform 0.3s;">▼</span>
+                 </div>
                  
                  <div style="flex:1; margin-left: 15px;">
                     <div style="color:#fff; font-weight:bold;">${this.getProductName(item, order)}</div>
@@ -566,6 +572,35 @@ window.CartUI = {
 
     toggleSubTabs: function (uid) {
         const el = document.getElementById(uid);
-        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        const header = el.previousElementSibling;
+        const icon = header.querySelector('.toggle-icon');
+
+        const isHidden = el.style.display === 'none';
+        el.style.display = isHidden ? 'block' : 'none';
+
+        if (icon) {
+            icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+    },
+
+    getProductIconElement: function (item, order) {
+        const type = item.simulator_type || '';
+        const iconMap = {
+            'shorts': 'assets/ui-icons/icon-fight-shorts.png',
+            'shorts_fight': 'assets/ui-icons/icon-fight-shorts.png',
+            'shorts_legging': 'assets/ui-icons/icon-shorts-calca-legging.png',
+            'legging': 'assets/ui-icons/icon-calca-legging.png',
+            'calca-legging': 'assets/ui-icons/icon-calca-legging.png',
+            'moletom': 'assets/ui-icons/icon-moletom.png',
+            'top': 'assets/ui-icons/icon-top.png'
+        };
+
+        const iconPath = iconMap[type.toLowerCase().replace(/\s+/g, '_')] || iconMap[type.toLowerCase()] || '';
+
+        if (iconPath) {
+            return `<img src="${iconPath}" alt="${type}" style="width:70%; height:70%; object-fit:contain; filter: brightness(1.2);">`;
+        }
+
+        return `<span style="font-size:0.7rem; color:#666; font-weight:bold;">${type.substring(0, 3).toUpperCase()}</span>`;
     }
 };
