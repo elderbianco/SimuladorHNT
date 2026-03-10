@@ -122,8 +122,8 @@ function setupMainEvents() {
     };
 
     const btnP = document.getElementById('btn-pdf');
-    if (btnP) btnP.onclick = () => {
-        if (saveOrderToHistory(false)) {
+    if (btnP) btnP.onclick = async () => {
+        if (await saveOrderToHistory(false)) {
             PDFGenerator.openPreview();
         }
     };
