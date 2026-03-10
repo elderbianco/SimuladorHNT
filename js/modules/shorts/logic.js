@@ -350,7 +350,10 @@ function checkZoneUsage(zoneId) {
 /**
  * Salva o pedido atual no histórico (Carrinho)
  */
-function saveOrderToHistory(silent = false, pdfUrl = null) {
+/**
+ * Salva o pedido atual no histórico (Carrinho)
+ */
+async function saveOrderToHistory(silent = false) {
     // 1. Validação via Adapter
     const validation = DBAdapter.validateOrder(state);
     if (!validation.valid) {
@@ -361,7 +364,17 @@ function saveOrderToHistory(silent = false, pdfUrl = null) {
         return false;
     }
 
-    // 2. Formatação via Adapter
+    // 2. Geração de PDF Automática (NEW)
+    let pdfUrl = null;
+    try {
+        if (typeof PDFGenerator !== 'undefined') {
+            pdfUrl = await PDFGenerator.generateAndSaveForCart();
+        }
+    } catch (e) {
+        console.error('❌ Erro ao gerar PDF para carrinho:', e);
+    }
+
+    // 3. Formatação via Adapter
     const pricing = calculateFullPrice();
     const newRow = DBAdapter.formatForDatabase(state, pricing, DATA, pdfUrl);
 
