@@ -238,7 +238,30 @@ window.UIComponents.createTextEditor = function ({
             subPanel.innerText = "ColorPicker not available";
         }
 
-        // 5. Scale Slider
+        // 5. Scale Slider (Non-linear mapping: 70% area for reduction)
+        // Mapeamento: 
+        // 0 - 70   => 0.05 - 1.0 (Redução)
+        // 70 - 100 => 1.0 - 4.0  (Ampliação)
+        const valToSlider = (val) => {
+            if (val <= 1.0) {
+                // Mapeia linear de [0.05, 1.0] para [0, 70]
+                return ((val - 0.05) / (1.0 - 0.05)) * 70;
+            } else {
+                // Mapeia linear de [1.0, 4.0] para [70, 100]
+                return 70 + ((val - 1.0) / (4.0 - 1.0)) * 30;
+            }
+        };
+
+        const sliderToVal = (sliderVal) => {
+            if (sliderVal <= 70) {
+                // Mapeia de [0, 70] para [0.05, 1.0]
+                return 0.05 + (sliderVal / 70) * (1.0 - 0.05);
+            } else {
+                // Mapeia de [70, 100] para [1.0, 4.0]
+                return 1.0 + ((sliderVal - 70) / 30) * (4.0 - 1.0);
+            }
+        };
+
         const sizeRow = document.createElement('div');
         sizeRow.style.display = 'flex';
         sizeRow.style.alignItems = 'center';
@@ -252,11 +275,13 @@ window.UIComponents.createTextEditor = function ({
 
         const sl = document.createElement('input');
         sl.className = 'range-slider';
-        sl.type = 'range'; sl.min = 0.1; sl.max = 5.0; sl.step = 0.1; sl.value = t.scale;
+        sl.type = 'range';
+        sl.min = 0; sl.max = 100; sl.step = 1;
+        sl.value = valToSlider(t.scale);
         sl.style.flex = '1';
 
         const num = document.createElement('input');
-        num.type = 'number'; num.min = 0.1; num.max = 5.0; num.step = 0.1; num.value = t.scale.toFixed(2);
+        num.type = 'number'; num.min = 0.05; num.max = 4.0; num.step = 0.05; num.value = t.scale.toFixed(2);
         num.style.width = '75px';
         num.style.padding = '4px 8px';
         num.style.boxSizing = 'border-box';
@@ -265,18 +290,21 @@ window.UIComponents.createTextEditor = function ({
         num.style.color = '#fff';
         num.style.border = '1px solid #444';
         num.style.borderRadius = '4px';
-        num.style.fontSize = '0.9rem'; // Slightly larger font
+        num.style.fontSize = '0.9rem';
         num.style.lineHeight = '1.2';
 
         sl.oninput = (e) => {
-            const val = parseFloat(e.target.value);
+            const sliderVal = parseFloat(e.target.value);
+            const val = sliderToVal(sliderVal);
             num.value = val.toFixed(2);
             if (callbacks.onScaleChange) callbacks.onScaleChange(zone.id, val);
         };
 
         num.oninput = (e) => {
-            const val = parseFloat(e.target.value) || 1.0;
-            sl.value = val;
+            let val = parseFloat(e.target.value) || 1.0;
+            if (val < 0.05) val = 0.05;
+            if (val > 4.0) val = 4.0;
+            sl.value = valToSlider(val);
             if (callbacks.onScaleChange) callbacks.onScaleChange(zone.id, val);
         };
 
