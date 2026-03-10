@@ -280,15 +280,9 @@ function renderControls() {
             return;
         }
 
-        let newSeq = '';
-        if (typeof generateNextSequenceNumber === 'function') {
-            newSeq = generateNextSequenceNumber();
-        } else {
-            let last = parseInt(localStorage.getItem('hnt_sequence_id') || '0');
-            let next = last + 1;
-            localStorage.setItem('hnt_sequence_id', next);
-            newSeq = String(next).padStart(6, '0');
-        }
+        const newSeq = (typeof generateNextSequenceNumber === 'function')
+            ? generateNextSequenceNumber()
+            : String(parseInt(localStorage.getItem('hnt_sequence_id') || '0') + 1).padStart(6, '0');
 
         const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId)
             ? state.orderNumber
@@ -296,24 +290,10 @@ function renderControls() {
 
         state.simulationId = `${orderPrefix}-SH-${newSeq}`;
 
-        let pdfUrl = null;
-        if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
-            try {
-                console.log('📄 Gerando PDF para carrinho...');
-                pdfUrl = await PDFGenerator.generateAndSaveForCart();
-            } catch (err) {
-                console.error('Erro ao gerar PDF:', err);
-            }
-        }
-
-        if (pdfUrl) {
-            state.pdfUrl = pdfUrl;
-        }
-
-        if (saveOrderToHistory()) {
+        if (await saveOrderToHistory()) {
             saveState();
             if (typeof updateCartCount === 'function') updateCartCount();
-            if (confirm('✅ Produto adicionado ao carrinho!\\n\\nDeseja ir para a página de pedidos finalizar?')) {
+            if (confirm('✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) {
                 window.location.href = 'IndexPedidoSimulador.html';
             }
         }
