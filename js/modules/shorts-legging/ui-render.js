@@ -228,8 +228,8 @@ function renderCustomizationSection() {
                 config: state.config,
                 fonts: avalFonts,
                 colors: (state.config.textColors && state.config.textColors.length > 0)
-                    ? CONFIG.colors.filter(c => state.config.textColors.includes(c.id))
-                    : CONFIG.colors,
+                    ? DATA.colors.filter(c => state.config.textColors.includes(c.id))
+                    : DATA.colors,
                 callbacks: {
                     onToggle: (zoneId, enabled) => {
                         tState.enabled = enabled;
