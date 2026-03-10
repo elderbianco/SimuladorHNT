@@ -126,14 +126,12 @@ function setupMainEvents() {
     const btnCopy = document.getElementById('btn-copy');
     if (btnCopy) btnCopy.onclick = () => copyToClipboard();
 
-    const btnPdf = document.getElementById('btn-pdf');
-    if (btnPdf) {
-        btnPdf.onclick = () => {
-            if (saveOrderToHistory(false)) {
-                PDFGenerator.openPreview();
-            }
-        };
-    }
+    const btnP = document.getElementById('btn-pdf');
+    if (btnP) btnP.onclick = async () => {
+        if (await saveOrderToHistory(false)) {
+            PDFGenerator.openPreview();
+        }
+    };
 
     const btnCart = document.getElementById('btn-add-cart') || document.getElementById('btn-export-db');
     if (btnCart) {
