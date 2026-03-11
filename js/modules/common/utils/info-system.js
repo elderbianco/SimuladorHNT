@@ -75,9 +75,8 @@ const InfoSystem = {
             <p><strong>Atenção:</strong> O espaço é otimizado para artes centralizadas. Se incluir um texto, tente não exceder a largura proporcional para manter a estética.</p>
         `,
         'info_telefone': `
-            <h3>Por que o telefone é obrigatário?</h3>
+            <h3>Por que o telefone é obrigatório?</h3>
             <p>O seu número é fundamental para que nosso time de produção entre em contato caso surjam dúvidas ou necessidade de <strong>ajustes técnicos</strong> durante o desenvolvimento da sua peça.</p>
-            <p>Além disso, enviaremos a <strong>Aprovação de Arte final</strong> para garantir que tudo saia exatamente como você personalizou antes de iniciarmos a confecção.</p>
         `,
         'info_emb': `
             <h3>Arquivos Técnicos (.EMB)</h3>
