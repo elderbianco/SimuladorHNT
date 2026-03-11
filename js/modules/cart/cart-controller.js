@@ -54,8 +54,10 @@ function loadDashboard() {
         if (!data.item && data.DADOS_TECNICOS_JSON) {
             try {
                 // Parse the technical data JSON which contains the full state
+                const originalPdfUrl = data.pdfUrl; // Preserve top-level PDF link
                 const technicalData = JSON.parse(data.DADOS_TECNICOS_JSON);
                 data = technicalData; // Use the original nested format
+                if (originalPdfUrl) data.pdfUrl = originalPdfUrl; // Restore PDF link
             } catch (e) {
                 console.error('Error parsing DADOS_TECNICOS_JSON:', e);
                 return; // Skip this item
