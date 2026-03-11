@@ -57,12 +57,17 @@ function loadDashboard() {
     history.forEach((order, index) => {
         let data = order;
 
-        // Convert flat format (from DBAdapter) to nested format (for cart display)
+        // --- NORMALIZAÇÃO DE CAMPOS (Supabase vs Local) ---
+        // Se vier do Supabase, o campo é pdf_url. Normalizamos para pdfUrl usado na UI.
+        if (data.pdf_url && !data.pdfUrl) data.pdfUrl = data.pdf_url;
+
         // CRITICAL FIX: If item is missing but we have technical data, reconstruct the item
         if (!data.item && data.DADOS_TECNICOS_JSON) {
             try {
-                const originalPdfUrl = data.pdfUrl; // Preserve top-level PDF link
-                const technicalData = JSON.parse(data.DADOS_TECNICOS_JSON);
+                const originalPdfUrl = data.pdfUrl || data.pdf_url; // Preserve top-level PDF link (both formats)
+                const technicalData = (typeof data.DADOS_TECNICOS_JSON === 'string')
+                    ? JSON.parse(data.DADOS_TECNICOS_JSON)
+                    : data.DADOS_TECNICOS_JSON;
 
                 // Reconstruct the 'item' structure expected by the rest of the logic and CartUI
                 data.item = {
@@ -74,7 +79,8 @@ function loadDashboard() {
                         parts: technicalData.parts || {},
                         sizes: technicalData.sizes || {},
                         uploads: technicalData.uploads || {},
-                        texts: technicalData.texts || {}
+                        texts: technicalData.texts || {},
+                        observations: technicalData.observations || ""
                     },
                     pdf_path: originalPdfUrl || ""
                 };
@@ -90,10 +96,12 @@ function loadDashboard() {
         }
 
         // --- PDF LINK RESILIENCE ---
-        // If still no PDF link but we have an order_id, try to predict it
+        // If still no PDF link but we have an order_id, try to predict it (fallback legacy)
         if (!data.pdfUrl && (!data.item || !data.item.pdf_path) && data.order_id) {
-            const predictedUrl = `assets/BancoDados/PedidosPDF/Pedido_${data.order_id}.pdf`;
-            console.log(`🔍 Predicting PDF link for ${data.order_id}: ${predictedUrl}`);
+            // Only predict if NOT in production (local dev path)
+            const fileName = `Pedido_${data.order_id}.pdf`.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const predictedUrl = `assets/BancoDados/PedidosPDF/${fileName}`;
+            console.log(`🔍 Predicting local PDF link for ${data.order_id}: ${predictedUrl}`);
             if (data.item) data.item.pdf_path = predictedUrl;
             data.pdfUrl = predictedUrl;
         }

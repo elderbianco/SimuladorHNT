@@ -976,14 +976,20 @@ const PDFGenerator = {
             // --- G. SALVAR ---
             const pdfBase64 = doc.output('datauristring').split(',').pop();
             this.updateModalButton('saving');
-            const savedPath = await this.saveToLocalFolder(id, pdfBase64, 'pdf');
+            // --- SUPABASE SYNC ---
+            let cloudUrl = null;
+            if (typeof SupabaseAdapter !== 'undefined') {
+                console.log('☁️ Sincronizando PDF manual com Supabase...');
+                cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', `Pedido_${id}.pdf`, pdfBase64, 'application/pdf');
+            }
 
-            if (savedPath) {
-                const fileName = savedPath.split(/[/\\]/).pop();
-                const publicUrl = `assets/BancoDados/PedidosPDF/${fileName}`;
-                this.savedPdfUrl = publicUrl;
-                this.updateModalButton('ready', publicUrl);
+            if (savedPath || cloudUrl) {
+                const finalUrl = cloudUrl || `assets/BancoDados/PedidosPDF/${savedPath.split(/[/\\]/).pop()}`;
+                this.savedPdfUrl = finalUrl;
+                this.updateModalButton('ready', finalUrl);
+                console.log('✅ PDF salvo e disponível em:', finalUrl);
             } else {
+                console.warn('⚠️ Falha no salvamento automático (Offline). Baixando localmente.');
                 doc.save(`Pedido_${id}.pdf`);
                 this.updateModalButton('ready', '#');
             }
