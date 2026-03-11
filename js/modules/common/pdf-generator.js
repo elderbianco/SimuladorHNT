@@ -1122,37 +1122,39 @@ const PDFGenerator = {
             doc.setFont('helvetica', 'bold');
             doc.text(`TOTAL FINAL: ${totalText}`, pageWidth / 2, currentY, { align: 'center' });
 
-            // Salvar
+            // 4. Salvar Localmente (Opcional - Para ambientes com backend local)
             const fileName = `Pedido_${id.replace(/[^a-zA-Z0-9-_]/g, '_')}`;
             const pdfBase64 = doc.output('datauristring').split(',').pop();
             const savedPath = await this.saveToLocalFolder(fileName, pdfBase64, 'pdf');
 
-            if (savedPath) {
-                const finalFileName = savedPath.split(/[/\\]/).pop();
-                const publicUrl = `assets/BancoDados/PedidosPDF/${finalFileName}`;
-                console.log(`✅ PDF salvo no servidor local: ${publicUrl}`);
+            let finalUrl = null;
 
-                // --- SUPABASE SYNC ---
-                if (typeof SupabaseAdapter !== 'undefined') {
-                    SupabaseAdapter.uploadFile('pedidos_pdf', finalFileName, pdfBase64, 'application/pdf');
+            // --- SUPABASE SYNC (Prioridade Máxima) ---
+            if (typeof SupabaseAdapter !== 'undefined') {
+                console.log('☁️ Enviando PDF para Supabase Storage...');
+                const cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', fileName + ".pdf", pdfBase64, 'application/pdf');
+                if (cloudUrl) {
+                    console.log('✅ PDF disponível na nuvem:', cloudUrl);
+                    finalUrl = cloudUrl;
                 }
-                // ---------------------
-
-                return publicUrl;
-            } else {
-                console.warn('⚠️ Offline ou GitHub Pages: Disparando download automático como fallback.');
-                doc.save(fileName + ".pdf");
-
-                // --- SUPABASE SYNC (Fallback local ainda sobe para nuvem se houver internet) ---
-                if (typeof SupabaseAdapter !== 'undefined') {
-                    const cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', fileName + ".pdf", pdfBase64, 'application/pdf');
-                    if (cloudUrl) return cloudUrl;
-                }
-                // ---------------------
-
-                // Retornamos o link previsto para que o carrinho tente mostrá-lo (resiliência)
-                return `assets/BancoDados/PedidosPDF/${fileName}.pdf`;
             }
+
+            // --- FALLBACKS ---
+            if (!finalUrl && savedPath) {
+                // Se falhou nuvem mas salvou local (ambiente dev)
+                const finalFileName = savedPath.split(/[/\\]/).pop();
+                finalUrl = `assets/BancoDados/PedidosPDF/${finalFileName}`;
+                console.log(`📡 Usando link local: ${finalUrl}`);
+            }
+
+            if (!finalUrl) {
+                // Se tudo falhar, dispara o download para o usuário não perder o arquivo
+                console.warn('⚠️ Falha no salvamento automático. Disparando download manual.');
+                doc.save(fileName + ".pdf");
+                finalUrl = `assets/BancoDados/PedidosPDF/${fileName}.pdf`; // Link previsto resiliente
+            }
+
+            return finalUrl;
 
         } catch (err) {
             console.error('❌ Erro ao gerar PDF para carrinho:', err);
