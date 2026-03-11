@@ -87,6 +87,20 @@ function init() {
                     state._editingOrderId = orderToEdit.order_id || orderToEdit.ID_PEDIDO;
                     localStorage.removeItem('editingOrderIndex');
 
+                    // --- RECONSTRUTOR DE ELEMENTOS (Imagens) ---
+                    if (state.uploads) {
+                        Object.keys(state.uploads).forEach(zoneId => {
+                            const up = state.uploads[zoneId];
+                            if (up && up.src) {
+                                console.log(`RE-ADD: Reconstruindo imagem para zona: ${zoneId}`);
+                                if (typeof addImage === 'function') {
+                                    addImage(zoneId, up.src, up.filename || "Imagem Enviada", up.isCustom !== false);
+                                }
+                            }
+                        });
+                    }
+                    // -------------------------------------------
+
                     renderControls();
                     renderFixedTexts();
                     updateVisuals();
