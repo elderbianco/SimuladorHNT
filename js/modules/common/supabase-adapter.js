@@ -93,12 +93,11 @@ const SupabaseAdapter = {
         }
 
         try {
-            // IMPORTANT: Table 'pedidos' does NOT have a 'created_at' column.
-            // Ordering by ID_PEDIDO (primary key) as fallback.
+            // IMPORTANT: The real timestamp column in the 'pedidos' table is 'criado_em', NOT 'created_at'
             const { data, error } = await window.supabaseClient
                 .from('pedidos')
                 .select('*')
-                .order('ID_PEDIDO', { ascending: false });
+                .order('criado_em', { ascending: false });
 
             if (error) throw error;
             console.log(`✅ ${data.length} pedidos carregados do Supabase`);
