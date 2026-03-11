@@ -294,27 +294,9 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
         return false;
     }
 
-    // 2. Geração de PDF Automática (NEW)
-    let pdfUrl = pdfUrlOverride;
-    try {
-        if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
-            pdfUrl = await PDFGenerator.generateAndSaveForCart();
-        }
-    } catch (e) {
-        console.error('❌ Erro ao gerar PDF para carrinho:', e);
-    }
-
-    // 3. Formatação via Adapter
-    const pricing = calculateFullPrice();
-    const newRow = DBAdapter.formatForDatabase(state, pricing, CONFIG, pdfUrl);
-
-    // 4. Persistência
+    // 2. Cálculo do ID Final (Sequencial) - Necessário ANTES do PDF
     const history = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
-
-    // --- SEQUENCING LOGIC (New) ---
     let sigla = 'SL';
-    if (newRow.order_id && newRow.order_id.includes('-SL-')) sigla = 'SL';
-
     let typeCount = 0;
     const currentOrderNum = state.orderNumber;
 
@@ -330,7 +312,28 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     });
 
     const sequenceSuffix = String(typeCount + 1).padStart(2, '0');
-    newRow.order_id = `${newRow.order_id}-${sequenceSuffix}`;
+    let finalId = `${state.simulationId}-${sequenceSuffix}`;
+
+    // Verificação de Edição: Manter ID original se existir
+    if (state._editingIndex !== undefined && state._editingIndex !== null) {
+        if (state._editingOrderId) finalId = state._editingOrderId;
+    }
+
+    // 3. Geração de PDF Automática com ID Final
+    let pdfUrl = pdfUrlOverride;
+    try {
+        if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
+            pdfUrl = await PDFGenerator.generateAndSaveForCart(finalId);
+        }
+    } catch (e) {
+        console.error('❌ Erro ao gerar PDF para carrinho:', e);
+    }
+
+    // 4. Formatação via Adapter e Persistência
+    const pricing = calculateFullPrice();
+    const newRow = DBAdapter.formatForDatabase(state, pricing, CONFIG, pdfUrl);
+    newRow.order_id = finalId; // Sincroniza ID final
+
     // -----------------------------
 
     // CRITICAL: Limpeza preventiva antes de adicionar
