@@ -82,8 +82,11 @@ function loadDashboard() {
                 data.item = {
                     simulator_type: technicalData.productInitial ? "shorts" : (technicalData.simulator_type || "shorts"),
                     model_name: technicalData.productInitial ? "Shorts " + technicalData.productInitial : (technicalData.model_name || "Simulação"),
-                    qty_total: technicalData.qty_total || 1,
-                    pricing: technicalData.pricing || { total_price: 0, unit_price: 0 },
+                    qty_total: technicalData.qty_total || data.QUANTIDADE || data.quantity || 1,
+                    pricing: {
+                        total_price: data.PRECO_FINAL || data.total_price || (technicalData.pricing ? technicalData.pricing.total_price : 0),
+                        unit_price: data.PRECO_UNITARIO || (technicalData.pricing ? technicalData.pricing.unit_price : 0)
+                    },
                     specs: {
                         parts: technicalData.parts || {},
                         sizes: technicalData.sizes || {},
