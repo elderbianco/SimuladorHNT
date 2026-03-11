@@ -81,8 +81,28 @@ function init() {
                 // Ensure config is current
                 if (currentConfig) state.config = currentConfig;
 
+                // --- RECONSTRUTOR DE ELEMENTOS (Imagens) ---
+                if (state.uploads) {
+                    Object.keys(state.uploads).forEach(zoneId => {
+                        const up = state.uploads[zoneId];
+                        if (up && up.src) {
+                            console.log(`RE-ADD: Reconstruindo imagem para zona: ${zoneId}`);
+                            if (typeof addImage === 'function') {
+                                addImage(zoneId, up.src, up.filename || "Imagem Enviada", up.isCustom !== false);
+                            }
+                        }
+                    });
+                }
+                // -------------------------------------------
+
                 // Clear flag
                 localStorage.removeItem('editingOrderIndex');
+
+                // Trigger UI Updates (Moved here or inside init flow)
+                if (typeof renderControls === 'function') renderControls();
+                if (typeof renderFixedTexts === 'function') renderFixedTexts();
+                if (typeof updatePrice === 'function') updatePrice();
+                if (typeof updateVisuals === 'function') updateVisuals();
 
                 console.log('✅ Estado restaurado ANTES da renderização inicial');
             } catch (e) {
