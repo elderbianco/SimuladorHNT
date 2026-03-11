@@ -158,6 +158,11 @@ const InfoSystem = {
     loadTexts: function () {
         try {
             const stored = JSON.parse(localStorage.getItem('hnt_info_texts') || '{}');
+            // Força a atualização do texto do telefone removendo do cache antigo se existir
+            if (stored.info_telefone) {
+                delete stored.info_telefone;
+                localStorage.setItem('hnt_info_texts', JSON.stringify(stored));
+            }
             this.texts = { ...this.defaults, ...stored };
         } catch (e) {
             console.error("Erro ao carregar textos informativos", e);
