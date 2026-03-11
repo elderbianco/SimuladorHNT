@@ -1130,11 +1130,26 @@ const PDFGenerator = {
             if (savedPath) {
                 const finalFileName = savedPath.split(/[/\\]/).pop();
                 const publicUrl = `assets/BancoDados/PedidosPDF/${finalFileName}`;
-                console.log(`✅ PDF salvo no servidor: ${publicUrl}`);
+                console.log(`✅ PDF salvo no servidor local: ${publicUrl}`);
+
+                // --- SUPABASE SYNC ---
+                if (typeof SupabaseAdapter !== 'undefined') {
+                    SupabaseAdapter.uploadFile('pedidos_pdf', finalFileName, pdfBase64, 'application/pdf');
+                }
+                // ---------------------
+
                 return publicUrl;
             } else {
                 console.warn('⚠️ Offline ou GitHub Pages: Disparando download automático como fallback.');
                 doc.save(fileName + ".pdf");
+
+                // --- SUPABASE SYNC (Fallback local ainda sobe para nuvem se houver internet) ---
+                if (typeof SupabaseAdapter !== 'undefined') {
+                    const cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', fileName + ".pdf", pdfBase64, 'application/pdf');
+                    if (cloudUrl) return cloudUrl;
+                }
+                // ---------------------
+
                 // Retornamos o link previsto para que o carrinho tente mostrá-lo (resiliência)
                 return `assets/BancoDados/PedidosPDF/${fileName}.pdf`;
             }

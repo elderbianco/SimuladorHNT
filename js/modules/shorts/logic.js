@@ -245,27 +245,21 @@ function generateFormattedFilename(zoneId, originalName, source = 'EXT') {
  * Envia o arquivo para o servidor salvar na pasta correta
  */
 async function uploadFileToServer(file, base64) {
+    if (typeof SupabaseAdapter === 'undefined') return;
+
     try {
-        const formData = {
-            image: base64,
-            filename: generateFormattedFilename(state.pendingUploadZone || 'unknown', file.name, 'EXT'),
-            folder: file.name.match(/\.(emb|dst|pes|exp)$/i) ? 'embroidery' : 'image'
-        };
+        const fileName = generateFormattedFilename(state.pendingUploadZone || 'unknown', file.name, 'EXT');
 
-        const res = await fetch('/api/upload-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
+        const publicUrl = await SupabaseAdapter.uploadFile('client_uploads', fileName, base64, file.type);
 
-        const data = await res.json();
-        if (data.success) {
-            console.log('✅ Upload concluído:', data.path);
-        } else {
-            console.error('❌ Erro no upload:', data.error);
+        if (publicUrl) {
+            console.log('✅ Upload para Supabase concluído:', publicUrl);
+            if (state.pendingUploadZone && state.uploads[state.pendingUploadZone]) {
+                state.uploads[state.pendingUploadZone].supabaseUrl = publicUrl;
+            }
         }
     } catch (e) {
-        console.error('❌ Erro de conexão no upload:', e);
+        console.error('❌ Erro no upload para Supabase:', e);
     }
 }
 
