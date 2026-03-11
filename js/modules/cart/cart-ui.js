@@ -102,11 +102,15 @@ window.CartUI = {
                        target="_blank" 
                        onclick="event.stopPropagation()"
                        title="Abrir Ficha Técnica (PDF)"
-                       style="text-decoration:none; background: #c0392b; border: none; color: #fff; font-size: 0.85rem; cursor: pointer; padding: 8px 15px; border-radius: 6px; font-weight: 800; transition: all 0.3s ease; display:flex; align-items:center; gap:5px;"
-                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(192, 57, 43, 0.4)';"
-                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                       <span>📄</span> PDF
-                    </a>` : ''}
+                       class="pdf-link-pulsing"
+                       style="text-decoration:none; background: #c0392b; border: 2px solid #e74c3c; color: #fff; font-size: 0.9rem; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; transition: all 0.3s ease; display:flex; align-items:center; gap:8px; box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);"
+                       onmouseover="this.style.transform='scale(1.05)'; this.style.background='#e74c3c';"
+                       onmouseout="this.style.transform='scale(1)'; this.style.background='#c0392b';">
+                       <span style="font-size: 1.2rem;">📄</span> VISUALIZAR PDF
+                    </a>` : `
+                    <div style="font-size: 0.75rem; color: #666; font-style: italic;">PDF não gerado</div>
+                    `}
+
 
                     <button class="btn-edit" 
                             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: #fff; font-size: 0.85rem; cursor: pointer; padding: 8px 15px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;"

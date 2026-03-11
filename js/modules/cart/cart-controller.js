@@ -51,24 +51,51 @@ function loadDashboard() {
         let data = order;
 
         // Convert flat format (from DBAdapter) to nested format (for cart display)
-        // CRITICAL FIX: Only restore if item is missing. Modern records already have .item
+        // CRITICAL FIX: If item is missing but we have technical data, reconstruct the item
         if (!data.item && data.DADOS_TECNICOS_JSON) {
             try {
-                // Parse the technical data JSON which contains the full state
                 const originalPdfUrl = data.pdfUrl; // Preserve top-level PDF link
                 const technicalData = JSON.parse(data.DADOS_TECNICOS_JSON);
-                data = technicalData; // Use the original nested format
-                if (originalPdfUrl) data.pdfUrl = originalPdfUrl; // Restore PDF link
+
+                // Reconstruct the 'item' structure expected by the rest of the logic and CartUI
+                data.item = {
+                    simulator_type: technicalData.productInitial ? "shorts" : (technicalData.simulator_type || "shorts"),
+                    model_name: technicalData.productInitial ? "Shorts " + technicalData.productInitial : (technicalData.model_name || "Simulação"),
+                    qty_total: technicalData.qty_total || 1,
+                    pricing: technicalData.pricing || { total_price: 0, unit_price: 0 },
+                    specs: {
+                        parts: technicalData.parts || {},
+                        sizes: technicalData.sizes || {},
+                        uploads: technicalData.uploads || {},
+                        texts: technicalData.texts || {}
+                    },
+                    pdf_path: originalPdfUrl || ""
+                };
+
+                // Ensure basic record fields
+                if (!data.order_id) data.order_id = technicalData.simulationId || technicalData.orderNumber || `PEDIDO_${index}`;
+                if (!data.created_at) data.created_at = new Date().toISOString();
+                if (originalPdfUrl) data.pdfUrl = originalPdfUrl;
             } catch (e) {
                 console.error('Error parsing DADOS_TECNICOS_JSON:', e);
                 return; // Skip this item
             }
         }
 
+        // --- PDF LINK RESILIENCE ---
+        // If still no PDF link but we have an order_id, try to predict it
+        if (!data.pdfUrl && (!data.item || !data.item.pdf_path) && data.order_id) {
+            const predictedUrl = `assets/BancoDados/PedidosPDF/Pedido_${data.order_id}.pdf`;
+            console.log(`🔍 Predicting PDF link for ${data.order_id}: ${predictedUrl}`);
+            if (data.item) data.item.pdf_path = predictedUrl;
+            data.pdfUrl = predictedUrl;
+        }
+
         // Debug Log for PDF link tracking
         if (data.pdfUrl || (data.item && data.item.pdf_path)) {
             console.log(`📄 PDF found for order ${data.order_id || index}:`, data.pdfUrl || (data.item ? data.item.pdf_path : ''));
         }
+
 
 
         // Legacy conversion if needed
