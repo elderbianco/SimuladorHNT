@@ -159,7 +159,7 @@ function setupMainEvents() {
 
                         // B. Salvar no Carrinho (passando a URL do PDF)
                         console.log("🛒 Salvando no carrinho...");
-                        if (saveOrderToHistory(false, pdfUrl)) {
+                        if (await saveOrderToHistory(false, pdfUrl)) {
                             console.log("🛒 Salvo com sucesso. Realizando limpeza...");
 
                             // C. Resetar o simulador (Limpar dados)
