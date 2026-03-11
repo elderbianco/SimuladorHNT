@@ -347,12 +347,6 @@ function checkZoneUsage(zoneId) {
 /**
  * Salva o pedido atual no histórico (Carrinho)
  */
-/**
- * Salva o pedido atual no histórico (Carrinho)
- */
-/**
- * Salva o pedido atual no histórico (Carrinho)
- */
 async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     // 1. Validação via Adapter
     const validation = DBAdapter.validateOrder(state);
@@ -364,34 +358,13 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
         return false;
     }
 
-    // 2. Geração de PDF Automática (NEW)
-    let pdfUrl = pdfUrlOverride;
-    try {
-        if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
-            pdfUrl = await PDFGenerator.generateAndSaveForCart();
-        }
-    } catch (e) {
-        console.error('❌ Erro ao gerar PDF para carrinho:', e);
-    }
-
-    // 3. Formatação via Adapter
-    const pricing = calculateFullPrice();
-    const newRow = DBAdapter.formatForDatabase(state, pricing, DATA, pdfUrl);
-
-    // 3. Persistência
+    // 2. Cálculo do ID Final (Sequencial) - Necessário ANTES do PDF
     const history = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
-
-    // --- SEQUENCING LOGIC (New) ---
-    // Count items of same Order + Type to append index (01, 02...)
-    let sigla = 'SH'; // Default for Shorts
-    // Try to detect from generated ID if possible, or use default
-    if (newRow.order_id && newRow.order_id.includes('-SH-')) sigla = 'SH';
-
+    let sigla = 'SH';
     let typeCount = 0;
-    const currentOrderNum = state.orderNumber; // e.g. HNT-PD-10000
+    const currentOrderNum = state.orderNumber;
 
     history.forEach(h => {
-        // Safe check for matching Order Number AND Sigla
         if (h.DADOS_TECNICOS_JSON) {
             try {
                 const hState = JSON.parse(h.DADOS_TECNICOS_JSON);
@@ -403,27 +376,35 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     });
 
     const sequenceSuffix = String(typeCount + 1).padStart(2, '0');
-    newRow.order_id = `${newRow.order_id}-${sequenceSuffix}`;
-    // -----------------------------
+    let finalId = `${state.simulationId}-${sequenceSuffix}`;
 
-    // Verificação de Edição: Sobrescrever em vez de adicionar
+    // Verificação de Edição: Manter ID original se existir
+    if (state._editingIndex !== undefined && state._editingIndex !== null) {
+        if (state._editingOrderId) finalId = state._editingOrderId;
+    }
+
+    // 3. Geração de PDF Automática com ID Final
+    let pdfUrl = pdfUrlOverride;
+    try {
+        if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
+            pdfUrl = await PDFGenerator.generateAndSaveForCart(finalId);
+        }
+    } catch (e) {
+        console.error('❌ Erro ao gerar PDF para carrinho:', e);
+    }
+
+    // 4. Formatação via Adapter e Persistência
+    const pricing = calculateFullPrice();
+    const newRow = DBAdapter.formatForDatabase(state, pricing, DATA, pdfUrl);
+    newRow.order_id = finalId; // Sincroniza ID final
+
     if (state._editingIndex !== undefined && state._editingIndex !== null) {
         console.log(`✏️ Atualizando item existente no índice: ${state._editingIndex}`);
-
-        // Se quisermos manter o mesmo ID original durante a edição:
-        if (state._editingOrderId) {
-            newRow.order_id = state._editingOrderId;
-            newRow.ID_SIMULACAO = state._editingOrderId;
-            newRow.ID_PEDIDO = state._editingOrderId;
-        }
-
         history[state._editingIndex] = newRow;
-
-        // Limpar flag de edição para que a próxima ação (se houver sem recarregar) seja um novo item
         delete state._editingIndex;
         delete state._editingOrderId;
     } else {
-        history.push(newRow); // O Adapter já retorna o objeto no formato final
+        history.push(newRow);
     }
 
     localStorage.setItem('hnt_all_orders_db', JSON.stringify(history));
@@ -435,6 +416,7 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
 
     return true;
 }
+
 
 /**
  * Atualiza o contador do carrinho no cabeçalho
