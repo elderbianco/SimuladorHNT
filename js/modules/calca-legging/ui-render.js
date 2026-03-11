@@ -491,18 +491,21 @@ function appendGalleryItem(container, i) {
 
 // Logic helpers (kept from original)
 async function uploadFileToServer(file, base64, zoneId) {
+    if (typeof SupabaseAdapter === 'undefined') return;
+
     try {
-        const formData = {
-            image: base64,
-            filename: (typeof generateFormattedFilename === 'function') ? generateFormattedFilename(zoneId, file.name, 'EXT') : file.name,
-            folder: file.name.match(/\.(emb|dst|pes|exp)$/i) ? 'embroidery' : 'image'
-        };
-        const res = await fetch('/api/upload-image', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData)
-        });
-        const data = await res.json();
-        if (data.success) console.log('✅ Upload:', data.path);
-    } catch (e) { console.error('❌ Upload:', e); }
+        const fileName = (typeof generateFormattedFilename === 'function') ? generateFormattedFilename(zoneId, file.name, 'EXT') : file.name;
+        const publicUrl = await SupabaseAdapter.uploadFile('client_uploads', fileName, base64, file.type);
+
+        if (publicUrl) {
+            console.log('✅ Upload para Supabase (Calça Legging) concluído:', publicUrl);
+            if (zoneId && state.uploads && state.uploads[zoneId]) {
+                state.uploads[zoneId].supabaseUrl = publicUrl;
+            }
+        }
+    } catch (e) {
+        console.error('❌ Erro no upload para Supabase (Calça Legging):', e);
+    }
 }
 
 function addImage(z) { document.getElementById(`upload-${z}`).click(); }
