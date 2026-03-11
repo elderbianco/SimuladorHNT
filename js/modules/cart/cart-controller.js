@@ -57,9 +57,18 @@ function loadDashboard() {
     history.forEach((order, index) => {
         let data = order;
 
-        // --- NORMALIZAÇÃO DE CAMPOS (Supabase vs Local) ---
-        // Se vier do Supabase, o campo é pdf_url. Normalizamos para pdfUrl usado na UI.
+        // --- NORMALIZAÇÃO DE CAMPOS (Supabase → UI) ---
+        // A tabela real usa: criado_em, ID_PEDIDO, pdf_url
+        // A UI espera:       created_at, order_id,  pdfUrl
         if (data.pdf_url && !data.pdfUrl) data.pdfUrl = data.pdf_url;
+        if (data.criado_em && !data.created_at) data.created_at = data.criado_em;
+        if (data.ID_PEDIDO && !data.order_id) data.order_id = data.ID_PEDIDO;
+        if (data.DADOS_TECNICOS_JSON === undefined && data.json_tec) {
+            // json_tec is the Supabase column for technical data (already parsed jsonb)
+            data.DADOS_TECNICOS_JSON = typeof data.json_tec === 'string'
+                ? data.json_tec
+                : JSON.stringify(data.json_tec);
+        }
 
         // CRITICAL FIX: If item is missing but we have technical data, reconstruct the item
         if (!data.item && data.DADOS_TECNICOS_JSON) {
