@@ -999,8 +999,8 @@ const PDFGenerator = {
      * Gera e salva PDF em segundo plano (para carrinho)
      * Retorna a URL do PDF salvo ou null se falhar
      */
-    async generateAndSaveForCart() {
-        const id = this.context.state?.simulationId || 'HNT_PEDIDO';
+    async generateAndSaveForCart(customId = null) {
+        const id = customId || this.context.state?.simulationId || 'HNT_PEDIDO';
 
         try {
             // 1. Garantir dependências
@@ -1019,7 +1019,7 @@ const PDFGenerator = {
                 await this.updateSnapshot(true);
             }
 
-            // 3. Gerar PDF (mesmo código do generateBackgroundPDF, mas sem UI)
+            // 3. Gerar PDF
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -1110,7 +1110,7 @@ const PDFGenerator = {
             const totalDisplay = document.getElementById('price-display');
             let totalText = totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '').trim() : 'R$ 0,00';
 
-            // Limpeza (whitelist)
+            // Limpeza
             totalText = totalText.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
             totalText = totalText.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
             totalText = totalText.replace(/\s+/g, ' ').trim();
@@ -1123,22 +1123,24 @@ const PDFGenerator = {
             doc.text(`TOTAL FINAL: ${totalText}`, pageWidth / 2, currentY, { align: 'center' });
 
             // Salvar
+            const fileName = `Pedido_${id.replace(/[^a-zA-Z0-9-_]/g, '_')}`;
             const pdfBase64 = doc.output('datauristring').split(',').pop();
-            const savedPath = await this.saveToLocalFolder(id, pdfBase64, 'pdf');
+            const savedPath = await this.saveToLocalFolder(fileName, pdfBase64, 'pdf');
 
             if (savedPath) {
-                const fileName = savedPath.split(/[/\\]/).pop();
-                const publicUrl = `assets/BancoDados/PedidosPDF/${fileName}`;
-                console.log(`✅ PDF salvo para carrinho: ${publicUrl}`);
+                const finalFileName = savedPath.split(/[/\\]/).pop();
+                const publicUrl = `assets/BancoDados/PedidosPDF/${finalFileName}`;
+                console.log(`✅ PDF salvo no servidor: ${publicUrl}`);
                 return publicUrl;
             } else {
-                console.warn('⚠️ Falha ao salvar PDF no servidor');
-                return null;
+                console.warn('⚠️ Offline ou GitHub Pages: Disparando download automático como fallback.');
+                doc.save(fileName + ".pdf");
+                // Retornamos o link previsto para que o carrinho tente mostrá-lo (resiliência)
+                return `assets/BancoDados/PedidosPDF/${fileName}.pdf`;
             }
 
         } catch (err) {
             console.error('❌ Erro ao gerar PDF para carrinho:', err);
-            alert('Erro ao gerar PDF: ' + err.message);
             return null;
         }
     }
