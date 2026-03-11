@@ -81,7 +81,7 @@ function showEmbZoneSelection(file) {
     }
 
     // Confirm button
-    document.getElementById('emb-confirm-btn').onclick = () => {
+    document.getElementById('emb-confirm-btn').onclick = async () => {
         const selectedOriginalIds = [];
         const checkboxes = zoneCheckboxes.querySelectorAll('input:checked');
 
@@ -95,11 +95,49 @@ function showEmbZoneSelection(file) {
             return;
         }
 
+        // --- SUPABASE EMB UPLOAD ---
+        let supabaseUrl = null;
+        if (typeof SupabaseAdapter !== 'undefined') {
+            try {
+                // Indicador visual de carregamento
+                const btn = document.getElementById('emb-confirm-btn');
+                const originalText = btn.innerText;
+                btn.disabled = true;
+                btn.innerText = '⏳ ENVIANDO...';
+
+                // Lógica de nomeação (tentar usar lógica global se disponível)
+                let nameToUse = file.name;
+                if (typeof generateFormattedFilename === 'function') {
+                    nameToUse = generateFormattedFilename(selectedOriginalIds[0], file.name, 'EXT');
+                }
+
+                // Leitura do arquivo para Base64
+                const base64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+
+                // Upload real
+                supabaseUrl = await SupabaseAdapter.uploadFile('client_uploads', nameToUse, base64, 'application/octet-stream');
+
+                if (!supabaseUrl) throw new Error("Falha no upload");
+
+                console.log('✅ Arquivo EMB enviado para Supabase:', supabaseUrl);
+            } catch (err) {
+                console.error('❌ Erro no upload do arquivo EMB:', err);
+                alert('⚠️ Ocorreu um erro ao enviar o arquivo para a nuvem. Tentaremos salvar localmente para o seu navegador, mas recomendamos tentar novamente.');
+            }
+        }
+        // ---------------------------
+
         // Add file to state
         state.embFiles.push({
             filename: file.name,
             size: file.size,
-            zones: selectedOriginalIds
+            zones: selectedOriginalIds,
+            supabaseUrl: supabaseUrl // Persiste a URL da nuvem no estado
         });
 
         if (typeof saveState === 'function') saveState();
