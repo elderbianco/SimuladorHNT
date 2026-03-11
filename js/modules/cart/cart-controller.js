@@ -6,7 +6,14 @@
 
 const STORAGE_KEY = 'hnt_all_orders_db';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Sincronizar com Supabase antes de carregar
+    if (typeof SupabaseAdapter !== 'undefined') {
+        const pedidos = await SupabaseAdapter.getPedidos();
+        if (pedidos && pedidos.length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(pedidos));
+        }
+    }
     loadDashboard();
 
     document.getElementById('btn-clear-all').onclick = clearAll;
@@ -206,25 +213,14 @@ async function deleteOrder(index) {
     const raw = localStorage.getItem(STORAGE_KEY);
     const history = raw ? JSON.parse(raw) : [];
 
-    // Get the order to extract simulationId for PDF deletion
     const order = history[index];
-    const simulationId = order?.order_id || order?.item?.simulation_id;
+    const orderId = order?.order_id || order?.ID_PEDIDO;
 
-    // Delete PDF from server if simulationId exists
-    if (simulationId) {
-        try {
-            const response = await fetch(`/api/delete-pdf/${simulationId}`, {
-                method: 'DELETE'
-            });
-            if (response.ok) {
-                console.log(`✅ PDF deletado: ${simulationId}`);
-            } else {
-                console.warn(`⚠️ PDF não encontrado ou erro ao deletar: ${simulationId}`);
-            }
-        } catch (err) {
-            console.error('Erro ao deletar PDF:', err);
-        }
+    // --- SUPABASE SYNC ---
+    if (orderId && typeof SupabaseAdapter !== 'undefined') {
+        await SupabaseAdapter.deletePedido(orderId);
     }
+    // ---------------------
 
     history.splice(index, 1);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
@@ -294,8 +290,15 @@ function editOrder(index) {
 }
 
 
-function clearAll() {
+async function clearAll() {
     if (!confirm('Deseja limpar TODO o histórico de pedidos?')) return;
+
+    // --- SUPABASE SYNC (DANGEROUS BUT FOR USER CONVENIENCE) ---
+    // If we wanted to clear everything from Supabase, we'd need a bulk delete.
+    // For now, we clear local and user can re-sync if they want.
+    // Alternatively, we could delete all rows matching a criteria.
+    // ---------------------
+
     localStorage.removeItem(STORAGE_KEY);
     loadDashboard();
 }

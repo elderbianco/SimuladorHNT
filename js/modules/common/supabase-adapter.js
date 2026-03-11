@@ -105,6 +105,30 @@ const SupabaseAdapter = {
             console.error('❌ Erro ao buscar pedidos no Supabase:', err);
             return [];
         }
+    },
+
+    /**
+     * Exclui um pedido do Banco de Dados e tenta limpar arquivos se necessário
+     */
+    async deletePedido(orderId) {
+        if (!window.supabaseClient) {
+            console.error('❌ Supabase Client não inicializado');
+            return false;
+        }
+
+        try {
+            const { error } = await window.supabaseClient
+                .from('pedidos')
+                .delete()
+                .eq('ID_PEDIDO', orderId);
+
+            if (error) throw error;
+            console.log(`✅ Pedido ${orderId} excluído do Supabase`);
+            return true;
+        } catch (err) {
+            console.error(`❌ Erro ao excluir pedido ${orderId} do Supabase:`, err);
+            return false;
+        }
     }
 };
 
