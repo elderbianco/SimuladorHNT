@@ -244,6 +244,13 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     const row = DBAdapter.formatForDatabase(state, p, CONFIG, pdfUrl);
     row.order_id = finalId; // Sincroniza ID final
 
+    // --- SUPABASE SYNC ---
+    if (typeof SupabaseAdapter !== 'undefined') {
+        console.log('🚀 Sincronizando com Supabase (Moletom)...');
+        SupabaseAdapter.savePedido(row, state);
+    }
+    // ---------------------
+
     // 5. Persistência
     if (state._editingIndex !== undefined && state._editingIndex !== null) {
         console.log(`✏️ Atualizando item existente no índice: ${state._editingIndex}`);

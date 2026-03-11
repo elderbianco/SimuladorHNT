@@ -390,6 +390,13 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     const newRow = DBAdapter.formatForDatabase(state, pricing, CONFIG, pdfUrl);
     newRow.order_id = finalId; // Sincroniza ID final
 
+    // --- SUPABASE SYNC ---
+    if (typeof SupabaseAdapter !== 'undefined') {
+        console.log('🚀 Sincronizando com Supabase (Calça Legging)...');
+        SupabaseAdapter.savePedido(newRow, state);
+    }
+    // ---------------------
+
     if (state._editingIndex !== undefined && state._editingIndex !== null) {
         console.log(`✏️ Atualizando item existente no índice: ${state._editingIndex}`);
         history[state._editingIndex] = newRow;

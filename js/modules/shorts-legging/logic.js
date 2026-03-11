@@ -334,6 +334,13 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     const newRow = DBAdapter.formatForDatabase(state, pricing, CONFIG, pdfUrl);
     newRow.order_id = finalId; // Sincroniza ID final
 
+    // --- SUPABASE SYNC ---
+    if (typeof SupabaseAdapter !== 'undefined') {
+        console.log('🚀 Sincronizando com Supabase (Shorts Legging)...');
+        SupabaseAdapter.savePedido(newRow, state);
+    }
+    // ---------------------
+
     // -----------------------------
 
     // CRITICAL: Limpeza preventiva antes de adicionar
