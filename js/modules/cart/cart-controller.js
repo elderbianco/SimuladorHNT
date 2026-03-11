@@ -51,6 +51,7 @@ function loadDashboard() {
         let data = order;
 
         // Convert flat format (from DBAdapter) to nested format (for cart display)
+        // CRITICAL FIX: Only restore if item is missing. Modern records already have .item
         if (!data.item && data.DADOS_TECNICOS_JSON) {
             try {
                 // Parse the technical data JSON which contains the full state
@@ -63,6 +64,12 @@ function loadDashboard() {
                 return; // Skip this item
             }
         }
+
+        // Debug Log for PDF link tracking
+        if (data.pdfUrl || (data.item && data.item.pdf_path)) {
+            console.log(`📄 PDF found for order ${data.order_id || index}:`, data.pdfUrl || (data.item ? data.item.pdf_path : ''));
+        }
+
 
         // Legacy conversion if needed
         if (!data.item && Array.isArray(order)) data = convertLegacyData(order);

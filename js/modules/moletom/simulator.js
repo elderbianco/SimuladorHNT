@@ -193,7 +193,7 @@ function setupMainEvents() {
 /**
  * Salva o pedido atual no histórico (Carrinho)
  */
-async function saveOrderToHistory(silent = false) {
+async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     // 1. Validação
     const validation = DBAdapter.validateOrder(state);
     if (!validation.valid) {
@@ -205,9 +205,9 @@ async function saveOrderToHistory(silent = false) {
     }
 
     // 2. Geração de PDF Automática (NEW)
-    let pdfUrl = null;
+    let pdfUrl = pdfUrlOverride;
     try {
-        if (typeof PDFGenerator !== 'undefined') {
+        if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
             pdfUrl = await PDFGenerator.generateAndSaveForCart();
         }
     } catch (e) {
