@@ -104,14 +104,27 @@ const DatabaseManager = {
                 headers: headers,
                 body: JSON.stringify(data)
             });
-            const json = await res.json();
-            if (json.success) {
-                console.log("✅ Servidor sincronizado (Excel atualizado).");
-            } else {
-                console.warn("⚠️ Falha ao atualizar Excel:", json.error);
+
+            if (!res.ok) {
+                console.warn(`⚠️ Servidor local ignorado (HTTP ${res.status}). Usando apenas Supabase.`);
+                return;
+            }
+
+            const text = await res.text();
+            if (!text) return;
+
+            try {
+                const json = JSON.parse(text);
+                if (json.success) {
+                    console.log("✅ Servidor sincronizado (Excel atualizado).");
+                } else {
+                    console.warn("⚠️ Falha ao atualizar Excel:", json.error);
+                }
+            } catch (e) {
+                console.warn("⚠️ Resposta do servidor não é JSON:", text.substring(0, 100));
             }
         } catch (e) {
-            console.error("Erro de conexão com servidor:", e);
+            console.warn("⚠️ Sem servidor local detectado (provavelmente no GitHub Pages):", e.message);
         }
     },
 

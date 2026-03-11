@@ -556,7 +556,7 @@ const PDFGenerator = {
 
         try {
             await Promise.all([
-                loadScript('https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js', 'jspdf'),
+                loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js', 'jspdf'),
                 loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', 'QRCode')
             ]);
             return true;
