@@ -188,7 +188,7 @@ window.validateEmbBeforeAction = function (onSuccess) {
         if (result.opportunity.length > 0) {
             if (typeof showEmbAlert === 'function') showEmbAlert([...new Set(result.opportunity)], onSuccess);
             else {
-                if (confirm('Atenção: Você tem uploads sem arquivo EMB. Deseja continuar mesmo assim?')) onSuccess();
+                if (confirm('Atenção: Você tem imagens enviadas, mas não anexou o arquivo de bordado correspondente (.EMB).\n\nClique em [OK] para prosseguir sem enviar o arquivo.\nClique em [Cancelar] para retornar e anexar a arte.')) onSuccess();
             }
             return false;
         }
