@@ -487,8 +487,14 @@ function handleImageUpload(e, zoneId) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-        addImage(zoneId, event.target.result, file.name, true);
+    reader.onload = async (event) => {
+        const base64 = event.target.result;
+        addImage(zoneId, base64, file.name, true);
+
+        // --- SUPABASE SYNC ---
+        await uploadFileToServer(file, base64, zoneId);
+        // ---------------------
+
         // Ativa limites visuais automaticamente ao subir imagem
         state.zoneLimits[zoneId] = true;
         if (typeof updateLimits === 'function') updateLimits();
@@ -497,8 +503,26 @@ function handleImageUpload(e, zoneId) {
 }
 
 /**
- * Seleção da Galeria
+ * Envia o arquivo para o servidor via Supabase
  */
+async function uploadFileToServer(file, base64, zoneId) {
+    if (typeof SupabaseAdapter === 'undefined') return;
+
+    try {
+        const fileName = (typeof generateFormattedFilename === 'function') ? generateFormattedFilename(zoneId, file.name, 'EXT') : file.name;
+        const publicUrl = await SupabaseAdapter.uploadFile('client_uploads', fileName, base64, file.type);
+
+        if (publicUrl) {
+            console.log('✅ Upload para Supabase (Shorts Legging) concluído:', publicUrl);
+            if (zoneId && state.uploads && state.uploads[zoneId]) {
+                state.uploads[zoneId].supabaseUrl = publicUrl;
+                state.uploads[zoneId].src = publicUrl; // Sincroniza src para persistência
+            }
+        }
+    } catch (e) {
+        console.error('❌ Erro no upload para Supabase (Shorts Legging):', e);
+    }
+}
 function handleGallerySelection(src) {
     if (state.pending) {
         addImage(state.pending, src, "Imagem do Acervo", false);

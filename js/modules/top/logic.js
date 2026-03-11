@@ -433,6 +433,54 @@ window.checkForRestoration = function () {
 };
 
 /**
+ * Handler para Upload de Imagem (Fixing missing link)
+ */
+function handleImageUpload(e, zoneId) {
+    const file = (e.target && e.target.files) ? e.target.files[0] : (e.files ? e.files[0] : e);
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        const base64 = event.target.result;
+        if (typeof addImage === 'function') {
+            addImage(zoneId, base64, file.name, true);
+        }
+
+        // --- SUPABASE SYNC ---
+        await uploadFileToServer(file, base64, zoneId);
+        // ---------------------
+
+        // Ativa limites visuais automaticamente
+        state.zoneLimits[zoneId] = true;
+        if (typeof updateLimits === 'function') updateLimits();
+    };
+    reader.readAsDataURL(file);
+}
+
+/**
+ * Envia o arquivo para o servidor via Supabase
+ */
+async function uploadFileToServer(file, base64, zoneId) {
+    if (typeof SupabaseAdapter === 'undefined') return;
+
+    try {
+        const fileName = (typeof generateFormattedFilename === 'function') ? generateFormattedFilename(zoneId, file.name, 'EXT') : file.name;
+        const publicUrl = await SupabaseAdapter.uploadFile('client_uploads', fileName, base64, file.type);
+
+        if (publicUrl) {
+            console.log('✅ Upload para Supabase (Top) concluído:', publicUrl);
+            if (!state.uploads) state.uploads = {};
+            if (!state.uploads[zoneId]) state.uploads[zoneId] = {};
+            state.uploads[zoneId].supabaseUrl = publicUrl;
+            state.uploads[zoneId].src = publicUrl;
+            state.uploads[zoneId].filename = fileName;
+        }
+    } catch (e) {
+        console.error('❌ Erro no upload para Supabase (Top):', e);
+    }
+}
+
+/**
  * Reseta os dados do simulador para o estado inicial (Limpeza)
  */
 function resetSimulatorData() {
