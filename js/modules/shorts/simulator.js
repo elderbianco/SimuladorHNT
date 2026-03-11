@@ -128,7 +128,7 @@ async function init() {
     if (editingIndex !== null) {
         console.log('✏️ Detectado modo de edição - Carregando estado...');
         setTimeout(() => {
-            const history = JSON.parse(localStorage.getItem('orderHistory') || '[]');
+            const history = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
             const orderToEdit = history[editingIndex];
 
             if (orderToEdit && orderToEdit.DADOS_TECNICOS_JSON) {
