@@ -283,27 +283,9 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
         return false;
     }
 
-    // 2. Geração de PDF Automática (NEW)
-    let pdfUrl = pdfUrlOverride;
-    try {
-        if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
-            pdfUrl = await PDFGenerator.generateAndSaveForCart();
-        }
-    } catch (e) {
-        console.error('❌ Erro ao gerar PDF para carrinho:', e);
-    }
-
-    // 3. Formatação via Adapter
-    const pricing = calculateFullPrice();
-    const newRow = DBAdapter.formatForDatabase(state, pricing, CONFIG, pdfUrl);
-
-    // 4. Persistência
+    // 2. Cálculo do ID Final (Sequencial) - Necessário ANTES do PDF
     const history = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
-
-    // --- SEQUENCING LOGIC (New) ---
     let sigla = 'TP'; // Default for Top
-    if (newRow.order_id && newRow.order_id.includes('-TP-')) sigla = 'TP';
-
     let typeCount = 0;
     const currentOrderNum = state.orderNumber;
 
@@ -319,35 +301,46 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     });
 
     const sequenceSuffix = String(typeCount + 1).padStart(2, '0');
-    newRow.order_id = `${newRow.order_id}-${sequenceSuffix}`;
-    // -----------------------------
+    let finalId = `${state.simulationId}-${sequenceSuffix}`;
 
-    // Verificação de Edição: Sobrescrever em vez de adicionar
+    // Verificação de Edição: Manter ID original se existir
+    if (state._editingIndex !== undefined && state._editingIndex !== null) {
+        if (state._editingOrderId) finalId = state._editingOrderId;
+    }
+
+    // 3. Geração de PDF Automática com ID Final
+    let pdfUrl = pdfUrlOverride;
+    try {
+        if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
+            pdfUrl = await PDFGenerator.generateAndSaveForCart(finalId);
+        }
+    } catch (e) {
+        console.error('❌ Erro ao gerar PDF para carrinho:', e);
+    }
+
+    // 4. Formatação via Adapter e Persistência
+    const pricing = calculateFullPrice();
+    const newRow = DBAdapter.formatForDatabase(state, pricing, CONFIG, pdfUrl);
+    newRow.order_id = finalId; // Sincroniza ID final
+
     if (state._editingIndex !== undefined && state._editingIndex !== null) {
         console.log(`✏️ Atualizando item existente no índice: ${state._editingIndex}`);
-
-        if (state._editingOrderId) {
-            newRow.order_id = state._editingOrderId;
-            newRow.ID_SIMULACAO = state._editingOrderId;
-            newRow.ID_PEDIDO = state._editingOrderId;
-        }
-
         history[state._editingIndex] = newRow;
-
         delete state._editingIndex;
         delete state._editingOrderId;
     } else {
         history.push(newRow);
     }
+
     localStorage.setItem('hnt_all_orders_db', JSON.stringify(history));
 
-    // 4. Banco de Dados Linear (Excel)
     if (typeof DatabaseManager !== 'undefined') {
         DatabaseManager.addOrder(newRow);
     }
 
     return true;
 }
+
 // --- CACHE SYSTEM ---
 window.dataCache = {
     textZonesById: new Map(),
@@ -417,11 +410,6 @@ window.checkForRestoration = function () {
         if (typeof updatePrice === 'function') updatePrice();
 
         // Force re-render visuals
-        // Top might not have 'scheduleRender' same as Shorts? 
-        // simulator-top.js uses 'renderControls' and 'updateVisuals' manually in init.
-        // It does not seem to have 'scheduleRender' exposed globally as easily or uses it differently.
-        // Let's check simulator-top.js structure.
-        // It has updateVisuals();
         if (typeof updateVisuals === 'function') updateVisuals();
 
         setTimeout(() => {
