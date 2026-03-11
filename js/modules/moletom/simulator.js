@@ -204,74 +204,63 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
         return false;
     }
 
-    // 2. Geração de PDF Automática (NEW)
+    // 2. Cálculo do ID Final (Sequencial) - Necessário ANTES do PDF
+    const h = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
+    let sigla = 'ML';
+    let typeCount = 0;
+    const currentOrderNum = state.orderNumber;
+
+    h.forEach(histItem => {
+        if (histItem.DADOS_TECNICOS_JSON) {
+            try {
+                const hState = JSON.parse(histItem.DADOS_TECNICOS_JSON);
+                if ((hState.orderNumber === currentOrderNum) && histItem.order_id && histItem.order_id.includes(`-${sigla}-`)) {
+                    typeCount++;
+                }
+            } catch (e) { }
+        }
+    });
+
+    const sequenceSuffix = String(typeCount + 1).padStart(2, '0');
+    let finalId = `${state.simulationId}-${sequenceSuffix}`;
+
+    // Verificação de Edição: Manter ID original se existir
+    if (state._editingIndex !== undefined && state._editingIndex !== null) {
+        if (state._editingOrderId) finalId = state._editingOrderId;
+    }
+
+    // 3. Geração de PDF Automática com ID Final
     let pdfUrl = pdfUrlOverride;
     try {
         if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
-            pdfUrl = await PDFGenerator.generateAndSaveForCart();
+            pdfUrl = await PDFGenerator.generateAndSaveForCart(finalId);
         }
     } catch (e) {
         console.error('❌ Erro ao gerar PDF para carrinho:', e);
     }
 
-    // 3. Formatação
+    // 4. Formatação via Adapter
     const p = calculateFullPrice();
-    // Moletom uses 'CONFIG' global
     const row = DBAdapter.formatForDatabase(state, p, CONFIG, pdfUrl);
+    row.order_id = finalId; // Sincroniza ID final
 
-    // 3. Persistência
-    try {
-        const h = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
-
-        // --- SEQUENCING LOGIC (New) ---
-        let sigla = 'ML';
-        if (row.order_id && row.order_id.includes('-ML-')) sigla = 'ML';
-
-        let typeCount = 0;
-        const currentOrderNum = state.orderNumber;
-
-        h.forEach(histItem => {
-            if (histItem.DADOS_TECNICOS_JSON) {
-                try {
-                    const hState = JSON.parse(histItem.DADOS_TECNICOS_JSON);
-                    if ((hState.orderNumber === currentOrderNum) && histItem.order_id && histItem.order_id.includes(`-${sigla}-`)) {
-                        typeCount++;
-                    }
-                } catch (e) { }
-            }
-        });
-
-        const sequenceSuffix = String(typeCount + 1).padStart(2, '0');
-        row.order_id = `${row.order_id}-${sequenceSuffix}`;
-        // -----------------------------
-
-        // Verificação de Edição: Sobrescrever em vez de adicionar
-        if (state._editingIndex !== undefined && state._editingIndex !== null) {
-            console.log(`✏️ Atualizando item existente no índice: ${state._editingIndex}`);
-
-            if (state._editingOrderId) {
-                row.order_id = state._editingOrderId;
-                row.ID_SIMULACAO = state._editingOrderId;
-                row.ID_PEDIDO = state._editingOrderId;
-            }
-
-            h[state._editingIndex] = row;
-
-            delete state._editingIndex;
-            delete state._editingOrderId;
-        } else {
-            h.push(row);
-        }
-        localStorage.setItem('hnt_all_orders_db', JSON.stringify(h));
-
-        // 4. Banco de Dados Linear (Excel)
-        if (typeof DatabaseManager !== 'undefined') {
-            DatabaseManager.addOrder(row);
-        }
-
-        return true;
-    } catch (e) {
-        console.error("Erro ao salvar:", e);
-        return false;
+    // 5. Persistência
+    if (state._editingIndex !== undefined && state._editingIndex !== null) {
+        console.log(`✏️ Atualizando item existente no índice: ${state._editingIndex}`);
+        h[state._editingIndex] = row;
+        delete state._editingIndex;
+        delete state._editingOrderId;
+    } else {
+        h.push(row);
     }
+
+    localStorage.setItem('hnt_all_orders_db', JSON.stringify(h));
+
+    // 6. Banco de Dados Linear (Excel)
+    if (typeof DatabaseManager !== 'undefined') {
+        DatabaseManager.addOrder(row);
+    }
+
+    return true;
 }
+
