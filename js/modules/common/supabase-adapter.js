@@ -81,6 +81,30 @@ const SupabaseAdapter = {
             console.error('❌ Erro ao salvar pedido no Supabase DB:', err);
             return null;
         }
+    },
+
+    /**
+     * Busca todos os pedidos do Banco de Dados
+     */
+    async getPedidos() {
+        if (!window.supabaseClient) {
+            console.error('❌ Supabase Client não inicializado');
+            return [];
+        }
+
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('pedidos')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            console.log(`✅ ${data.length} pedidos carregados do Supabase`);
+            return data;
+        } catch (err) {
+            console.error('❌ Erro ao buscar pedidos no Supabase:', err);
+            return [];
+        }
     }
 };
 
