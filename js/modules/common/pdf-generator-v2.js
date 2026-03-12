@@ -838,8 +838,7 @@ setTimeout(() => {
     }
 }, 3000);
 
-// Recapturar quando houver mudanças visuais
-// (conectar com scheduleRender se disponível)
+// Recapturar quando houver mudanças visuais (conectar com scheduleRender se disponível)
 if (typeof scheduleRender !== 'undefined') {
     const originalScheduleRender = scheduleRender;
     window.scheduleRender = function (...args) {
