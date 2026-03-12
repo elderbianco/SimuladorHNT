@@ -325,8 +325,12 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
 
     // --- SUPABASE SYNC ---
     if (typeof SupabaseAdapter !== 'undefined') {
-        console.log('🚀 Sincronizando com Supabase (Top)...');
-        SupabaseAdapter.savePedido(newRow, state);
+        console.log('🚀 Sincronizando com Supabase (Top):', {
+            id: newRow.order_id,
+            total: newRow.total_price,
+            qty: newRow.quantity
+        });
+        await SupabaseAdapter.savePedido(newRow, state);
     }
     // ---------------------
 

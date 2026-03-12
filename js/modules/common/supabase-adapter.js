@@ -60,6 +60,10 @@ const SupabaseAdapter = {
             });
 
             // Mapeamento para as colunas reais da tabela `pedidos`
+            // Tratamento robusto de números para evitar persistência de strings ou 0 indesejados
+            const finalPrice = parseFloat(String(formattedData.total_price).replace(',', '.')) || 0;
+            const finalQty = parseInt(formattedData.quantity) || 0;
+
             const row = {
                 ID_PEDIDO: formattedData.order_id,
                 ID_SIMULACAO: technicalJson.simulationId,
@@ -68,14 +72,18 @@ const SupabaseAdapter = {
                 TELEFONE_CLIENTE: formattedData.client_phone,
                 COR_BASE: formattedData.color,
                 TAMANHO: formattedData.grade,
-                QUANTIDADE: parseInt(formattedData.quantity) || 0,
-                PRECO_FINAL: parseFloat(formattedData.total_price) || 0,
+                QUANTIDADE: finalQty,
+                PRECO_FINAL: finalPrice,
                 pdf_url: formattedData.pdfUrl,
                 json_tec: technicalJson, // Backup completo
                 STATUS_PEDIDO: 'Simulação'
             };
 
-            console.log('📤 Enviando linha para Supabase:', row);
+            console.log('📤 Enviando linha para Supabase:', {
+                id: row.ID_PEDIDO,
+                preco: row.PRECO_FINAL,
+                qty: row.QUANTIDADE
+            });
 
             const { data, error } = await window.supabaseClient
                 .from('pedidos')

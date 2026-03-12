@@ -315,8 +315,88 @@ window.checkForRestoration = function () {
 };
 
 /**
- * Reseta os dados do simulador para o estado inicial (Limpeza)
+ * Salva o pedido atual no histórico (Carrinho)
  */
+async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
+    // 1. Validação via Adapter
+    const validation = DBAdapter.validateOrder(state);
+    if (!validation.valid) {
+        if (!silent) {
+            alert('⚠️ ' + validation.errors.join('\n'));
+        }
+        return false;
+    }
+
+    // 2. Cálculo do ID Final (Sequencial) - Necessário ANTES do PDF
+    const history = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
+    let sigla = 'ML';
+    let typeCount = 0;
+    const currentOrderNum = state.orderNumber;
+
+    history.forEach(h => {
+        if (h.DADOS_TECNICOS_JSON) {
+            try {
+                const hState = JSON.parse(h.DADOS_TECNICOS_JSON);
+                if ((hState.orderNumber === currentOrderNum) && h.order_id && h.order_id.includes(`-${sigla}-`)) {
+                    typeCount++;
+                }
+            } catch (e) { }
+        }
+    });
+
+    const sequenceSuffix = String(typeCount + 1).padStart(2, '0');
+    let finalId = `${state.simulationId}-${sequenceSuffix}`;
+
+    // Verificação de Edição: Manter ID original se existir
+    if (state._editingIndex !== undefined && state._editingIndex !== null) {
+        if (state._editingOrderId) finalId = state._editingOrderId;
+    }
+
+    // 3. Geração de PDF Automática com ID Final
+    let pdfUrl = pdfUrlOverride;
+    try {
+        if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
+            pdfUrl = await PDFGenerator.generateAndSaveForCart(finalId);
+        }
+    } catch (e) {
+        console.error('❌ Erro ao gerar PDF para carrinho:', e);
+    }
+
+    // 4. Formatação via Adapter e Persistência
+    const pricing = calculateFullPrice();
+    const newRow = DBAdapter.formatForDatabase(state, pricing, CONFIG, pdfUrl);
+    newRow.order_id = finalId; // Sincroniza ID final
+
+    // --- SUPABASE SYNC ---
+    if (typeof SupabaseAdapter !== 'undefined') {
+        console.log('🚀 Sincronizando com Supabase (Moletom):', {
+            id: newRow.order_id,
+            total: newRow.total_price,
+            qty: newRow.quantity
+        });
+        await SupabaseAdapter.savePedido(newRow, state);
+    }
+    // ---------------------
+
+    if (state._editingIndex !== undefined && state._editingIndex !== null) {
+        console.log(`✏️ Atualizando item existente no índice: ${state._editingIndex}`);
+        history[state._editingIndex] = newRow;
+        delete state._editingIndex;
+        delete state._editingOrderId;
+    } else {
+        history.push(newRow);
+    }
+
+    localStorage.setItem('hnt_all_orders_db', JSON.stringify(history));
+
+    if (typeof DatabaseManager !== 'undefined') {
+        DatabaseManager.addOrder(newRow);
+    }
+
+    return true;
+}
+
+// ... existing code ...
 function resetSimulatorData() {
     console.log("🧹 Resetando dados do simulador (Moletom)...");
 
