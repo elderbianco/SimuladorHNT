@@ -58,11 +58,15 @@ function loadDashboard() {
         let data = order;
 
         // --- NORMALIZAÇÃO DE CAMPOS (Supabase → UI) ---
-        // A tabela real usa: criado_em, ID_PEDIDO, pdf_url
-        // A UI espera:       created_at, order_id,  pdfUrl
+        // A tabela real usa: criado_em, ID_PEDIDO, pdf_url, PRECO_FINAL
+        // A UI espera:       created_at, order_id,  pdfUrl,  total_price
         if (data.pdf_url && !data.pdfUrl) data.pdfUrl = data.pdf_url;
         if (data.criado_em && !data.created_at) data.created_at = data.criado_em;
         if (data.ID_PEDIDO && !data.order_id) data.order_id = data.ID_PEDIDO;
+
+        // Garantir que o preço final esteja disponível para a reconstrução do item
+        const dbPrice = parseFloat(data.PRECO_FINAL) || parseFloat(data.total_price) || 0;
+
         if (data.DADOS_TECNICOS_JSON === undefined && data.json_tec) {
             // json_tec is the Supabase column for technical data (already parsed jsonb)
             data.DADOS_TECNICOS_JSON = typeof data.json_tec === 'string'
@@ -78,14 +82,18 @@ function loadDashboard() {
                     ? JSON.parse(data.DADOS_TECNICOS_JSON)
                     : data.DADOS_TECNICOS_JSON;
 
+                // Preço unitário fallback (se houver total e quantidade)
+                const qty = parseInt(technicalData.qty_total || data.QUANTIDADE || 1);
+                const unitPriceFallback = dbPrice > 0 ? (dbPrice / qty) : 0;
+
                 // Reconstruct the 'item' structure expected by the rest of the logic and CartUI
                 data.item = {
                     simulator_type: technicalData.productInitial ? "shorts" : (technicalData.simulator_type || "shorts"),
                     model_name: technicalData.productInitial ? "Shorts " + technicalData.productInitial : (technicalData.model_name || "Simulação"),
-                    qty_total: technicalData.qty_total || data.QUANTIDADE || data.quantity || 1,
+                    qty_total: qty,
                     pricing: {
-                        total_price: data.PRECO_FINAL || data.total_price || (technicalData.pricing ? technicalData.pricing.total_price : 0),
-                        unit_price: data.PRECO_UNITARIO || (technicalData.pricing ? technicalData.pricing.unit_price : 0)
+                        total_price: dbPrice || (technicalData.pricing ? technicalData.pricing.total_price : 0),
+                        unit_price: parseFloat(data.PRECO_UNITARIO) || (technicalData.pricing ? technicalData.pricing.unit_price : unitPriceFallback)
                     },
                     specs: {
                         parts: technicalData.parts || {},

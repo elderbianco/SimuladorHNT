@@ -53,6 +53,12 @@ const SupabaseAdapter = {
         }
 
         try {
+            console.log('📦 Preparando objeto para Supabase:', {
+                order_id: formattedData.order_id,
+                price: formattedData.total_price,
+                pdf: formattedData.pdfUrl
+            });
+
             // Mapeamento para as colunas reais da tabela `pedidos`
             const row = {
                 ID_PEDIDO: formattedData.order_id,
@@ -68,6 +74,8 @@ const SupabaseAdapter = {
                 json_tec: technicalJson, // Backup completo
                 STATUS_PEDIDO: 'Simulação'
             };
+
+            console.log('📤 Enviando linha para Supabase:', row);
 
             const { data, error } = await window.supabaseClient
                 .from('pedidos')
