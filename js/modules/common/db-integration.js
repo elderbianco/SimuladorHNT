@@ -76,6 +76,14 @@ const DBAdapter = {
             status: "saved_locally", // draft, saved_locally, submitted
             pdfUrl: pdfUrl, // Armazena link do PDF para o Cart
 
+            // --- FLATTENED DATA FOR DB COMPATIBILITY ---
+            total_price: pricing.total || 0,
+            quantity: totalQty,
+            product_type: this.detectProductType(state, true),
+            client_name: state.client_info?.name || "Cliente",
+            client_phone: state.phone || "",
+            // -------------------------------------------
+
             // Critical for Restoration System
             DADOS_TECNICOS_JSON: JSON.stringify(state),
 

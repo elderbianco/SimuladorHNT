@@ -72,10 +72,10 @@ function loadDashboard() {
             };
         }
 
-        // Preço e Quantidade (Case Insensitive e fallback robusto)
-        const dbPrice = parseFloat(data.PRECO_FINAL || data.preco_final || data.total_price || 0);
-        const dbQty = parseInt(data.QUANTIDADE || data.quantidade || 1);
-        const dbUnitPrice = parseFloat(data.PRECO_UNITARIO || data.preco_unitario || 0);
+        // Preço e Quantidade (Case Insensitive e fallback robusto para estruturas planas ou aninhadas)
+        const dbPrice = parseFloat(data.PRECO_FINAL || data.preco_final || data.total_price || data.item?.pricing?.total_price || 0);
+        const dbQty = parseInt(data.QUANTIDADE || data.quantidade || data.item?.qty_total || 1);
+        const dbUnitPrice = parseFloat(data.PRECO_UNITARIO || data.preco_unitario || data.item?.pricing?.unit_price || 0);
 
         if (data.DADOS_TECNICOS_JSON === undefined && (data.json_tec || data.JSON_TEC)) {
             const jtec = data.json_tec || data.JSON_TEC;
