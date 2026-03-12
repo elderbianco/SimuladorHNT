@@ -21,7 +21,7 @@ const PDFGenerator = {
         if (window.jspdf && window.jspdf.plugin && window.jspdf.plugin.autotable) return;
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = "https://unpkg.com/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js";
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js";
             script.onload = resolve;
             script.onerror = reject;
             document.head.appendChild(script);
