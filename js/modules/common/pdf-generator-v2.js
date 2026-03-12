@@ -812,21 +812,21 @@ currentY += 20;
 
 // --- F. TERMOS ---
 // Verifica espaço (precisa de uns 40-50mm)
-// Se não couber, nova página
-const termsText = "AVISO IMPORTANTE: Este documento é uma SIMULAÇÃO DIGITAL para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação. Ao prosseguir, você declara que leu e concorda com todas as informações e condições do produto disponíveis em nosso FAQ, além de confirmar que possui os direitos autorais sobre as artes enviadas, assumindo total responsabilidade legal. Em caso de dúvidas, entre em contato com nossa equipe.";
-doc.setFontSize(9);
+// Se não couber, nova            // --- TERMOS E CONDIÇÕES ---
+const termsText = "⚠️ AVISO IMPORTANTE: Este documento é uma SIMULAÇÃO DIGITAL para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação. Ao prosseguir, você declara que leu e concorda com todas as informações e condições do produto disponíveis em nosso FAQ, além de confirmar que possui os direitos autorais sobre as artes enviadas, assumindo total responsabilidade legal. Em caso de dúvidas, entre em contato com nossa equipe.";
+doc.setFontSize(8);
 doc.setFont('helvetica', 'normal');
-doc.setTextColor(80, 80, 80);
+doc.setTextColor(120, 120, 120);
 const termsLines = doc.splitTextToSize(termsText, pageWidth - (margin * 2));
-const termsHeight = (termsLines.length * 4) + 15;
+const termsHeight = (termsLines.length * 3.5) + 5;
 
-if (currentY + termsHeight > pageHeight - 20) {
+if (currentY + termsHeight > pageHeight - 60) { // Buffer maior para QR
     doc.addPage();
     currentY = drawPageTemplate(doc);
 }
 
-doc.text(termsLines, pageWidth / 2, currentY, { align: 'center' });
-currentY += termsHeight;
+doc.text(termsLines, margin, currentY);
+currentY += termsHeight + 10;
 
 // --- E. QR CODES GIGANTES (75% LARGURA) ---
 if (currentY + 60 > pageHeight - 20) {
@@ -1011,6 +1011,19 @@ if (savedPath || cloudUrl) {
         doc.text('RESUMO DO PEDIDO', pageWidth / 2, currentY + 5.5, { align: 'center' });
         currentY += 15;
 
+        // --- TOTAL FINAL (DESTAQUE) ---
+        currentY += 4;
+        doc.setDrawColor(212, 175, 55);
+        doc.setLineWidth(1);
+        doc.line(margin, currentY, pageWidth - margin, currentY);
+        currentY += 8;
+
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text('TOTAL INVESTIMENTO:', margin, currentY);
+        doc.text(totalText, pageWidth - margin, currentY, { align: 'right' });
+        currentY += 12;
         // Total
         const totalDisplay = document.getElementById('price-display');
         let totalText = totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '').trim() : 'R$ 0,00';
