@@ -72,115 +72,30 @@ const PDFGenerator = {
             }
 
             const canvas = await html2canvas(captureTarget, {
-                scale: 0.75, // OTIMIZAÇÃO: Reduzido para 75%
+                scale: 1, // Full scale for maximum quality
                 useCORS: true,
                 allowTaint: false,
-                backgroundColor: null, // TRANSPARENTE para não criar barras brancas
+                backgroundColor: '#ffffff', // Use solid bg instead of null for better compatibility
                 logging: false,
-                imageTimeout: 0,
+                imageTimeout: 5000, // Wait up to 5s for images
                 removeContainer: true,
-                scrollX: 0,
-                scrollY: 0,
-                x: 0,
-                y: 0,
-                ignoreElements: (element) => {
-                    // Ignore UI helpers
-                    if (element.classList.contains('drag-handle') ||
-                        element.classList.contains('resize-handle') ||
-                        element.classList.contains('ui-draggable-handle') ||
-                        element.classList.contains('limit-layer') ||
-                        element.classList.contains('zoom-controls')) {
-                        return true;
-                    }
-                    return false;
-                },
                 onclone: (clonedDoc) => {
-                    // 1. Reset 'will-change'
-                    const hardwareAccelerated = clonedDoc.querySelectorAll('*');
-                    hardwareAccelerated.forEach(el => {
-                        const style = window.getComputedStyle(el);
-                        if (style.willChange && style.willChange !== 'auto') {
-                            el.style.willChange = 'auto';
-                        }
-                        if (el.style.transform.includes('translate3d')) {
-                            el.style.transform = el.style.transform.replace(/translate3d\(([^,]+),\s*([^,]+)(?:,\s*[^)]+)?\)/g, 'translate($1, $2)');
-                        }
-                    });
-
-                    // 2. Normalize clone for capture
-                    clonedDoc.body.style.margin = '0';
-                    clonedDoc.body.style.padding = '0';
-
-                    // PRESERVAR O BACKGROUND (RingHNT)
-                    const originalArea = document.querySelector('.simulator-area');
-                    const target = clonedDoc.querySelector('.simulator-wrapper');
-
-                    if (target && originalArea) {
-                        // Aplica o background do Ring
-                        const bgStyle = window.getComputedStyle(originalArea).backgroundImage;
-                        target.style.backgroundImage = bgStyle;
-                        target.style.backgroundSize = 'cover';
-                        target.style.backgroundPosition = 'center bottom';
-                        target.style.backgroundColor = 'transparent'; // Fundo transparente!
-
-                        // Reset all ancestors
-                        let parent = target.parentElement;
-                        while (parent && parent !== clonedDoc.body) {
-                            parent.style.margin = '0';
-                            parent.style.padding = '0';
-                            parent.style.position = 'static';
-                            parent.style.transform = 'none';
-                            parent.style.width = '1000px';
-                            parent.style.height = '1000px';
-                            parent = parent.parentElement;
-                        }
-
-                        // 3. Normalize the target itself
-                        const isLeggingActive = PDFGenerator.context.state?.extras?.calca_legging?.enabled || target.classList.contains('calca-legging-active');
-                        target.style.top = '0'; // Forçar topo zero para centralização absoluta
-                        target.style.transform = 'none';
-                        target.style.left = '0';
-                        target.style.margin = '0 auto';
+                    // Force capture area size for the clone
+                    const target = clonedDoc.querySelector('.zoom-container') || clonedDoc.querySelector('.simulator-wrapper');
+                    if (target) {
                         target.style.width = '1000px';
                         target.style.height = '1000px';
-                        target.style.position = 'relative';
+                        target.style.transform = 'none';
+                        target.style.position = 'static';
+                        target.style.margin = '0 auto';
+                        target.style.visibility = 'visible';
+                        target.style.opacity = '1';
 
-                        // Centering logic for multiple layers
-                        const allLayers = target.querySelectorAll('.product-layer, .layer, .customization-layer');
-                        allLayers.forEach(l => {
-                            const isCustom = l.classList.contains('customization-layer');
-                            const style = window.getComputedStyle(l);
-
-                            if (style.display === 'none') {
-                                l.style.display = 'none';
-                                return;
-                            }
-
-                            l.style.position = 'absolute';
-                            l.style.top = isLeggingActive && !isCustom ? '100px' : '0'; // Ajuste específico para pernas
-                            l.style.left = '0';
-                            l.style.width = '100%';
-                            l.style.height = '100%';
-                            l.style.display = isCustom ? 'block' : 'flex';
-                            l.style.justifyContent = 'center';
-                            l.style.alignItems = 'center';
-                            l.style.transform = 'none';
-
-                            if (!isCustom) {
-                                const img = l.querySelector('img');
-                                if (img) {
-                                    img.style.maxWidth = '100%';
-                                    img.style.maxHeight = '100%';
-                                    img.style.objectFit = 'contain';
-                                    img.style.margin = '0 auto';
-                                    img.style.position = 'relative';
-                                }
-                            } else {
-                                // Garantir que elementos customizados (logos/textos) sejam capturados onde estão
-                                l.querySelectorAll('.drag-item, .custom-text, .custom-image').forEach(el => {
-                                    el.style.visibility = 'visible';
-                                    el.style.opacity = '1';
-                                });
+                        // Ensure all sub-elements are forced visible
+                        target.querySelectorAll('*').forEach(el => {
+                            const style = window.getComputedStyle(el);
+                            if (style.display === 'none' && !el.classList.contains('drag-handle') && !el.classList.contains('resize-handle')) {
+                                el.style.display = 'block';
                             }
                         });
                     }
@@ -676,18 +591,26 @@ const PDFGenerator = {
             let currentY = drawExpertTemplate(doc);
 
             // 2. IMAGEM (MAIOR ÁREA POSSÍVEL)
-            if (this.cachedSnapshot) {
-                const imgProps = doc.getImageProperties(this.cachedSnapshot);
-                const maxW = pageWidth - (margin * 2);
-                const maxH = pageHeight * 0.55;
-                let imgW = maxW;
-                let imgH = (imgProps.height * imgW) / imgProps.width;
-                if (imgH > maxH) {
-                    imgH = maxH;
-                    imgW = (imgProps.width * imgH) / imgProps.height;
+            if (this.cachedSnapshot && this.cachedSnapshot.length > 500) {
+                try {
+                    const imgProps = doc.getImageProperties(this.cachedSnapshot);
+                    const maxW = pageWidth - (margin * 2);
+                    const maxH = pageHeight * 0.45; // 45% da página para dar espaço ao texto
+                    let imgW = maxW;
+                    let imgH = (imgProps.height * imgW) / imgProps.width;
+                    if (imgH > maxH) {
+                        imgH = maxH;
+                        imgW = (imgProps.width * imgH) / imgProps.height;
+                    }
+                    doc.addImage(this.cachedSnapshot, 'PNG', (pageWidth - imgW) / 2, currentY, imgW, imgH);
+                    currentY += imgH + 10;
+                } catch (e) {
+                    console.warn("Falha ao adicionar imagem ao PDF:", e);
+                    currentY += 10;
                 }
-                doc.addImage(this.cachedSnapshot, 'PNG', (pageWidth - imgW) / 2, currentY, imgW, imgH);
-                currentY += imgH + 8;
+            } else {
+                console.warn("Snapshot ausente ou inválido no momento da geração.");
+                currentY += 10;
             }
 
             // 3. RESUMO LINEAR CONDENSADO
@@ -697,36 +620,47 @@ const PDFGenerator = {
             doc.text('DETALHES DO ORÇAMENTO', margin, currentY);
             currentY += 8;
 
-            const clean = (s) => s ? s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$]/g, '').trim() : '';
+            const clean = (s) => s ? s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$]/g, ' ').replace(/\s+/g, ' ').trim() : '';
             const rows = Array.from(document.querySelectorAll('#summary-body tr')).filter(r => {
-                const s = window.getComputedStyle(r);
-                return s.display !== 'none' && r.innerText.trim() && !r.innerText.includes('Total:');
+                return r.innerText.trim() && !r.innerText.includes('Total:');
             });
 
-            doc.setFontSize(10);
+            doc.setFontSize(9.5);
             rows.forEach(row => {
-                const cols = row.querySelectorAll('td');
+                const cols = Array.from(row.querySelectorAll('td'));
                 if (cols.length < 2) return;
 
-                let label = clean(cols[0].innerText);
-                let value = clean(cols[1].innerText || cols[1].querySelector('input, textarea')?.value);
-                let price = clean(cols[2]?.innerText);
+                let label = clean(cols[0].innerText || cols[0].textContent);
+                let value = clean(cols[1].innerText || cols[1].querySelector('input, textarea')?.value || cols[1].textContent);
+                let price = cols.length > 2 ? clean(cols[2]?.innerText || cols[2]?.textContent) : '';
 
                 if (!label && value) { label = value; value = ''; }
                 if (!label) return;
 
-                if (currentY > pageHeight - 35) {
+                // Evitar duplicação bizarra se o label for igual ao valor
+                if (label === value) value = '';
+
+                if (currentY > pageHeight - 40) {
                     doc.addPage();
                     currentY = drawExpertTemplate(doc);
                 }
 
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(50, 50, 50);
-                doc.text(label + (value ? ` (${value})` : '') + ':', margin, currentY);
+                doc.setTextColor(60, 60, 60);
+
+                // Truncar label se muito longo para não sobrepor o preço
+                const fullLabel = label + (value ? ` (${value})` : '') + ':';
+                const maxWidth = price ? (pageWidth - margin * 2 - 40) : (pageWidth - margin * 2);
+                const safeLabel = doc.splitTextToSize(fullLabel, maxWidth)[0];
+
+                doc.text(safeLabel, margin, currentY);
+
                 if (price) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(0, 0, 0);
                     doc.text(price, pageWidth - margin, currentY, { align: 'right' });
                 }
-                currentY += 5.5;
+                currentY += 6; // Espaçamento mais generoso
             });
 
             // 4. TOTAL EM DESTAQUE
@@ -760,20 +694,38 @@ const PDFGenerator = {
             const qrX1 = (pageWidth - (qrSize * 2 + qrGap)) / 2;
             const qrX2 = qrX1 + qrSize + qrGap;
 
-            const generateQR = (t) => {
-                const d = document.createElement('div');
-                new QRCode(d, { text: t, width: 256, height: 256 });
-                return d.querySelector('canvas').toDataURL('image/png');
+            const generateQR = async (t) => {
+                return new Promise((resolve) => {
+                    const d = document.createElement('div');
+                    new QRCode(d, { text: t, width: 256, height: 256, correctLevel: 3 });
+
+                    // Aguardar renderização do canvas
+                    const check = setInterval(() => {
+                        const canvas = d.querySelector('canvas');
+                        if (canvas) {
+                            clearInterval(check);
+                            resolve(canvas.toDataURL('image/png'));
+                        }
+                        const img = d.querySelector('img');
+                        if (img && img.src && img.src.startsWith('data:')) {
+                            clearInterval(check);
+                            resolve(img.src);
+                        }
+                    }, 50);
+
+                    // Timeout de segurança
+                    setTimeout(() => { clearInterval(check); resolve(null); }, 2000);
+                });
             };
 
             try {
-                const q1 = generateQR(id);
-                doc.addImage(q1, 'PNG', qrX1, currentY, qrSize, qrSize);
+                const q1 = await generateQR(id);
+                if (q1) doc.addImage(q1, 'PNG', qrX1, currentY, qrSize, qrSize);
                 doc.setFontSize(9); doc.setFont('helvetica', 'bold');
                 doc.text('Pedido Nº', qrX1 + (qrSize / 2), currentY - 3, { align: 'center' });
 
-                const q2 = generateQR(id);
-                doc.addImage(q2, 'PNG', qrX2, currentY, qrSize, qrSize);
+                const q2 = await generateQR(`HNT-SIM-${id}`);
+                if (q2) doc.addImage(q2, 'PNG', qrX2, currentY, qrSize, qrSize);
                 doc.text('ID Simulador:', qrX2 + (qrSize / 2), currentY - 3, { align: 'center' });
             } catch (e) { console.warn("QR Error", e); }
 
