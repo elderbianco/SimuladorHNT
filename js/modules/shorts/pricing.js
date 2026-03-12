@@ -31,11 +31,13 @@ function getZonePrice(zone) {
 }
 
 function calculateFullPrice() {
-    let unitBase = state.config.basePrice;
+    let unitBase = state.config.basePrice || 0;
+
+    console.log('🧮 Calculando Preço - Base:', unitBase, 'Config:', state.config);
 
     // Add extras
     DATA.extras.forEach(e => {
-        if (state.extras[e.id].enabled) {
+        if (state.extras[e.id] && state.extras[e.id].enabled) {
             // Check for dynamic price override from Admin
             const price = (state.config.extraPrices && state.config.extraPrices[e.id] !== undefined)
                 ? state.config.extraPrices[e.id]
