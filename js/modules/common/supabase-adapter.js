@@ -44,6 +44,17 @@ const SupabaseAdapter = {
     },
 
     /**
+     * Auxiliar para limpar strings de preço (remove R$, espaços e converte vírgula)
+     */
+    cleanPrice(val) {
+        if (typeof val === 'number') return val;
+        if (!val) return 0;
+        // Remove tudo que não é número, vírgula ou ponto
+        const cleaned = String(val).replace(/[R$\s]/g, '').replace(',', '.');
+        return parseFloat(cleaned) || 0;
+    },
+
+    /**
      * Salva o registro do pedido no Banco de Dados
      */
     async savePedido(formattedData, technicalJson) {
@@ -53,16 +64,18 @@ const SupabaseAdapter = {
         }
 
         try {
+            // Tratamento robusto de preços e quantidades
+            // formattedData.total_price pode vir do DBAdapter (número) ou de edições (string)
+            const finalPrice = this.cleanPrice(formattedData.total_price);
+            const finalQty = parseInt(formattedData.quantity) || 0;
+            const unitPrice = finalQty > 0 ? (finalPrice / finalQty) : finalPrice;
+
             console.log('📦 Preparando objeto para Supabase:', {
                 order_id: formattedData.order_id,
-                price: formattedData.total_price,
-                pdf: formattedData.pdfUrl
+                price: finalPrice,
+                qty: finalQty,
+                unit: unitPrice
             });
-
-            // Mapeamento para as colunas reais da tabela `pedidos`
-            // Tratamento robusto de números para evitar persistência de strings ou 0 indesejados
-            const finalPrice = parseFloat(String(formattedData.total_price).replace(',', '.')) || 0;
-            const finalQty = parseInt(formattedData.quantity) || 0;
 
             const row = {
                 ID_PEDIDO: formattedData.order_id,
@@ -74,6 +87,7 @@ const SupabaseAdapter = {
                 TAMANHO: formattedData.grade,
                 QUANTIDADE: finalQty,
                 PRECO_FINAL: finalPrice,
+                PRECO_UNITARIO: unitPrice, // Adicionado suporte a preço unitário
                 pdf_url: formattedData.pdfUrl,
                 json_tec: technicalJson, // Backup completo
                 STATUS_PEDIDO: 'Simulação'
@@ -82,6 +96,7 @@ const SupabaseAdapter = {
             console.log('📤 Enviando linha para Supabase:', {
                 id: row.ID_PEDIDO,
                 preco: row.PRECO_FINAL,
+                unitário: row.PRECO_UNITARIO,
                 qty: row.QUANTIDADE
             });
 
