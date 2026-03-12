@@ -10,4 +10,4 @@ Este comando reverte o Orquestrador para o seu modelo padrão (melhor disponíve
 
 1. Executar script de configuração
 // turbo
-2. Executar: `python .agent/scripts/manage_orchestrator_config.py --action disable-eco`
+2. Executar: `py .agent/scripts/manage_orchestrator_config.py --action disable-eco`
