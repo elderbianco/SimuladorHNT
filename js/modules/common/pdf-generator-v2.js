@@ -589,103 +589,83 @@ const PDFGenerator = {
             const pageHeight = doc.internal.pageSize.getHeight();
             const margin = 20; // 2cm de margem
 
-            // --- FUNÇÃO AUXILIAR: TEMPLATE DE PÁGINA ---
+            // --- FUNÇÃO AUXILIAR: TEMPLATE DE PÁGINA (EXPERT v15) ---
             const drawPageTemplate = (docArg) => {
                 const width = docArg.internal.pageSize.getWidth();
                 const height = docArg.internal.pageSize.getHeight();
+                const margin = 20;
 
-                // 1. Fundo Branco Base (Sempre limpar)
-                docArg.setFillColor(255, 255, 255);
-                docArg.rect(0, 0, width, height, 'F');
+                // 1. Fundo com Degradê Cinza Claro (Estética Moderna)
+                for (let i = 0; i < height; i++) {
+                    const grey = 248 - Math.floor((i / height) * 10);
+                    docArg.setFillColor(grey, grey, grey);
+                    docArg.rect(0, i, width, 1, 'F');
+                }
 
-                // 2. Marca D'água (Logo Expandida)
-                // Nota: Se a imagem principal (snapshot) já tiver fundo (Ring), a marca d'água pode ficar redundante 
-                // na primeira página, mas é essencial nas seguintes.
-                const logoImg = document.querySelector('.header-logo-img');
+                // 2. Marca D'água Central (Logo HNT)
+                const logoImg = document.querySelector('.header-logo-img') || document.querySelector('img[src*="logo"]');
                 if (logoImg) {
                     try {
                         docArg.saveGraphicsState();
-                        docArg.setGState(new docArg.GState({ opacity: 0.05 })); // Opacidade bem leve para fundo de texto
-
+                        docArg.setGState(new docArg.GState({ opacity: 0.03 })); // Muito sutil
                         const ratio = logoImg.naturalHeight / logoImg.naturalWidth;
-                        const wmWidth = width * 0.9; // 90% da largura
+                        const wmWidth = width * 0.8;
                         const wmHeight = wmWidth * ratio;
-                        const wmX = (width - wmWidth) / 2;
-                        const wmY = (height - wmHeight) / 2;
-
-                        const canvas = document.createElement('canvas');
-                        canvas.width = logoImg.naturalWidth;
-                        canvas.height = logoImg.naturalHeight;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(logoImg, 0, 0);
-                        const logoData = canvas.toDataURL('image/jpeg'); // JPEG é mais rápido e leve para fundo
-
-                        docArg.addImage(logoData, 'JPEG', wmX, wmY, wmWidth, wmHeight);
+                        docArg.addImage(logoImg, 'PNG', (width - wmWidth) / 2, (height - wmHeight) / 2, wmWidth, wmHeight);
                         docArg.restoreGraphicsState();
-                    } catch (e) { }
+                    } catch (e) { console.warn("Watermark fail", e); }
                 }
 
-                // 3. Cabeçalho (Sempre Presente)
-                let headY = 20;
+                // 3. Moldura Estética Dourada (Destaque da Marca)
+                docArg.setDrawColor(212, 175, 55); // Dourado HNT
+                docArg.setLineWidth(0.5);
+                docArg.rect(margin - 2, margin - 2, width - (margin * 2) + 4, height - (margin * 2) + 4, 'S');
 
+                // 4. Cabeçalho Institucional
                 docArg.setFont('helvetica', 'bold');
-                docArg.setFontSize(22);
-                docArg.setTextColor(50, 50, 50);
-                docArg.text('HANUTHAI', width / 2, headY, { align: 'center' });
+                docArg.setFontSize(24);
+                docArg.setTextColor(40, 40, 40);
+                docArg.text('HANUTHAI', margin, margin + 10);
 
-                headY += 7;
-                docArg.setFontSize(10);
+                docArg.setFontSize(9);
                 docArg.setFont('helvetica', 'normal');
                 docArg.setTextColor(100, 100, 100);
-                docArg.text('SIMULADOR DE PERSONALIZAÇÃO', width / 2, headY, { align: 'center' });
+                docArg.text('CUSTOM APPAREL & FIGHTWEAR', margin, margin + 15);
 
-                headY += 8;
-                docArg.setDrawColor(200, 200, 200);
-                docArg.line(20, headY, width - 20, headY);
+                // Info do Pedido no Canto Superior Direito
+                docArg.setFont('helvetica', 'bold');
+                docArg.setFontSize(10);
+                docArg.setTextColor(0, 0, 0);
+                docArg.text(`PEDIDO: #${id}`, width - margin, margin + 8, { align: 'right' });
+                docArg.setFont('helvetica', 'normal');
+                docArg.setFontSize(8);
+                docArg.text(`ID SIMULADOR: ${id}`, width - margin, margin + 13, { align: 'right' });
 
-                // Retorna onde o conteúdo deve começar
-                return headY + 10;
+                return margin + 25; // Início do conteúdo
             };
 
             // --- GERAÇÃO DAS PÁGINAS ---
             let currentY = drawPageTemplate(doc);
 
-            // Sub-cabeçalho da Primeira Página
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`PEDIDO #${id}`, margin, currentY);
-            doc.text(`Data: ${new Date().toLocaleString('pt-BR')}`, pageWidth - margin, currentY, { align: 'right' });
-            currentY += 15;
-
-            // --- C. IMAGEM (Snapshot do Simulador) ---
-            // A imagem só vai na primeira página
+            // --- C. IMAGEM DO PRODUTO (CENTRAL E GRANDE) ---
             if (this.cachedSnapshot) {
                 try {
                     const imgProps = doc.getImageProperties(this.cachedSnapshot);
-                    // Ajustar para caber na página mantendo aspect ratio
-                    const maxImgWidth = pageWidth * 0.7;
-                    const maxImgHeight = pageHeight * 0.6; // No máximo 60% da altura da página
+                    const maxImgWidth = pageWidth - (margin * 2);
+                    const maxImgHeight = pageHeight * 0.5;
 
                     let imgWidth = maxImgWidth;
                     let imgHeight = (imgProps.height * imgWidth) / imgProps.width;
 
-                    // Se ficar muito alta, reduz
                     if (imgHeight > maxImgHeight) {
                         imgHeight = maxImgHeight;
                         imgWidth = (imgProps.width * imgHeight) / imgProps.height;
                     }
 
                     const xKey = (pageWidth - imgWidth) / 2;
-
-                    // Sem moldura, apenas a imagem limpa
                     doc.addImage(this.cachedSnapshot, 'PNG', xKey, currentY, imgWidth, imgHeight);
-                    currentY += imgHeight + 15;
-                } catch (e) {
-                    console.error('Erro ao adicionar imagem:', e);
-                    currentY += 20;
-                }
-            } else {
-                currentY += 10;
+                    currentY += imgHeight + 10;
+                } catch (e) { console.error('Erro na imagem', e); currentY += 10; }
             }
 
             // --- D. RESUMO TEXTUAL (LEGACY - FAST) ---
@@ -936,8 +916,7 @@ const PDFGenerator = {
             doc.text(termsLines, pageWidth / 2, currentY, { align: 'center' });
             currentY += termsHeight;
 
-            // --- G. QR CODES ---
-            // Precisa de 60mm
+            // --- E. QR CODES GIGANTES (75% LARGURA) ---
             if (currentY + 60 > pageHeight - 20) {
                 doc.addPage();
                 currentY = drawPageTemplate(doc);
@@ -949,29 +928,32 @@ const PDFGenerator = {
                 return el.querySelector('canvas').toDataURL('image/png');
             };
 
-            const qrSize = 50; const qrGap = 40;
-            const qrStartX = (pageWidth - (qrSize * 2 + qrGap)) / 2;
+            const qrSize = (pageWidth - (margin * 2)) * 0.35; // Tamanho maior
+            const qrGap = 20; // Espaçamento dobrado (na prática resolvido pela largura relativa)
+            const totalQrWidth = (qrSize * 2) + qrGap;
+            const qrStartX = (pageWidth - totalQrWidth) / 2;
 
             try {
-                // QR 1
-                const idPrefix = id.split('-')[0];
+                // QR 1: Pedido
                 const qr1Data = generateQR(id);
                 doc.addImage(qr1Data, 'PNG', qrStartX, currentY, qrSize, qrSize);
 
                 doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
+                doc.setFont('helvetica', 'bold');
                 doc.text('Pedido Nº', qrStartX + (qrSize / 2), currentY - 3, { align: 'center' });
-                doc.text(idPrefix, qrStartX + (qrSize / 2), currentY + qrSize + 5, { align: 'center' });
+                doc.setFont('helvetica', 'normal');
+                doc.text(id.split('-')[0], qrStartX + (qrSize / 2), currentY + qrSize + 5, { align: 'center' });
 
-                // QR 2
+                // QR 2: ID Simulador
                 const qr2Data = generateQR(id);
                 const qr2X = qrStartX + qrSize + qrGap;
                 doc.addImage(qr2Data, 'PNG', qr2X, currentY, qrSize, qrSize);
 
+                doc.setFont('helvetica', 'bold');
                 doc.text('ID Simulador:', qr2X + (qrSize / 2), currentY - 3, { align: 'center' });
+                doc.setFont('helvetica', 'normal');
                 doc.text(id, qr2X + (qrSize / 2), currentY + qrSize + 5, { align: 'center' });
-
-            } catch (errqr) { }
+            } catch (errqr) { console.error("QR fail", errqr); }
 
             // --- G. SALVAR ---
             const pdfBase64 = doc.output('datauristring').split(',').pop();
