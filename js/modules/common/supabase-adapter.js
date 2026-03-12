@@ -138,6 +138,30 @@ const SupabaseAdapter = {
             console.error(`❌ Erro ao excluir pedido ${orderId} do Supabase:`, err);
             return false;
         }
+    },
+
+    /**
+     * Exclui múltiplos pedidos do Banco de Dados
+     * @param {string[]} orderIds - Lista de IDs de pedido
+     */
+    async deletePedidos(orderIds) {
+        if (!window.supabaseClient || !orderIds || orderIds.length === 0) {
+            return false;
+        }
+
+        try {
+            const { error } = await window.supabaseClient
+                .from('pedidos')
+                .delete()
+                .in('ID_PEDIDO', orderIds);
+
+            if (error) throw error;
+            console.log(`✅ ${orderIds.length} pedidos excluídos do Supabase`);
+            return true;
+        } catch (err) {
+            console.error('❌ Erro ao excluir pedidos em massa no Supabase:', err);
+            return false;
+        }
     }
 };
 
