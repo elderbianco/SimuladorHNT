@@ -567,14 +567,13 @@ const PDFGenerator = {
     },
 
     /**
-     * Gera um PDF real em background usando jsPDF (REDESENHADO v2)
+     * Gera um PDF real em background usando jsPDF (EXPERT v15)
      */
     async generateBackgroundPDF() {
-        // 1. Garantir Dependências
         if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
             const loaded = await this.loadDependencies();
             if (!loaded) {
-                alert('Erro: Bibliotecas de PDF não carregaram. Verifique sua internet.');
+                alert('Erro: Bibliotecas de PDF não carregaram.');
                 this.updateModalButton('error');
                 return;
             }
@@ -583,502 +582,202 @@ const PDFGenerator = {
         const id = this.context.state?.simulationId || 'HNT_PEDIDO';
 
         try {
+            // 1. FORÇAR ATUALIZAÇÃO (Feedback Visual)
+            this.updateModalButton('loading');
+            console.log('🔄 Sincronizando canvas e resumo...');
+            await this.updateSnapshot(true); // Força novo snapshot
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
-            const margin = 20; // 2cm de margem
+            const margin = 20;
 
-            // --- FUNÇÃO AUXILIAR: TEMPLATE DE PÁGINA (EXPERT v15) ---
-            const drawPageTemplate = (docArg) => {
+            // --- TEMPLATE UNITÁRIO (Padrão Expert) ---
+            const drawExpertTemplate = (docArg) => {
                 const width = docArg.internal.pageSize.getWidth();
                 const height = docArg.internal.pageSize.getHeight();
-                const margin = 20;
 
-                // 1. Fundo com Degradê Cinza Claro (Estética Moderna)
+                // Degradê
                 for (let i = 0; i < height; i++) {
-                    const grey = 248 - Math.floor((i / height) * 10);
+                    const grey = 248 - Math.floor((i / height) * 8);
                     docArg.setFillColor(grey, grey, grey);
                     docArg.rect(0, i, width, 1, 'F');
                 }
 
-                // 2. Marca D'água Central (Logo HNT)
+                // Marca D'água
                 const logoImg = document.querySelector('.header-logo-img') || document.querySelector('img[src*="logo"]');
                 if (logoImg) {
                     try {
                         docArg.saveGraphicsState();
-                        docArg.setGState(new docArg.GState({ opacity: 0.03 })); // Muito sutil
+                        docArg.setGState(new docArg.GState({ opacity: 0.03 }));
                         const ratio = logoImg.naturalHeight / logoImg.naturalWidth;
-                        const wmWidth = width * 0.8;
+                        const wmWidth = width * 0.75;
                         const wmHeight = wmWidth * ratio;
                         docArg.addImage(logoImg, 'PNG', (width - wmWidth) / 2, (height - wmHeight) / 2, wmWidth, wmHeight);
                         docArg.restoreGraphicsState();
-                    } catch (e) { console.warn("Watermark fail", e); }
+                    } catch (e) { }
                 }
 
-                // 3. Moldura Estética Dourada (Destaque da Marca)
-                docArg.setDrawColor(212, 175, 55); // Dourado HNT
+                // Borda Dourada
+                docArg.setDrawColor(212, 175, 55);
                 docArg.setLineWidth(0.5);
                 docArg.rect(margin - 2, margin - 2, width - (margin * 2) + 4, height - (margin * 2) + 4, 'S');
 
-                // 4. Cabeçalho Institucional
+                // Header
                 docArg.setFont('helvetica', 'bold');
-                docArg.setFontSize(24);
-                docArg.setTextColor(40, 40, 40);
+                docArg.setFontSize(22);
+                docArg.setTextColor(30, 30, 30);
                 docArg.text('HANUTHAI', margin, margin + 10);
-
-                docArg.setFontSize(9);
+                docArg.setFontSize(8);
                 docArg.setFont('helvetica', 'normal');
-                docArg.setTextColor(100, 100, 100);
-                docArg.text('CUSTOM APPAREL & FIGHTWEAR', margin, margin + 15);
+                docArg.setTextColor(120, 120, 120);
+                docArg.text('CUSTOM APPAREL & FIGHTWEAR', margin, margin + 14);
 
-                // Info do Pedido no Canto Superior Direito
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(10);
                 docArg.setTextColor(0, 0, 0);
                 docArg.text(`PEDIDO: #${id}`, width - margin, margin + 8, { align: 'right' });
+                docArg.setFontSize(7);
                 docArg.setFont('helvetica', 'normal');
-                docArg.setFontSize(8);
-                docArg.text(`ID SIMULADOR: ${id}`, width - margin, margin + 13, { align: 'right' });
+                docArg.text(`ID SIMULADOR: ${id}`, width - margin, margin + 12, { align: 'right' });
 
-                return margin + 25; // Início do conteúdo
+                return margin + 22;
             };
 
-            // --- GERAÇÃO DAS PÁGINAS ---
-            let currentY = drawPageTemplate(doc);
+            let currentY = drawExpertTemplate(doc);
 
-            // --- C. IMAGEM DO PRODUTO (CENTRAL E GRANDE) ---
+            // 2. IMAGEM (MAIOR ÁREA POSSÍVEL)
             if (this.cachedSnapshot) {
-                try {
-                    const imgProps = doc.getImageProperties(this.cachedSnapshot);
-                    const maxImgWidth = pageWidth - (margin * 2);
-                    const maxImgHeight = pageHeight * 0.5;
-
-                    let imgWidth = maxImgWidth;
-                    let imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
-                    if (imgHeight > maxImgHeight) {
-                        imgHeight = maxImgHeight;
-                        imgWidth = (imgProps.width * imgHeight) / imgProps.height;
-                    }
-
-                    const xKey = (pageWidth - imgWidth) / 2;
-                    doc.addImage(this.cachedSnapshot, 'PNG', xKey, currentY, imgWidth, imgHeight);
-                    currentY += imgHeight + 10;
-                } catch (e) { console.error('Erro na imagem', e); currentY += 10; }
+                const imgProps = doc.getImageProperties(this.cachedSnapshot);
+                const maxW = pageWidth - (margin * 2);
+                const maxH = pageHeight * 0.55;
+                let imgW = maxW;
+                let imgH = (imgProps.height * imgW) / imgProps.width;
+                if (imgH > maxH) {
+                    imgH = maxH;
+                    imgW = (imgProps.width * imgH) / imgProps.height;
+                }
+                doc.addImage(this.cachedSnapshot, 'PNG', (pageWidth - imgW) / 2, currentY, imgW, imgH);
+                currentY += imgH + 8;
             }
 
-            // --- D. RESUMO DO PEDIDO (LINEAR CONDENSADO) ---
-            if (currentY > pageHeight - 40) {
-                doc.addPage();
-                currentY = drawPageTemplate(doc);
-            }
-
-            doc.setFontSize(15); // Tamanho máximo conforme prompt
+            // 3. RESUMO LINEAR CONDENSADO
+            doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(212, 175, 55); // Dourado HNT
-            doc.text('RESUMO DO PEDIDO', margin, currentY);
-            currentY += 10;
+            doc.setTextColor(212, 175, 55);
+            doc.text('DETALHES DO ORÇAMENTO', margin, currentY);
+            currentY += 8;
 
-            const rows = Array.from(document.querySelectorAll('#summary-body tr'));
-            const validRows = rows.filter(row => {
-                const style = window.getComputedStyle(row);
-                if (style.display === 'none') return false;
-                const txt = row.innerText.trim();
-                return txt && !txt.includes('Valor Base') && !txt.includes('Total:');
+            const clean = (s) => s ? s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$]/g, '').trim() : '';
+            const rows = Array.from(document.querySelectorAll('#summary-body tr')).filter(r => {
+                const s = window.getComputedStyle(r);
+                return s.display !== 'none' && r.innerText.trim() && !r.innerText.includes('Total:');
             });
 
-            doc.setFontSize(11); // Tamanho padrão leitura
-            validRows.forEach(row => {
+            doc.setFontSize(10);
+            rows.forEach(row => {
                 const cols = row.querySelectorAll('td');
                 if (cols.length < 2) return;
 
-                const clean = (s) => s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$]/g, '').trim();
                 let label = clean(cols[0].innerText);
-                let value = clean(cols[1].innerText || cols[1].querySelector('input, textarea')?.value || '');
-                let price = clean(cols[2]?.innerText || '');
+                let value = clean(cols[1].innerText || cols[1].querySelector('input, textarea')?.value);
+                let price = clean(cols[2]?.innerText);
 
                 if (!label && value) { label = value; value = ''; }
                 if (!label) return;
 
-                // Verificação de quebra de página
-                if (currentY > pageHeight - 30) {
+                if (currentY > pageHeight - 35) {
                     doc.addPage();
-                    currentY = drawPageTemplate(doc);
+                    currentY = drawExpertTemplate(doc);
                 }
 
-                // Layout Linear: Label (Esq) | Preço (Dir)
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(40, 40, 40);
+                doc.setTextColor(50, 50, 50);
                 doc.text(label + (value ? ` (${value})` : '') + ':', margin, currentY);
-
                 if (price) {
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(0, 0, 0);
                     doc.text(price, pageWidth - margin, currentY, { align: 'right' });
                 }
-
-                currentY += 6; // Espaçamento condensado
+                currentY += 5.5;
             });
-                else if(cols.length === 1) {
-        let text = cols[0].innerText.trim();
 
-// NEW: Se houver um input ou textarea em linha de coluna única, priorizar o VALUE
-const singleInput = cols[0].querySelector('input, textarea');
-if (singleInput) {
-    // Tenta pegar o label se houver (ex: 'Observações:')
-    const labelEl = cols[0].querySelector('label');
-    const labelPrefix = labelEl ? labelEl.innerText.trim() + ' ' : '';
-    text = labelPrefix + singleInput.value.trim();
-}
+            // 4. TOTAL EM DESTAQUE
+            currentY += 3;
+            doc.setDrawColor(212, 175, 55);
+            doc.line(margin, currentY, pageWidth - margin, currentY);
+            currentY += 8;
 
-if (!text) return;
+            const totalDisplay = document.getElementById('price-display');
+            const totalText = clean(totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '') : 'R$ 0,00');
 
-// Títulos de Subseção
-if (['DETALHES DO PRODUTO', 'DETALHAMENTO FINANCEIRO', '1. CONFIGURAÇÃO DE BASE'].some(h => text.includes(h))) {
-    if (currentY + 15 > pageHeight - 20) { doc.addPage(); currentY = drawPageTemplate(doc); }
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0, 0, 0);
+            doc.text('INVESTIMENTO ESTIMADO:', margin, currentY);
+            doc.text(totalText, pageWidth - margin, currentY, { align: 'right' });
+            currentY += 12;
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setFillColor(230, 230, 230);
-    doc.rect(margin, currentY, pageWidth - (margin * 2), 5, 'F');
-    doc.setTextColor(0, 0, 0);
-    doc.text(text, margin + 2, currentY + 3.5);
-    currentY += 7;
-    doc.setFontSize(11);
-    return;
-}
+            // 5. TERMOS
+            const terms = "⚠️ AVISO IMPORTANTE: Este documento é uma SIMULAÇÃO DIGITAL. O resultado físico pode apresentar pequenas variações. Artes passarão por análise técnica. Ao prosseguir, você concorda com os termos e confirma direitos sobre as artes enviadas.";
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(140, 140, 140);
+            const termLines = doc.splitTextToSize(terms, pageWidth - (margin * 2));
+            doc.text(termLines, margin, currentY);
+            currentY += (termLines.length * 3.5) + 12;
 
-if (text.includes('TOTAL FINAL')) return;
+            // 6. QR CODES GIGANTES (75% Largura)
+            const qrSize = (pageWidth - (margin * 4)) * 0.45;
+            const qrGap = 20;
+            const qrX1 = (pageWidth - (qrSize * 2 + qrGap)) / 2;
+            const qrX2 = qrX1 + qrSize + qrGap;
 
-// Helper Local de Limpeza (WHITELIST APPROACH)
-const cleanDeepLocal = (str) => {
-    if (!str) return '';
-    let s = str.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
-    // Mantém apenas caracteres seguros (Alfanuméricos, Acentos, Pontuação básica, R$)
-    s = s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
-    return s.replace(/\s+/g, ' ').trim();
-};
+            const generateQR = (t) => {
+                const d = document.createElement('div');
+                new QRCode(d, { text: t, width: 256, height: 256 });
+                return d.querySelector('canvas').toDataURL('image/png');
+            };
 
-// Limpeza específica para estas linhas de texto
-text = cleanDeepLocal(text);
+            try {
+                const q1 = generateQR(id);
+                doc.addImage(q1, 'PNG', qrX1, currentY, qrSize, qrSize);
+                doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+                doc.text('Pedido Nº', qrX1 + (qrSize / 2), currentY - 3, { align: 'center' });
 
-if (text) {
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(10);
-    doc.setTextColor(80, 80, 80);
+                const q2 = generateQR(id);
+                doc.addImage(q2, 'PNG', qrX2, currentY, qrSize, qrSize);
+                doc.text('ID Simulador:', qrX2 + (qrSize / 2), currentY - 3, { align: 'center' });
+            } catch (e) { console.warn("QR Error", e); }
 
-    const lines = doc.splitTextToSize(text, pageWidth - (margin * 2));
-    const h = (lines.length * 4.5) + 3;
+            // SALVAR
+            const pdfBase64 = doc.output('datauristring').split(',').pop();
+            const fileName = `Pedido_${id}`;
+            this.updateModalButton('saving');
 
-    if (currentY + h > pageHeight - 20) { doc.addPage(); currentY = drawPageTemplate(doc); }
-
-    doc.text(lines, margin, currentY);
-    currentY += h;
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-}
+            if (typeof SupabaseAdapter !== 'undefined') {
+                const url = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
+                if (url) {
+                    this.savedPdfUrl = url;
+                    this.updateModalButton('ready', url);
+                    return url;
                 }
-            });
+            }
 
-
-
-// --- E. TOTAL FINAL ---
-// Verifica espaço para o Total (precisa de uns 30mm)
-if (currentY + 30 > pageHeight - 20) {
-    doc.addPage();
-    currentY = drawPageTemplate(doc);
-}
-
-currentY += 5;
-const totalDisplay = document.getElementById('price-display');
-let totalText = totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '').trim() : 'R$ 0,00';
-
-// Limpeza Final do Total (WHITELIST)
-totalText = totalText.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
-totalText = totalText.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
-totalText = totalText.replace(/\s+/g, ' ').trim();
-
-doc.setDrawColor(0);
-doc.line(margin, currentY, pageWidth - margin, currentY);
-currentY += 10;
-
-doc.setFontSize(14);
-doc.setFont('helvetica', 'bold');
-doc.text(`TOTAL FINAL: ${totalText}`, pageWidth / 2, currentY, { align: 'center' });
-currentY += 20;
-
-// --- F. TERMOS ---
-// Verifica espaço (precisa de uns 40-50mm)
-// Se não couber, nova            // --- TERMOS E CONDIÇÕES ---
-const termsText = "⚠️ AVISO IMPORTANTE: Este documento é uma SIMULAÇÃO DIGITAL para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação. Ao prosseguir, você declara que leu e concorda com todas as informações e condições do produto disponíveis em nosso FAQ, além de confirmar que possui os direitos autorais sobre as artes enviadas, assumindo total responsabilidade legal. Em caso de dúvidas, entre em contato com nossa equipe.";
-doc.setFontSize(8);
-doc.setFont('helvetica', 'normal');
-doc.setTextColor(120, 120, 120);
-const termsLines = doc.splitTextToSize(termsText, pageWidth - (margin * 2));
-const termsHeight = (termsLines.length * 3.5) + 5;
-
-if (currentY + termsHeight > pageHeight - 60) { // Buffer maior para QR
-    doc.addPage();
-    currentY = drawPageTemplate(doc);
-}
-
-doc.text(termsLines, margin, currentY);
-currentY += termsHeight + 10;
-
-// --- E. QR CODES GIGANTES (75% LARGURA) ---
-if (currentY + 60 > pageHeight - 20) {
-    doc.addPage();
-    currentY = drawPageTemplate(doc);
-}
-
-const generateQR = (text) => {
-    const el = document.createElement('div');
-    new QRCode(el, { text: text, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.H });
-    return el.querySelector('canvas').toDataURL('image/png');
-};
-
-const qrSize = (pageWidth - (margin * 2)) * 0.35; // Tamanho maior
-const qrGap = 20; // Espaçamento dobrado (na prática resolvido pela largura relativa)
-const totalQrWidth = (qrSize * 2) + qrGap;
-const qrStartX = (pageWidth - totalQrWidth) / 2;
-
-try {
-    // QR 1: Pedido
-    const qr1Data = generateQR(id);
-    doc.addImage(qr1Data, 'PNG', qrStartX, currentY, qrSize, qrSize);
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Pedido Nº', qrStartX + (qrSize / 2), currentY - 3, { align: 'center' });
-    doc.setFont('helvetica', 'normal');
-    doc.text(id.split('-')[0], qrStartX + (qrSize / 2), currentY + qrSize + 5, { align: 'center' });
-
-    // QR 2: ID Simulador
-    const qr2Data = generateQR(id);
-    const qr2X = qrStartX + qrSize + qrGap;
-    doc.addImage(qr2Data, 'PNG', qr2X, currentY, qrSize, qrSize);
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('ID Simulador:', qr2X + (qrSize / 2), currentY - 3, { align: 'center' });
-    doc.setFont('helvetica', 'normal');
-    doc.text(id, qr2X + (qrSize / 2), currentY + qrSize + 5, { align: 'center' });
-} catch (errqr) { console.error("QR fail", errqr); }
-
-// --- G. SALVAR ---
-const pdfBase64 = doc.output('datauristring').split(',').pop();
-const fileName = `Pedido_${id}`;
-this.updateModalButton('saving');
-
-// 1. Salvar Local (Opcional - Dev Environment)
-const savedPath = await this.saveToLocalFolder(fileName, pdfBase64, 'pdf');
-
-// 2. SUPABASE SYNC (Prioridade Máxima)
-let cloudUrl = null;
-if (typeof SupabaseAdapter !== 'undefined') {
-    console.log('☁️ Sincronizando PDF manual com Supabase...');
-    cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
-}
-
-if (savedPath || cloudUrl) {
-    const finalUrl = cloudUrl || `assets/BancoDados/PedidosPDF/${savedPath.split(/[/\\]/).pop()}`;
-    this.savedPdfUrl = finalUrl;
-    this.updateModalButton('ready', finalUrl);
-    console.log('✅ PDF salvo e disponível em:', finalUrl);
-} else {
-    console.warn('⚠️ Falha no salvamento automático (Offline). Baixando localmente.');
-    doc.save(`Pedido_${id}.pdf`);
-    this.updateModalButton('ready', '#');
-}
+            doc.save(`${fileName}.pdf`);
+            this.updateModalButton('ready', '#');
 
         } catch (err) {
-    console.error('Erro PDF:', err);
-    this.updateModalButton('error');
-    alert('Erro: ' + err.message);
-}
+            console.error('PDF Error:', err);
+            this.updateModalButton('error');
+        }
     },
 
     /**
      * Gera e salva PDF em segundo plano (para carrinho)
-     * Retorna a URL do PDF salvo ou null se falhar
      */
     async generateAndSaveForCart(customId = null) {
-    const id = customId || this.context.state?.simulationId || 'HNT_PEDIDO';
-
-    try {
-        // 1. Garantir dependências
-        if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
-            const loaded = await this.loadDependencies();
-            if (!loaded) {
-                console.warn('⚠️ Bibliotecas de PDF não carregaram. PDF não será gerado.');
-                alert('Erro: Bibliotecas de PDF não carregaram. Verifique sua conexão.');
-                return null;
-            }
-        }
-
-        // 2. Garantir que temos snapshot atualizado
-        if (!this.cachedSnapshot) {
-            console.log('📸 Capturando snapshot para PDF...');
-            await this.updateSnapshot(true);
-        }
-
-        // 3. Gerar PDF
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        const margin = 20;
-
-        // Template de página (função auxiliar inline)
-        const drawPageTemplate = (docArg) => {
-            const width = docArg.internal.pageSize.getWidth();
-            const height = docArg.internal.pageSize.getHeight();
-
-            docArg.setFillColor(255, 255, 255);
-            docArg.rect(0, 0, width, height, 'F');
-
-            // Marca D'água
-            const logoDataUrl = 'assets/logo.png';
-            try {
-                const wmWidth = width * 0.9;
-                const ratio = 1;
-                const wmHeight = wmWidth * ratio;
-                const wmX = (width - wmWidth) / 2;
-                const wmY = (height - wmHeight) / 2;
-                docArg.saveGraphicsState();
-                docArg.setGState(new docArg.GState({ opacity: 0.05 }));
-                docArg.addImage(logoDataUrl, 'PNG', wmX, wmY, wmWidth, wmHeight);
-                docArg.restoreGraphicsState();
-            } catch (e) { }
-
-            // Cabeçalho
-            const headY = 10;
-            docArg.setFontSize(18);
-            docArg.setFont('helvetica', 'bold');
-            docArg.setTextColor(212, 175, 55);
-            docArg.text('HANUTHAI', width / 2, headY, { align: 'center' });
-
-            return headY + 10;
-        };
-
-        let currentY = drawPageTemplate(doc);
-
-        // Sub-cabeçalho
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`PEDIDO #${id}`, margin, currentY);
-        doc.text(`Data: ${new Date().toLocaleString('pt-BR')}`, pageWidth - margin, currentY, { align: 'right' });
-        currentY += 15;
-
-        // Imagem do produto
-        if (this.cachedSnapshot) {
-            try {
-                const imgProps = doc.getImageProperties(this.cachedSnapshot);
-                const maxImgWidth = pageWidth - (margin * 2);
-                const maxImgHeight = pageHeight * 0.5;
-
-                let imgWidth = 140;
-                let imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
-                if (imgHeight > maxImgHeight) {
-                    imgHeight = maxImgHeight;
-                    imgWidth = (imgProps.width * imgHeight) / imgProps.height;
-                }
-
-                const xKey = (pageWidth - imgWidth) / 2;
-                doc.addImage(this.cachedSnapshot, 'PNG', xKey, currentY, imgWidth, imgHeight);
-                currentY += imgHeight + 15;
-            } catch (e) {
-                console.error('Erro ao adicionar imagem:', e);
-                currentY += 20;
-            }
-        } else {
-            currentY += 10;
-        }
-
-        // Resumo (simplificado - apenas pega do DOM)
-        if (currentY > pageHeight - 40) {
-            doc.addPage();
-            currentY = drawPageTemplate(doc);
-        }
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.setFillColor(230, 230, 230);
-        doc.rect(margin, currentY, pageWidth - (margin * 2), 8, 'F');
-        doc.text('RESUMO DO PEDIDO', pageWidth / 2, currentY + 5.5, { align: 'center' });
-        currentY += 15;
-
-        // --- TOTAL FINAL (DESTAQUE) ---
-        currentY += 4;
-        doc.setDrawColor(212, 175, 55);
-        doc.setLineWidth(1);
-        doc.line(margin, currentY, pageWidth - margin, currentY);
-        currentY += 8;
-
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(0, 0, 0);
-        doc.text('TOTAL INVESTIMENTO:', margin, currentY);
-        doc.text(totalText, pageWidth - margin, currentY, { align: 'right' });
-        currentY += 12;
-        // Total
-        const totalDisplay = document.getElementById('price-display');
-        let totalText = totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '').trim() : 'R$ 0,00';
-
-        // Limpeza
-        totalText = totalText.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
-        totalText = totalText.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
-        totalText = totalText.replace(/\s+/g, ' ').trim();
-
-        doc.setDrawColor(0);
-        doc.line(margin, currentY, pageWidth - margin, currentY);
-        currentY += 10;
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`TOTAL FINAL: ${totalText}`, pageWidth / 2, currentY, { align: 'center' });
-
-        // 4. Salvar Localmente (Opcional - Para ambientes com backend local)
-        const fileName = `Pedido_${id.replace(/[^a-zA-Z0-9-_]/g, '_')}`;
-        const pdfBase64 = doc.output('datauristring').split(',').pop();
-        const savedPath = await this.saveToLocalFolder(fileName, pdfBase64, 'pdf');
-
-        let finalUrl = null;
-
-        // --- SUPABASE SYNC (Prioridade Máxima) ---
-        if (typeof SupabaseAdapter !== 'undefined') {
-            console.log('☁️ Enviando PDF para Supabase Storage...');
-            const cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', fileName + ".pdf", pdfBase64, 'application/pdf');
-            if (cloudUrl) {
-                console.log('✅ PDF disponível na nuvem:', cloudUrl);
-                finalUrl = cloudUrl;
-            }
-        }
-
-        // --- FALLBACKS ---
-        if (!finalUrl && savedPath) {
-            // Se falhou nuvem mas salvou local (ambiente dev)
-            const finalFileName = savedPath.split(/[/\\]/).pop();
-            finalUrl = `assets/BancoDados/PedidosPDF/${finalFileName}`;
-            console.log(`📡 Usando link local: ${finalUrl}`);
-        }
-
-        if (!finalUrl) {
-            // Se tudo falhar, dispara o download para o usuário não perder o arquivo
-            console.warn('⚠️ Falha no salvamento automático. Disparando download manual.');
-            doc.save(fileName + ".pdf");
-            finalUrl = `assets/BancoDados/PedidosPDF/${fileName}.pdf`; // Link previsto resiliente
-        }
-
-        return finalUrl;
-
-    } catch (err) {
-        console.error('❌ Erro ao gerar PDF para carrinho:', err);
-        return null;
+        return this.generateBackgroundPDF(); // Reutiliza motor expert unificado
     }
-}
 };
 
 // Hook automático para atualizar snapshot quando o simulador mudar
