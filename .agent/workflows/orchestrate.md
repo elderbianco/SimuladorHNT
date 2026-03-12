@@ -67,7 +67,7 @@ Since you are running in a local environment with `opencode` installed, you shou
 **Command to Execute:**
 
 ```bash
-python .agent/scripts/run_orchestrator_opencode.py "$ARGUMENTS"
+py .agent/scripts/run_orchestrator_opencode.py "$ARGUMENTS"
 ```
 
 > This script reads your configuration (Eco/Standard) and calls the `opencode` CLI directly.

@@ -10,4 +10,4 @@ Este comando configura o Orquestrador para usar o modelo DeepSeek R1 (versão gr
 
 1. Executar script de configuração
 // turbo
-2. Executar: `python .agent/scripts/manage_orchestrator_config.py --action enable-eco`
+2. Executar: `py .agent/scripts/manage_orchestrator_config.py --action enable-eco`
