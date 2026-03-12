@@ -668,324 +668,236 @@ const PDFGenerator = {
                 } catch (e) { console.error('Erro na imagem', e); currentY += 10; }
             }
 
-            // --- D. RESUMO TEXTUAL (LEGACY - FAST) ---
-
-            // Título da Seção
+            // --- D. RESUMO DO PEDIDO (LINEAR CONDENSADO) ---
             if (currentY > pageHeight - 40) {
                 doc.addPage();
                 currentY = drawPageTemplate(doc);
             }
 
-            doc.setFontSize(14);
+            doc.setFontSize(15); // Tamanho máximo conforme prompt
             doc.setFont('helvetica', 'bold');
-            doc.setFillColor(230, 230, 230);
-            doc.rect(margin, currentY, pageWidth - (margin * 2), 8, 'F');
-            doc.text('RESUMO DO PEDIDO', pageWidth / 2, currentY + 5.5, { align: 'center' });
-            currentY += 15;
-
-            // Loop de itens
-            doc.setFontSize(11);
-            const rows = Array.from(document.querySelectorAll('#summary-body tr'));
-
-            const validRows = rows.filter(row => {
-                const style = window.getComputedStyle(row);
-                if (style.display === 'none' || style.visibility === 'hidden') return false;
-                const txt = row.innerText.trim();
-                // Filtros de linhas indesejadas
-                if (!txt || txt === ':' || txt.includes('Valor Base do Pedido') || txt.includes('Total:') || txt.includes('AVISO IMPORTANTE')) return false;
-                return true;
-            });
-
-            validRows.forEach(row => {
-                const cols = row.querySelectorAll('td');
-
-                if (cols.length >= 2) {
-                    // Helper de Limpeza Profunda (WHITELIST APPROACH)
-                    // Permite apenas: Letras, Números, Espaços, Pontuação Básica, Acentos PT-BR, Símbolos de Moeda
-                    const cleanDeep = (str) => {
-                        if (!str) return '';
-                        // 1. Remover sequências de lixo específicas primeiro
-                        let s = str.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
-
-                        // 2. FILTRO WHITELIST (O mais seguro)
-                        // Mantém: a-z A-Z 0-9 
-                        // Acentos: \u00C0-\u00FF (Latin-1 Supplement: á, é, í, ó, ú, ç, ñ, etc.)
-                        // Pontuação: . , : ; ( ) [ ] { } - _ + = / \ | ' " ? ! @ # $ % *
-                        // Espaços: \s
-                        s = s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
-
-                        return s.replace(/\s+/g, ' ').trim();
-                    };
-
-                    let label = cleanDeep(cols[0].innerText);
-                    let detail = cleanDeep(cols[1].innerText);
-
-                    // NEW: Se houver um input ou textarea, capturar o VALUE em vez do innerText
-                    const inputEl = cols[1].querySelector('input, textarea');
-                    if (inputEl) {
-                        detail = cleanDeep(inputEl.value);
-                    }
-
-                    let price = cols[2]?.innerText.trim() || '';
-
-                    // Ajuste para labels vazios ou duplicados
-                    if (label.length < 3) {
-                        const rawDetail = cols[1].innerText;
-                        const parts = rawDetail.split('\n');
-                        if (parts.length > 1) {
-                            label = cleanDeep(parts[0]);
-                            detail = cleanDeep(parts.slice(1).join(' '));
-                        } else {
-                            label = detail;
-                            detail = '';
-                        }
-                    }
-
-                    if (!label && detail) { label = detail; detail = ''; }
-                    if (!label && !detail) return;
-
-                    // --- TRATAMENTO ESPECIAL: ARQUIVOS & MATRIZ ---
-                    if (label.includes('Taxa de Matriz') && detail.includes('Arquivo:')) {
-                        // Forçar quebra de linha antes de "Arquivo:" e "Cobrado"
-                        detail = detail
-                            .replace('(Arquivo:', '\n(Arquivo:')
-                            .replace('Cobrado uma', '\nCobrado uma');
-
-                        // Quebrar nomes de arquivos longos forçadamente
-                        const fileMatch = detail.match(/\(Arquivo:\s*([^\n]+)/);
-                        if (fileMatch && fileMatch[1]) {
-                            const originalName = fileMatch[1];
-                            // Inserir espaço a cada 10 caracteres para garantir quebra
-                            const brokenName = originalName.replace(/.{10}/g, '$& ');
-                            detail = detail.replace(originalName, brokenName);
-                        }
-                    }
-
-                    detail = detail.replace(/\n\s+/g, '\n');
-
-                    // Cálculos de Layout Rígidos
-                    doc.setFont('helvetica', 'bold');
-                    const labelStr = label + (label ? ':' : '');
-                    const labelW = doc.getTextWidth(labelStr + ' ');
-
-                    doc.setFont('helvetica', 'normal');
-                    const safeGap = 5; // Gap de segurança aumentado
-                    const priceW = price ? doc.getTextWidth(price) : 0;
-
-                    // LARGURA MÁXIMA DA COLUNA DE DETALHES (CRÍTICO)
-                    // Garante que o texto NUNCA invada a área do preço
-                    const maxDetailW = pageWidth - margin - labelW - priceW - margin - safeGap;
-
-                    // Quebra de Linha Automática
-                    // splitTextToSize vai forçar a quebra se passar de maxDetailW
-                    const detailLines = detail ? doc.splitTextToSize(detail, Math.max(maxDetailW, 20)) : [];
-                    const lineHeight = 4.5;
-                    const blockHeight = Math.max((detailLines.length * lineHeight), lineHeight) + 2; // +2 buffer
-
-                    // VERIFICAÇÃO DE QUEBRA DE PÁGINA
-                    if (currentY + blockHeight > pageHeight - 20) {
-                        doc.addPage();
-                        currentY = drawPageTemplate(doc);
-                    }
-
-                    // Renderização
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(0, 0, 0); // Preto
-                    doc.text(labelStr, margin, currentY);
-
-                    if (detailLines.length > 0) {
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(50, 50, 50); // Grafite Escuro
-                        // Renderizar texto quebrado respeitando a largura
-                        doc.text(detailLines, margin + labelW, currentY);
-                    }
-
-                    if (price) {
-                        doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(0, 0, 0); // Preto
-                        doc.text(price, pageWidth - margin, currentY, { align: 'right' });
-                    }
-
-                    currentY += blockHeight;
-                }
-                else if (cols.length === 1) {
-                    let text = cols[0].innerText.trim();
-
-                    // NEW: Se houver um input ou textarea em linha de coluna única, priorizar o VALUE
-                    const singleInput = cols[0].querySelector('input, textarea');
-                    if (singleInput) {
-                        // Tenta pegar o label se houver (ex: 'Observações:')
-                        const labelEl = cols[0].querySelector('label');
-                        const labelPrefix = labelEl ? labelEl.innerText.trim() + ' ' : '';
-                        text = labelPrefix + singleInput.value.trim();
-                    }
-
-                    if (!text) return;
-
-                    // Títulos de Subseção
-                    if (['DETALHES DO PRODUTO', 'DETALHAMENTO FINANCEIRO', '1. CONFIGURAÇÃO DE BASE'].some(h => text.includes(h))) {
-                        if (currentY + 15 > pageHeight - 20) { doc.addPage(); currentY = drawPageTemplate(doc); }
-
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(9);
-                        doc.setFillColor(230, 230, 230);
-                        doc.rect(margin, currentY, pageWidth - (margin * 2), 5, 'F');
-                        doc.setTextColor(0, 0, 0);
-                        doc.text(text, margin + 2, currentY + 3.5);
-                        currentY += 7;
-                        doc.setFontSize(11);
-                        return;
-                    }
-
-                    if (text.includes('TOTAL FINAL')) return;
-
-                    // Helper Local de Limpeza (WHITELIST APPROACH)
-                    const cleanDeepLocal = (str) => {
-                        if (!str) return '';
-                        let s = str.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
-                        // Mantém apenas caracteres seguros (Alfanuméricos, Acentos, Pontuação básica, R$)
-                        s = s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
-                        return s.replace(/\s+/g, ' ').trim();
-                    };
-
-                    // Limpeza específica para estas linhas de texto
-                    text = cleanDeepLocal(text);
-
-                    if (text) {
-                        doc.setFont('helvetica', 'italic');
-                        doc.setFontSize(10);
-                        doc.setTextColor(80, 80, 80);
-
-                        const lines = doc.splitTextToSize(text, pageWidth - (margin * 2));
-                        const h = (lines.length * 4.5) + 3;
-
-                        if (currentY + h > pageHeight - 20) { doc.addPage(); currentY = drawPageTemplate(doc); }
-
-                        doc.text(lines, margin, currentY);
-                        currentY += h;
-
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFontSize(11);
-                        doc.setFont('helvetica', 'normal');
-                    }
-                }
-            });
-
-
-
-            // --- E. TOTAL FINAL ---
-            // Verifica espaço para o Total (precisa de uns 30mm)
-            if (currentY + 30 > pageHeight - 20) {
-                doc.addPage();
-                currentY = drawPageTemplate(doc);
-            }
-
-            currentY += 5;
-            const totalDisplay = document.getElementById('price-display');
-            let totalText = totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '').trim() : 'R$ 0,00';
-
-            // Limpeza Final do Total (WHITELIST)
-            totalText = totalText.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
-            totalText = totalText.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
-            totalText = totalText.replace(/\s+/g, ' ').trim();
-
-            doc.setDrawColor(0);
-            doc.line(margin, currentY, pageWidth - margin, currentY);
+            doc.setTextColor(212, 175, 55); // Dourado HNT
+            doc.text('RESUMO DO PEDIDO', margin, currentY);
             currentY += 10;
 
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`TOTAL FINAL: ${totalText}`, pageWidth / 2, currentY, { align: 'center' });
-            currentY += 20;
+            const rows = Array.from(document.querySelectorAll('#summary-body tr'));
+            const validRows = rows.filter(row => {
+                const style = window.getComputedStyle(row);
+                if (style.display === 'none') return false;
+                const txt = row.innerText.trim();
+                return txt && !txt.includes('Valor Base') && !txt.includes('Total:');
+            });
 
-            // --- F. TERMOS ---
-            // Verifica espaço (precisa de uns 40-50mm)
-            // Se não couber, nova página
-            const termsText = "AVISO IMPORTANTE: Este documento é uma SIMULAÇÃO DIGITAL para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação. Ao prosseguir, você declara que leu e concorda com todas as informações e condições do produto disponíveis em nosso FAQ, além de confirmar que possui os direitos autorais sobre as artes enviadas, assumindo total responsabilidade legal. Em caso de dúvidas, entre em contato com nossa equipe.";
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(80, 80, 80);
-            const termsLines = doc.splitTextToSize(termsText, pageWidth - (margin * 2));
-            const termsHeight = (termsLines.length * 4) + 15;
+            doc.setFontSize(11); // Tamanho padrão leitura
+            validRows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                if (cols.length < 2) return;
 
-            if (currentY + termsHeight > pageHeight - 20) {
-                doc.addPage();
-                currentY = drawPageTemplate(doc);
-            }
+                const clean = (s) => s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$]/g, '').trim();
+                let label = clean(cols[0].innerText);
+                let value = clean(cols[1].innerText || cols[1].querySelector('input, textarea')?.value || '');
+                let price = clean(cols[2]?.innerText || '');
 
-            doc.text(termsLines, pageWidth / 2, currentY, { align: 'center' });
-            currentY += termsHeight;
+                if (!label && value) { label = value; value = ''; }
+                if (!label) return;
 
-            // --- E. QR CODES GIGANTES (75% LARGURA) ---
-            if (currentY + 60 > pageHeight - 20) {
-                doc.addPage();
-                currentY = drawPageTemplate(doc);
-            }
+                // Verificação de quebra de página
+                if (currentY > pageHeight - 30) {
+                    doc.addPage();
+                    currentY = drawPageTemplate(doc);
+                }
 
-            const generateQR = (text) => {
-                const el = document.createElement('div');
-                new QRCode(el, { text: text, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.H });
-                return el.querySelector('canvas').toDataURL('image/png');
-            };
-
-            const qrSize = (pageWidth - (margin * 2)) * 0.35; // Tamanho maior
-            const qrGap = 20; // Espaçamento dobrado (na prática resolvido pela largura relativa)
-            const totalQrWidth = (qrSize * 2) + qrGap;
-            const qrStartX = (pageWidth - totalQrWidth) / 2;
-
-            try {
-                // QR 1: Pedido
-                const qr1Data = generateQR(id);
-                doc.addImage(qr1Data, 'PNG', qrStartX, currentY, qrSize, qrSize);
-
-                doc.setFontSize(10);
+                // Layout Linear: Label (Esq) | Preço (Dir)
                 doc.setFont('helvetica', 'bold');
-                doc.text('Pedido Nº', qrStartX + (qrSize / 2), currentY - 3, { align: 'center' });
-                doc.setFont('helvetica', 'normal');
-                doc.text(id.split('-')[0], qrStartX + (qrSize / 2), currentY + qrSize + 5, { align: 'center' });
+                doc.setTextColor(40, 40, 40);
+                doc.text(label + (value ? ` (${value})` : '') + ':', margin, currentY);
 
-                // QR 2: ID Simulador
-                const qr2Data = generateQR(id);
-                const qr2X = qrStartX + qrSize + qrGap;
-                doc.addImage(qr2Data, 'PNG', qr2X, currentY, qrSize, qrSize);
+                if (price) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(price, pageWidth - margin, currentY, { align: 'right' });
+                }
 
-                doc.setFont('helvetica', 'bold');
-                doc.text('ID Simulador:', qr2X + (qrSize / 2), currentY - 3, { align: 'center' });
-                doc.setFont('helvetica', 'normal');
-                doc.text(id, qr2X + (qrSize / 2), currentY + qrSize + 5, { align: 'center' });
-            } catch (errqr) { console.error("QR fail", errqr); }
+                currentY += 6; // Espaçamento condensado
+            });
+                else if(cols.length === 1) {
+        let text = cols[0].innerText.trim();
 
-            // --- G. SALVAR ---
-            const pdfBase64 = doc.output('datauristring').split(',').pop();
-            const fileName = `Pedido_${id}`;
-            this.updateModalButton('saving');
+// NEW: Se houver um input ou textarea em linha de coluna única, priorizar o VALUE
+const singleInput = cols[0].querySelector('input, textarea');
+if (singleInput) {
+    // Tenta pegar o label se houver (ex: 'Observações:')
+    const labelEl = cols[0].querySelector('label');
+    const labelPrefix = labelEl ? labelEl.innerText.trim() + ' ' : '';
+    text = labelPrefix + singleInput.value.trim();
+}
 
-            // 1. Salvar Local (Opcional - Dev Environment)
-            const savedPath = await this.saveToLocalFolder(fileName, pdfBase64, 'pdf');
+if (!text) return;
 
-            // 2. SUPABASE SYNC (Prioridade Máxima)
-            let cloudUrl = null;
-            if (typeof SupabaseAdapter !== 'undefined') {
-                console.log('☁️ Sincronizando PDF manual com Supabase...');
-                cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
-            }
+// Títulos de Subseção
+if (['DETALHES DO PRODUTO', 'DETALHAMENTO FINANCEIRO', '1. CONFIGURAÇÃO DE BASE'].some(h => text.includes(h))) {
+    if (currentY + 15 > pageHeight - 20) { doc.addPage(); currentY = drawPageTemplate(doc); }
 
-            if (savedPath || cloudUrl) {
-                const finalUrl = cloudUrl || `assets/BancoDados/PedidosPDF/${savedPath.split(/[/\\]/).pop()}`;
-                this.savedPdfUrl = finalUrl;
-                this.updateModalButton('ready', finalUrl);
-                console.log('✅ PDF salvo e disponível em:', finalUrl);
-            } else {
-                console.warn('⚠️ Falha no salvamento automático (Offline). Baixando localmente.');
-                doc.save(`Pedido_${id}.pdf`);
-                this.updateModalButton('ready', '#');
-            }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setFillColor(230, 230, 230);
+    doc.rect(margin, currentY, pageWidth - (margin * 2), 5, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.text(text, margin + 2, currentY + 3.5);
+    currentY += 7;
+    doc.setFontSize(11);
+    return;
+}
+
+if (text.includes('TOTAL FINAL')) return;
+
+// Helper Local de Limpeza (WHITELIST APPROACH)
+const cleanDeepLocal = (str) => {
+    if (!str) return '';
+    let s = str.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
+    // Mantém apenas caracteres seguros (Alfanuméricos, Acentos, Pontuação básica, R$)
+    s = s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
+    return s.replace(/\s+/g, ' ').trim();
+};
+
+// Limpeza específica para estas linhas de texto
+text = cleanDeepLocal(text);
+
+if (text) {
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+
+    const lines = doc.splitTextToSize(text, pageWidth - (margin * 2));
+    const h = (lines.length * 4.5) + 3;
+
+    if (currentY + h > pageHeight - 20) { doc.addPage(); currentY = drawPageTemplate(doc); }
+
+    doc.text(lines, margin, currentY);
+    currentY += h;
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+}
+                }
+            });
+
+
+
+// --- E. TOTAL FINAL ---
+// Verifica espaço para o Total (precisa de uns 30mm)
+if (currentY + 30 > pageHeight - 20) {
+    doc.addPage();
+    currentY = drawPageTemplate(doc);
+}
+
+currentY += 5;
+const totalDisplay = document.getElementById('price-display');
+let totalText = totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '').trim() : 'R$ 0,00';
+
+// Limpeza Final do Total (WHITELIST)
+totalText = totalText.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
+totalText = totalText.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
+totalText = totalText.replace(/\s+/g, ' ').trim();
+
+doc.setDrawColor(0);
+doc.line(margin, currentY, pageWidth - margin, currentY);
+currentY += 10;
+
+doc.setFontSize(14);
+doc.setFont('helvetica', 'bold');
+doc.text(`TOTAL FINAL: ${totalText}`, pageWidth / 2, currentY, { align: 'center' });
+currentY += 20;
+
+// --- F. TERMOS ---
+// Verifica espaço (precisa de uns 40-50mm)
+// Se não couber, nova página
+const termsText = "AVISO IMPORTANTE: Este documento é uma SIMULAÇÃO DIGITAL para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação. Ao prosseguir, você declara que leu e concorda com todas as informações e condições do produto disponíveis em nosso FAQ, além de confirmar que possui os direitos autorais sobre as artes enviadas, assumindo total responsabilidade legal. Em caso de dúvidas, entre em contato com nossa equipe.";
+doc.setFontSize(9);
+doc.setFont('helvetica', 'normal');
+doc.setTextColor(80, 80, 80);
+const termsLines = doc.splitTextToSize(termsText, pageWidth - (margin * 2));
+const termsHeight = (termsLines.length * 4) + 15;
+
+if (currentY + termsHeight > pageHeight - 20) {
+    doc.addPage();
+    currentY = drawPageTemplate(doc);
+}
+
+doc.text(termsLines, pageWidth / 2, currentY, { align: 'center' });
+currentY += termsHeight;
+
+// --- E. QR CODES GIGANTES (75% LARGURA) ---
+if (currentY + 60 > pageHeight - 20) {
+    doc.addPage();
+    currentY = drawPageTemplate(doc);
+}
+
+const generateQR = (text) => {
+    const el = document.createElement('div');
+    new QRCode(el, { text: text, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.H });
+    return el.querySelector('canvas').toDataURL('image/png');
+};
+
+const qrSize = (pageWidth - (margin * 2)) * 0.35; // Tamanho maior
+const qrGap = 20; // Espaçamento dobrado (na prática resolvido pela largura relativa)
+const totalQrWidth = (qrSize * 2) + qrGap;
+const qrStartX = (pageWidth - totalQrWidth) / 2;
+
+try {
+    // QR 1: Pedido
+    const qr1Data = generateQR(id);
+    doc.addImage(qr1Data, 'PNG', qrStartX, currentY, qrSize, qrSize);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Pedido Nº', qrStartX + (qrSize / 2), currentY - 3, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(id.split('-')[0], qrStartX + (qrSize / 2), currentY + qrSize + 5, { align: 'center' });
+
+    // QR 2: ID Simulador
+    const qr2Data = generateQR(id);
+    const qr2X = qrStartX + qrSize + qrGap;
+    doc.addImage(qr2Data, 'PNG', qr2X, currentY, qrSize, qrSize);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('ID Simulador:', qr2X + (qrSize / 2), currentY - 3, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(id, qr2X + (qrSize / 2), currentY + qrSize + 5, { align: 'center' });
+} catch (errqr) { console.error("QR fail", errqr); }
+
+// --- G. SALVAR ---
+const pdfBase64 = doc.output('datauristring').split(',').pop();
+const fileName = `Pedido_${id}`;
+this.updateModalButton('saving');
+
+// 1. Salvar Local (Opcional - Dev Environment)
+const savedPath = await this.saveToLocalFolder(fileName, pdfBase64, 'pdf');
+
+// 2. SUPABASE SYNC (Prioridade Máxima)
+let cloudUrl = null;
+if (typeof SupabaseAdapter !== 'undefined') {
+    console.log('☁️ Sincronizando PDF manual com Supabase...');
+    cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
+}
+
+if (savedPath || cloudUrl) {
+    const finalUrl = cloudUrl || `assets/BancoDados/PedidosPDF/${savedPath.split(/[/\\]/).pop()}`;
+    this.savedPdfUrl = finalUrl;
+    this.updateModalButton('ready', finalUrl);
+    console.log('✅ PDF salvo e disponível em:', finalUrl);
+} else {
+    console.warn('⚠️ Falha no salvamento automático (Offline). Baixando localmente.');
+    doc.save(`Pedido_${id}.pdf`);
+    this.updateModalButton('ready', '#');
+}
 
         } catch (err) {
-            console.error('Erro PDF:', err);
-            this.updateModalButton('error');
-            alert('Erro: ' + err.message);
-        }
+    console.error('Erro PDF:', err);
+    this.updateModalButton('error');
+    alert('Erro: ' + err.message);
+}
     },
 
     /**
@@ -993,167 +905,167 @@ const PDFGenerator = {
      * Retorna a URL do PDF salvo ou null se falhar
      */
     async generateAndSaveForCart(customId = null) {
-        const id = customId || this.context.state?.simulationId || 'HNT_PEDIDO';
+    const id = customId || this.context.state?.simulationId || 'HNT_PEDIDO';
 
-        try {
-            // 1. Garantir dependências
-            if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
-                const loaded = await this.loadDependencies();
-                if (!loaded) {
-                    console.warn('⚠️ Bibliotecas de PDF não carregaram. PDF não será gerado.');
-                    alert('Erro: Bibliotecas de PDF não carregaram. Verifique sua conexão.');
-                    return null;
-                }
+    try {
+        // 1. Garantir dependências
+        if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
+            const loaded = await this.loadDependencies();
+            if (!loaded) {
+                console.warn('⚠️ Bibliotecas de PDF não carregaram. PDF não será gerado.');
+                alert('Erro: Bibliotecas de PDF não carregaram. Verifique sua conexão.');
+                return null;
             }
-
-            // 2. Garantir que temos snapshot atualizado
-            if (!this.cachedSnapshot) {
-                console.log('📸 Capturando snapshot para PDF...');
-                await this.updateSnapshot(true);
-            }
-
-            // 3. Gerar PDF
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
-            const margin = 20;
-
-            // Template de página (função auxiliar inline)
-            const drawPageTemplate = (docArg) => {
-                const width = docArg.internal.pageSize.getWidth();
-                const height = docArg.internal.pageSize.getHeight();
-
-                docArg.setFillColor(255, 255, 255);
-                docArg.rect(0, 0, width, height, 'F');
-
-                // Marca D'água
-                const logoDataUrl = 'assets/logo.png';
-                try {
-                    const wmWidth = width * 0.9;
-                    const ratio = 1;
-                    const wmHeight = wmWidth * ratio;
-                    const wmX = (width - wmWidth) / 2;
-                    const wmY = (height - wmHeight) / 2;
-                    docArg.saveGraphicsState();
-                    docArg.setGState(new docArg.GState({ opacity: 0.05 }));
-                    docArg.addImage(logoDataUrl, 'PNG', wmX, wmY, wmWidth, wmHeight);
-                    docArg.restoreGraphicsState();
-                } catch (e) { }
-
-                // Cabeçalho
-                const headY = 10;
-                docArg.setFontSize(18);
-                docArg.setFont('helvetica', 'bold');
-                docArg.setTextColor(212, 175, 55);
-                docArg.text('HANUTHAI', width / 2, headY, { align: 'center' });
-
-                return headY + 10;
-            };
-
-            let currentY = drawPageTemplate(doc);
-
-            // Sub-cabeçalho
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`PEDIDO #${id}`, margin, currentY);
-            doc.text(`Data: ${new Date().toLocaleString('pt-BR')}`, pageWidth - margin, currentY, { align: 'right' });
-            currentY += 15;
-
-            // Imagem do produto
-            if (this.cachedSnapshot) {
-                try {
-                    const imgProps = doc.getImageProperties(this.cachedSnapshot);
-                    const maxImgWidth = pageWidth - (margin * 2);
-                    const maxImgHeight = pageHeight * 0.5;
-
-                    let imgWidth = 140;
-                    let imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
-                    if (imgHeight > maxImgHeight) {
-                        imgHeight = maxImgHeight;
-                        imgWidth = (imgProps.width * imgHeight) / imgProps.height;
-                    }
-
-                    const xKey = (pageWidth - imgWidth) / 2;
-                    doc.addImage(this.cachedSnapshot, 'PNG', xKey, currentY, imgWidth, imgHeight);
-                    currentY += imgHeight + 15;
-                } catch (e) {
-                    console.error('Erro ao adicionar imagem:', e);
-                    currentY += 20;
-                }
-            } else {
-                currentY += 10;
-            }
-
-            // Resumo (simplificado - apenas pega do DOM)
-            if (currentY > pageHeight - 40) {
-                doc.addPage();
-                currentY = drawPageTemplate(doc);
-            }
-
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.setFillColor(230, 230, 230);
-            doc.rect(margin, currentY, pageWidth - (margin * 2), 8, 'F');
-            doc.text('RESUMO DO PEDIDO', pageWidth / 2, currentY + 5.5, { align: 'center' });
-            currentY += 15;
-
-            // Total
-            const totalDisplay = document.getElementById('price-display');
-            let totalText = totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '').trim() : 'R$ 0,00';
-
-            // Limpeza
-            totalText = totalText.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
-            totalText = totalText.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
-            totalText = totalText.replace(/\s+/g, ' ').trim();
-
-            doc.setDrawColor(0);
-            doc.line(margin, currentY, pageWidth - margin, currentY);
-            currentY += 10;
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`TOTAL FINAL: ${totalText}`, pageWidth / 2, currentY, { align: 'center' });
-
-            // 4. Salvar Localmente (Opcional - Para ambientes com backend local)
-            const fileName = `Pedido_${id.replace(/[^a-zA-Z0-9-_]/g, '_')}`;
-            const pdfBase64 = doc.output('datauristring').split(',').pop();
-            const savedPath = await this.saveToLocalFolder(fileName, pdfBase64, 'pdf');
-
-            let finalUrl = null;
-
-            // --- SUPABASE SYNC (Prioridade Máxima) ---
-            if (typeof SupabaseAdapter !== 'undefined') {
-                console.log('☁️ Enviando PDF para Supabase Storage...');
-                const cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', fileName + ".pdf", pdfBase64, 'application/pdf');
-                if (cloudUrl) {
-                    console.log('✅ PDF disponível na nuvem:', cloudUrl);
-                    finalUrl = cloudUrl;
-                }
-            }
-
-            // --- FALLBACKS ---
-            if (!finalUrl && savedPath) {
-                // Se falhou nuvem mas salvou local (ambiente dev)
-                const finalFileName = savedPath.split(/[/\\]/).pop();
-                finalUrl = `assets/BancoDados/PedidosPDF/${finalFileName}`;
-                console.log(`📡 Usando link local: ${finalUrl}`);
-            }
-
-            if (!finalUrl) {
-                // Se tudo falhar, dispara o download para o usuário não perder o arquivo
-                console.warn('⚠️ Falha no salvamento automático. Disparando download manual.');
-                doc.save(fileName + ".pdf");
-                finalUrl = `assets/BancoDados/PedidosPDF/${fileName}.pdf`; // Link previsto resiliente
-            }
-
-            return finalUrl;
-
-        } catch (err) {
-            console.error('❌ Erro ao gerar PDF para carrinho:', err);
-            return null;
         }
+
+        // 2. Garantir que temos snapshot atualizado
+        if (!this.cachedSnapshot) {
+            console.log('📸 Capturando snapshot para PDF...');
+            await this.updateSnapshot(true);
+        }
+
+        // 3. Gerar PDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 20;
+
+        // Template de página (função auxiliar inline)
+        const drawPageTemplate = (docArg) => {
+            const width = docArg.internal.pageSize.getWidth();
+            const height = docArg.internal.pageSize.getHeight();
+
+            docArg.setFillColor(255, 255, 255);
+            docArg.rect(0, 0, width, height, 'F');
+
+            // Marca D'água
+            const logoDataUrl = 'assets/logo.png';
+            try {
+                const wmWidth = width * 0.9;
+                const ratio = 1;
+                const wmHeight = wmWidth * ratio;
+                const wmX = (width - wmWidth) / 2;
+                const wmY = (height - wmHeight) / 2;
+                docArg.saveGraphicsState();
+                docArg.setGState(new docArg.GState({ opacity: 0.05 }));
+                docArg.addImage(logoDataUrl, 'PNG', wmX, wmY, wmWidth, wmHeight);
+                docArg.restoreGraphicsState();
+            } catch (e) { }
+
+            // Cabeçalho
+            const headY = 10;
+            docArg.setFontSize(18);
+            docArg.setFont('helvetica', 'bold');
+            docArg.setTextColor(212, 175, 55);
+            docArg.text('HANUTHAI', width / 2, headY, { align: 'center' });
+
+            return headY + 10;
+        };
+
+        let currentY = drawPageTemplate(doc);
+
+        // Sub-cabeçalho
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`PEDIDO #${id}`, margin, currentY);
+        doc.text(`Data: ${new Date().toLocaleString('pt-BR')}`, pageWidth - margin, currentY, { align: 'right' });
+        currentY += 15;
+
+        // Imagem do produto
+        if (this.cachedSnapshot) {
+            try {
+                const imgProps = doc.getImageProperties(this.cachedSnapshot);
+                const maxImgWidth = pageWidth - (margin * 2);
+                const maxImgHeight = pageHeight * 0.5;
+
+                let imgWidth = 140;
+                let imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                if (imgHeight > maxImgHeight) {
+                    imgHeight = maxImgHeight;
+                    imgWidth = (imgProps.width * imgHeight) / imgProps.height;
+                }
+
+                const xKey = (pageWidth - imgWidth) / 2;
+                doc.addImage(this.cachedSnapshot, 'PNG', xKey, currentY, imgWidth, imgHeight);
+                currentY += imgHeight + 15;
+            } catch (e) {
+                console.error('Erro ao adicionar imagem:', e);
+                currentY += 20;
+            }
+        } else {
+            currentY += 10;
+        }
+
+        // Resumo (simplificado - apenas pega do DOM)
+        if (currentY > pageHeight - 40) {
+            doc.addPage();
+            currentY = drawPageTemplate(doc);
+        }
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setFillColor(230, 230, 230);
+        doc.rect(margin, currentY, pageWidth - (margin * 2), 8, 'F');
+        doc.text('RESUMO DO PEDIDO', pageWidth / 2, currentY + 5.5, { align: 'center' });
+        currentY += 15;
+
+        // Total
+        const totalDisplay = document.getElementById('price-display');
+        let totalText = totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '').trim() : 'R$ 0,00';
+
+        // Limpeza
+        totalText = totalText.replace(/!9þ|!9|& ?þ|&þ|þ|Ø=ÜÅ/g, '');
+        totalText = totalText.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s\.,:;()\[\]\{\}\-_+=/\\|'"?!@#$%*R$]/g, '');
+        totalText = totalText.replace(/\s+/g, ' ').trim();
+
+        doc.setDrawColor(0);
+        doc.line(margin, currentY, pageWidth - margin, currentY);
+        currentY += 10;
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`TOTAL FINAL: ${totalText}`, pageWidth / 2, currentY, { align: 'center' });
+
+        // 4. Salvar Localmente (Opcional - Para ambientes com backend local)
+        const fileName = `Pedido_${id.replace(/[^a-zA-Z0-9-_]/g, '_')}`;
+        const pdfBase64 = doc.output('datauristring').split(',').pop();
+        const savedPath = await this.saveToLocalFolder(fileName, pdfBase64, 'pdf');
+
+        let finalUrl = null;
+
+        // --- SUPABASE SYNC (Prioridade Máxima) ---
+        if (typeof SupabaseAdapter !== 'undefined') {
+            console.log('☁️ Enviando PDF para Supabase Storage...');
+            const cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', fileName + ".pdf", pdfBase64, 'application/pdf');
+            if (cloudUrl) {
+                console.log('✅ PDF disponível na nuvem:', cloudUrl);
+                finalUrl = cloudUrl;
+            }
+        }
+
+        // --- FALLBACKS ---
+        if (!finalUrl && savedPath) {
+            // Se falhou nuvem mas salvou local (ambiente dev)
+            const finalFileName = savedPath.split(/[/\\]/).pop();
+            finalUrl = `assets/BancoDados/PedidosPDF/${finalFileName}`;
+            console.log(`📡 Usando link local: ${finalUrl}`);
+        }
+
+        if (!finalUrl) {
+            // Se tudo falhar, dispara o download para o usuário não perder o arquivo
+            console.warn('⚠️ Falha no salvamento automático. Disparando download manual.');
+            doc.save(fileName + ".pdf");
+            finalUrl = `assets/BancoDados/PedidosPDF/${fileName}.pdf`; // Link previsto resiliente
+        }
+
+        return finalUrl;
+
+    } catch (err) {
+        console.error('❌ Erro ao gerar PDF para carrinho:', err);
+        return null;
     }
+}
 };
 
 // Hook automático para atualizar snapshot quando o simulador mudar
