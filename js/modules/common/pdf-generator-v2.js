@@ -678,11 +678,11 @@ const PDFGenerator = {
                     currentY += 10;
                 }
 
-                // 3. RESUMO LINEAR CONDENSADO
+                // 3. RESUMO HORIZONTAL OTIMIZADO
                 doc.setFontSize(14);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(212, 175, 55);
-                doc.text('DETALHES DO ORÇAMENTO', margin, currentY);
+                doc.text('RESUMO TÉCNICO DO ORÇAMENTO', margin, currentY);
                 currentY += 8;
 
                 const clean = (s) => s ? s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$]/g, ' ').replace(/\s+/g, ' ').trim() : '';
@@ -690,7 +690,7 @@ const PDFGenerator = {
                     return r.innerText.trim() && !r.innerText.includes('Total:');
                 });
 
-                doc.setFontSize(9.5);
+                doc.setFontSize(10);
                 rows.forEach(row => {
                     const cols = Array.from(row.querySelectorAll('td'));
                     if (cols.length < 2) return;
@@ -701,11 +701,9 @@ const PDFGenerator = {
 
                     if (!label && value) { label = value; value = ''; }
                     if (!label) return;
-
-                    // Evitar duplicação bizarra se o label for igual ao valor
                     if (label === value) value = '';
 
-                    if (currentY > pageHeight - 40) {
+                    if (currentY > pageHeight - 55) {
                         doc.addPage();
                         currentY = drawExpertTemplate(doc);
                     }
@@ -713,19 +711,33 @@ const PDFGenerator = {
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(60, 60, 60);
 
-                    // Truncar label se muito longo para não sobrepor o preço
-                    const fullLabel = label + (value ? ` (${value})` : '') + ':';
-                    const maxWidth = price ? (pageWidth - margin * 2 - 40) : (pageWidth - margin * 2);
-                    const safeLabel = doc.splitTextToSize(fullLabel, maxWidth)[0];
+                    // LÓGICA HORIZONTAL: Maximizar texto na linha
+                    const fullText = `${label}${value ? ` (${value})` : ''}:`;
+                    const priceWidth = price ? doc.getTextWidth(price) + 5 : 0;
+                    const availableWidth = pageWidth - (margin * 2) - priceWidth;
 
-                    doc.text(safeLabel, margin, currentY);
+                    const lines = doc.splitTextToSize(fullText, availableWidth);
 
-                    if (price) {
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(0, 0, 0);
-                        doc.text(price, pageWidth - margin, currentY, { align: 'right' });
-                    }
-                    currentY += 6; // Espaçamento mais generoso
+                    lines.forEach((line, index) => {
+                        if (currentY > pageHeight - 15) {
+                            doc.addPage();
+                            currentY = drawExpertTemplate(doc);
+                        }
+                        doc.text(line, margin, currentY);
+
+                        // Colocar o preço apenas na primeira linha do conjunto
+                        if (price && index === 0) {
+                            doc.setFont('helvetica', 'normal');
+                            doc.setTextColor(0, 0, 0);
+                            doc.text(price, pageWidth - margin, currentY, { align: 'right' });
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(60, 60, 60);
+                        }
+
+                        if (index < lines.length - 1) currentY += 5;
+                    });
+
+                    currentY += 6.5;
                 });
 
                 // 4. TOTAL EM DESTAQUE
