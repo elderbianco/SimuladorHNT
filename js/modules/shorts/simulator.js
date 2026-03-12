@@ -200,6 +200,10 @@ function setupMainEvents() {
     const btnPdf = document.getElementById('btn-pdf');
     if (btnPdf) {
         btnPdf.onclick = async () => {
+            if (typeof PDFGenerator !== 'undefined') {
+                PDFGenerator.showCaptureFlash();
+                await PDFGenerator.updateSnapshot(true);
+            }
             if (await saveOrderToHistory(false)) {
                 PDFGenerator.openPreview();
             }
@@ -233,6 +237,8 @@ function setupMainEvents() {
                         let pdfUrl = null;
                         if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
                             console.log("📸 Gerando PDF em background...");
+                            PDFGenerator.showCaptureFlash();
+                            await PDFGenerator.updateSnapshot(true);
                             pdfUrl = await PDFGenerator.generateAndSaveForCart();
                         }
 

@@ -137,50 +137,52 @@ const PDFGenerator = {
 
                         // 3. Normalize the target itself
                         const isLeggingActive = PDFGenerator.context.state?.extras?.calca_legging?.enabled || target.classList.contains('calca-legging-active');
-                        target.style.top = isLeggingActive ? '100px' : '0';
+                        target.style.top = '0'; // Forçar topo zero para centralização absoluta
                         target.style.transform = 'none';
                         target.style.left = '0';
-                        target.style.margin = '0';
+                        target.style.margin = '0 auto';
                         target.style.width = '1000px';
                         target.style.height = '1000px';
+                        target.style.position = 'relative';
 
-                        // Centering logic logic
-                        const productLayers = target.querySelectorAll('.product-layer, .layer');
-                        productLayers.forEach(l => {
-                            if (window.getComputedStyle(l).display === 'none') {
+                        // Centering logic for multiple layers
+                        const allLayers = target.querySelectorAll('.product-layer, .layer, .customization-layer');
+                        allLayers.forEach(l => {
+                            const isCustom = l.classList.contains('customization-layer');
+                            const style = window.getComputedStyle(l);
+
+                            if (style.display === 'none') {
                                 l.style.display = 'none';
                                 return;
                             }
+
+                            l.style.position = 'absolute';
+                            l.style.top = isLeggingActive && !isCustom ? '100px' : '0'; // Ajuste específico para pernas
+                            l.style.left = '0';
                             l.style.width = '100%';
                             l.style.height = '100%';
-                            l.style.display = 'flex';
+                            l.style.display = isCustom ? 'block' : 'flex';
                             l.style.justifyContent = 'center';
                             l.style.alignItems = 'center';
                             l.style.transform = 'none';
 
-                            const img = l.querySelector('img');
-                            if (img) {
-                                img.style.maxWidth = '100%';
-                                img.style.maxHeight = '100%';
-                                img.style.objectFit = 'contain';
-                                img.style.margin = '0 auto';
+                            if (!isCustom) {
+                                const img = l.querySelector('img');
+                                if (img) {
+                                    img.style.maxWidth = '100%';
+                                    img.style.maxHeight = '100%';
+                                    img.style.objectFit = 'contain';
+                                    img.style.margin = '0 auto';
+                                    img.style.position = 'relative';
+                                }
+                            } else {
+                                // Garantir que elementos customizados (logos/textos) sejam capturados onde estão
+                                l.querySelectorAll('.drag-item, .custom-text, .custom-image').forEach(el => {
+                                    el.style.visibility = 'visible';
+                                    el.style.opacity = '1';
+                                });
                             }
                         });
-
-                        // Customization Layer
-                        const customLayer = target.querySelector('.customization-layer');
-                        if (customLayer) {
-                            if (window.getComputedStyle(customLayer).display === 'none') {
-                                customLayer.style.display = 'none';
-                            } else {
-                                customLayer.style.width = '100%';
-                                customLayer.style.height = '100%';
-                                customLayer.style.top = '0';
-                                customLayer.style.left = '0';
-                                customLayer.style.transform = 'none';
-                                customLayer.style.display = 'block';
-                            }
-                        }
                     }
                 }
             });
@@ -226,6 +228,19 @@ const PDFGenerator = {
         } finally {
             this.captureInProgress = false;
         }
+    },
+
+    /**
+     * Efeito visual de "Flash" na tela (Premium UX)
+     */
+    showCaptureFlash() {
+        const flash = document.createElement('div');
+        flash.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:100000; pointer-events:none; opacity:1; transition: opacity 0.4s ease-out;';
+        document.body.appendChild(flash);
+        requestAnimationFrame(() => {
+            flash.style.opacity = '0';
+            setTimeout(() => flash.remove(), 400);
+        });
     },
 
     /**
