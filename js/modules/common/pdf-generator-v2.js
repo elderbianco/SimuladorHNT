@@ -765,46 +765,36 @@ const PDFGenerator = {
                 doc.text(termLines, margin, currentY);
                 currentY += (termLines.length * 3.5) + 12;
 
-                // 6. QR CODES GIGANTES (75% Largura)
-                const qrSize = (pageWidth - (margin * 4)) * 0.45;
-                const qrGap = 20;
-                const qrX1 = (pageWidth - (qrSize * 2 + qrGap)) / 2;
-                const qrX2 = qrX1 + qrSize + qrGap;
-
-                const generateQR = async (t) => {
-                    return new Promise((resolve) => {
-                        const d = document.createElement('div');
-                        new QRCode(d, { text: t, width: 256, height: 256, correctLevel: 3 });
-
-                        // Aguardar renderização do canvas
-                        const check = setInterval(() => {
-                            const canvas = d.querySelector('canvas');
-                            if (canvas) {
-                                clearInterval(check);
-                                resolve(canvas.toDataURL('image/png'));
-                            }
-                            const img = d.querySelector('img');
-                            if (img && img.src && img.src.startsWith('data:')) {
-                                clearInterval(check);
-                                resolve(img.src);
-                            }
-                        }, 50);
-
-                        // Timeout de segurança
-                        setTimeout(() => { clearInterval(check); resolve(null); }, 2000);
-                    });
-                };
-
                 try {
-                    const q1 = await generateQR(id);
-                    if (q1) doc.addImage(q1, 'PNG', qrX1, currentY, qrSize, qrSize);
-                    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-                    doc.text('Pedido Nº', qrX1 + (qrSize / 2), currentY - 3, { align: 'center' });
+                    // Posicionamento Centralizado e Espaçado
+                    const qrSize = (pageWidth - (margin * 4)) * 0.45;
+                    const qrGap = 20;
+                    const qrX1 = (pageWidth - (qrSize * 2 + qrGap)) / 2;
+                    const qrX2 = qrX1 + qrSize + qrGap;
+                    const qrYStart = currentY + 12;
 
-                    const q2 = await generateQR(`HNT-SIM-${id}`);
-                    if (q2) doc.addImage(q2, 'PNG', qrX2, currentY, qrSize, qrSize);
-                    doc.text('ID Simulador:', qrX2 + (qrSize / 2), currentY - 3, { align: 'center' });
-                } catch (e) { console.warn("QR Error", e); }
+                    // QR 1: Apenas Pedido
+                    const q1 = await generateQR(id);
+                    if (q1) {
+                        doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(50, 50, 50);
+                        doc.text('CÓDIGO DO PEDIDO', qrX1 + (qrSize / 2), qrYStart - 4, { align: 'center' });
+                        doc.addImage(q1, 'PNG', qrX1, qrYStart, qrSize, qrSize);
+                        doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+                        doc.text(`${id}`, qrX1 + (qrSize / 2), qrYStart + qrSize + 5, { align: 'center' });
+                    }
+
+                    // QR 2: Pedido + Simulator ID
+                    const q2 = await generateQR(`PEDIDO:${id}|SIM:${id}`);
+                    if (q2) {
+                        doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+                        doc.text('CONFERÊNCIA TÉCNICA', qrX2 + (qrSize / 2), qrYStart - 4, { align: 'center' });
+                        doc.addImage(q2, 'PNG', qrX2, qrYStart, qrSize, qrSize);
+                        doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+                        doc.text(`REF: ${id}`, qrX2 + (qrSize / 2), qrYStart + qrSize + 5, { align: 'center' });
+                    }
+                } catch (e) {
+                    console.warn("QR Error", e);
+                }
 
                 // SALVAR
                 const pdfBase64 = doc.output('datauristring').split(',').pop();
