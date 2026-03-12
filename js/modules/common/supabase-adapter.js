@@ -14,11 +14,25 @@ const SupabaseAdapter = {
         }
 
         try {
-            // Converter base64 para Blob se necessário
             let blob = fileData;
-            if (typeof fileData === 'string' && fileData.startsWith('data:')) {
-                const res = await fetch(fileData);
-                blob = await res.blob();
+            
+            // CONVERSÃO ROBUSTA: Se for string, verificar se é Base64
+            if (typeof fileData === 'string') {
+                if (fileData.startsWith('data:')) {
+                    // Formato completo: data:application/pdf;base64,.....
+                    const res = await fetch(fileData);
+                    blob = await res.blob();
+                } else if (/^[A-Za-z0-9+/=]+$/.test(fileData.substring(0, 100).replace(/\s/g, ''))) {
+                    // Formato Raw Base64 (sem prefixo) - Comum na saída do jsPDF
+                    console.log('📦 Detectado Base64 bruto. Convertendo para Blob...');
+                    const byteCharacters = atob(fileData.replace(/\s/g, ''));
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    blob = new Blob([byteArray], { type: type });
+                }
             }
 
             const { data, error } = await window.supabaseClient.storage

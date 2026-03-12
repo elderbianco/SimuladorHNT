@@ -975,12 +975,17 @@ const PDFGenerator = {
 
             // --- G. SALVAR ---
             const pdfBase64 = doc.output('datauristring').split(',').pop();
+            const fileName = `Pedido_${id}`;
             this.updateModalButton('saving');
-            // --- SUPABASE SYNC ---
+
+            // 1. Salvar Local (Opcional - Dev Environment)
+            const savedPath = await this.saveToLocalFolder(fileName, pdfBase64, 'pdf');
+
+            // 2. SUPABASE SYNC (Prioridade Máxima)
             let cloudUrl = null;
             if (typeof SupabaseAdapter !== 'undefined') {
                 console.log('☁️ Sincronizando PDF manual com Supabase...');
-                cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', `Pedido_${id}.pdf`, pdfBase64, 'application/pdf');
+                cloudUrl = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
             }
 
             if (savedPath || cloudUrl) {
