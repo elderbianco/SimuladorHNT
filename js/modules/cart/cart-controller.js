@@ -216,10 +216,25 @@ function applyGlobalInfo() {
     location.reload();
 }
 
-function deleteGroup(indices) {
-    if (!confirm('Deseja excluir este pedido completo e todos os seus itens?')) return;
+async function deleteGroup(indices) {
+    if (!confirm('Deseja excluir este pedido completo e todos os seus itens (Local e no Banco de Dados)?')) return;
 
     let history = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+    // --- SUPABASE SYNC ---
+    if (typeof SupabaseAdapter !== 'undefined') {
+        try {
+            const idsToDelete = indices.map(idx => history[idx]?.order_id || history[idx]?.ID_PEDIDO).filter(id => !!id);
+            if (idsToDelete.length > 0) {
+                console.log('🗑️ Excluindo grupo de pedidos do Supabase:', idsToDelete);
+                await SupabaseAdapter.deletePedidos(idsToDelete);
+            }
+        } catch (e) {
+            console.error('Erro ao excluir grupo do Supabase:', e);
+        }
+    }
+    // ---------------------
+
     // Remove indices in descending order to avoid shift issues
     const sortedIndices = indices.sort((a, b) => b - a);
     sortedIndices.forEach(idx => history.splice(idx, 1));
