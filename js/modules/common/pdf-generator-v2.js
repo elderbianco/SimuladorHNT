@@ -82,21 +82,58 @@ const PDFGenerator = {
                 onclone: (clonedDoc) => {
                     // Force capture area size for the clone
                     const target = clonedDoc.querySelector('.zoom-container') || clonedDoc.querySelector('.simulator-wrapper');
+                    const originalArea = document.querySelector('.simulator-area');
+
                     if (target) {
+                        // Preservar Background do Simulador no Clone
+                        if (originalArea) {
+                            const bgStyle = window.getComputedStyle(originalArea).backgroundImage;
+                            if (bgStyle && bgStyle !== 'none') {
+                                target.style.backgroundImage = bgStyle;
+                                target.style.backgroundSize = 'cover';
+                                target.style.backgroundPosition = 'center bottom';
+                            }
+                        }
+
                         target.style.width = '1000px';
                         target.style.height = '1000px';
                         target.style.transform = 'none';
-                        target.style.position = 'static';
+                        target.style.position = 'relative';
                         target.style.margin = '0 auto';
                         target.style.visibility = 'visible';
                         target.style.opacity = '1';
 
-                        // Ensure all sub-elements are forced visible
-                        target.querySelectorAll('*').forEach(el => {
-                            const style = window.getComputedStyle(el);
-                            if (style.display === 'none' && !el.classList.contains('drag-handle') && !el.classList.contains('resize-handle')) {
-                                el.style.display = 'block';
+                        // Normalização de camadas para "Print"
+                        target.querySelectorAll('.product-layer, .layer, .customization-layer').forEach(l => {
+                            const style = window.getComputedStyle(l);
+                            if (style.display !== 'none') {
+                                l.style.position = 'absolute';
+                                l.style.top = '0';
+                                l.style.left = '0';
+                                l.style.width = '100%';
+                                l.style.height = '100%';
+                                l.style.display = l.classList.contains('customization-layer') ? 'block' : 'flex';
+                                l.style.justifyContent = 'center';
+                                l.style.alignItems = 'center';
+                                l.style.transform = 'none';
+                                l.style.visibility = 'visible';
+                                l.style.opacity = '1';
+
+                                const img = l.querySelector('img');
+                                if (img) {
+                                    img.style.maxWidth = '100%';
+                                    img.style.maxHeight = '100%';
+                                    img.style.objectFit = 'contain';
+                                    img.style.margin = '0 auto';
+                                    img.style.visibility = 'visible';
+                                    img.style.opacity = '1';
+                                }
                             }
+                        });
+
+                        // Esconder elementos de UI
+                        clonedDoc.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle, .limit-layer, .zoom-controls').forEach(el => {
+                            el.style.display = 'none';
                         });
                     }
                 }
