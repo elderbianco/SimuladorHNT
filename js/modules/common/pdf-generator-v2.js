@@ -610,10 +610,12 @@ const PDFGenerator = {
                     } catch (e) { }
                 }
 
-                // 3. Moldura HNT (Dourada)
+                // 3. Moldura HNT (Dourada) - REMOVIDO na v15.9 a pedido do usuário
+                /*
                 docArg.setDrawColor(212, 175, 55);
                 docArg.setLineWidth(0.5);
                 docArg.rect(margin - 2, margin - 2, width - (margin * 2) + 4, height - (margin * 2) + 4, 'S');
+                */
 
                 // 4. Cabeçalho HNT
                 docArg.setFont('helvetica', 'bold');
@@ -725,10 +727,11 @@ const PDFGenerator = {
                 currentY += 6.5;
             });
 
-            // 4. TOTAL EM DESTAQUE
-            currentY += 3;
+            // 4. TOTAL EM DESTAQUE - Linha removida na v15.9
+            /*
             doc.setDrawColor(212, 175, 55);
             doc.line(margin, currentY, pageWidth - margin, currentY);
+            */
             currentY += 8;
 
             const totalDisplay = document.getElementById('price-display');
