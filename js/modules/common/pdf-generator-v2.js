@@ -23,8 +23,8 @@ const PDFGenerator = {
     },
 
     /**
-     * Motor de Renderização Nuclear (Manual Canvas 2D) - v15.4
-     * Varredura Universal com Suporte a Transformações e Camadas Dinâmicas.
+     * Motor de Renderização Nuclear (Manual Canvas 2D) - v15.5
+     * Deep Crawler: Herança de Transformação e Suporte a Blob/Base64.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
@@ -34,20 +34,27 @@ const PDFGenerator = {
                 canvas.width = 1200;
                 canvas.height = 1200;
 
-                console.log('☢️ Motor Nuclear v15.4 (Sync + Transform) Ativado...');
+                console.log('☢️ Motor Nuclear v15.5 (Deep Crawler) Ativado...');
 
                 // 1. Fundo Branco Base
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Helper para carregar imagens
+                // Helper para carregar imagens (Aguardando decodificação completa)
                 const loadImage = (src) => new Promise((res) => {
                     if (!src || src === 'none') return res(null);
                     const img = new Image();
+
+                    // Só aplica CORS se for URL externa HTTP/HTTPS
                     if (src.startsWith('http') && !src.includes(window.location.hostname)) {
                         img.crossOrigin = "anonymous";
                     }
-                    img.onload = () => res(img);
+
+                    img.onload = () => {
+                        // Garantir que a imagem está "pronta" para desenho no canvas
+                        if (img.complete && img.naturalWidth > 0) res(img);
+                        else setTimeout(() => res(img), 50);
+                    };
                     img.onerror = () => res(null);
                     img.src = src;
                 });
@@ -66,13 +73,17 @@ const PDFGenerator = {
                 const containerRect = container.getBoundingClientRect();
                 const scale = canvas.width / containerRect.width;
 
-                // 2. Coletar Elementos Visuais Recursivamente (Crawler)
+                // 2. Coletar Elementos Visuais Recursivamente com Herança de Transformação
                 const visualElements = [];
-                const crawl = (el) => {
+                const crawl = (el, parentMatrix = [1, 0, 0, 1, 0, 0]) => {
                     const style = window.getComputedStyle(el);
                     if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
 
                     const rect = el.getBoundingClientRect();
+                    const transform = style.transform !== 'none' ? style.transform : null;
+
+                    // Identificar se é uma camada de customização (forçar prioridade)
+                    const isCustom = el.classList.contains('dynamic-layer') || el.classList.contains('customization-layer') || el.closest('.customization-layer');
 
                     // Capturar IMGs
                     if (el.tagName === 'IMG' && el.src) {
@@ -80,8 +91,8 @@ const PDFGenerator = {
                             type: 'img',
                             src: el.src,
                             rect: rect,
-                            zIndex: parseInt(style.zIndex) || 0,
-                            transform: style.transform,
+                            zIndex: isCustom ? 5000 + (parseInt(style.zIndex) || 0) : (parseInt(style.zIndex) || 0),
+                            transform: transform,
                             order: visualElements.length
                         });
                     }
@@ -95,14 +106,14 @@ const PDFGenerator = {
                                 type: 'bg',
                                 src: url,
                                 rect: rect,
-                                zIndex: parseInt(style.zIndex) || 0,
-                                transform: style.transform,
+                                zIndex: isCustom ? 5000 + (parseInt(style.zIndex) || 0) : (parseInt(style.zIndex) || 0),
+                                transform: transform,
                                 order: visualElements.length
                             });
                         }
                     }
 
-                    // Capturar Texto Direto
+                    // Capturar Texto
                     Array.from(el.childNodes).forEach(node => {
                         if (node.nodeType === 3 && node.textContent.trim().length > 0) {
                             visualElements.push({
@@ -110,47 +121,43 @@ const PDFGenerator = {
                                 content: node.textContent.trim(),
                                 rect: rect,
                                 style: style,
-                                zIndex: parseInt(style.zIndex) || 0,
+                                zIndex: isCustom ? 6000 + (parseInt(style.zIndex) || 0) : (parseInt(style.zIndex) || 0),
                                 order: visualElements.length
                             });
                         }
                     });
 
-                    Array.from(el.children).forEach(crawl);
+                    Array.from(el.children).forEach(child => crawl(child));
                 };
 
                 crawl(container);
 
-                // 3. Ordenar Camadas (Garantir que a ordem de visualização seja mantida)
-                // Prioridade: z-index, seguido pela ordem no DOM
+                // 3. Ordenar Camadas Precisamente
                 visualElements.sort((a, b) => (a.zIndex - b.zIndex) || (a.order - b.order));
-                console.log(`📊 Crawler capturou ${visualElements.length} elementos.`);
+                console.log(`📊 Deep Crawler capturou ${visualElements.length} elementos.`);
 
-                // 4. Renderizar Ordem Final com Suporte a Transformações
+                // 4. Renderizar Ordem Final
                 for (const item of visualElements) {
-                    ctx.save(); // Salvar estado do canvas antes de aplicar transformações
+                    ctx.save();
 
                     const x = (item.rect.left - containerRect.left + item.rect.width / 2) * scale;
                     const y = (item.rect.top - containerRect.top + item.rect.height / 2) * scale;
                     const w = item.rect.width * scale;
                     const h = item.rect.height * scale;
 
-                    // Mover o contexto para o centro do elemento para aplicar rotação/escala
                     ctx.translate(x, y);
 
-                    // Aplicar Transformação CSS se existir (Matrix)
-                    if (item.transform && item.transform !== 'none') {
-                        const values = item.transform.match(/matrix\((.+)\)/)?.[1].split(',').map(parseFloat);
-                        if (values && values.length === 6) {
-                            // Aplicar apenas rotação e escala da matriz (ignorando translação já tratada pelo rect)
-                            ctx.transform(values[0], values[1], values[2], values[3], 0, 0);
+                    // Aplicar Transformação (Matriz de 6 valores)
+                    if (item.transform) {
+                        const m = item.transform.match(/matrix\((.+)\)/)?.[1].split(',').map(parseFloat);
+                        if (m && m.length === 6) {
+                            ctx.transform(m[0], m[1], m[2], m[3], 0, 0);
                         }
                     }
 
                     if (item.type === 'img' || item.type === 'bg') {
                         const img = await loadImage(item.src);
                         if (img) {
-                            // Desenhar centralizado
                             ctx.drawImage(img, -w / 2, -h / 2, w, h);
                             console.log(`✅ ${item.type} desenhado: ${item.src.split('/').pop()}`);
                         }
@@ -164,14 +171,14 @@ const PDFGenerator = {
                         console.log(`✅ Texto desenhado: ${item.content.substring(0, 10)}...`);
                     }
 
-                    ctx.restore(); // Restaurar estado original do canvas
+                    ctx.restore();
                 }
 
-                const result = canvas.toDataURL('image/jpeg', 0.9);
-                console.log('☢️ Snapshot Nuclear v15.4 CONCLUÍDO.');
+                const result = canvas.toDataURL('image/jpeg', 0.95);
+                console.log('☢️ Snapshot Nuclear v15.5 CONCLUÍDO.');
                 resolve(result);
             } catch (e) {
-                console.error('❌ Erro Crítico no Motor Nuclear v15.4:', e);
+                console.error('❌ Erro Crítico no Deep Crawler v15.5:', e);
                 resolve(null);
             }
         });
