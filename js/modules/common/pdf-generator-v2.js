@@ -1,6 +1,6 @@
 /**
- * Módulo de Geração de PDF (v14 - ROBUST) - Atomic Print Technology
- * PRÉ-CAPTURA em background para geração INSTANTÂNEA e AUTO-SAVE.
+ * Módulo de Geração de PDF (v15 - NUCLEAR) - Atomic Print Technology
+ * Renderização DIRETA via Canvas para garantir fidelidade de imagem.
  */
 const PDFGenerator = {
     context: {
@@ -13,20 +13,8 @@ const PDFGenerator = {
     cachedSnapshot: null,
     captureInProgress: false,
     lastCaptureTime: 0,
-    isCaptureBroken: false, // Circuit breaker: se true, não tenta mais usar html2canvas
-    savedPdfUrl: null, // URL do PDF salvo no servidor
-
-    // Carrega dinamicamente o plugin AutoTable se não existir (Mantido para compatibilidade futura, embora não usado no layout manual)
-    async loadAutoTable() {
-        if (window.jspdf && window.jspdf.plugin && window.jspdf.plugin.autotable) return;
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js";
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
-    },
+    isCaptureBroken: false,
+    savedPdfUrl: null,
 
     prepareDraft(state, pricing, productData) {
         this.context.state = state;
@@ -35,27 +23,92 @@ const PDFGenerator = {
     },
 
     /**
-     *智能PRÉ-CAPTURA: Executada em background, sem bloquear UI
-     * Chamada automaticamente quando o simulador muda
+     * Motor de Renderização Nuclear (Manual Canvas 2D)
+     * Desenha camada por camada para garantir 100% de fidelidade.
      */
-    async updateSnapshot(force = false) {
-        // Se o sistema de captura já falhou anteriormente (erro de segurança), não tenta mais.
-        if (this.isCaptureBroken) return;
+    async drawManualSnapshot() {
+        return new Promise(async (resolve) => {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 1200;
+                canvas.height = 1200;
 
-        // RACE CONDITION FIX: Se forçado, espera a captura anterior terminar
-        if (this.captureInProgress) {
-            if (force) {
-                console.log('⏳ Captura forçada solicitada, mas há uma em andamento. Aguardando...');
-                while (this.captureInProgress) {
-                    await new Promise(r => setTimeout(r, 100));
+                // 1. Fundo Branco Base
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Helper para carregar imagem
+                const loadImage = (src) => new Promise((res) => {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => res(img);
+                    img.onerror = () => res(null);
+                    img.src = src;
+                });
+
+                // 2. Desenhar Fundo HNT (Ring)
+                const bgImg = await loadImage('assets/simulator/Background_RingHNT.jpeg');
+                if (bgImg) ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+
+                // 3. Desenhar Camadas do Produto
+                const layers = Array.from(document.querySelectorAll('.product-layer img, .layer img'));
+                for (const imgEl of layers) {
+                    const img = await loadImage(imgEl.src);
+                    if (img) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 }
-                console.log('✅ Captura anterior finalizada. Prosseguindo com forçada.');
-            } else {
-                return; // Se não for forçado, apenas ignora
-            }
-        }
 
-        // Throttle: no máximo 1 captura a cada 2 segundos (exceto se forçado)
+                // 4. Desenhar Customizações (Logos/Fotos)
+                const customImgs = Array.from(document.querySelectorAll('.customization-layer .custom-element-img'));
+                for (const imgEl of customImgs) {
+                    const img = await loadImage(imgEl.src);
+                    if (img) {
+                        const rect = imgEl.getBoundingClientRect();
+                        const container = (document.querySelector('.zoom-container') || document.querySelector('.simulator-area'));
+                        const containerRect = container.getBoundingClientRect();
+
+                        const scale = canvas.width / containerRect.width;
+                        const x = (rect.left - containerRect.left) * scale;
+                        const y = (rect.top - containerRect.top) * scale;
+                        const w = rect.width * scale;
+                        const h = rect.height * scale;
+
+                        ctx.drawImage(img, x, y, w, h);
+                    }
+                }
+
+                // 5. Desenhar Textos
+                const customTexts = Array.from(document.querySelectorAll('.customization-layer .custom-text'));
+                for (const txtEl of customTexts) {
+                    const rect = txtEl.getBoundingClientRect();
+                    const container = (document.querySelector('.zoom-container') || document.querySelector('.simulator-area'));
+                    const containerRect = container.getBoundingClientRect();
+                    const scale = canvas.width / containerRect.width;
+                    const style = window.getComputedStyle(txtEl);
+
+                    ctx.font = `${style.fontWeight} ${parseFloat(style.fontSize) * scale}px ${style.fontFamily}`;
+                    ctx.fillStyle = style.color;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    const x = (rect.left - containerRect.left + rect.width / 2) * scale;
+                    const y = (rect.top - containerRect.top + rect.height / 2) * scale;
+
+                    ctx.fillText(txtEl.innerText, x, y);
+                }
+
+                resolve(canvas.toDataURL('image/jpeg', 0.9));
+            } catch (e) {
+                console.error('Falha no desenho manual:', e);
+                resolve(null);
+            }
+        });
+    },
+
+    async updateSnapshot(force = false) {
+        if (this.isCaptureBroken && !force) return;
+        if (this.captureInProgress) return;
+
         const now = Date.now();
         if (!force && (now - this.lastCaptureTime < 2000)) return;
 
@@ -63,207 +116,60 @@ const PDFGenerator = {
         this.lastCaptureTime = now;
 
         try {
-            // FIX: Capture the zoom-container instead of the wrapper to get the full context
-            const captureTarget = document.querySelector('.zoom-container') || document.querySelector('.simulator-wrapper');
+            console.log('☢️ Ativando Renderização Industrial Direta...');
+            const snapshot = await this.drawManualSnapshot();
 
-            if (!captureTarget || typeof html2canvas === 'undefined') {
-                this.captureInProgress = false;
-                return;
-    /**
-     * Motor de Renderização Nuclear (Manual Canvas 2D)
-     * Desenha camada por camada para garantir 100% de fidelidade.
-     */
-    async drawManualSnapshot() {
-                    return new Promise(async (resolve) => {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        canvas.width = 1200;
-                        canvas.height = 1200;
-
-                        // 1. Fundo Branco Base
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                        // Helper para carregar imagem
-                        const loadImage = (src) => new Promise((res) => {
-                            const img = new Image();
-                            img.crossOrigin = "anonymous";
-                            img.onload = () => res(img);
-                            img.onerror = () => res(null);
-                            img.src = src;
-                        });
-
-                        // 2. Desenhar Fundo HNT (Ring)
-                        const bgImg = await loadImage('assets/simulator/Background_RingHNT.jpeg');
-                        if (bgImg) ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-
-                        // 3. Desenhar Camadas do Produto
-                        const layers = Array.from(document.querySelectorAll('.product-layer img, .layer img'));
-                        for (const imgEl of layers) {
-                            const img = await loadImage(imgEl.src);
-                            if (img) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        }
-
-                        // 4. Desenhar Customizações (Logos/Fotos)
-                        const customImgs = Array.from(document.querySelectorAll('.customization-layer .custom-element-img'));
-                        for (const imgEl of customImgs) {
-                            const img = await loadImage(imgEl.src);
-                            if (img) {
-                                const rect = imgEl.getBoundingClientRect();
-                                const containerRect = (document.querySelector('.zoom-container') || document.querySelector('.simulator-area')).getBoundingClientRect();
-
-                                // Calcular proporções
-                                const scale = canvas.width / containerRect.width;
-                                const x = (rect.left - containerRect.left) * scale;
-                                const y = (rect.top - containerRect.top) * scale;
-                                const w = rect.width * scale;
-                                const h = rect.height * scale;
-
-                                ctx.drawImage(img, x, y, w, h);
-                            }
-                        }
-
-                        // 5. Desenhar Textos
-                        const customTexts = Array.from(document.querySelectorAll('.customization-layer .custom-text'));
-                        for (const txtEl of customTexts) {
-                            const rect = txtEl.getBoundingClientRect();
-                            const containerRect = (document.querySelector('.zoom-container') || document.querySelector('.simulator-area')).getBoundingClientRect();
-                            const scale = canvas.width / containerRect.width;
-                            const style = window.getComputedStyle(txtEl);
-
-                            ctx.font = `${style.fontWeight} ${parseFloat(style.fontSize) * scale}px ${style.fontFamily}`;
-                            ctx.fillStyle = style.color;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-
-                            const x = (rect.left - containerRect.left + rect.width / 2) * scale;
-                            const y = (rect.top - containerRect.top + rect.height / 2) * scale;
-
-                            ctx.fillText(txtEl.innerText, x, y);
-                        }
-
-                        resolve(canvas.toDataURL('image/jpeg', 0.9));
-                    });
-                },
-
-    async updateSnapshot(force = false) {
-                    if (this.isCaptureBroken) return;
-                    if (this.captureInProgress) return;
-
-                    this.captureInProgress = true;
-                    try {
-                        console.log('☢️ Ativando Renderização Direta (Nuclear Fix)...');
-                        const snapshot = await this.drawManualSnapshot();
-
-                        if (snapshot && snapshot.length > 1000) {
-                            this.cachedSnapshot = snapshot;
-                            console.log(`✅ Snapshot Nuclear gerado: ${Math.round(snapshot.length / 1024)} KB`);
-                        } else {
-                            console.error('❌ Falha na geração do Snapshot Nuclear.');
-                        }
-                    } catch (e) {
-                        console.error('❌ Erro no motor Nuclear:', e);
-                    } finally {
-                        this.captureInProgress = false;
-                    }
-                },
-
-                canvas.width = 0;
-                canvas.height = 0;
-
-            } catch (error) {
-                console.warn('html2canvas falhou via updateSnapshot. Tentando dom-to-image como fallback...', error);
-
-                try {
-                    // Tentativa secundária com dom-to-image
-                    if (typeof domtoimage !== 'undefined') {
-                        const dataUrl = await domtoimage.toPng(document.querySelector('.simulator-wrapper'), {
-                            quality: 1.0,
-                            bgcolor: 'transparent',
-                            style: { transform: 'scale(1)', transformOrigin: 'top left' }
-                        });
-
-                        if (dataUrl && dataUrl.length > 100) {
-                            this.cachedSnapshot = dataUrl;
-                            this.captureInProgress = false;
-                            console.log('✅ Snapshot recuperado via dom-to-image!');
-                            return;
-                        }
-                    }
-                } catch (err2) {
-                    console.warn('dom-to-image também falhou:', err2);
-                }
-
-                console.warn('Erro fatal ao atualizar snapshot (Security Error?):', error);
-                // Se falhar (ex: Tainted Canvas), anula o cache para forçar o fallback DOM
-                this.cachedSnapshot = null;
-
-                // ATIVAR CIRCUIT BREAKER:
-                // Se houve erro (provavelmente CORS/Tainted), desabilita tentativas futuras para não travar o navegador.
-                this.isCaptureBroken = true;
-                console.log('⚠️ Captura de imagem desabilitada por segurança. O PDF será gerado sem a imagem visual.');
-            } finally {
-                this.captureInProgress = false;
+            if (snapshot && snapshot.length > 1000) {
+                this.cachedSnapshot = snapshot;
+                console.log(`✅ Snapshot Nuclear gerado: ${Math.round(snapshot.length / 1024)} KB`);
+                this.isCaptureBroken = false;
+            } else {
+                console.error('❌ Falha na geração do Snapshot Nuclear.');
             }
-        },
+        } catch (e) {
+            console.error('❌ Erro no motor Nuclear:', e);
+            this.isCaptureBroken = true;
+        } finally {
+            this.captureInProgress = false;
+        }
+    },
 
-        /**
-         * Efeito visual de "Flash" na tela (Premium UX)
-         */
-        showCaptureFlash() {
-            const flash = document.createElement('div');
-            flash.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:100000; pointer-events:none; opacity:1; transition: opacity 0.4s ease-out;';
-            document.body.appendChild(flash);
-            requestAnimationFrame(() => {
-                flash.style.opacity = '0';
-                setTimeout(() => flash.remove(), 400);
-            });
-        },
+    showCaptureFlash() {
+        const flash = document.createElement('div');
+        flash.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:100000; pointer-events:none; opacity:1; transition: opacity 0.4s ease-out;';
+        document.body.appendChild(flash);
+        requestAnimationFrame(() => {
+            flash.style.opacity = '0';
+            setTimeout(() => flash.remove(), 400);
+        });
+    },
 
-        /**
-         * Fallback Robusto: Clona o DOM do simulador quando html2canvas falha
-         * (Comum em localhost ou com imagens sem CORS)
-         */
-        getVisualFallback() {
-            const originalWrapper = document.querySelector('.simulator-wrapper');
-            if (!originalWrapper) return '<div style="text-align:center;">[Visual Indisponível]</div>';
-
-            // Clonar o wrapper completo
-            const clone = originalWrapper.cloneNode(true);
-
-            // Limpar elementos de UI (controles, limites, etc)
-            clone.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle, .limit-layer').forEach(el => el.remove());
-
-            // Forçar estilos para impressão
-            clone.style.transform = 'scale(0.8)'; // Reduzir um pouco para caber
-            clone.style.transformOrigin = 'top center';
-            clone.style.left = '0';
-            clone.style.top = '0';
-            clone.style.margin = '0 auto';
-            clone.style.position = 'relative';
-            clone.style.boxShadow = 'none';
-            clone.style.border = 'none';
-
-            // Converter para string HTML (wrapper temporário para extrair innerHTML)
-            const wrapper = document.createElement('div');
-            wrapper.style.width = '100%';
-            wrapper.style.height = '500px'; // Altura fixa segura
-            wrapper.style.overflow = 'hidden';
-            wrapper.style.display = 'flex';
-            wrapper.style.justifyContent = 'center';
-            wrapper.style.alignItems = 'flex-start';
-
-            wrapper.appendChild(clone);
-            return wrapper.outerHTML;
-        },
+    getVisualFallback() {
+        const originalWrapper = document.querySelector('.simulator-wrapper');
+        if (!originalWrapper) return '<div style="text-align:center;">[Visual Indisponível]</div>';
+        const clone = originalWrapper.cloneNode(true);
+        clone.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle, .limit-layer').forEach(el => el.remove());
+        clone.style.transform = 'scale(0.8)';
+        clone.style.transformOrigin = 'top center';
+        clone.style.position = 'relative';
+        const wrapper = document.createElement('div');
+        wrapper.style.width = '100%';
+        wrapper.style.height = '500px';
+        wrapper.style.overflow = 'hidden';
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'center';
+        wrapper.style.alignItems = 'flex-start';
+        wrapper.appendChild(clone);
+        return wrapper.outerHTML;
+    },
 
     async openPreview() {
-            // 1. Mostrar Overlay de Carregamento (Bloqueante) com BARRA DE PROGRESSO
-            const loadingOverlay = document.createElement('div');
-            loadingOverlay.id = 'pdf-loading-overlay';
-            loadingOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:sans-serif; transition: opacity 0.3s ease;';
+        // 1. Mostrar Overlay de Carregamento (Bloqueante) com BARRA DE PROGRESSO
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'pdf-loading-overlay';
+        loadingOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:sans-serif; transition: opacity 0.3s ease;';
 
-            loadingOverlay.innerHTML = `
+        loadingOverlay.innerHTML = `
             <div style="font-size:3rem; margin-bottom:20px;">📸</div>
             <h2 style="margin:0 0 10px 0; font-weight:300;">Gerando Visualização...</h2>
             
@@ -272,613 +178,613 @@ const PDFGenerator = {
             </div>
             <div id="pdf-progress-text" style="margin-top:10px; font-size:0.8rem; color:#888;">0%</div>
         `;
-            document.body.appendChild(loadingOverlay);
+        document.body.appendChild(loadingOverlay);
 
-            // Helper para delay
-            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+        // Helper para delay
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-            // PROTEÇÃO FINAL: Timeout absoluto de 15 segundos para remover overlay
-            const emergencyTimeout = setTimeout(() => {
-                console.error('🚨 TIMEOUT EMERGENCIAL: Removendo overlay após 15 segundos');
-                if (loadingOverlay && loadingOverlay.parentNode) {
-                    loadingOverlay.style.opacity = '0';
-                    setTimeout(() => loadingOverlay.remove(), 300);
+        // PROTEÇÃO FINAL: Timeout absoluto de 15 segundos para remover overlay
+        const emergencyTimeout = setTimeout(() => {
+            console.error('🚨 TIMEOUT EMERGENCIAL: Removendo overlay após 15 segundos');
+            if (loadingOverlay && loadingOverlay.parentNode) {
+                loadingOverlay.style.opacity = '0';
+                setTimeout(() => loadingOverlay.remove(), 300);
+            }
+        }, 15000);
+
+        try {
+            // SEQUÊNCIA DE PROGRESSO INTELIGENTE (Smart Wait - OTIMIZADA)
+            const bar = document.getElementById('pdf-progress-bar');
+            const txt = document.getElementById('pdf-progress-text');
+
+            // 1. Início e Forçar Renderização
+            if (bar) bar.style.width = '10%';
+            if (txt) txt.innerText = '10% - Processando...';
+
+            // Forçar atualização visual
+            if (typeof window.updateVisuals === 'function') window.updateVisuals();
+
+            // CRITICAL: Limpar cache antigo para garantir nova captura
+            this.cachedSnapshot = null;
+
+            await sleep(100); // Buffer Mínimo
+
+            // 2. Loop de Verificação de Imagens (Smart Wait OTIMIZADO com TIMEOUT)
+            if (bar) bar.style.width = '30%';
+            if (txt) txt.innerText = '30% - Sincronizando Assets...';
+
+            let retries = 0;
+            const maxRetries = 40; // 4 segundos máximo
+            let allImagesLoaded = false;
+            const startTime = Date.now();
+            const maxWaitTime = 5000; // 5 segundos de timeout absoluto
+
+            while (retries < maxRetries && !allImagesLoaded) {
+                // TIMEOUT DE SEGURANÇA: Se passar de 5 segundos, sai do loop
+                if (Date.now() - startTime > maxWaitTime) {
+                    console.warn('⚠️ Timeout atingido ao aguardar imagens. Prosseguindo...');
+                    break;
                 }
-            }, 15000);
 
+                const images = document.querySelectorAll('.simulator-wrapper img');
+                const total = images.length;
+                let loaded = 0;
+                let failed = 0;
+
+                images.forEach(img => {
+                    if (img.complete && img.naturalWidth > 0 && img.src) {
+                        loaded++;
+                    } else if (img.complete && img.naturalWidth === 0) {
+                        // Imagem falhou ao carregar
+                        failed++;
+                        console.warn('⚠️ Imagem falhou:', img.src);
+                    }
+                });
+
+                console.log(`📊 Imagens: ${loaded}/${total} carregadas, ${failed} falharam`);
+
+                if (total === 0 || loaded >= total || (loaded + failed) >= total) {
+                    allImagesLoaded = true;
+                } else {
+                    const percent = 30 + Math.floor((loaded / total) * 40);
+                    if (bar) bar.style.width = `${percent}%`;
+                    await sleep(100); // Check mais frequente (100ms)
+                    retries++;
+                }
+            }
+
+            if (!allImagesLoaded) {
+                console.warn('⚠️ Nem todas as imagens carregaram, mas prosseguindo...');
+            }
+
+            // 3. Estabilização Final
+            if (bar) bar.style.width = '80%';
+            if (txt) txt.innerText = '80% - Finalizando...';
+
+            // Força repaint
+            document.body.offsetHeight;
+            await sleep(100); // Buffer Mínimo Final
+
+            // 4. Captura
+            if (bar) bar.style.width = '90%';
+            if (txt) txt.innerText = '90% - Capturando...';
+
+            // O updateSnapshot agora espera se houver captura de fundo rodando
+            await this.updateSnapshot(true);
+
+            // 100% (Finalização)
+            if (bar) bar.style.width = '100%';
+            if (txt) txt.innerText = '100% - Pronto!';
+            await sleep(100);
+
+        } catch (e) {
+            console.error("Erro na captura forçada:", e);
+            alert("Erro ao gerar imagem: " + e.message);
+        } finally {
+            // Cancelar timeout de emergência
+            clearTimeout(emergencyTimeout);
+
+            // 3. Remover Overlay com Fade Out
             try {
-                // SEQUÊNCIA DE PROGRESSO INTELIGENTE (Smart Wait - OTIMIZADA)
-                const bar = document.getElementById('pdf-progress-bar');
-                const txt = document.getElementById('pdf-progress-text');
-
-                // 1. Início e Forçar Renderização
-                if (bar) bar.style.width = '10%';
-                if (txt) txt.innerText = '10% - Processando...';
-
-                // Forçar atualização visual
-                if (typeof window.updateVisuals === 'function') window.updateVisuals();
-
-                // CRITICAL: Limpar cache antigo para garantir nova captura
-                this.cachedSnapshot = null;
-
-                await sleep(100); // Buffer Mínimo
-
-                // 2. Loop de Verificação de Imagens (Smart Wait OTIMIZADO com TIMEOUT)
-                if (bar) bar.style.width = '30%';
-                if (txt) txt.innerText = '30% - Sincronizando Assets...';
-
-                let retries = 0;
-                const maxRetries = 40; // 4 segundos máximo
-                let allImagesLoaded = false;
-                const startTime = Date.now();
-                const maxWaitTime = 5000; // 5 segundos de timeout absoluto
-
-                while (retries < maxRetries && !allImagesLoaded) {
-                    // TIMEOUT DE SEGURANÇA: Se passar de 5 segundos, sai do loop
-                    if (Date.now() - startTime > maxWaitTime) {
-                        console.warn('⚠️ Timeout atingido ao aguardar imagens. Prosseguindo...');
-                        break;
-                    }
-
-                    const images = document.querySelectorAll('.simulator-wrapper img');
-                    const total = images.length;
-                    let loaded = 0;
-                    let failed = 0;
-
-                    images.forEach(img => {
-                        if (img.complete && img.naturalWidth > 0 && img.src) {
-                            loaded++;
-                        } else if (img.complete && img.naturalWidth === 0) {
-                            // Imagem falhou ao carregar
-                            failed++;
-                            console.warn('⚠️ Imagem falhou:', img.src);
-                        }
-                    });
-
-                    console.log(`📊 Imagens: ${loaded}/${total} carregadas, ${failed} falharam`);
-
-                    if (total === 0 || loaded >= total || (loaded + failed) >= total) {
-                        allImagesLoaded = true;
-                    } else {
-                        const percent = 30 + Math.floor((loaded / total) * 40);
-                        if (bar) bar.style.width = `${percent}%`;
-                        await sleep(100); // Check mais frequente (100ms)
-                        retries++;
-                    }
+                loadingOverlay.style.opacity = '0';
+                await sleep(300);
+                if (loadingOverlay && loadingOverlay.parentNode) {
+                    loadingOverlay.remove();
                 }
-
-                if (!allImagesLoaded) {
-                    console.warn('⚠️ Nem todas as imagens carregaram, mas prosseguindo...');
-                }
-
-                // 3. Estabilização Final
-                if (bar) bar.style.width = '80%';
-                if (txt) txt.innerText = '80% - Finalizando...';
-
-                // Força repaint
-                document.body.offsetHeight;
-                await sleep(100); // Buffer Mínimo Final
-
-                // 4. Captura
-                if (bar) bar.style.width = '90%';
-                if (txt) txt.innerText = '90% - Capturando...';
-
-                // O updateSnapshot agora espera se houver captura de fundo rodando
-                await this.updateSnapshot(true);
-
-                // 100% (Finalização)
-                if (bar) bar.style.width = '100%';
-                if (txt) txt.innerText = '100% - Pronto!';
-                await sleep(100);
-
-            } catch (e) {
-                console.error("Erro na captura forçada:", e);
-                alert("Erro ao gerar imagem: " + e.message);
-            } finally {
-                // Cancelar timeout de emergência
-                clearTimeout(emergencyTimeout);
-
-                // 3. Remover Overlay com Fade Out
-                try {
-                    loadingOverlay.style.opacity = '0';
-                    await sleep(300);
-                    if (loadingOverlay && loadingOverlay.parentNode) {
-                        loadingOverlay.remove();
-                    }
-                } catch (err) {
-                    console.error('Erro ao remover overlay:', err);
-                    // Forçar remoção direta
-                    if (loadingOverlay && loadingOverlay.parentNode) {
-                        loadingOverlay.parentNode.removeChild(loadingOverlay);
-                    }
+            } catch (err) {
+                console.error('Erro ao remover overlay:', err);
+                // Forçar remoção direta
+                if (loadingOverlay && loadingOverlay.parentNode) {
+                    loadingOverlay.parentNode.removeChild(loadingOverlay);
                 }
             }
+        }
 
-            const modal = document.getElementById('summary-modal');
-            if (!modal) return;
+        const modal = document.getElementById('summary-modal');
+        if (!modal) return;
 
-            // Sincronizar dados da tabela (Instantâneo)
-            const source = document.getElementById('summary-body');
-            const target = document.getElementById('summary-body-modal');
-            if (source && target) target.innerHTML = source.innerHTML;
+        // Sincronizar dados da tabela (Instantâneo)
+        const source = document.getElementById('summary-body');
+        const target = document.getElementById('summary-body-modal');
+        if (source && target) target.innerHTML = source.innerHTML;
 
-            const titleEl = document.querySelector('#summary-modal .modal-header h3');
-            if (titleEl && this.context.state?.simulationId) {
-                titleEl.innerText = `RESUMO DO PEDIDO (#${this.context.state.simulationId})`;
-            }
+        const titleEl = document.querySelector('#summary-modal .modal-header h3');
+        if (titleEl && this.context.state?.simulationId) {
+            titleEl.innerText = `RESUMO DO PEDIDO (#${this.context.state.simulationId})`;
+        }
 
-            // Resetar estado do botão para "Iniciando..."
-            this.updateModalButton('generating');
+        // Resetar estado do botão para "Iniciando..."
+        this.updateModalButton('generating');
 
-            // Renderizar prévia INSTANTÂNEA usando cache (agora atualizado)
-            this.renderPreviewInModal();
+        // Renderizar prévia INSTANTÂNEA usando cache (agora atualizado)
+        this.renderPreviewInModal();
 
-            modal.style.display = 'flex';
+        modal.style.display = 'flex';
 
-            // --- NOVO: GERAR PDF EM BACKGROUND E SALVAR ---
-            // Agora que o usuário está vendo o resumo, geramos o PDF real e salvamos no servidor.
-            this.generateBackgroundPDF();
-        },
+        // --- NOVO: GERAR PDF EM BACKGROUND E SALVAR ---
+        // Agora que o usuário está vendo o resumo, geramos o PDF real e salvamos no servidor.
+        this.generateBackgroundPDF();
+    },
 
-        /**
-         * Atualiza o botão do modal com estados de carregamento e progresso (PROGRES BAR v15)
-         */
-        updateModalButton(state, url = '#') {
-            const btn = document.querySelector('#summary-modal .btn-action');
-            const progressContainer = document.querySelector('#pdf-progress-container');
-            const progressBar = document.querySelector('#pdf-progress-bar');
+    /**
+     * Atualiza o botão do modal com estados de carregamento e progresso (PROGRES BAR v15)
+     */
+    updateModalButton(state, url = '#') {
+        const btn = document.querySelector('#summary-modal .btn-action');
+        const progressContainer = document.querySelector('#pdf-progress-container');
+        const progressBar = document.querySelector('#pdf-progress-bar');
 
-            if (!btn) return;
+        if (!btn) return;
 
-            // Reset progress bar visibility
-            if (progressContainer) progressContainer.style.display = 'none';
+        // Reset progress bar visibility
+        if (progressContainer) progressContainer.style.display = 'none';
 
-            switch (state) {
-                case 'loading':
-                    btn.disabled = true;
-                    btn.innerHTML = '<span>🔄</span> Sincronizando Design...';
-                    btn.style.opacity = '0.7';
-                    if (progressContainer) {
-                        progressContainer.style.display = 'block';
-                        if (progressBar) progressBar.style.width = '30%';
-                    }
-                    break;
-                case 'capturing':
-                    btn.innerHTML = '<span>📸</span> Capturando Imagem...';
-                    if (progressBar) progressBar.style.width = '60%';
-                    break;
-                case 'saving':
-                    btn.innerHTML = '<span>☁️</span> Salvando na Nuvem...';
-                    if (progressBar) progressBar.style.width = '85%';
-                    break;
-                case 'ready':
-                    btn.disabled = false;
-                    btn.innerHTML = '<span>✅</span> PDF PRONTO - ABRIR AGORA';
-                    btn.style.background = '#28a745';
-                    btn.style.opacity = '1';
-                    if (progressBar) progressBar.style.width = '100%';
-                    if (url && url !== '#') {
-                        btn.onclick = () => window.open(url, '_blank');
-                    }
-                    // Esconder barra após 1.5s
-                    setTimeout(() => { if (progressContainer) progressContainer.style.display = 'none'; }, 1500);
-                    break;
-                case 'error':
-                    btn.disabled = false;
-                    btn.innerHTML = '<span>❌</span> Erro ao gerar PDF';
-                    btn.style.background = '#dc3545';
-                    if (progressContainer) progressContainer.style.display = 'none';
-                    break;
-            }
-        },
-
-        renderPreviewInModal() {
-            let preview = document.getElementById('print-product-preview');
-            if (!preview) {
-                const modalBody = document.querySelector('#summary-modal .modal-content div[style*="padding: 20px"]');
-                preview = document.createElement('div');
-                preview.id = 'print-product-preview';
-                preview.style.textAlign = 'center';
-                preview.style.marginBottom = '20px';
-                if (modalBody) modalBody.insertBefore(preview, modalBody.firstChild);
-            }
-
-            // Usar snapshot em cache para preview INSTANTÂNEO
-            if (this.cachedSnapshot) {
-                preview.innerHTML = `<img src="${this.cachedSnapshot}" style="max-width: 100%; height: auto; border: 1px solid #333; border-radius: 4px;">`;
-            } else {
-                // Fallback: clone DOM (mais lento, mas funcional)
-                const originalWrapper = document.querySelector('.simulator-wrapper');
-                if (originalWrapper) {
-                    const clone = originalWrapper.cloneNode(true);
-                    clone.style.transform = 'none';
-                    clone.style.left = '0';
-                    clone.style.top = '0';
-                    clone.style.width = '100%';
-                    clone.style.height = '100%';
-                    clone.style.position = 'relative';
-                    clone.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle').forEach(el => el.remove());
-                    preview.innerHTML = '';
-                    preview.appendChild(clone);
+        switch (state) {
+            case 'loading':
+                btn.disabled = true;
+                btn.innerHTML = '<span>🔄</span> Sincronizando Design...';
+                btn.style.opacity = '0.7';
+                if (progressContainer) {
+                    progressContainer.style.display = 'block';
+                    if (progressBar) progressBar.style.width = '30%';
                 }
+                break;
+            case 'capturing':
+                btn.innerHTML = '<span>📸</span> Capturando Imagem...';
+                if (progressBar) progressBar.style.width = '60%';
+                break;
+            case 'saving':
+                btn.innerHTML = '<span>☁️</span> Salvando na Nuvem...';
+                if (progressBar) progressBar.style.width = '85%';
+                break;
+            case 'ready':
+                btn.disabled = false;
+                btn.innerHTML = '<span>✅</span> PDF PRONTO - ABRIR AGORA';
+                btn.style.background = '#28a745';
+                btn.style.opacity = '1';
+                if (progressBar) progressBar.style.width = '100%';
+                if (url && url !== '#') {
+                    btn.onclick = () => window.open(url, '_blank');
+                }
+                // Esconder barra após 1.5s
+                setTimeout(() => { if (progressContainer) progressContainer.style.display = 'none'; }, 1500);
+                break;
+            case 'error':
+                btn.disabled = false;
+                btn.innerHTML = '<span>❌</span> Erro ao gerar PDF';
+                btn.style.background = '#dc3545';
+                if (progressContainer) progressContainer.style.display = 'none';
+                break;
+        }
+    },
+
+    renderPreviewInModal() {
+        let preview = document.getElementById('print-product-preview');
+        if (!preview) {
+            const modalBody = document.querySelector('#summary-modal .modal-content div[style*="padding: 20px"]');
+            preview = document.createElement('div');
+            preview.id = 'print-product-preview';
+            preview.style.textAlign = 'center';
+            preview.style.marginBottom = '20px';
+            if (modalBody) modalBody.insertBefore(preview, modalBody.firstChild);
+        }
+
+        // Usar snapshot em cache para preview INSTANTÂNEO
+        if (this.cachedSnapshot) {
+            preview.innerHTML = `<img src="${this.cachedSnapshot}" style="max-width: 100%; height: auto; border: 1px solid #333; border-radius: 4px;">`;
+        } else {
+            // Fallback: clone DOM (mais lento, mas funcional)
+            const originalWrapper = document.querySelector('.simulator-wrapper');
+            if (originalWrapper) {
+                const clone = originalWrapper.cloneNode(true);
+                clone.style.transform = 'none';
+                clone.style.left = '0';
+                clone.style.top = '0';
+                clone.style.width = '100%';
+                clone.style.height = '100%';
+                clone.style.position = 'relative';
+                clone.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle').forEach(el => el.remove());
+                preview.innerHTML = '';
+                preview.appendChild(clone);
             }
-        },
+        }
+    },
 
     /**
      * Geração de PDF (v12) e Backup Automático Local
      */
     async generate(title) {
-            // Função legado para imprimir direto (caso chamado manualmente)
-            window.print();
-        },
+        // Função legado para imprimir direto (caso chamado manualmente)
+        window.print();
+    },
 
     /**
      * Envia o snapshot (ou PDF) para o servidor local
      */
     async saveToLocalFolder(id, data = null, type = 'image') {
-            // Se dados não fornecidos, usa o snapshot cached (comportamento antigo/fallback)
-            const payload = data || this.cachedSnapshot;
-            if (!payload) return null;
+        // Se dados não fornecidos, usa o snapshot cached (comportamento antigo/fallback)
+        const payload = data || this.cachedSnapshot;
+        if (!payload) return null;
 
-            try {
-                // Tenta enviar para o servidor local (server.js)
-                const response = await fetch('/api/save-pedido', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: id,
-                        snapshot: payload, // Pode ser base64 jpg ou pdf
-                        type: type, // NEW: informa o tipo explicitamente
-                        timestamp: new Date().toISOString()
-                    })
-                });
+        try {
+            // Tenta enviar para o servidor local (server.js)
+            const response = await fetch('/api/save-pedido', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: id,
+                    snapshot: payload, // Pode ser base64 jpg ou pdf
+                    type: type, // NEW: informa o tipo explicitamente
+                    timestamp: new Date().toISOString()
+                })
+            });
 
-                if (response.ok) {
-                    const json = await response.json();
-                    console.log(`✅ Arquivo ${id} salvo automaticamente.`);
-                    return json.path; // Retorna o caminho salvo (ou URL se o server suportar)
-                }
-            } catch (err) {
-                console.warn('Simulador offline ou erro de rede. Arquivo não salvo localmente.');
+            if (response.ok) {
+                const json = await response.json();
+                console.log(`✅ Arquivo ${id} salvo automaticamente.`);
+                return json.path; // Retorna o caminho salvo (ou URL se o server suportar)
             }
-            return null;
-        },
+        } catch (err) {
+            console.warn('Simulador offline ou erro de rede. Arquivo não salvo localmente.');
+        }
+        return null;
+    },
 
     /**
      * Carrega dependências (jsPDF, QRCode) dinamicamente se não existirem
      */
     async loadDependencies() {
-            const loadScript = (src, globalCheck) => {
-                return new Promise((resolve, reject) => {
-                    if (window[globalCheck]) return resolve();
-                    const script = document.createElement('script');
-                    script.src = src;
-                    script.onload = resolve;
-                    script.onerror = reject;
-                    document.head.appendChild(script);
-                });
-            };
+        const loadScript = (src, globalCheck) => {
+            return new Promise((resolve, reject) => {
+                if (window[globalCheck]) return resolve();
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        };
 
-            try {
-                await Promise.all([
-                    loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js', 'jspdf'),
-                    loadScript('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js', 'QRCode')
-                ]);
-                return true;
-            } catch (e) {
-                console.error('Erro ao carregar libs de PDF/QR:', e);
-                return false;
-            }
-        },
+        try {
+            await Promise.all([
+                loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js', 'jspdf'),
+                loadScript('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js', 'QRCode')
+            ]);
+            return true;
+        } catch (e) {
+            console.error('Erro ao carregar libs de PDF/QR:', e);
+            return false;
+        }
+    },
 
     /**
      * Gera um PDF real em background usando jsPDF (EXPERT v15)
      */
     async generateBackgroundPDF() {
-            if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
-                const loaded = await this.loadDependencies();
-                if (!loaded) {
-                    alert('Erro: Bibliotecas de PDF não carregaram.');
-                    this.updateModalButton('error');
-                    return;
-                }
+        if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
+            const loaded = await this.loadDependencies();
+            if (!loaded) {
+                alert('Erro: Bibliotecas de PDF não carregaram.');
+                this.updateModalButton('error');
+                return;
             }
+        }
 
-            // Helper para gerar QR Codes assincronamente
-            const generateQR = async (text) => {
-                return new Promise((resolve) => {
+        // Helper para gerar QR Codes assincronamente
+        const generateQR = async (text) => {
+            return new Promise((resolve) => {
+                try {
+                    const qrDiv = document.createElement('div');
+                    qrDiv.style.position = 'absolute';
+                    qrDiv.style.left = '-9999px';
+                    qrDiv.style.top = '-9999px';
+                    document.body.appendChild(qrDiv);
+
+                    new QRCode(qrDiv, {
+                        text: text,
+                        width: 256,
+                        height: 256,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    setTimeout(() => {
+                        const canvas = qrDiv.querySelector('canvas');
+                        const img = qrDiv.querySelector('img');
+                        const data = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
+                        document.body.removeChild(qrDiv);
+                        resolve(data);
+                    }, 600);
+                } catch (e) {
+                    console.error("Erro interno QR:", e);
+                    resolve(null);
+                }
+            });
+        };
+
+        const id = this.context.state?.simulationId || 'HNT_PEDIDO';
+
+        try {
+            // 1. FORÇAR ATUALIZAÇÃO (Feedback Visual)
+            this.updateModalButton('loading');
+            console.log('🔄 Sincronizando canvas e resumo...');
+            await this.updateSnapshot(true); // Força novo snapshot
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 20;
+
+            // --- TEMPLATE INSTITUCIONAL (HNT Expert v15) ---
+            const drawExpertTemplate = (docArg) => {
+                const width = docArg.internal.pageSize.getWidth();
+                const height = docArg.internal.pageSize.getHeight();
+
+                // 1. Degradê de Fundo Premium
+                for (let i = 0; i < height; i++) {
+                    const grey = 248 - Math.floor((i / height) * 8);
+                    docArg.setFillColor(grey, grey, grey);
+                    docArg.rect(0, i, width, 1, 'F');
+                }
+
+                // 2. Marca D'água HNT
+                const logoImg = document.querySelector('.header-logo-img') || document.querySelector('img[src*="logo"]');
+                if (logoImg) {
                     try {
-                        const qrDiv = document.createElement('div');
-                        qrDiv.style.position = 'absolute';
-                        qrDiv.style.left = '-9999px';
-                        qrDiv.style.top = '-9999px';
-                        document.body.appendChild(qrDiv);
+                        docArg.saveGraphicsState();
+                        docArg.setGState(new docArg.GState({ opacity: 0.03 }));
+                        const ratio = logoImg.naturalHeight / logoImg.naturalWidth;
+                        const wmWidth = width * 0.75;
+                        const wmHeight = wmWidth * ratio;
+                        docArg.addImage(logoImg, 'PNG', (width - wmWidth) / 2, (height - wmHeight) / 2, wmWidth, wmHeight);
+                        docArg.restoreGraphicsState();
+                    } catch (e) { }
+                }
 
-                        new QRCode(qrDiv, {
-                            text: text,
-                            width: 256,
-                            height: 256,
-                            colorDark: "#000000",
-                            colorLight: "#ffffff",
-                            correctLevel: QRCode.CorrectLevel.H
-                        });
+                // 3. Moldura HNT (Dourada)
+                docArg.setDrawColor(212, 175, 55);
+                docArg.setLineWidth(0.5);
+                docArg.rect(margin - 2, margin - 2, width - (margin * 2) + 4, height - (margin * 2) + 4, 'S');
 
-                        setTimeout(() => {
-                            const canvas = qrDiv.querySelector('canvas');
-                            const img = qrDiv.querySelector('img');
-                            const data = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
-                            document.body.removeChild(qrDiv);
-                            resolve(data);
-                        }, 600);
-                    } catch (e) {
-                        console.error("Erro interno QR:", e);
-                        resolve(null);
-                    }
-                });
+                // 4. Cabeçalho HNT
+                docArg.setFont('helvetica', 'bold');
+                docArg.setFontSize(24);
+                docArg.setTextColor(30, 30, 30);
+                docArg.text('HANUTHAI', margin, margin + 12);
+                docArg.setFontSize(9);
+                docArg.setFont('helvetica', 'normal');
+                docArg.setTextColor(120, 120, 120);
+                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT MODE', margin, margin + 18);
+
+                // 5. Metadados do Pedido
+                docArg.setFont('helvetica', 'bold');
+                docArg.setFontSize(11);
+                docArg.setTextColor(0, 0, 0);
+                docArg.text(`PEDIDO: #${id}`, width - margin, margin + 10, { align: 'right' });
+                docArg.setFontSize(8);
+                docArg.setFont('helvetica', 'normal');
+                docArg.setTextColor(100, 100, 100);
+                docArg.text(`SIMULADOR ID: ${id}`, width - margin, margin + 15, { align: 'right' });
+
+                return margin + 25;
             };
 
-            const id = this.context.state?.simulationId || 'HNT_PEDIDO';
+            let currentY = drawExpertTemplate(doc);
 
-            try {
-                // 1. FORÇAR ATUALIZAÇÃO (Feedback Visual)
-                this.updateModalButton('loading');
-                console.log('🔄 Sincronizando canvas e resumo...');
-                await this.updateSnapshot(true); // Força novo snapshot
-
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const pageHeight = doc.internal.pageSize.getHeight();
-                const margin = 20;
-
-                // --- TEMPLATE INSTITUCIONAL (HNT Expert v15) ---
-                const drawExpertTemplate = (docArg) => {
-                    const width = docArg.internal.pageSize.getWidth();
-                    const height = docArg.internal.pageSize.getHeight();
-
-                    // 1. Degradê de Fundo Premium
-                    for (let i = 0; i < height; i++) {
-                        const grey = 248 - Math.floor((i / height) * 8);
-                        docArg.setFillColor(grey, grey, grey);
-                        docArg.rect(0, i, width, 1, 'F');
+            // 2. IMAGEM (MAIOR ÁREA POSSÍVEL)
+            if (this.cachedSnapshot && this.cachedSnapshot.length > 500) {
+                try {
+                    const imgProps = doc.getImageProperties(this.cachedSnapshot);
+                    const maxW = pageWidth - (margin * 2);
+                    const maxH = pageHeight * 0.45; // 45% da página para dar espaço ao texto
+                    let imgW = maxW;
+                    let imgH = (imgProps.height * imgW) / imgProps.width;
+                    if (imgH > maxH) {
+                        imgH = maxH;
+                        imgW = (imgProps.width * imgH) / imgProps.height;
                     }
-
-                    // 2. Marca D'água HNT
-                    const logoImg = document.querySelector('.header-logo-img') || document.querySelector('img[src*="logo"]');
-                    if (logoImg) {
-                        try {
-                            docArg.saveGraphicsState();
-                            docArg.setGState(new docArg.GState({ opacity: 0.03 }));
-                            const ratio = logoImg.naturalHeight / logoImg.naturalWidth;
-                            const wmWidth = width * 0.75;
-                            const wmHeight = wmWidth * ratio;
-                            docArg.addImage(logoImg, 'PNG', (width - wmWidth) / 2, (height - wmHeight) / 2, wmWidth, wmHeight);
-                            docArg.restoreGraphicsState();
-                        } catch (e) { }
-                    }
-
-                    // 3. Moldura HNT (Dourada)
-                    docArg.setDrawColor(212, 175, 55);
-                    docArg.setLineWidth(0.5);
-                    docArg.rect(margin - 2, margin - 2, width - (margin * 2) + 4, height - (margin * 2) + 4, 'S');
-
-                    // 4. Cabeçalho HNT
-                    docArg.setFont('helvetica', 'bold');
-                    docArg.setFontSize(24);
-                    docArg.setTextColor(30, 30, 30);
-                    docArg.text('HANUTHAI', margin, margin + 12);
-                    docArg.setFontSize(9);
-                    docArg.setFont('helvetica', 'normal');
-                    docArg.setTextColor(120, 120, 120);
-                    docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT MODE', margin, margin + 18);
-
-                    // 5. Metadados do Pedido
-                    docArg.setFont('helvetica', 'bold');
-                    docArg.setFontSize(11);
-                    docArg.setTextColor(0, 0, 0);
-                    docArg.text(`PEDIDO: #${id}`, width - margin, margin + 10, { align: 'right' });
-                    docArg.setFontSize(8);
-                    docArg.setFont('helvetica', 'normal');
-                    docArg.setTextColor(100, 100, 100);
-                    docArg.text(`SIMULADOR ID: ${id}`, width - margin, margin + 15, { align: 'right' });
-
-                    return margin + 25;
-                };
-
-                let currentY = drawExpertTemplate(doc);
-
-                // 2. IMAGEM (MAIOR ÁREA POSSÍVEL)
-                if (this.cachedSnapshot && this.cachedSnapshot.length > 500) {
-                    try {
-                        const imgProps = doc.getImageProperties(this.cachedSnapshot);
-                        const maxW = pageWidth - (margin * 2);
-                        const maxH = pageHeight * 0.45; // 45% da página para dar espaço ao texto
-                        let imgW = maxW;
-                        let imgH = (imgProps.height * imgW) / imgProps.width;
-                        if (imgH > maxH) {
-                            imgH = maxH;
-                            imgW = (imgProps.width * imgH) / imgProps.height;
-                        }
-                        doc.addImage(this.cachedSnapshot, 'JPEG', (pageWidth - imgW) / 2, currentY, imgW, imgH);
-                        currentY += imgH + 10;
-                    } catch (e) {
-                        console.warn("Falha ao adicionar imagem ao PDF:", e);
-                        currentY += 10;
-                    }
-                } else {
-                    console.warn("Snapshot ausente ou inválido no momento da geração.");
+                    doc.addImage(this.cachedSnapshot, 'JPEG', (pageWidth - imgW) / 2, currentY, imgW, imgH);
+                    currentY += imgH + 10;
+                } catch (e) {
+                    console.warn("Falha ao adicionar imagem ao PDF:", e);
                     currentY += 10;
                 }
+            } else {
+                console.warn("Snapshot ausente ou inválido no momento da geração.");
+                currentY += 10;
+            }
 
-                // 3. RESUMO HORIZONTAL OTIMIZADO
-                doc.setFontSize(14);
+            // 3. RESUMO HORIZONTAL OTIMIZADO
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(212, 175, 55);
+            doc.text('RESUMO TÉCNICO DO ORÇAMENTO', margin, currentY);
+            currentY += 8;
+
+            const clean = (s) => s ? s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$]/g, ' ').replace(/\s+/g, ' ').trim() : '';
+            const rows = Array.from(document.querySelectorAll('#summary-body tr')).filter(r => {
+                return r.innerText.trim() && !r.innerText.includes('Total:');
+            });
+
+            doc.setFontSize(10);
+            rows.forEach(row => {
+                const cols = Array.from(row.querySelectorAll('td'));
+                if (cols.length < 2) return;
+
+                let label = clean(cols[0].innerText || cols[0].textContent);
+                let value = clean(cols[1].innerText || cols[1].querySelector('input, textarea')?.value || cols[1].textContent);
+                let price = cols.length > 2 ? clean(cols[2]?.innerText || cols[2]?.textContent) : '';
+
+                if (!label && value) { label = value; value = ''; }
+                if (!label) return;
+                if (label === value) value = '';
+
+                if (currentY > pageHeight - 55) {
+                    doc.addPage();
+                    currentY = drawExpertTemplate(doc);
+                }
+
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(212, 175, 55);
-                doc.text('RESUMO TÉCNICO DO ORÇAMENTO', margin, currentY);
-                currentY += 8;
+                doc.setTextColor(60, 60, 60);
 
-                const clean = (s) => s ? s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$]/g, ' ').replace(/\s+/g, ' ').trim() : '';
-                const rows = Array.from(document.querySelectorAll('#summary-body tr')).filter(r => {
-                    return r.innerText.trim() && !r.innerText.includes('Total:');
-                });
+                // LÓGICA HORIZONTAL: Maximizar texto na linha
+                const fullText = `${label}${value ? ` (${value})` : ''}:`;
+                const priceWidth = price ? doc.getTextWidth(price) + 5 : 0;
+                const availableWidth = pageWidth - (margin * 2) - priceWidth;
 
-                doc.setFontSize(10);
-                rows.forEach(row => {
-                    const cols = Array.from(row.querySelectorAll('td'));
-                    if (cols.length < 2) return;
+                const lines = doc.splitTextToSize(fullText, availableWidth);
 
-                    let label = clean(cols[0].innerText || cols[0].textContent);
-                    let value = clean(cols[1].innerText || cols[1].querySelector('input, textarea')?.value || cols[1].textContent);
-                    let price = cols.length > 2 ? clean(cols[2]?.innerText || cols[2]?.textContent) : '';
-
-                    if (!label && value) { label = value; value = ''; }
-                    if (!label) return;
-                    if (label === value) value = '';
-
-                    if (currentY > pageHeight - 55) {
+                lines.forEach((line, index) => {
+                    if (currentY > pageHeight - 15) {
                         doc.addPage();
                         currentY = drawExpertTemplate(doc);
                     }
+                    doc.text(line, margin, currentY);
 
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(60, 60, 60);
+                    // Colocar o preço apenas na primeira linha do conjunto
+                    if (price && index === 0) {
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(price, pageWidth - margin, currentY, { align: 'right' });
+                        doc.setFont('helvetica', 'bold');
+                        doc.setTextColor(60, 60, 60);
+                    }
 
-                    // LÓGICA HORIZONTAL: Maximizar texto na linha
-                    const fullText = `${label}${value ? ` (${value})` : ''}:`;
-                    const priceWidth = price ? doc.getTextWidth(price) + 5 : 0;
-                    const availableWidth = pageWidth - (margin * 2) - priceWidth;
-
-                    const lines = doc.splitTextToSize(fullText, availableWidth);
-
-                    lines.forEach((line, index) => {
-                        if (currentY > pageHeight - 15) {
-                            doc.addPage();
-                            currentY = drawExpertTemplate(doc);
-                        }
-                        doc.text(line, margin, currentY);
-
-                        // Colocar o preço apenas na primeira linha do conjunto
-                        if (price && index === 0) {
-                            doc.setFont('helvetica', 'normal');
-                            doc.setTextColor(0, 0, 0);
-                            doc.text(price, pageWidth - margin, currentY, { align: 'right' });
-                            doc.setFont('helvetica', 'bold');
-                            doc.setTextColor(60, 60, 60);
-                        }
-
-                        if (index < lines.length - 1) currentY += 5;
-                    });
-
-                    currentY += 6.5;
+                    if (index < lines.length - 1) currentY += 5;
                 });
 
-                // 4. TOTAL EM DESTAQUE
-                currentY += 3;
-                doc.setDrawColor(212, 175, 55);
-                doc.line(margin, currentY, pageWidth - margin, currentY);
-                currentY += 8;
+                currentY += 6.5;
+            });
 
-                const totalDisplay = document.getElementById('price-display');
-                const totalText = clean(totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '') : 'R$ 0,00');
+            // 4. TOTAL EM DESTAQUE
+            currentY += 3;
+            doc.setDrawColor(212, 175, 55);
+            doc.line(margin, currentY, pageWidth - margin, currentY);
+            currentY += 8;
 
-                doc.setFontSize(16);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(0, 0, 0);
-                doc.text('INVESTIMENTO ESTIMADO:', margin, currentY);
-                doc.text(totalText, pageWidth - margin, currentY, { align: 'right' });
-                currentY += 12;
+            const totalDisplay = document.getElementById('price-display');
+            const totalText = clean(totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '') : 'R$ 0,00');
 
-                // 5. TERMOS
-                const terms = "⚠️ AVISO IMPORTANTE: Este documento é uma SIMULAÇÃO DIGITAL. O resultado físico pode apresentar pequenas variações. Artes passarão por análise técnica. Ao prosseguir, você concorda com os termos e confirma direitos sobre as artes enviadas.";
-                doc.setFontSize(7.5);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(140, 140, 140);
-                const termLines = doc.splitTextToSize(terms, pageWidth - (margin * 2));
-                doc.text(termLines, margin, currentY);
-                currentY += (termLines.length * 3.5) + 12;
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0, 0, 0);
+            doc.text('INVESTIMENTO ESTIMADO:', margin, currentY);
+            doc.text(totalText, pageWidth - margin, currentY, { align: 'right' });
+            currentY += 12;
 
-                try {
-                    // Posicionamento Centralizado e Espaçado
-                    const qrSize = (pageWidth - (margin * 4)) * 0.45;
-                    const qrGap = 20;
-                    const qrX1 = (pageWidth - (qrSize * 2 + qrGap)) / 2;
-                    const qrX2 = qrX1 + qrSize + qrGap;
-                    const qrYStart = currentY + 12;
+            // 5. TERMOS
+            const terms = "⚠️ AVISO IMPORTANTE: Este documento é uma SIMULAÇÃO DIGITAL. O resultado físico pode apresentar pequenas variações. Artes passarão por análise técnica. Ao prosseguir, você concorda com os termos e confirma direitos sobre as artes enviadas.";
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(140, 140, 140);
+            const termLines = doc.splitTextToSize(terms, pageWidth - (margin * 2));
+            doc.text(termLines, margin, currentY);
+            currentY += (termLines.length * 3.5) + 12;
 
-                    // QR 1: Apenas Pedido
-                    const q1 = await generateQR(id);
-                    if (q1) {
-                        doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(50, 50, 50);
-                        doc.text('CÓDIGO DO PEDIDO', qrX1 + (qrSize / 2), qrYStart - 4, { align: 'center' });
-                        doc.addImage(q1, 'PNG', qrX1, qrYStart, qrSize, qrSize);
-                        doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-                        doc.text(`${id}`, qrX1 + (qrSize / 2), qrYStart + qrSize + 5, { align: 'center' });
-                    }
+            try {
+                // Posicionamento Centralizado e Espaçado
+                const qrSize = (pageWidth - (margin * 4)) * 0.45;
+                const qrGap = 20;
+                const qrX1 = (pageWidth - (qrSize * 2 + qrGap)) / 2;
+                const qrX2 = qrX1 + qrSize + qrGap;
+                const qrYStart = currentY + 12;
 
-                    // QR 2: Pedido + Simulator ID
-                    const q2 = await generateQR(`PEDIDO:${id}|SIM:${id}`);
-                    if (q2) {
-                        doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-                        doc.text('CONFERÊNCIA TÉCNICA', qrX2 + (qrSize / 2), qrYStart - 4, { align: 'center' });
-                        doc.addImage(q2, 'PNG', qrX2, qrYStart, qrSize, qrSize);
-                        doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-                        doc.text(`REF: ${id}`, qrX2 + (qrSize / 2), qrYStart + qrSize + 5, { align: 'center' });
-                    }
-                } catch (e) {
-                    console.warn("QR Error", e);
+                // QR 1: Apenas Pedido
+                const q1 = await generateQR(id);
+                if (q1) {
+                    doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(50, 50, 50);
+                    doc.text('CÓDIGO DO PEDIDO', qrX1 + (qrSize / 2), qrYStart - 4, { align: 'center' });
+                    doc.addImage(q1, 'PNG', qrX1, qrYStart, qrSize, qrSize);
+                    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+                    doc.text(`${id}`, qrX1 + (qrSize / 2), qrYStart + qrSize + 5, { align: 'center' });
                 }
 
-                // SALVAR
-                const pdfBase64 = doc.output('datauristring').split(',').pop();
-                const fileName = `Pedido_${id}`;
-                this.updateModalButton('saving');
-
-                if (typeof SupabaseAdapter !== 'undefined') {
-                    const url = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
-                    if (url) {
-                        this.savedPdfUrl = url;
-                        this.updateModalButton('ready', url);
-                        return url;
-                    }
+                // QR 2: Pedido + Simulator ID
+                const q2 = await generateQR(`PEDIDO:${id}|SIM:${id}`);
+                if (q2) {
+                    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+                    doc.text('CONFERÊNCIA TÉCNICA', qrX2 + (qrSize / 2), qrYStart - 4, { align: 'center' });
+                    doc.addImage(q2, 'PNG', qrX2, qrYStart, qrSize, qrSize);
+                    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+                    doc.text(`REF: ${id}`, qrX2 + (qrSize / 2), qrYStart + qrSize + 5, { align: 'center' });
                 }
-
-                doc.save(`${fileName}.pdf`);
-                this.updateModalButton('ready', '#');
-
-            } catch (err) {
-                console.error('PDF Error:', err);
-                this.updateModalButton('error');
+            } catch (e) {
+                console.warn("QR Error", e);
             }
-        },
+
+            // SALVAR
+            const pdfBase64 = doc.output('datauristring').split(',').pop();
+            const fileName = `Pedido_${id}`;
+            this.updateModalButton('saving');
+
+            if (typeof SupabaseAdapter !== 'undefined') {
+                const url = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
+                if (url) {
+                    this.savedPdfUrl = url;
+                    this.updateModalButton('ready', url);
+                    return url;
+                }
+            }
+
+            doc.save(`${fileName}.pdf`);
+            this.updateModalButton('ready', '#');
+
+        } catch (err) {
+            console.error('PDF Error:', err);
+            this.updateModalButton('error');
+        }
+    },
 
     /**
      * Gera e salva PDF em segundo plano (para carrinho)
      */
     async generateAndSaveForCart(customId = null) {
-            return this.generateBackgroundPDF(); // Reutiliza motor expert unificado
-        }
-    };
-
-    // Hook automático para atualizar snapshot quando o simulador mudar
-    if(typeof window !== 'undefined') {
-        window.PDFGenerator = PDFGenerator;
-
-// Captura inicial após 3 segundos
-setTimeout(() => {
-    if (PDFGenerator.updateSnapshot) {
-        PDFGenerator.updateSnapshot();
+        return this.generateBackgroundPDF(); // Reutiliza motor expert unificado
     }
-}, 3000);
+};
 
-// Recapturar quando houver mudanças visuais (conectar com scheduleRender se disponível)
-if (typeof scheduleRender !== 'undefined') {
-    const originalScheduleRender = scheduleRender;
-    window.scheduleRender = function (...args) {
-        originalScheduleRender(...args);
-        // Agendar atualização do snapshot (debounced)
+// Hook automático para atualizar snapshot quando o simulador mudar
+if (typeof window !== 'undefined') {
+    window.PDFGenerator = PDFGenerator;
+
+    // Captura inicial após 3 segundos
+    setTimeout(() => {
         if (PDFGenerator.updateSnapshot) {
-            setTimeout(() => PDFGenerator.updateSnapshot(), 500);
+            PDFGenerator.updateSnapshot();
         }
-    };
-}
+    }, 3000);
+
+    // Recapturar quando houver mudanças visuais (conectar com scheduleRender se disponível)
+    if (typeof scheduleRender !== 'undefined') {
+        const originalScheduleRender = scheduleRender;
+        window.scheduleRender = function (...args) {
+            originalScheduleRender(...args);
+            // Agendar atualização do snapshot (debounced)
+            if (PDFGenerator.updateSnapshot) {
+                setTimeout(() => PDFGenerator.updateSnapshot(), 500);
+            }
+        };
+    }
 }
