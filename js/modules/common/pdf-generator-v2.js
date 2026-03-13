@@ -51,13 +51,9 @@ const PDFGenerator = {
                 });
                 document.body.appendChild(ghost);
 
-                // 2. Reset de Geometria no Clone (Invisível para o usuário)
-                const ghostZoomContainer = ghost.querySelector('#zoom-container');
-                if (ghostZoomContainer) {
-                    ghostZoomContainer.style.transform = 'none';
-                    ghostZoomContainer.style.left = '0';
-                    ghostZoomContainer.style.top = '0';
-                }
+                // 2. Sincronização de Geometria (Manter Zoom/Pan do Usuário)
+                // Removido reset para garantir que o PDF seja um print fiel do que o usuário vê.
+                // O ghost já herda o transform via cloneNode(true).
 
                 // 3. Blindagem Universal Base64 (Apenas no Clone)
                 const toBase64 = (url) => new Promise((res) => {
