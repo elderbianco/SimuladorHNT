@@ -79,6 +79,7 @@ function calculateFullPrice() {
     const baseGarmentPrice = (state.config && state.config.basePrice !== undefined) ? state.config.basePrice : 189.90;
 
     let textCount = 0;
+    let customTextCost = 0;
     let customImagesCost = 0;
     let customUploadsCount = 0;
 
