@@ -82,43 +82,6 @@ function calculateFullPrice() {
         logoRemovalFee = state.config.logoPunhoRemovalFee || CONFIG.logoPunhoRemovalFee || 15.00;
     }
 
-    // 6. Lógica de Preço de Atacado (Tiers)
-    let currentTierBase = baseGarmentPrice;
-    if (totalQty >= 30 && state.config.price30 > 0) currentTierBase = state.config.price30;
-    else if (totalQty >= 20 && state.config.price20 > 0) currentTierBase = state.config.price20;
-    else if (totalQty >= 10 && state.config.price10 > 0) currentTierBase = state.config.price10;
-
-    // 7. Base Unitária Completa (Peça + Customizações + Taxa Logo Punho)
-    // Nota: Dividimos a taxa de remoção pela quantidade para compor a base unitária se houver peças
-    const unitRemovalFee = totalQty > 0 ? (logoRemovalFee / totalQty) : logoRemovalFee;
-
-    let fullUnitBase = baseGarmentPrice + customTextCost + customImagesCost + unitRemovalFee;
-
-    // 8. Calcular Subtotal Baseado no Preço FULL
-    let subTotal = 0;
-    Object.entries(state.sizes).forEach(([sz, q]) => {
-        if (q > 0) {
-            const sd = (CONFIG.sizes || state.config.sizes || []).find(s => s.label === sz);
-            const sizeModPrice = (state.config.sizeModPrice != null) ? state.config.sizeModPrice : (CONFIG.sizeModPrice || 0);
-            const extra = (sd && sd.priceMod > 0) ? sizeModPrice : 0;
-            subTotal += (fullUnitBase + extra) * q;
-        }
-    });
-
-    // 9. Calcular Valor do Desconto: (Preço Original - Preço da Faixa) * Qtd
-    let baseDiscountPerUnit = Math.max(0, baseGarmentPrice - currentTierBase);
-    let dVal = baseDiscountPerUnit * totalQty;
-
-    // 10. Porcentagem Efetiva para o Relatório
-    let dPct = 0;
-    if (subTotal > 0) {
-        dPct = (dVal / subTotal) * 100;
-    }
-
-    // 11. Taxas de Matriz e Isenção
-    const df = customUploadsCount * (state.config.devFee || 0);
-    let wv = (state.config.artWaiver && totalQty > 10 && (customUploadsCount > 0 || textCount > 0)) ? (state.config.devFee || 0) : 0;
-
     // 12. Upgrades (Zíper e Bolso)
     let upgradesCost = 0;
     if (state.zipper && state.zipper.enabled) {
@@ -128,39 +91,59 @@ function calculateFullPrice() {
         upgradesCost += (state.config.pocketUpgrade !== undefined) ? state.config.pocketUpgrade : 10.00;
     }
 
+    // 6. Lógica    // Wholesale Price Logic (Tiers)
+    let tierBasePrice = baseGarmentPrice; // Default to full price
+    if (totalQty >= 30 && state.config.price30 > 0) tierBasePrice = state.config.price30;
+    else if (totalQty >= 20 && state.config.price20 > 0) tierBasePrice = state.config.price20;
+    else if (totalQty >= 10 && state.config.price10 > 0) tierBasePrice = state.config.price10;
+
+    // Customization Adds on top (independent of base price change)
+    let fullUnitBase = baseGarmentPrice + customTextCost + customImagesCost + upgradesCost;
+
+    let subTotal = 0;
+    Object.entries(state.sizes).forEach(([sz, q]) => {
+        const qtyVal = parseInt(q) || 0;
+        if (qtyVal > 0) {
+            const sizeData = CONFIG.sizes.find(s => s.label === sz);
+            const mod = (sizeData && sizeData.priceMod > 0) ? (state.config.sizeModPrice || 0) : 0;
+            subTotal += (fullUnitBase + mod) * qtyVal;
+        }
+    });
+
+    // Calculate Discount: (OriginalBase - TierBase) * Qty
+    let baseDiscountPerUnit = Math.max(0, baseGarmentPrice - tierBasePrice);
+    let discountVal = baseDiscountPerUnit * totalQty;
+
+    // Effective Percent based on FULL SubTotal (Base + Customs)
+    let appliedDiscount = 0;
+    if (subTotal > 0) {
+        appliedDiscount = (discountVal / subTotal) * 100;
+    }
+
+    // Taxas de Desenvolvimento
+    const devFees = customUploadsCount * (state.config.devFee || 0);
+
+    // Isenção de Arte (Waiver)
+    let waiver = 0;
+    if (state.config.artWaiver && totalQty >= 10 && customUploadsCount > 0) {
+        waiver = (state.config.devFee || 0);
+    }
+
     return {
-        total: subTotal - dVal - wv + df + (upgradesCost * totalQty),
-        discountPercent: dPct,
-        discountValue: dVal,
-        devFees: df,
-        waiver: wv,
+        total: subTotal - discountVal - waiver + devFees + (logoRemovalFee * totalQty),
+        discountPercent: appliedDiscount,
+        discountValue: discountVal,
+        devFees: devFees,
+        waiver: waiver,
         logoRemovalFee: logoRemovalFee,
         upgradesCost: upgradesCost
     };
 }
 
-function getZonePrice(zoneId, type) {
-    if (!zoneId) return 0;
-
-    // Normalize zoneId
-    const zid = zoneId.toLowerCase();
-
-    if (type === 'image') {
-        if (zid.includes('frente')) return state.config.logoFrontPrice || 0;
-        if (zid.includes('costas')) return state.config.logoBackPrice || 0;
-        if (zid.includes('manga')) return state.config.logoSleevePrice || 0;
-        if (zid.includes('touca') || zid.includes('capuz')) return state.config.logoHoodPrice || 0;
-        // Fallback
-        return state.config.logoFrontPrice || 0;
-    } else if (type === 'text') {
-        if (zid.includes('frente')) return state.config.textFrontPrice || 0;
-        if (zid.includes('costas')) return state.config.textBackPrice || 0;
-        if (zid.includes('manga')) return state.config.textSleevePrice || 0;
-        if (zid.includes('touca') || zid.includes('capuz')) return state.config.textHoodPrice || 0;
-        // Fallback
-        return state.config.textFrontPrice || 0;
+// Fallback
+return state.config.textFrontPrice || 0;
     }
-    return 0;
+return 0;
 }
 function updateReport(total, qty, discPct, discVal, waiver, devFees) {
     const b = document.getElementById('summary-body');
