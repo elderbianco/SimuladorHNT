@@ -48,8 +48,22 @@ const PDFGenerator = {
                 });
 
                 // 2. Desenhar Fundo HNT (Ring)
-                const bgImg = await loadImage('assets/simulator/Background_RingHNT.jpeg');
-                if (bgImg) ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+                // Tentativa múltipla de caminhos para o fundo
+                const bgPaths = ['RingHNT.jpeg', 'Icons/RingHNT.jpeg', 'assets/simulator/Background_RingHNT.jpeg'];
+                let bgImg = null;
+                for (const path of bgPaths) {
+                    bgImg = await loadImage(path);
+                    if (bgImg) {
+                        console.log(`🖼️ Fundo carregado via: ${path}`);
+                        break;
+                    }
+                }
+
+                if (bgImg) {
+                    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+                } else {
+                    console.warn('⚠️ Nenhum fundo HNT encontrado. Usando base branca.');
+                }
 
                 // 3. Desenhar Camadas do Produto
                 const layers = Array.from(document.querySelectorAll('.product-layer img, .layer img'));
