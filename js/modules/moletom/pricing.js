@@ -36,16 +36,51 @@ function updatePrice(providedPricing) {
     }
 }
 
+/**
+ * Retorna o preço de uma zona baseado no tipo (logo/texto)
+ */
+function getZonePrice(zoneId, type = 'logo') {
+    if (!state.config) return 0;
+
+    // 1. Preço Granular do Admin (Prioridade Máxima)
+    if (state.config.zonePrices && state.config.zonePrices[zoneId] !== undefined) {
+        return parseFloat(state.config.zonePrices[zoneId]);
+    }
+
+    // 2. Fallbacks de Categoria
+    const isText = type === 'text';
+    const zid = zoneId.toLowerCase();
+    if (zid.includes('frente')) {
+        return isText ? (state.config.textFrontPrice || 0) : (state.config.logoFrontPrice || 0);
+    }
+    if (zid.includes('costas')) {
+        return isText ? (state.config.textBackPrice || 0) : (state.config.logoBackPrice || 0);
+    }
+    if (zid.includes('manga') || zid.includes('punho')) {
+        return isText ? (state.config.textSleevePrice || 9.90) : (state.config.logoSleevePrice || 9.90);
+    }
+    if (zid.includes('touca') || zid.includes('capuz')) {
+        return isText ? (state.config.textHoodPrice || 9.90) : (state.config.logoHoodPrice || 9.90);
+    }
+
+    // Default fallback
+    return isText ? (state.config.textPrice || 19.90) : (state.config.logoPrice || 0);
+}
+
+/**
+ * Calcula o preço total da simulação
+ */
 function calculateFullPrice() {
-    // 1. Definições Iniciais
-    const baseGarmentPrice = (state.config && state.config.basePrice > 0) ? state.config.basePrice : (CONFIG && CONFIG.basePrice ? CONFIG.basePrice : 189.90);
-    let customTextCost = 0;
+    // 1. Calcular Quantidade Total FIRST
+    let totalQty = 0;
+    Object.values(state.sizes).forEach(q => totalQty += (parseInt(q) || 0));
+
+    // 2. Preço de Base do Admin
+    const baseGarmentPrice = (state.config && state.config.basePrice !== undefined) ? state.config.basePrice : 189.90;
+
+    let textCount = 0;
     let customImagesCost = 0;
     let customUploadsCount = 0;
-    let textCount = 0;
-
-    // 2. Calcular Quantidade Total FIRST (necessário para tiers e waiver)
-    const totalQty = Object.values(state.sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
 
     // 3. Zonas de Imagem (Logos da Galeria e Uploads)
     const uniqueCustomLogos = new Set();
@@ -55,11 +90,8 @@ function calculateFullPrice() {
                 const isCustom = el.dataset.isCustom === 'true';
                 if (isCustom) {
                     uniqueCustomLogos.add(el.dataset.filename || 'custom');
-                    // Cobra o preço da zona mesmo para imagens customizadas
-                    customImagesCost += getZonePrice(zid, 'image');
-                } else {
-                    customImagesCost += getZonePrice(zid, 'image');
                 }
+                customImagesCost += getZonePrice(zid, 'image');
             });
         }
     });
@@ -79,10 +111,10 @@ function calculateFullPrice() {
     // 5. Logo Punho Fee (Taxa de retirada)
     let logoRemovalFee = 0;
     if (state.logoPunho && !state.logoPunho.enabled) {
-        logoRemovalFee = state.config.logoPunhoRemovalFee || CONFIG.logoPunhoRemovalFee || 15.00;
+        logoRemovalFee = state.config.logoPunhoRemovalFee || 15.00;
     }
 
-    // 12. Upgrades (Zíper e Bolso)
+    // 6. Upgrades (Zíper e Bolso)
     let upgradesCost = 0;
     if (state.zipper && state.zipper.enabled) {
         upgradesCost += (state.config.zipperUpgrade !== undefined) ? state.config.zipperUpgrade : 15.00;
@@ -91,39 +123,31 @@ function calculateFullPrice() {
         upgradesCost += (state.config.pocketUpgrade !== undefined) ? state.config.pocketUpgrade : 10.00;
     }
 
-    // 6. Lógica    // Wholesale Price Logic (Tiers)
-    let tierBasePrice = baseGarmentPrice; // Default to full price
+    // 7. Lógica de Atacado (Tiers)
+    let tierBasePrice = baseGarmentPrice;
     if (totalQty >= 30 && state.config.price30 > 0) tierBasePrice = state.config.price30;
     else if (totalQty >= 20 && state.config.price20 > 0) tierBasePrice = state.config.price20;
     else if (totalQty >= 10 && state.config.price10 > 0) tierBasePrice = state.config.price10;
 
-    // Customization Adds on top (independent of base price change)
+    // 8. Base Unitária com Customizações (exceto descontos)
     let fullUnitBase = baseGarmentPrice + customTextCost + customImagesCost + upgradesCost;
 
     let subTotal = 0;
     Object.entries(state.sizes).forEach(([sz, q]) => {
         const qtyVal = parseInt(q) || 0;
         if (qtyVal > 0) {
-            const sizeData = CONFIG.sizes.find(s => s.label === sz);
+            const sizeData = (CONFIG.sizes || []).find(s => s.label === sz);
             const mod = (sizeData && sizeData.priceMod > 0) ? (state.config.sizeModPrice || 0) : 0;
             subTotal += (fullUnitBase + mod) * qtyVal;
         }
     });
 
-    // Calculate Discount: (OriginalBase - TierBase) * Qty
+    // 9. Calcular Desconto: (OriginalBase - TierBase) * Qty
     let baseDiscountPerUnit = Math.max(0, baseGarmentPrice - tierBasePrice);
     let discountVal = baseDiscountPerUnit * totalQty;
 
-    // Effective Percent based on FULL SubTotal (Base + Customs)
-    let appliedDiscount = 0;
-    if (subTotal > 0) {
-        appliedDiscount = (discountVal / subTotal) * 100;
-    }
-
-    // Taxas de Desenvolvimento
+    // 10. Taxas de Desenvolvimento e Isenção
     const devFees = customUploadsCount * (state.config.devFee || 0);
-
-    // Isenção de Arte (Waiver)
     let waiver = 0;
     if (state.config.artWaiver && totalQty >= 10 && customUploadsCount > 0) {
         waiver = (state.config.devFee || 0);
@@ -131,7 +155,7 @@ function calculateFullPrice() {
 
     return {
         total: subTotal - discountVal - waiver + devFees + (logoRemovalFee * totalQty),
-        discountPercent: appliedDiscount,
+        discountPercent: subTotal > 0 ? (discountVal / subTotal) * 100 : 0,
         discountValue: discountVal,
         devFees: devFees,
         waiver: waiver,
@@ -140,11 +164,6 @@ function calculateFullPrice() {
     };
 }
 
-// Fallback
-return state.config.textFrontPrice || 0;
-    }
-return 0;
-}
 function updateReport(total, qty, discPct, discVal, waiver, devFees) {
     const b = document.getElementById('summary-body');
     if (!b) return;
@@ -181,9 +200,10 @@ function updateReport(total, qty, discPct, discVal, waiver, devFees) {
     // 1. TAMANHOS
     const sizeList = [];
     Object.entries(state.sizes).forEach(([size, q]) => {
-        if (q > 0) {
+        const qtyVal = parseInt(q) || 0;
+        if (qtyVal > 0) {
             const mod = (CONFIG.sizes || []).find(s => s.label === size)?.priceMod || 0;
-            sizeList.push(`<strong>${q}x</strong> ${size}${mod > 0 ? ' (<span style="color:#00b4d8">Acresc. Tamanho +R$ ' + fmtMoney(mod) + '</span>)' : ''}`);
+            sizeList.push(`<strong>${qtyVal}x</strong> ${size}${mod > 0 ? ' (<span style="color:#00b4d8">Acresc. Tamanho +R$ ' + fmtMoney(mod) + '</span>)' : ''}`);
         }
     });
 
@@ -222,7 +242,7 @@ function updateReport(total, qty, discPct, discVal, waiver, devFees) {
 
     // Logo Punho (Removal Fee)
     if (state.logoPunho && !state.logoPunho.enabled) {
-        const fee = state.config.logoPunhoRemovalFee || CONFIG.logoPunhoRemovalFee || 15.00;
+        const fee = state.config.logoPunhoRemovalFee || 15.00;
         html += row(
             icons.warn,
             'Remoção de Logo HNT',
@@ -231,147 +251,62 @@ function updateReport(total, qty, discPct, discVal, waiver, devFees) {
         );
     }
 
-
+    // Upgrades
+    if (state.zipper && state.zipper.enabled) {
+        html += row(icons.part, 'Upgrade de Zíper', 'Zíper reforçado na frente.', state.config.zipperUpgrade || 15.00);
+    }
+    if (state.pocket && state.pocket.enabled) {
+        html += row(icons.part, 'Upgrade de Bolso', 'Bolso canguru com zíper.', state.config.pocketUpgrade || 10.00);
+    }
 
     // Zonas (Logos e Textos)
     const elementsByZone = {};
-
-    // Agrupa imagens
     Object.keys(state.elements).forEach(zk => {
         if (state.elements[zk].length > 0) {
             state.elements[zk].forEach(el => {
                 if (!elementsByZone[zk]) elementsByZone[zk] = [];
                 const isCustom = el.dataset.isCustom === 'true';
-                const price = isCustom ? 0 : getZonePrice(zk, 'logo');
-
-                let filename = 'Imagem da Galeria';
-                if (el.dataset.formattedFilename) {
-                    filename = el.dataset.formattedFilename;
-                } else {
-                    const imgTag = el.querySelector('img');
-                    if (imgTag && imgTag.src) {
-                        const parts = imgTag.src.split('/');
-                        filename = decodeURIComponent(parts[parts.length - 1].split('?')[0]);
-                    }
-                }
-
-                if (isCustom) filename += ' <span style="color:#FFA500; font-size:0.8em;">(Taxa Matriz se aplicável)</span>';
-
-                elementsByZone[zk].push({
-                    type: 'image',
-                    desc: `Arquivo: ${filename}`,
-                    price: price
-                });
+                const price = getZonePrice(zk, 'logo');
+                elementsByZone[zk].push({ type: 'image', desc: `Logo: ${el.dataset.formattedFilename || el.dataset.filename || 'Galeria'}`, price });
             });
         }
     });
 
-    // Agrupa textos
     Object.keys(state.texts).forEach(tk => {
         const t = state.texts[tk];
         if (t.enabled && t.content) {
-            const zoneConf = (CONFIG.textZones || []).find(z => z.id === tk);
-            const pZone = zoneConf ? zoneConf.parentZone : tk;
-            if (!elementsByZone[pZone]) elementsByZone[pZone] = [];
-
-            const price = getZonePrice(pZone, 'text');
-            elementsByZone[pZone].push({
-                type: 'text',
-                desc: `"${t.content}" (${t.fontFamily})`,
-                price: price
-            });
+            const parentZone = (CONFIG.textZones || []).find(z => z.id === tk)?.parentZone || tk;
+            if (!elementsByZone[parentZone]) elementsByZone[parentZone] = [];
+            elementsByZone[parentZone].push({ type: 'text', desc: `Texto: "${t.content}"`, price: getZonePrice(parentZone, 'text') });
         }
     });
 
-    // Renderiza agrupado
     Object.keys(elementsByZone).forEach(zk => {
         const zoneName = (CONFIG.zones && CONFIG.zones[zk]) ? CONFIG.zones[zk].name : zk;
         elementsByZone[zk].forEach(item => {
-            html += row(
-                item.type === 'image' ? icons.image : icons.text,
-                `${item.type === 'image' ? 'Logo' : 'Texto'} - ${zoneName}`,
-                item.desc,
-                item.price,
-                item.price === 0
-            );
+            html += row(item.type === 'image' ? icons.image : icons.text, `${item.type === 'image' ? 'Logo' : 'Texto'} - ${zoneName}`, item.desc, item.price, item.price === 0);
         });
     });
 
-    // 3. FINANCEIRO & OBSERVAÇÕES
+    // 3. FINANCEIRO
     html += `<tr style="background:#2C2C2C; color:#fff; font-weight:bold;"><td colspan="3">DETALHAMENTO FINANCEIRO</td></tr>`;
-
-    // Subtotal
     if (total > 0) {
-        const subTotalVal = (total + discVal + waiver - devFees);
-        html += `
-            <tr style="background:#1a1a1a;">
-                <td colspan="2">
-                    <strong>Valor Base do Pedido (${qty} peças)</strong>
-                    <div style="font-size:0.8em; color:#888;">Média Unitária: R$ ${fmtMoney(subTotalVal / qty)}</div>
-                </td>
-                <td class="text-right">R$ ${fmtMoney(subTotalVal)}</td>
-            </tr>
-        `;
+        html += `<tr style="background:#1a1a1a;"><td colspan="2"><strong>Valor Base com Customizações</strong></td><td class="text-right">R$ ${fmtMoney(total + discVal + waiver - devFees)}</td></tr>`;
     }
-
-    // Taxas Separadas
     if (devFees > 0) {
-        const devFeeVal = state.config.devFee || CONFIG.devFee || 0;
-        const count = Math.round(devFees / devFeeVal);
-        html += `
-            <tr style="background:rgba(255, 165, 0, 0.1);">
-                <td><strong>Taxa de Matriz</strong></td>
-                <td>
-                    Refere-se a criação de <strong>${count}</strong> nova(s) matriz(es).
-                    <div style="color:#FFA500; font-size:0.85em; margin-top:2px;">⚠️ Cobrado uma única vez por pedido por arte única.</div>
-                </td>
-                <td class="text-right" style="color:#FFA500;">+ R$ ${fmtMoney(devFees)}</td>
-            </tr>
-        `;
+        html += `<tr style="background:rgba(255,165,0,0.1);"><td><strong>Taxa de Matriz</strong></td><td>Criação de matriz(es).</td><td class="text-right" style="color:#FFA500;">+ R$ ${fmtMoney(devFees)}</td></tr>`;
     }
-
-    // Descontos
-    if (discPct > 0) {
-        html += `
-            <tr style="background:rgba(40, 167, 69, 0.1);">
-                <td><strong>Desconto Atacado</strong></td>
-                <td>Aplicado desconto de <strong>${discPct}%</strong>.</td>
-                <td class="text-right" style="color:#28a745;">- R$ ${fmtMoney(discVal)}</td>
-            </tr>
-        `;
+    if (discVal > 0) {
+        html += `<tr style="background:rgba(40,167,69,0.1);"><td><strong>Desconto Atacado</strong></td><td>Total de ${discPct.toFixed(1)}%</td><td class="text-right" style="color:#28a745;">- R$ ${fmtMoney(discVal)}</td></tr>`;
     }
-
-    // Isenção
     if (waiver > 0) {
-        html += `
-            <tr style="background:rgba(40, 167, 69, 0.1);">
-                <td><strong>Bônus de Matriz</strong></td>
-                <td>Isenção de taxa por volume (>10 peças).</td>
-                <td class="text-right" style="color:#28a745;">- R$ ${fmtMoney(waiver)}</td>
-            </tr>
-        `;
+        html += `<tr style="background:rgba(40,167,69,0.1);"><td><strong>Bônus de Matriz</strong></td><td>Isenção por volume.</td><td class="text-right" style="color:#28a745;">- R$ ${fmtMoney(waiver)}</td></tr>`;
     }
 
     // Prazo
-    const { minDate, maxDate } = calculateBusinessDates(
-        new Date(),
-        state.config.production?.minDays || 15,
-        state.config.production?.maxDays || 25,
-        state.config.production?.holidays || []
-    );
-    html += `<tr><td colspan="3" style="padding:15px 0; color:#aaa; font-size:0.9em; border-top:1px solid #444;"><strong>📅 Previsão Estimada:</strong> ${minDate} a ${maxDate} (${state.config.production?.minDays || 15}-${state.config.production?.maxDays || 25} dias úteis)</td></tr>`;
-
-    // Total Final
-    html += `
-        <tr style="background:#00b4d8; color:#000; font-weight:800; text-transform:uppercase;">
-            <td colspan="3" style="padding:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:5px;">
-                    <span style="font-size:0.9rem;">TOTAL FINAL PREVISTO</span>
-                    <span style="font-size:1.4rem;">R$ ${fmtMoney(total)}</span>
-                </div>
-            </td>
-        </tr>
-    `;
+    const { minDate, maxDate } = calculateBusinessDates(new Date(), state.config.production?.minDays || 15, state.config.production?.maxDays || 25, state.config.production?.holidays || []);
+    html += `<tr><td colspan="3" style="padding:15px 0; color:#aaa; font-size:0.9em; border-top:1px solid #444;"><strong>📅 Previsão Estimada:</strong> ${minDate} a ${maxDate}</td></tr>`;
+    html += `<tr style="background:#00b4d8; color:#000; font-weight:800; text-transform:uppercase;"><td colspan="3" style="padding:15px;"><div style="display:flex; justify-content:space-between;"><span>TOTAL FINAL</span><span>R$ ${fmtMoney(total)}</span></div></td></tr>`;
 
     b.innerHTML = html;
 }
@@ -390,14 +325,7 @@ function calculateBusinessDates(startDate, minDays, maxDays, holidays) {
         }
         return d;
     }
-
     const d1 = addBusinessDays(startDate, minDays);
     const d2 = addBusinessDays(startDate, maxDays);
-
-    return {
-        minDate: d1.toLocaleDateString(),
-        maxDate: d2.toLocaleDateString(),
-        minDateObj: d1,
-        maxDateObj: d2
-    };
+    return { minDate: d1.toLocaleDateString(), maxDate: d2.toLocaleDateString() };
 }
