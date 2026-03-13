@@ -91,7 +91,7 @@ function getFormattedId() {
 }
 
 // Estado Global
-const state = {
+window.state = {
     simulationId: '',
     simNumber: generateUUID(),
     orderNumber: '',
@@ -119,6 +119,8 @@ const state = {
     isLocked: false
 };
 
+globalThis.state = window.state;
+var state = window.state;
 state.simulationId = getFormattedId();
 
 // Initialize text zones

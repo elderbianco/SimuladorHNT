@@ -157,7 +157,7 @@ function saveState() {
     // Para Shorts Legging, salvamos apenas os dados essenciais
     // Note: state.elements contém elementos DOM, que não podem ser serializados.
     // Em uma implementação futura, deveríamos salvar os URLs/Posições se quisermos restaurar imagens.
-    window.state = {
+    const data = {
         simulationId: state.simulationId,
         simNumber: state.simNumber,
         orderNumber: state.orderNumber,
@@ -245,14 +245,13 @@ function clearState() {
     }
 }
 
-// ... existing code ...
-
 // Auto-Sync with Admin Panel
 window.addEventListener('storage', (e) => {
-    if (e.key === 'hnt_text_colors') {
-        console.log('🔄 Sincronizando cores de texto com Admin...');
-        loadAdminConfig();
+    if (e.key === 'hnt_text_colors' || e.key === 'hnt_shorts_legging_config') {
+        console.log('🔄 Sincronizando configurações com Admin...');
+        if (typeof loadAdminConfig === 'function') loadAdminConfig();
         if (typeof renderControls === 'function') renderControls();
+        if (typeof updatePrice === 'function') updatePrice();
     }
     // SINCRONIZAÇÃO GLOBAL DE CLIENTE
     if (e.key === 'hnt_global_client_phone' || e.key === 'hnt_global_client_terms') {
@@ -273,12 +272,3 @@ window.addEventListener('storage', (e) => {
         }
     }
 });
-
-// Auto-init config load
-// NOTA: loadAdminConfig() é definido em logic.js, que é carregado DEPOIS deste arquivo.
-// A inicialização será feita automaticamente pelo logic.js
-// if (document.readyState === 'loading') {
-//     document.addEventListener('DOMContentLoaded', loadAdminConfig);
-// } else {
-//     loadAdminConfig();
-// }
