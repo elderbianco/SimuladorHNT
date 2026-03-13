@@ -123,6 +123,8 @@ window.state = {
     isLocked: false
 };
 
+globalThis.state = window.state;
+var state = window.state;
 state.simulationId = getFormattedId();
 
 // Initialize text zones
