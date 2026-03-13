@@ -691,7 +691,7 @@ const PDFGenerator = {
                         imgH = maxH;
                         imgW = (imgProps.width * imgH) / imgProps.height;
                     }
-                    doc.addImage(this.cachedSnapshot, 'PNG', (pageWidth - imgW) / 2, currentY, imgW, imgH);
+                    doc.addImage(this.cachedSnapshot, 'JPEG', (pageWidth - imgW) / 2, currentY, imgW, imgH);
                     currentY += imgH + 10;
                 } catch (e) {
                     console.warn("Falha ao adicionar imagem ao PDF:", e);
