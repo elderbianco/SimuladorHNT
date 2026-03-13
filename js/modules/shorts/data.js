@@ -251,4 +251,6 @@ const DATA = {
         console.error("Erro ao carregar galeria personalizada:", e);
     }
 })();
-
+// Expose to window
+window.DATA = DATA;
+window.CONFIG = DATA;
