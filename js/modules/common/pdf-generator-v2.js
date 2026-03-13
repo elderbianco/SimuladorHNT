@@ -29,7 +29,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.22 (Live DOM + CSS Nuke + Absolute Box) Ativado...');
+                console.log('☢️ Motor Nuclear v15.23 (CSS Nuke + Strict Area Bounds) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -38,7 +38,7 @@ const PDFGenerator = {
                 }
 
                 // --- 1. PREPARAÇÃO DA CENA REAL (LIVE PREP) ---
-                console.log('🔄 Sincronizando DNA Digital na Cena Real v15.22...');
+                console.log('🔄 Sincronizando DNA Digital na Cena Real v15.23...');
 
                 // Conversor Base64 (Imuniza contra CORS sem piscar a tela)
                 const toBase64 = (url) => new Promise((res) => {
@@ -78,10 +78,13 @@ const PDFGenerator = {
                     }
                 }
 
-                // --- 2. CSS NUKE (DESTRUIÇÃO VISUAL TEMPORÁRIA DE BORDAS E HANDLERS) ---
-                console.log('🛡️ Anulando bordas de seleção JQuery/Fabric via CSS Injection...');
+                // --- 2. CSS NUKE (DESTRUIÇÃO VISUAL TEMPORÁRIA E PROTEÇÃO DE OVERFLOW Y) ---
+                console.log('🛡️ Anulando falsas bordas via CSS Injection e Travando Overflow...');
                 const nukeStyle = document.createElement('style');
                 nukeStyle.innerHTML = `
+                    .simulator-area {
+                        overflow: hidden !important; 
+                    }
                     .simulator-area .ui-selected, 
                     .simulator-area .ui-wrapper, 
                     .simulator-area .custom-element, 
@@ -107,13 +110,16 @@ const PDFGenerator = {
                 `;
                 document.head.appendChild(nukeStyle);
 
-                // --- 3. CAPTURA DIGITAL DIRETA COM BOUNDS ABSOLUTOS ---
+                // --- 3. CAPTURA DIGITAL DIRETA (Html2Canvas in DOM) ---
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Disparando Câmera no Fluxo Vivo com Rigid Bounds...');
+                    console.log('📸 Disparando Câmera no Fluxo Vivo com Natural Bounds...');
 
                     // Pequeno delay para garantir aplicação do CSS Nuke
                     await new Promise(r => setTimeout(r, 50));
+
+                    // Rolagem ao Topo (Evita bugar o canvas interno caso o usuário tenha scrollado)
+                    window.scrollTo(0, 0);
 
                     // Pega as medidas exatas da moldura visível para não estourar em offsets invisíveis
                     const rect = originalArea.getBoundingClientRect();
@@ -126,12 +132,9 @@ const PDFGenerator = {
                         allowTaint: true,
                         backgroundColor: '#000000',
                         logging: false,
-                        width: Math.floor(rect.width),
-                        height: Math.floor(rect.height),
-                        x: scrollX + rect.left,
-                        y: scrollY + rect.top,
-                        windowWidth: document.documentElement.clientWidth,
-                        windowHeight: document.documentElement.clientHeight
+                        // Largura e Altura baseadas estritamente no elemento visual (sem offset falso)
+                        width: originalArea.clientWidth,
+                        height: originalArea.clientHeight
                     });
 
                     snapshot = canvas.toDataURL('image/jpeg', 0.90);
@@ -144,7 +147,7 @@ const PDFGenerator = {
 
                 // --- 5. ENTREGA ---
                 if (snapshot) {
-                    console.log('✅ Print LIVE ABSOLUTE v15.22 CONCLUÍDO.');
+                    console.log('✅ Print LIVE ABSOLUTE v15.23 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     console.warn('⚠️ html2canvas falhou no DOM real. Tentando motor legado...');
@@ -152,7 +155,7 @@ const PDFGenerator = {
                     resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico Live Engine v15.22:', e);
+                console.error('❌ Erro Crítico Live Engine v15.23:', e);
                 resolve(null);
             }
         });
