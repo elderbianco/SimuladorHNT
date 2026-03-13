@@ -23,13 +23,13 @@ const PDFGenerator = {
     },
 
     /**
-     * Motor de Renderização Nuclear v15.7 (Live Capture)
-     * Captura direta do DOM real com sanitização expressa.
+     * Motor de Renderização Nuclear v15.12 (Hyper-Fidelity)
+     * Usa html2canvas + Pré-processamento Base64 para garantir rotação e escala exatas.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.7 (Live Capture) Ativado...');
+                console.log('☢️ Motor Nuclear v15.12 (Hyper-Fidelity) Ativado...');
 
                 const originalWrapper = document.querySelector('.simulator-wrapper');
                 if (!originalWrapper) {
@@ -40,51 +40,71 @@ const PDFGenerator = {
                 // 1. Sanitização em Tempo Real (Esconder UI)
                 document.body.classList.add('pdf-capturing');
 
-                // Pequeno delay para garantir que o CSS de sanitização foi aplicado
-                await new Promise(r => setTimeout(r, 100));
+                // 2. Pré-processamento Atômico Base64 (Blindagem de Imagens para html2canvas)
+                const toBase64 = (img) => new Promise((res) => {
+                    if (!img.src || img.src.startsWith('data:')) return res(img.src);
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.naturalWidth || img.width;
+                    canvas.height = img.naturalHeight || img.height;
+                    try {
+                        ctx.drawImage(img, 0, 0);
+                        res(canvas.toDataURL('image/png'));
+                    } catch (e) {
+                        console.warn('⚠️ Erro CORS ao converter Base64:', img.src);
+                        res(img.src);
+                    }
+                });
 
-                // 2. Captura via dom-to-image-more (ou fallback manual)
-                let snapshot = null;
-                const lib = window.domToImage || window.domtoimage;
-
-                if (lib && typeof lib.toJpeg === 'function') {
-                    console.log('📸 Tirando foto do DOM vivo...');
-
-                    // Configurações agressivas de captura
-                    snapshot = await lib.toJpeg(originalWrapper, {
-                        quality: 0.95,
-                        width: originalWrapper.offsetWidth,
-                        height: originalWrapper.offsetHeight,
-                        bgcolor: '#ffffff',
-                        style: {
-                            'transform': 'none',
-                            'left': '0',
-                            'top': '0',
-                            'margin': '0'
-                        },
-                        // Garantir que imagens dinâmicas (Blob/CORS) sejam carregadas
-                        cacheBust: true
-                    });
+                console.log('🔄 Blindando imagens em Base64...');
+                const imgs = Array.from(originalWrapper.querySelectorAll('img'));
+                for (const img of imgs) {
+                    if (img.src && !img.src.startsWith('data:')) {
+                        const b64 = await toBase64(img);
+                        img.src = b64;
+                    }
                 }
 
-                // 3. Verificação de Integridade (Prevenir imagens em branco)
+                // 3. Captura via html2canvas (Motor Ouro para Rotação e Escala)
+                let snapshot = null;
+                if (typeof html2canvas !== 'undefined') {
+                    console.log('📸 Capturando via html2canvas (Fidelidade Geométrica)...');
+                    const canvas = await html2canvas(originalWrapper, {
+                        scale: 2, // Alta Definição
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null,
+                        logging: false
+                    });
+                    snapshot = canvas.toDataURL('image/jpeg', 0.95);
+                }
+
+                // 4. Verificação de Integridade e Fallback
                 if (!snapshot || snapshot.length < 5000) {
-                    console.warn('⚠️ Captura dom-to-image falhou ou retornou imagem vazia. Usando Força Bruta Manual v15.5...');
-                    // Se falhar o dom-to-image, revertemos para o motor de desenho manual que reconstrói a cena
+                    console.warn('⚠️ html2canvas falhou. Tentando dom-to-image fallback...');
+                    const lib = window.domToImage || window.domtoimage;
+                    if (lib && typeof lib.toJpeg === 'function') {
+                        snapshot = await lib.toJpeg(originalWrapper, { quality: 0.95 });
+                    }
+                }
+
+                // 5. Fallback Final (Motor Manual v15.5)
+                if (!snapshot || snapshot.length < 5000) {
+                    console.warn('⚠️ Todos os motores modernos falharam. Usando Força Bruta Manual...');
                     snapshot = await this.drawLegacyManualSnapshot();
                 }
 
-                // 4. Restaurar UI
+                // 6. Restaurar UI
                 document.body.classList.remove('pdf-capturing');
 
                 if (snapshot) {
-                    console.log('✅ Snapshot Nuclear v15.7 CONCLUÍDO.');
+                    console.log('✅ Snapshot Nuclear v15.12 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     resolve(null);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico no Live Capture v15.7:', e);
+                console.error('❌ Erro Crítico no Hyper-Fidelity v15.12:', e);
                 document.body.classList.remove('pdf-capturing');
                 resolve(null);
             }
