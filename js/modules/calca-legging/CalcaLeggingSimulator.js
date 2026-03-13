@@ -78,5 +78,13 @@ window.renderControls = () => window.CalcaLeggingSimulatorInstance.render();
 const originalInitCalca = window.init;
 window.init = async function () {
     if (originalInitCalca) await originalInitCalca();
+
+    // Ensure 'Geral' exists so that the sizes section can be rendered
+    if (window.DATA && window.DATA.categories) {
+        if (!window.DATA.categories.find(c => c.id === 'Geral')) {
+            window.DATA.categories.unshift({ id: 'Geral', name: 'Geral' });
+        }
+    }
+
     window.CalcaLeggingSimulatorInstance.init();
 };
