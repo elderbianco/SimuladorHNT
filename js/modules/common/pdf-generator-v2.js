@@ -692,7 +692,7 @@ const PDFGenerator = {
                 try {
                     const imgProps = doc.getImageProperties(this.cachedSnapshot);
                     const maxW = pageWidth - (margin * 2);
-                    const maxH = pageHeight * 0.60; // Destaque Máximo (60% da página)
+                    const maxH = pageHeight * 0.80; // FOCO TOTAL (80% da página)
                     let imgW = maxW;
                     let imgH = (imgProps.height * imgW) / imgProps.width;
                     if (imgH > maxH) {
