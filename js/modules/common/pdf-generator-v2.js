@@ -682,39 +682,43 @@ const PDFGenerator = {
                 // 3. Normalizar espaços
                 return text.replace(/\s+/g, ' ').trim();
             };
-            const rows = Array.from(document.querySelectorAll('#summary-body tr')).filter(r => {
-                return r.innerText.trim() && !r.innerText.includes('Total:');
+            // 3. Coleta de Itens do Resumo (Tabela Real) - v15.11
+            const rows = Array.from(document.querySelectorAll('#summary-body tr, #summary-body-modal tr')).filter(r => {
+                const text = r.innerText.trim();
+                return text && !text.includes('Total:') && !r.closest('thead');
             });
-            const summary = document.getElementById('summary-body');
-            const list = Array.from(summary.querySelectorAll('li'));
-            list.forEach(li => {
-                const cols = li.querySelectorAll('span');
+
+            rows.forEach(row => {
+                const cols = Array.from(row.querySelectorAll('td'));
                 if (cols.length < 2) return;
 
                 let label = clean(cols[0].innerText || cols[0].textContent);
-                let value = clean(cols[1].innerText || cols[1].textContent);
+                let detail = clean(cols[1].innerText || cols[1].textContent);
+                let price = cols.length > 2 ? clean(cols[2]?.innerText || cols[2]?.textContent) : '';
+
+                // Combinar detalhe ao label se houver
+                const fullLabel = detail ? `${label} (${detail})` : label;
 
                 doc.setFontSize(8.5);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(0, 0, 0);
 
-                // Proteção contra fim da página (v15.10)
-                if (currentY > pageHeight - 30) {
+                // Proteção contra fim da página
+                if (currentY > pageHeight - 35) {
                     doc.addPage();
                     currentY = drawExpertTemplate(doc);
                 }
 
-                // Quebra de Linha Inteligente para Labels Longos (v15.10)
-                const maxLabelWidth = pageWidth - (margin * 2) - 40; // Dá 40mm de folga para o valor à direita
-                const labelLines = doc.splitTextToSize(label, maxLabelWidth);
+                // Quebra de Linha Inteligente
+                const maxLabelWidth = pageWidth - (margin * 2) - 35;
+                const labelLines = doc.splitTextToSize(fullLabel, maxLabelWidth);
 
-                // Desenhar Label (pode ter múltiplas linhas)
                 doc.text(labelLines, margin, currentY);
 
-                // Desenhar Valor (Alinhado com a PRIMEIRA linha do label)
-                doc.text(value, pageWidth - margin, currentY, { align: 'right' });
+                if (price) {
+                    doc.text(price, pageWidth - margin, currentY, { align: 'right' });
+                }
 
-                // Ajustar Y baseado no número de linhas do label
                 currentY += (labelLines.length * 4.5) + 2;
             });
 
