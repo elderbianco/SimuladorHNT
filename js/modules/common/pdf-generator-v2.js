@@ -672,59 +672,44 @@ const PDFGenerator = {
             doc.text('RESUMO TÉCNICO DO ORÇAMENTO', margin, currentY);
             currentY += 8;
 
-            const clean = (s) => s ? s.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$]/g, ' ').replace(/\s+/g, ' ').trim() : '';
+            // Função de Limpeza Ultra Sônica (v15.10): Remove emojis e normaliza texto para jsPDF
+            const clean = (s) => {
+                if (!s) return '';
+                // 1. Remover Emojis e Símbolos Especiais (Regex Robusta)
+                let text = s.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+                // 2. Filtrar apenas caracteres suportados (Safe for WinAnsi/jsPDF)
+                text = text.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$<>]/g, ' ');
+                // 3. Normalizar espaços
+                return text.replace(/\s+/g, ' ').trim();
+            };
             const rows = Array.from(document.querySelectorAll('#summary-body tr')).filter(r => {
                 return r.innerText.trim() && !r.innerText.includes('Total:');
             });
-
-            doc.setFontSize(10);
-            rows.forEach(row => {
-                const cols = Array.from(row.querySelectorAll('td'));
+            const summary = document.getElementById('summary-body');
+            const list = Array.from(summary.querySelectorAll('li'));
+            list.forEach(li => {
+                const cols = li.querySelectorAll('span');
                 if (cols.length < 2) return;
 
                 let label = clean(cols[0].innerText || cols[0].textContent);
-                let value = clean(cols[1].innerText || cols[1].querySelector('input, textarea')?.value || cols[1].textContent);
-                let price = cols.length > 2 ? clean(cols[2]?.innerText || cols[2]?.textContent) : '';
+                let value = clean(cols[1].innerText || cols[1].textContent);
 
-                if (!label && value) { label = value; value = ''; }
-                if (!label) return;
-                if (label === value) value = '';
+                doc.setFontSize(8.5);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
 
-                if (currentY > pageHeight - 55) {
-                    doc.addPage();
-                    currentY = drawExpertTemplate(doc);
-                }
+                // Quebra de Linha Inteligente para Labels Longos (v15.10)
+                const maxLabelWidth = pageWidth - (margin * 2) - 40; // Dá 40mm de folga para o valor à direita
+                const labelLines = doc.splitTextToSize(label, maxLabelWidth);
 
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(60, 60, 60);
+                // Desenhar Label (pode ter múltiplas linhas)
+                doc.text(labelLines, margin, currentY);
 
-                // LÓGICA HORIZONTAL: Maximizar texto na linha
-                const fullText = `${label}${value ? ` (${value})` : ''}:`;
-                const priceWidth = price ? doc.getTextWidth(price) + 5 : 0;
-                const availableWidth = pageWidth - (margin * 2) - priceWidth;
+                // Desenhar Valor (Alinhado com a PRIMEIRA linha do label)
+                doc.text(value, pageWidth - margin, currentY, { align: 'right' });
 
-                const lines = doc.splitTextToSize(fullText, availableWidth);
-
-                lines.forEach((line, index) => {
-                    if (currentY > pageHeight - 15) {
-                        doc.addPage();
-                        currentY = drawExpertTemplate(doc);
-                    }
-                    doc.text(line, margin, currentY);
-
-                    // Colocar o preço apenas na primeira linha do conjunto
-                    if (price && index === 0) {
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(0, 0, 0);
-                        doc.text(price, pageWidth - margin, currentY, { align: 'right' });
-                        doc.setFont('helvetica', 'bold');
-                        doc.setTextColor(60, 60, 60);
-                    }
-
-                    if (index < lines.length - 1) currentY += 5;
-                });
-
-                currentY += 6.5;
+                // Ajustar Y baseado no número de linhas do label
+                currentY += (labelLines.length * 4.5) + 2;
             });
 
             // 4. TOTAL EM DESTAQUE - Linha removida na v15.9
@@ -742,16 +727,20 @@ const PDFGenerator = {
             doc.setTextColor(0, 0, 0);
             doc.text('INVESTIMENTO ESTIMADO:', margin, currentY);
             doc.text(totalText, pageWidth - margin, currentY, { align: 'right' });
-            currentY += 12;
+            // 5. TERMOS E CONDIÇÕES - Removido Emojis (v15.10)
+            currentY += 5;
+            const terms = "AVISO IMPORTANTE: Este documento e uma SIMULACAO DIGITAL. O resultado fisico pode apresentar variacoes sutis de cores e proporcoes devido ao processo produtivo e configuracao de tela. O bordado sera validado por analise tecnica. Ao prosseguir, voce concorda com os termos e confirma direitos sobre as artes enviadas.";
 
-            // 5. TERMOS
-            const terms = "⚠️ AVISO IMPORTANTE: Este documento é uma SIMULAÇÃO DIGITAL. O resultado físico pode apresentar pequenas variações. Artes passarão por análise técnica. Ao prosseguir, você concorda com os termos e confirma direitos sobre as artes enviadas.";
-            doc.setFontSize(7.5);
-            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'italic');
             doc.setTextColor(140, 140, 140);
-            const termLines = doc.splitTextToSize(terms, pageWidth - (margin * 2));
+
+            // Garantir que a largura de quebra respeite rigorosamente as margens
+            const safeWidth = pageWidth - (margin * 2);
+            const termLines = doc.splitTextToSize(terms, safeWidth);
+
             doc.text(termLines, margin, currentY);
-            currentY += (termLines.length * 3.5) + 12;
+            currentY += (termLines.length * 3.5);
 
             try {
                 // Posicionamento Centralizado e Espaçado
