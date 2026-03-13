@@ -41,6 +41,11 @@ function updatePrice() {
 function getZonePrice(zoneId, type = 'logo') {
     if (!state.config) return 0;
 
+    // 1. Preço Granular do Admin (Prioridade Máxima)
+    if (state.config.zonePrices && state.config.zonePrices[zoneId] !== undefined) {
+        return parseFloat(state.config.zonePrices[zoneId]);
+    }
+
     const isText = type === 'text';
     if (zoneId.includes('lateral')) {
         return isText ? (state.config.textLatPrice || 0) : (state.config.logoLatPrice || 0);
@@ -88,6 +93,7 @@ function calculateFullPrice() {
         }
     });
 
+    // 5. CALCULAR SUBTOTAL E QUANTIDADE
     let totalQty = 0;
     Object.values(state.sizes).forEach(q => totalQty += (parseInt(q) || 0));
 
@@ -103,10 +109,11 @@ function calculateFullPrice() {
 
     let subTotal = 0;
     Object.entries(state.sizes).forEach(([sz, q]) => {
-        if (q > 0) {
-            const sizeData = CONFIG.sizes.find(s => s.label === sz);
+        const qtyVal = parseInt(q) || 0;
+        if (qtyVal > 0) {
+            const sizeData = (CONFIG.sizes || []).find(s => s.label === sz);
             const mod = (sizeData && sizeData.priceMod > 0) ? (state.config.sizeModPrice || 0) : 0;
-            subTotal += (fullUnitBase + mod) * q;
+            subTotal += (fullUnitBase + mod) * qtyVal;
         }
     });
 
@@ -125,8 +132,8 @@ function calculateFullPrice() {
 
     // Isenção de Arte (Waiver)
     let waiver = 0;
-    if (state.config.artWaiver && totalQty > 10) {
-        if (customUploadsCount > 0 || textCount > 0) waiver = (state.config.devFee || 0);
+    if (state.config.artWaiver && totalQty >= 10 && customUploadsCount > 0) {
+        waiver = (state.config.devFee || 0);
     }
 
     return {
