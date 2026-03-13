@@ -29,7 +29,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.18 (Portrait Force & Instant Sync) Ativado...');
+                console.log('☢️ Motor Nuclear v15.19 (Viewport Mirror Reverted) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -37,41 +37,24 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // 1. Criar Clone Fantasma "Portrait" (Exclusivo para o PDF/Modal)
+                // 1. Criar Clone Fantasma "Espelho" (Captura EXATA do Viewport)
                 const ghost = originalArea.cloneNode(true);
                 ghost.id = 'simulator-ghost-capture';
 
                 // Dimensões do Viewport Real (A janela que o usuário vê)
+                const viewW = originalArea.clientWidth;
                 const viewH = originalArea.clientHeight;
-                // Forçar formato retrato (Portrait) cortando as sobras laterais
-                // Um A4 é mais estreito que alto. Usamos uma proporção ex: 1:1.3 (w/h)
-                const portraitW = Math.min(originalArea.clientWidth, viewH * 0.85);
-
-                // Centralizar o conteúdo dentro da nova "moldura" estreita
-                const ghostZoomContainer = ghost.querySelector('#zoom-container');
-                if (ghostZoomContainer) {
-                    // Manter a escala atual
-                    const currentTransform = ghostZoomContainer.style.transform;
-                    // Se a tela for mais larga que a moldura portrait, deslocamos o container para a esquerda
-                    // para manter o produto no centro geométrico da nova moldura.
-                    const moveLeft = (originalArea.clientWidth - portraitW) / 2;
-                    if (moveLeft > 0) {
-                        ghostZoomContainer.style.marginLeft = `-${moveLeft}px`;
-                    }
-                }
 
                 Object.assign(ghost.style, {
                     position: 'fixed',
-                    left: '-40000px',
+                    left: '-30000px',
                     top: '0',
-                    width: portraitW + 'px',
+                    width: viewW + 'px',
                     height: viewH + 'px',
-                    overflow: 'hidden', // Cortar o que está fora do quadro Portrait
+                    overflow: 'hidden', // Cortar o que o usuário não vê (Fidelidade 1:1)
                     zIndex: '-1',
                     transform: 'none',
-                    backgroundColor: '#000000',
-                    display: 'flex',
-                    justifyContent: 'center'
+                    backgroundColor: '#000000'
                 });
                 document.body.appendChild(ghost);
 
@@ -92,7 +75,7 @@ const PDFGenerator = {
                     img.src = url;
                 });
 
-                console.log('🔄 Sincronizando Print Portrait no Ghost v15.18...');
+                console.log('🔄 Sincronizando Print 1:1 no Ghost v15.19...');
 
                 const ghostImgs = Array.from(ghost.querySelectorAll('img'));
                 for (const img of ghostImgs) {
@@ -122,7 +105,7 @@ const PDFGenerator = {
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#000000',
-                        width: portraitW,
+                        width: viewW,
                         height: viewH,
                         ignoreElements: (el) => {
                             return el.classList.contains('zoom-controls') ||
@@ -138,14 +121,14 @@ const PDFGenerator = {
                 document.body.removeChild(ghost);
 
                 if (snapshot) {
-                    console.log('✅ Print Portrait v15.18 CONCLUÍDO.');
+                    console.log('✅ Print v15.19 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     snapshot = await this.drawLegacyManualSnapshot();
                     resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico v15.18:', e);
+                console.error('❌ Erro Crítico v15.19:', e);
                 const ghost = document.getElementById('simulator-ghost-capture');
                 if (ghost) document.body.removeChild(ghost);
                 resolve(null);
