@@ -26,84 +26,59 @@ const PDFGenerator = {
      * Motor de Renderização Nuclear v15.12 (Hyper-Fidelity)
      * Usa html2canvas + Pré-processamento Base66 para garantir rotação e escala exatas.
      */
+    /**
+     * Motor de Renderização Nuclear v16 (Hyper-Fidelity Centralizado)
+     */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.28 (Landscape Close-Up Clone) Ativado...');
+                console.log('☢️ Motor Nuclear v16 (Focus on Items) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
-                if (!originalArea) {
+                const targetWrapper = document.querySelector('.simulator-wrapper');
+
+                if (!originalArea || !targetWrapper) {
                     console.error('❌ Simulador não encontrado!');
                     return resolve(null);
                 }
 
-                // --- 1. CRIANDO O CLONE FANTASMA NAS DIMENSÕES EXATAS ---
-                console.log('🔄 Sincronizando DNA Digital para Estúdio Responsivo v15.28...');
+                // --- 1. CRIANDO O CLONE FANTASMA APENAS DO WRAPPER (Customização) ---
+                console.log('🔄 Sincronizando Design para Captura Transparente...');
 
-                // Vamos focar as dimensões do estúdio no TAMANHO EXATO da moldura do mock (o zoom-container ou wrapper)
-                // Isso elimina o "teto" e o "chão" desnecessários da ringue que esmagam o design no PDF.
-                let targetHeight = 800; // Fallback
-                const zoomTarget = originalArea.querySelector('.zoom-container') || originalArea.querySelector('.simulator-wrapper');
-                if (zoomTarget) {
-                    const rect = zoomTarget.getBoundingClientRect();
-                    targetHeight = Math.floor(rect.height || 800);
-                }
+                const ghostWrapper = targetWrapper.cloneNode(true);
+                ghostWrapper.id = 'simulator-ghost-v16';
 
-                const hostRect = originalArea.getBoundingClientRect();
-                const ghost = originalArea.cloneNode(true);
-                ghost.id = 'simulator-ghost-v1529'; // Nova versão: Snapshot 1:1
+                const wrapperRect = targetWrapper.getBoundingClientRect();
 
-                // O clone `ghost` reproduz exatamente a tela do simulador
-                Object.assign(ghost.style, {
+                Object.assign(ghostWrapper.style, {
                     position: 'absolute',
                     left: '-20000px', // Oculto da tela
                     top: '0px',
-                    width: `${Math.floor(hostRect.width)}px`,
-                    height: `${Math.floor(hostRect.height)}px`,
-                    maxWidth: `${Math.floor(hostRect.width)}px`,
-                    maxHeight: `${Math.floor(hostRect.height)}px`,
-                    overflow: 'hidden',
+                    width: `${Math.floor(wrapperRect.width)}px`,
+                    height: `${Math.floor(wrapperRect.height)}px`,
+                    maxWidth: 'none',
+                    maxHeight: 'none',
+                    overflow: 'visible',
                     zIndex: '-999',
-                    transform: 'none',
+                    transform: 'none', // Remove any zoom scale for capture
                     margin: '0',
                     padding: '0'
                 });
 
-                // Blinda o zoom-container para usar exatamente o tamanho real ignorando
-                // o parent flex-box que estenderia no absoluto, mas MANTENDO O TRANSFORM (scale e translate) do usuario!
-                const origZoom = originalArea.querySelector('.zoom-container');
-                const ghostZoom = ghost.querySelector('.zoom-container');
-                if (origZoom && ghostZoom) {
-                    Object.assign(ghostZoom.style, {
-                        width: `${origZoom.offsetWidth}px`,
-                        height: `${origZoom.offsetHeight}px`,
-                        maxWidth: 'none',
-                        maxHeight: 'none',
-                        minWidth: 'auto',
-                        minHeight: 'auto',
-                        flexShrink: '0'
-                    });
-                }
+                document.body.appendChild(ghostWrapper);
 
-                document.body.appendChild(ghost);
+                // CSS Nuke no clone (Ocultar UI elements)
+                const elementsToHide = ghostWrapper.querySelectorAll('.drag-handle, .resize-handle, .delete-btn, .ui-resizable-handle, .limit-layer, .selection-border');
+                elementsToHide.forEach(el => el.remove());
 
-                // --- 2. CSS NUKE INTERNO (EXTERMÍNIO DE UI) ---
-                // Aplica inline os comandos de sumiço sem depender de engine global
-                const elementsToHide = ghost.querySelectorAll('.zoom-controls, .action-bar, #whatsapp-btn, .drag-handle, .resize-handle, .delete-btn, .ui-resizable-handle, .limit-layer, .selection-border');
-                elementsToHide.forEach(el => {
-                    el.style.setProperty('display', 'none', 'important');
-                    el.style.setProperty('opacity', '0', 'important');
-                    el.style.setProperty('visibility', 'hidden', 'important');
-                });
-
-                const targetBorders = ghost.querySelectorAll('.ui-selected, .ui-wrapper, .custom-element');
+                const targetBorders = ghostWrapper.querySelectorAll('.ui-selected, .ui-wrapper, .custom-element');
                 targetBorders.forEach(el => {
                     el.style.setProperty('outline', 'none', 'important');
                     el.style.setProperty('box-shadow', 'none', 'important');
                     el.style.setProperty('border', 'none', 'important');
                 });
 
-                // --- 3. IMUNIZAÇÃO BASE64 ABSOLUTA NO CLONE ---
+                // Imunização Base64
                 const toBase64 = (url) => new Promise((res) => {
                     if (!url || url.startsWith('data:')) return res(url);
                     const img = new Image();
@@ -120,14 +95,14 @@ const PDFGenerator = {
                     img.src = url;
                 });
 
-                const ghostImgs = Array.from(ghost.querySelectorAll('img'));
+                const ghostImgs = Array.from(ghostWrapper.querySelectorAll('img'));
                 for (const img of ghostImgs) {
                     if (img.src && !img.src.startsWith('data:')) {
                         img.src = await toBase64(img.src);
                     }
                 }
 
-                const ghostWithBg = Array.from(ghost.querySelectorAll('*')).filter(el => {
+                const ghostWithBg = Array.from(ghostWrapper.querySelectorAll('*')).filter(el => {
                     const bg = window.getComputedStyle(el).backgroundImage;
                     return bg && bg !== 'none' && bg.includes('url(');
                 });
@@ -140,67 +115,116 @@ const PDFGenerator = {
                     }
                 }
 
-                // --- 4. FOTOGRAFIA ESTÁTICA EM STUDIO ---
-                let snapshot = null;
+                // --- 2. CAPTURA DOS SHORTS (Transparente) ---
+                let shortsDataUrl = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Disparando Câmera Fiel 1:1 v15.29...');
-
-                    const canvas = await html2canvas(ghost, {
-                        scale: 2, // Resolução Elevada para PDF
+                    const canvasResult = await html2canvas(ghostWrapper, {
+                        scale: 3, // Resolução Elevada
                         useCORS: true,
                         allowTaint: true,
-                        backgroundColor: '#000000',
+                        backgroundColor: null, // Transparente!
                         logging: false,
-                        width: Math.floor(hostRect.width),
-                        height: Math.floor(hostRect.height),
-                        windowWidth: document.documentElement.offsetWidth,
-                        windowHeight: document.documentElement.offsetHeight,
-                        x: 0,
-                        y: 0,
-                        scrollX: 0,
-                        scrollY: 0
+                        width: Math.floor(wrapperRect.width),
+                        height: Math.floor(wrapperRect.height)
                     });
+                    shortsDataUrl = canvasResult.toDataURL('image/png');
+                }
+                document.body.removeChild(ghostWrapper);
 
-                    snapshot = canvas.toDataURL('image/jpeg', 0.90);
+                if (!shortsDataUrl) {
+                    throw new Error("html2canvas falhou ao capturar os items");
                 }
 
-                // --- 5. ENTREGA E LIMPEZA ---
-                document.body.removeChild(ghost);
+                // --- 3. MISTURAR COM O BACKGROUND NA POSIÇÃO CORRETA E TAMANHO MAXIMIZADO ---
+                const finalCanvas = document.createElement('canvas');
+                const ctx = finalCanvas.getContext('2d');
+                finalCanvas.width = 1600; // Tamanho grande e padronizado
+                finalCanvas.height = 1200;
 
-                if (snapshot) {
-                    console.log('✅ Print ISOLATED CLONE v15.29 CONCLUÍDO.');
-                    resolve(snapshot);
-                } else {
-                    console.warn('⚠️ html2canvas falhou no clone estático. Tentando motor legado...');
-                    snapshot = await this.drawLegacyManualSnapshot();
-                    resolve(snapshot);
+                // A. Carregar Fundo Escuro Base
+                ctx.fillStyle = '#111111';
+                ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+                // B. Carregar Imagem RingHNT
+                const loadImage = (src) => new Promise((res) => {
+                    if (!src) return res(null);
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => res(img);
+                    img.onerror = () => res(null);
+                    img.src = src;
+                });
+
+                // Possíveis caminhos da imagem Ring
+                const ringImg = await loadImage('Icons/RingHNT.jpeg') || await loadImage('assets/Icons/RingHNT.jpeg') || await loadImage('../Icons/RingHNT.jpeg') || await loadImage('assets/Galeria/RingHNT.jpeg');
+                if (ringImg) {
+                    // Preencher o fundo
+                    ctx.drawImage(ringImg, 0, 0, finalCanvas.width, finalCanvas.height);
                 }
+
+                // C. Carregar Shorts Transparente e Desenhar Centralizado/Ampliado!
+                const shortsImg = await loadImage(shortsDataUrl);
+                if (shortsImg) {
+                    // Calcular proporção para que ocupe quase toda a tela do canvas 1600x1200
+                    const marginY = 80;
+                    const marginX = 80;
+                    const targetW = finalCanvas.width - (marginX * 2);
+                    const targetH = finalCanvas.height - (marginY * 2);
+
+                    const scaleX = targetW / shortsImg.width;
+                    const scaleY = targetH / shortsImg.height;
+                    const scale = Math.min(scaleX, scaleY); // Manter proporção
+
+                    const drawW = shortsImg.width * scale;
+                    const drawH = shortsImg.height * scale;
+
+                    const drawX = (finalCanvas.width - drawW) / 2;
+                    const drawY = (finalCanvas.height - drawH) / 2;
+
+                    ctx.drawImage(shortsImg, drawX, drawY, drawW, drawH);
+                }
+
+                const finalSnapshot = finalCanvas.toDataURL('image/jpeg', 0.95);
+                console.log('✅ Print ISOLATED CLONE v16 CONCLUÍDO.');
+                resolve(finalSnapshot);
+
             } catch (e) {
-                console.error('❌ Erro Crítico Clone Engine v15.29:', e);
-                const ghost = document.getElementById('simulator-ghost-v1529');
+                console.error('❌ Erro Crítico Clone Engine v16:', e);
+                const ghost = document.getElementById('simulator-ghost-v16');
                 if (ghost) document.body.removeChild(ghost);
-                resolve(null);
+
+                // Fallback legado
+                const snapshot = await this.drawLegacyManualSnapshot();
+                resolve(snapshot);
             }
         });
     },
 
     /**
      * Motor de Backup Low-Level (v15.5)
-     * Reconstrói o canvas elemento por elemento se as libs de captura falharem.
      */
     async drawLegacyManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                canvas.width = 1200; canvas.height = 1200;
+                canvas.width = 1600; canvas.height = 1200;
 
-                ctx.fillStyle = '#ffffff';
+                ctx.fillStyle = '#111111';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 const container = document.querySelector('.simulator-wrapper');
+                if (!container) return resolve(null);
+
                 const rect = container.getBoundingClientRect();
-                const scale = 1200 / rect.width;
+
+                // Padronizando scale
+                const padding = 100;
+                const areaSize = Math.min(1600 - padding * 2, 1200 - padding * 2);
+                const scale = Math.min((1600 - padding * 2) / rect.width, (1200 - padding * 2) / rect.height);
+
+                const offsetX = (1600 - (rect.width * scale)) / 2;
+                const offsetY = (1200 - (rect.height * scale)) / 2;
 
                 const loadImage = (src) => new Promise((res) => {
                     const img = new Image();
@@ -212,11 +236,13 @@ const PDFGenerator = {
 
                 // Desenhar Fundo
                 const ringImg = await loadImage('Icons/RingHNT.jpeg') || await loadImage('RingHNT.jpeg');
-                if (ringImg) ctx.drawImage(ringImg, 0, 0, 1200, 1200);
+                if (ringImg) ctx.drawImage(ringImg, 0, 0, 1600, 1200);
 
                 const items = Array.from(container.querySelectorAll('img, [style*="background-image"]'));
                 for (const item of items) {
                     const s = window.getComputedStyle(item);
+                    if (s.display === 'none' || s.visibility === 'hidden' || s.opacity === '0') continue;
+
                     const r = item.getBoundingClientRect();
                     const src = (item.tagName === 'IMG' ? item.src : s.backgroundImage.match(/url\(['"]?(.*?)['"]?\)/)?.[1]);
 
@@ -224,8 +250,8 @@ const PDFGenerator = {
                         const img = await loadImage(src);
                         if (img) {
                             ctx.save();
-                            const x = (r.left - rect.left + r.width / 2) * scale;
-                            const y = (r.top - rect.top + r.height / 2) * scale;
+                            const x = offsetX + (r.left - rect.left + r.width / 2) * scale;
+                            const y = offsetY + (r.top - rect.top + r.height / 2) * scale;
                             ctx.translate(x, y);
 
                             if (s.transform !== 'none') {
@@ -237,7 +263,7 @@ const PDFGenerator = {
                         }
                     }
                 }
-                resolve(canvas.toDataURL('image/jpeg', 0.9));
+                resolve(canvas.toDataURL('image/jpeg', 0.95));
             } catch (e) { resolve(null); }
         });
     },
@@ -253,18 +279,18 @@ const PDFGenerator = {
         this.lastCaptureTime = now;
 
         try {
-            console.log('☢️ Ativando Renderização Industrial Direta...');
+            console.log('☢️ Ativando Renderização Industrial Direta (v16)...');
             const snapshot = await this.drawManualSnapshot();
 
             if (snapshot && snapshot.length > 1000) {
                 this.cachedSnapshot = snapshot;
-                console.log(`✅ Snapshot Nuclear gerado: ${Math.round(snapshot.length / 1024)} KB`);
+                console.log(`✅ Snapshot v16 gerado: ${Math.round(snapshot.length / 1024)} KB`);
                 this.isCaptureBroken = false;
             } else {
-                console.error('❌ Falha na geração do Snapshot Nuclear.');
+                console.error('❌ Falha na geração do Snapshot v16.');
             }
         } catch (e) {
-            console.error('❌ Erro no motor Nuclear:', e);
+            console.error('❌ Erro no motor Nuclear v16:', e);
             this.isCaptureBroken = true;
         } finally {
             this.captureInProgress = false;
