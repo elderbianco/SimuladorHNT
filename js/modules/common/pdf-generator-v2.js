@@ -49,45 +49,39 @@ const PDFGenerator = {
                     targetHeight = Math.floor(rect.height || 800);
                 }
 
-                // Proporção Landscape 3:2 (Perfeita para preencher largura da folha A4 e deixar resto da página livre para o QR Code)
-                const cropWidth = 1200;
-                const cropHeight = 800;
-
+                const hostRect = originalArea.getBoundingClientRect();
                 const ghost = originalArea.cloneNode(true);
-                ghost.id = 'simulator-ghost-v1528';
+                ghost.id = 'simulator-ghost-v1529'; // Nova versão: Snapshot 1:1
 
-                // O clone `ghost` vira uma janela panorâmica justa na altura do calção
+                // O clone `ghost` reproduz exatamente a tela do simulador
                 Object.assign(ghost.style, {
                     position: 'absolute',
                     left: '-20000px', // Oculto da tela
                     top: '0px',
-                    width: `${cropWidth}px`,
-                    height: `${cropHeight}px`,
-                    maxWidth: `${cropWidth}px`,
-                    maxHeight: `${cropHeight}px`,
+                    width: `${Math.floor(hostRect.width)}px`,
+                    height: `${Math.floor(hostRect.height)}px`,
+                    maxWidth: `${Math.floor(hostRect.width)}px`,
+                    maxHeight: `${Math.floor(hostRect.height)}px`,
                     overflow: 'hidden',
                     zIndex: '-999',
                     transform: 'none',
                     margin: '0',
-                    padding: '0',
-                    display: 'flex',                 // ALINHAMENTO MANDATÓRIO
-                    justifyContent: 'center',        // O container dos calções fica no exato centro
-                    alignItems: 'center',            // Grudado no topo e no fundo sem padding
-                    backgroundPosition: 'center 70%' // Sobe o background para aparecer o chão
+                    padding: '0'
                 });
 
-                // Blindar o container filho do short contra redimensionamento surpresa
+                // Blinda o zoom-container para usar exatamente o tamanho real ignorando
+                // o parent flex-box que estenderia no absoluto, mas MANTENDO O TRANSFORM (scale e translate) do usuario!
+                const origZoom = originalArea.querySelector('.zoom-container');
                 const ghostZoom = ghost.querySelector('.zoom-container');
-                if (ghostZoom) {
+                if (origZoom && ghostZoom) {
                     Object.assign(ghostZoom.style, {
-                        width: `${cropHeight}px`,
-                        height: `${cropHeight}px`,
+                        width: `${origZoom.offsetWidth}px`,
+                        height: `${origZoom.offsetHeight}px`,
                         maxWidth: 'none',
                         maxHeight: 'none',
                         minWidth: 'auto',
                         minHeight: 'auto',
-                        flexShrink: '0',
-                        transform: 'scale(1.4)'
+                        flexShrink: '0'
                     });
                 }
 
