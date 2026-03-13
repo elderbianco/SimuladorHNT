@@ -215,7 +215,7 @@ class BaseSimulator {
             if (s.type === 'color' && window.UIComponents?.createColorPicker) {
                 item.appendChild(window.UIComponents.createColorPicker(s.colors, s.selectedColor, s.onSelect, { className: 'inline-picker' }));
             } else if (s.type === 'size' && window.UIComponents?.createSizeSelector) {
-                item.appendChild(window.UIComponents.createSizeSelector(s.sizes, s.selectedSizes, s.onUpdate));
+                item.appendChild(window.UIComponents.createSizeSelector(s.sizes, s.selectedSizes || {}, this.state.config || {}, s.onUpdate));
             } else if (s.element) {
                 item.appendChild(s.element);
             }
