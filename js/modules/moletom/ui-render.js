@@ -424,7 +424,7 @@ function renderFinalForm() {
             <div style = "margin-top:10px; border-top:1px solid #333; padding-top:10px;" >
             <label style="font-weight:bold; display:block; color:#fff;">Observações:</label>
             <textarea id="obs-input" style="width:100%; height:60px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; padding:5px;"></textarea>
-        </div >
+        </div>
         <div style="margin-top:10px; background:rgba(212, 175, 55, 0.05); padding:12px; border:1px solid var(--gold-primary); border-radius:var(--radius-md);">
             <label style="font-weight:bold; display:block; color:var(--gold-primary); margin-bottom:8px;">Telefone <span style="color:red">*</span> ${(typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_telefone', 'Necessário para contato sobre ajustes técnicos e análise de produção') : ''}</label>
             <input type="tel" id="phone-input" style="width:100%; padding:10px; border:1px solid #444; background:#111; color:#fff; border-radius:4px;" placeholder="(XX) XXXXX-XXXX">

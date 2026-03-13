@@ -357,7 +357,7 @@ function renderControls_legacy() {
             <div style = "margin-top:15px; border-top: 1px solid #333; padding-top: 15px;" >
             <label style="font-weight:bold; display:block; margin-bottom:5px; color:#fff;">Observações:</label>
             <textarea id="obs-input" style="width:100%; border:1px solid #444; background:#222; color:#fff; padding:8px; border-radius:4px;" rows="3" placeholder="Ex: Detalhes específicos de arte, posições, etc."></textarea>
-        </div >
+        </div>
         <div style="margin-top:10px; background:rgba(212, 175, 55, 0.05); padding:12px; border:1px solid var(--gold-primary); border-radius:var(--radius-md);">
             <label style="font-weight:bold; display:block; margin-bottom:8px; color:var(--gold-primary);">Telefone para Contato <span style="color:red">*</span> ${(typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_telefone', 'Necessário para contato sobre ajustes técnicos e análise de produção') : ''}</label>
             <input type="tel" id="phone-input" style="width:100%; border:1px solid #444; background:#111; color:#fff; padding:10px; border-radius:4px; font-size:1rem;" placeholder="(XX) XXXXX XXXX" maxlength="15">
