@@ -23,8 +23,8 @@ const PDFGenerator = {
     },
 
     /**
-     * Motor de Renderização Nuclear (Manual Canvas 2D) - v15.3
-     * Varredura Universal (Crawler) para garantir 100% de fidelidade.
+     * Motor de Renderização Nuclear (Manual Canvas 2D) - v15.4
+     * Varredura Universal com Suporte a Transformações e Camadas Dinâmicas.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
@@ -34,7 +34,7 @@ const PDFGenerator = {
                 canvas.width = 1200;
                 canvas.height = 1200;
 
-                console.log('☢️ Motor Nuclear v15.3 (Crawler) Ativado...');
+                console.log('☢️ Motor Nuclear v15.4 (Sync + Transform) Ativado...');
 
                 // 1. Fundo Branco Base
                 ctx.fillStyle = '#ffffff';
@@ -52,7 +52,7 @@ const PDFGenerator = {
                     img.src = src;
                 });
 
-                // Desenhar Fundo HNT (Ring) Manualmente primeiro
+                // Desenhar Fundo HNT (Ring) na base absoluta
                 const ringImg = await loadImage('Icons/RingHNT.jpeg') || await loadImage('RingHNT.jpeg');
                 if (ringImg) ctx.drawImage(ringImg, 0, 0, canvas.width, canvas.height);
 
@@ -81,6 +81,7 @@ const PDFGenerator = {
                             src: el.src,
                             rect: rect,
                             zIndex: parseInt(style.zIndex) || 0,
+                            transform: style.transform,
                             order: visualElements.length
                         });
                     }
@@ -95,6 +96,7 @@ const PDFGenerator = {
                                 src: url,
                                 rect: rect,
                                 zIndex: parseInt(style.zIndex) || 0,
+                                transform: style.transform,
                                 order: visualElements.length
                             });
                         }
@@ -119,22 +121,38 @@ const PDFGenerator = {
 
                 crawl(container);
 
-                // 3. Ordenar por Z-Index e Document Order (Camadas)
+                // 3. Ordenar Camadas (Garantir que a ordem de visualização seja mantida)
+                // Prioridade: z-index, seguido pela ordem no DOM
                 visualElements.sort((a, b) => (a.zIndex - b.zIndex) || (a.order - b.order));
-                console.log(`📊 Crawler capturou ${visualElements.length} elementos visuais.`);
+                console.log(`📊 Crawler capturou ${visualElements.length} elementos.`);
 
-                // 4. Renderizar Ordem Final
+                // 4. Renderizar Ordem Final com Suporte a Transformações
                 for (const item of visualElements) {
-                    const x = (item.rect.left - containerRect.left) * scale;
-                    const y = (item.rect.top - containerRect.top) * scale;
+                    ctx.save(); // Salvar estado do canvas antes de aplicar transformações
+
+                    const x = (item.rect.left - containerRect.left + item.rect.width / 2) * scale;
+                    const y = (item.rect.top - containerRect.top + item.rect.height / 2) * scale;
                     const w = item.rect.width * scale;
                     const h = item.rect.height * scale;
+
+                    // Mover o contexto para o centro do elemento para aplicar rotação/escala
+                    ctx.translate(x, y);
+
+                    // Aplicar Transformação CSS se existir (Matrix)
+                    if (item.transform && item.transform !== 'none') {
+                        const values = item.transform.match(/matrix\((.+)\)/)?.[1].split(',').map(parseFloat);
+                        if (values && values.length === 6) {
+                            // Aplicar apenas rotação e escala da matriz (ignorando translação já tratada pelo rect)
+                            ctx.transform(values[0], values[1], values[2], values[3], 0, 0);
+                        }
+                    }
 
                     if (item.type === 'img' || item.type === 'bg') {
                         const img = await loadImage(item.src);
                         if (img) {
-                            ctx.drawImage(img, x, y, w, h);
-                            console.log(`✅ Desenhei ${item.type}: ${item.src.split('/').pop()}`);
+                            // Desenhar centralizado
+                            ctx.drawImage(img, -w / 2, -h / 2, w, h);
+                            console.log(`✅ ${item.type} desenhado: ${item.src.split('/').pop()}`);
                         }
                     } else if (item.type === 'text') {
                         const s = item.style;
@@ -142,16 +160,18 @@ const PDFGenerator = {
                         ctx.fillStyle = s.color;
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillText(item.content, x + w / 2, y + h / 2);
-                        console.log(`✅ Desenhei texto: ${item.content.substring(0, 10)}...`);
+                        ctx.fillText(item.content, 0, 0);
+                        console.log(`✅ Texto desenhado: ${item.content.substring(0, 10)}...`);
                     }
+
+                    ctx.restore(); // Restaurar estado original do canvas
                 }
 
                 const result = canvas.toDataURL('image/jpeg', 0.9);
-                console.log('☢️ Snapshot Nuclear v15.3 CONCLUÍDO.');
+                console.log('☢️ Snapshot Nuclear v15.4 CONCLUÍDO.');
                 resolve(result);
             } catch (e) {
-                console.error('❌ Erro Crítico no Crawler Nuclear:', e);
+                console.error('❌ Erro Crítico no Motor Nuclear v15.4:', e);
                 resolve(null);
             }
         });
