@@ -29,7 +29,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.26 (Hard-Bake Clone & Nuke) Ativado...');
+                console.log('☢️ Motor Nuclear v15.28 (Landscape Close-Up Clone) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -38,27 +38,56 @@ const PDFGenerator = {
                 }
 
                 // --- 1. CRIANDO O CLONE FANTASMA NAS DIMENSÕES EXATAS ---
-                console.log('🔄 Sincronizando DNA Digital para Estúdio Responsivo v15.27...');
+                console.log('🔄 Sincronizando DNA Digital para Estúdio Responsivo v15.28...');
 
-                const hostRect = originalArea.getBoundingClientRect();
+                // Vamos focar as dimensões do estúdio no TAMANHO EXATO da moldura do mock (o zoom-container ou wrapper)
+                // Isso elimina o "teto" e o "chão" desnecessários da ringue que esmagam o design no PDF.
+                let targetHeight = 800; // Fallback
+                const zoomTarget = originalArea.querySelector('.zoom-container') || originalArea.querySelector('.simulator-wrapper');
+                if (zoomTarget) {
+                    const rect = zoomTarget.getBoundingClientRect();
+                    targetHeight = Math.floor(rect.height || 800);
+                }
+
+                // Proporção Landscape 3:2 (Perfeita para preencher largura da folha A4 e deixar resto da página livre para o QR Code)
+                const cropHeight = targetHeight;
+                const cropWidth = Math.floor(targetHeight * 1.5);
+
                 const ghost = originalArea.cloneNode(true);
-                ghost.id = 'simulator-ghost-v1527';
+                ghost.id = 'simulator-ghost-v1528';
 
-                // Congelar as dimensões do estúdio com a visão perfeitamente enquadrada do usuário
+                // O clone `ghost` vira uma janela panorâmica justa na altura do calção
                 Object.assign(ghost.style, {
                     position: 'absolute',
                     left: '-20000px', // Oculto da tela
                     top: '0px',
-                    width: `${Math.floor(hostRect.width)}px`,
-                    height: `${Math.floor(hostRect.height)}px`,
-                    maxWidth: `${Math.floor(hostRect.width)}px`,
-                    maxHeight: `${Math.floor(hostRect.height)}px`,
+                    width: `${cropWidth}px`,
+                    height: `${cropHeight}px`,
+                    maxWidth: `${cropWidth}px`,
+                    maxHeight: `${cropHeight}px`,
                     overflow: 'hidden',
                     zIndex: '-999',
                     transform: 'none',
                     margin: '0',
-                    padding: '0'
+                    padding: '0',
+                    display: 'flex',                 // ALINHAMENTO MANDATÓRIO
+                    justifyContent: 'center',        // O container dos calções fica no exato centro
+                    alignItems: 'center'             // Grudado no topo e no fundo sem padding
                 });
+
+                // Blindar o container filho do short contra redimensionamento surpresa
+                const ghostZoom = ghost.querySelector('.zoom-container');
+                if (ghostZoom) {
+                    Object.assign(ghostZoom.style, {
+                        width: `${cropHeight}px`,
+                        height: `${cropHeight}px`,
+                        maxWidth: 'none',
+                        maxHeight: 'none',
+                        minWidth: 'auto',
+                        minHeight: 'auto',
+                        flexShrink: '0'
+                    });
+                }
 
                 document.body.appendChild(ghost);
 
