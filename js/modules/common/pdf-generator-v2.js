@@ -576,6 +576,39 @@ const PDFGenerator = {
             }
         }
 
+        // Helper para gerar QR Codes assincronamente
+        const generateQR = async (text) => {
+            return new Promise((resolve) => {
+                try {
+                    const qrDiv = document.createElement('div');
+                    qrDiv.style.position = 'absolute';
+                    qrDiv.style.left = '-9999px';
+                    qrDiv.style.top = '-9999px';
+                    document.body.appendChild(qrDiv);
+
+                    new QRCode(qrDiv, {
+                        text: text,
+                        width: 256,
+                        height: 256,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    setTimeout(() => {
+                        const canvas = qrDiv.querySelector('canvas');
+                        const img = qrDiv.querySelector('img');
+                        const data = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
+                        document.body.removeChild(qrDiv);
+                        resolve(data);
+                    }, 600);
+                } catch (e) {
+                    console.error("Erro interno QR:", e);
+                    resolve(null);
+                }
+            });
+        };
+
         const id = this.context.state?.simulationId || 'HNT_PEDIDO';
 
         try {
