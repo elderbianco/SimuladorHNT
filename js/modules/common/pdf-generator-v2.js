@@ -72,26 +72,26 @@ const PDFGenerator = {
             }
 
             const canvas = await html2canvas(captureTarget, {
-                scale: 1, // Alta qualidade
+                scale: 2, // Aumentado para 2 para máxima nitidez (Print Screen Real)
                 useCORS: true,
-                allowTaint: true,
+                allowTaint: false, // OBRIGATÓRIO: false para permitir toDataURL
                 backgroundColor: '#ffffff',
-                logging: false,
-                imageTimeout: 10000,
+                logging: true, // Habilitado temporariamente para debug
+                imageTimeout: 15000,
                 removeContainer: true,
                 onclone: (clonedDoc) => {
                     const target = clonedDoc.querySelector('.zoom-container') || clonedDoc.querySelector('.simulator-wrapper');
                     const originalArea = document.querySelector('.simulator-area');
 
                     if (target) {
-                        // 1. Preservar Background (Forçar URL Absoluta)
+                        // 1. Preservar Background (URL Absoluta Garantida)
                         if (originalArea) {
                             let bgStyle = window.getComputedStyle(originalArea).backgroundImage;
                             if (bgStyle && bgStyle !== 'none') {
-                                // Garantir caminho absoluto se for relativo
+                                // Converter caminhos relativos em absolutos para o clone
                                 if (bgStyle.includes('../../')) {
-                                    const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-                                    bgStyle = bgStyle.replace('../../', baseUrl);
+                                    const base = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                                    bgStyle = bgStyle.replace('../../', base);
                                 }
                                 target.style.backgroundImage = bgStyle;
                                 target.style.backgroundSize = 'cover';
@@ -100,15 +100,15 @@ const PDFGenerator = {
                             }
                         }
 
-                        // 2. Normalizar Dimensões para Captura Quadrada
-                        target.style.width = '1000px';
-                        target.style.height = '1000px';
+                        // 2. Dimensões Fixas para Fidelidade
+                        target.style.width = '1200px';
+                        target.style.height = '1200px';
                         target.style.transform = 'none';
                         target.style.position = 'relative';
                         target.style.display = 'block';
                         target.style.visibility = 'visible';
 
-                        // 3. Normalização Profunda de Camadas (Flattening)
+                        // 3. Flattening de Camadas
                         target.querySelectorAll('.product-layer, .layer, .customization-layer').forEach(l => {
                             l.style.position = 'absolute';
                             l.style.top = '0';
@@ -118,13 +118,10 @@ const PDFGenerator = {
                             l.style.display = 'block';
                             l.style.visibility = 'visible';
                             l.style.opacity = '1';
-                            l.style.transform = 'none';
 
-                            // Logos/Imagens
                             l.querySelectorAll('img').forEach(img => {
                                 img.style.display = 'block';
                                 img.style.visibility = 'visible';
-                                img.style.opacity = '1';
                                 if (!img.classList.contains('custom-element-img')) {
                                     img.style.width = '100%';
                                     img.style.height = '100%';
@@ -132,32 +129,36 @@ const PDFGenerator = {
                                 }
                             });
 
-                            // Textos Customizados (Expert Fix)
+                            // Textos (Garantir Estilo)
                             l.querySelectorAll('.custom-text').forEach(txt => {
-                                const originalTxt = document.querySelector(`[data-id="${txt.dataset.id}"] .custom-text`) || txt;
-                                const style = window.getComputedStyle(originalTxt);
-                                txt.style.fontFamily = style.fontFamily;
-                                txt.style.fontSize = style.fontSize;
-                                txt.style.color = style.color;
-                                txt.style.fontWeight = style.fontWeight;
-                                txt.style.textAlign = style.textAlign;
+                                const original = document.querySelector(`[data-id="${txt.dataset.id}"] .custom-text`) || txt;
+                                const s = window.getComputedStyle(original);
+                                txt.style.fontFamily = s.fontFamily;
+                                txt.style.fontSize = s.fontSize;
+                                txt.style.color = s.color;
+                                txt.style.fontWeight = s.fontWeight;
                                 txt.style.display = 'block';
                                 txt.style.visibility = 'visible';
                             });
                         });
 
-                        // 4. Esconder Elementos de Controle e UI
+                        // 4. Limpeza de UI
                         clonedDoc.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle, .limit-layer, .zoom-controls, .delete-btn').forEach(el => {
                             el.style.display = 'none';
-                            el.style.visibility = 'hidden';
                         });
                     }
                 }
             });
-            // Salvar no cache (PNG para transparência)
-            this.cachedSnapshot = canvas.toDataURL('image/png');
 
-            console.log('📸 PDF Debug: Snapshot dimensions:', canvas.width, 'x', canvas.height);
+            // 5. Verificação de Integridade do Snapshot
+            const snapshot = canvas.toDataURL('image/jpeg', 0.9); // JPEG é menor e mais compatível para PDF
+            if (snapshot.length < 1000) {
+                console.error('❌ Snapshot corrompido ou vazio (length < 1000).');
+                this.isCaptureBroken = true;
+            } else {
+                this.cachedSnapshot = snapshot;
+                console.log(`📸 Snapshot gerado com sucesso! Tamanho: ${Math.round(snapshot.length / 1024)} KB`);
+            }
 
             canvas.width = 0;
             canvas.height = 0;
