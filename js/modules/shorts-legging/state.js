@@ -157,7 +157,7 @@ function saveState() {
     // Para Shorts Legging, salvamos apenas os dados essenciais
     // Note: state.elements contém elementos DOM, que não podem ser serializados.
     // Em uma implementação futura, deveríamos salvar os URLs/Posições se quisermos restaurar imagens.
-    const data = {
+    window.state = {
         simulationId: state.simulationId,
         simNumber: state.simNumber,
         orderNumber: state.orderNumber,
