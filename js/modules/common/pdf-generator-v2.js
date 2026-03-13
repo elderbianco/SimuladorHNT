@@ -29,7 +29,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.23 (CSS Nuke + Strict Area Bounds) Ativado...');
+                console.log('☢️ Motor Nuclear v15.24 (Total Virtual Render) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -38,9 +38,9 @@ const PDFGenerator = {
                 }
 
                 // --- 1. PREPARAÇÃO DA CENA REAL (LIVE PREP) ---
-                console.log('🔄 Sincronizando DNA Digital na Cena Real v15.23...');
+                console.log('🔄 Sincronizando DNA Digital na Cena Real v15.24...');
 
-                // Conversor Base64 (Imuniza contra CORS sem piscar a tela)
+                // Conversor Base64
                 const toBase64 = (url) => new Promise((res) => {
                     if (!url || url.startsWith('data:')) return res(url);
                     const img = new Image();
@@ -57,7 +57,7 @@ const PDFGenerator = {
                     img.src = url;
                 });
 
-                // Injetar Base64 nas imagens e backgrounds reais silenciosamente
+                // Injetar Base64 nas imagens e backgrounds reais
                 const realImgs = Array.from(originalArea.querySelectorAll('img'));
                 for (const img of realImgs) {
                     if (img.src && !img.src.startsWith('data:')) {
@@ -78,12 +78,14 @@ const PDFGenerator = {
                     }
                 }
 
-                // --- 2. CSS NUKE (DESTRUIÇÃO VISUAL TEMPORÁRIA E PROTEÇÃO DE OVERFLOW Y) ---
-                console.log('🛡️ Anulando falsas bordas via CSS Injection e Travando Overflow...');
+                // --- 2. CSS NUKE (LIMPEZA VISUAL PROFUNDA E SOLTURA DE BOUNDS) ---
+                console.log('🛡️ Anulando falsas bordas via CSS Injection e Liberando Virtual Scroll...');
                 const nukeStyle = document.createElement('style');
                 nukeStyle.innerHTML = `
+                    /* Desprende o container de barras de rolagem cortantes para a foto ser integral */
                     .simulator-area {
-                        overflow: hidden !important; 
+                        overflow: visible !important;
+                        position: relative !important;
                     }
                     .simulator-area .ui-selected, 
                     .simulator-area .ui-wrapper, 
@@ -93,6 +95,8 @@ const PDFGenerator = {
                         outline: none !important;
                         box-shadow: none !important;
                         border: none !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
                     }
                     .ui-resizable-handle, 
                     .delete-btn, 
@@ -110,21 +114,17 @@ const PDFGenerator = {
                 `;
                 document.head.appendChild(nukeStyle);
 
-                // --- 3. CAPTURA DIGITAL DIRETA (Html2Canvas in DOM) ---
+                // --- 3. CAPTURA DIGITAL VIRTUAL (Total Scroll Height)
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Disparando Câmera no Fluxo Vivo com Natural Bounds...');
+                    console.log('📸 Disparando Câmera no Fluxo Vivo Customizado...');
 
                     // Pequeno delay para garantir aplicação do CSS Nuke
                     await new Promise(r => setTimeout(r, 50));
 
-                    // Rolagem ao Topo (Evita bugar o canvas interno caso o usuário tenha scrollado)
-                    window.scrollTo(0, 0);
-
-                    // Pega as medidas exatas da moldura visível para não estourar em offsets invisíveis
-                    const rect = originalArea.getBoundingClientRect();
-                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                    // Lê o tamanho integral (incluindo o que está escondido no scroll)
+                    const fullWidth = originalArea.scrollWidth;
+                    const fullHeight = originalArea.scrollHeight;
 
                     const canvas = await html2canvas(originalArea, {
                         scale: 1.5, // Altíssima Definição
@@ -132,9 +132,15 @@ const PDFGenerator = {
                         allowTaint: true,
                         backgroundColor: '#000000',
                         logging: false,
-                        // Largura e Altura baseadas estritamente no elemento visual (sem offset falso)
-                        width: originalArea.clientWidth,
-                        height: originalArea.clientHeight
+                        // Configura um viewport virtual do tamanho EXATO do scroll interno
+                        width: fullWidth,
+                        height: fullHeight,
+                        windowWidth: fullWidth,
+                        windowHeight: fullHeight,
+                        x: 0,
+                        y: 0,
+                        scrollY: 0,
+                        scrollX: 0
                     });
 
                     snapshot = canvas.toDataURL('image/jpeg', 0.90);
@@ -147,7 +153,7 @@ const PDFGenerator = {
 
                 // --- 5. ENTREGA ---
                 if (snapshot) {
-                    console.log('✅ Print LIVE ABSOLUTE v15.23 CONCLUÍDO.');
+                    console.log('✅ Print VIRTUAL v15.24 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     console.warn('⚠️ html2canvas falhou no DOM real. Tentando motor legado...');
@@ -155,7 +161,7 @@ const PDFGenerator = {
                     resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico Live Engine v15.23:', e);
+                console.error('❌ Erro Crítico Virtual Engine v15.24:', e);
                 resolve(null);
             }
         });
