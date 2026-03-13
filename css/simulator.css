@@ -795,6 +795,25 @@ input:checked+.slider:before {
     box-shadow: 0 6px 20px rgba(220, 53, 69, 0.6) !important;
 }
 
+/* 🛡️ Nuclear Sanitization para Captura de PDF (v15.7) */
+body.pdf-capturing .drag-handle,
+body.pdf-capturing .resize-handle,
+body.pdf-capturing .ui-draggable-handle,
+body.pdf-capturing .limit-layer,
+body.pdf-capturing .ui-resizable-handle,
+body.pdf-capturing .zoom-controls,
+body.pdf-capturing .action-bar {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+body.pdf-capturing .simulator-wrapper {
+    box-shadow: none !important;
+    border: none !important;
+    background: #fff !important;
+}
+
 /* Enhanced Color Selector */
 .color-option {
     position: relative;
