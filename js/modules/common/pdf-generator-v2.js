@@ -698,6 +698,12 @@ const PDFGenerator = {
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(0, 0, 0);
 
+                // Proteção contra fim da página (v15.10)
+                if (currentY > pageHeight - 30) {
+                    doc.addPage();
+                    currentY = drawExpertTemplate(doc);
+                }
+
                 // Quebra de Linha Inteligente para Labels Longos (v15.10)
                 const maxLabelWidth = pageWidth - (margin * 2) - 40; // Dá 40mm de folga para o valor à direita
                 const labelLines = doc.splitTextToSize(label, maxLabelWidth);
