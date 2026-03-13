@@ -23,8 +23,8 @@ const PDFGenerator = {
     },
 
     /**
-     * Motor de Renderização Nuclear (Manual Canvas 2D)
-     * Desenha camada por camada para garantir 100% de fidelidade.
+     * Motor de Renderização Nuclear (Manual Canvas 2D) - v15.3
+     * Varredura Universal (Crawler) para garantir 100% de fidelidade.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
@@ -34,114 +34,124 @@ const PDFGenerator = {
                 canvas.width = 1200;
                 canvas.height = 1200;
 
-                console.log('☢️ Iniciando renderização manual...');
+                console.log('☢️ Motor Nuclear v15.3 (Crawler) Ativado...');
 
                 // 1. Fundo Branco Base
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Helper inteligente para carregar imagens
+                // Helper para carregar imagens
                 const loadImage = (src) => new Promise((res) => {
-                    if (!src) return res(null);
+                    if (!src || src === 'none') return res(null);
                     const img = new Image();
-
-                    // Só aplica CORS se for externa
                     if (src.startsWith('http') && !src.includes(window.location.hostname)) {
                         img.crossOrigin = "anonymous";
                     }
-
                     img.onload = () => res(img);
-                    img.onerror = () => {
-                        console.warn('❌ Erro ao carregar asset para snapshot:', src);
-                        res(null);
-                    };
+                    img.onerror = () => res(null);
                     img.src = src;
                 });
 
-                // 2. Desenhar Fundo HNT (Ring)
-                const bgPaths = ['RingHNT.jpeg', 'Icons/RingHNT.jpeg', 'assets/simulator/Background_RingHNT.jpeg'];
-                let bgImg = null;
-                for (const path of bgPaths) {
-                    bgImg = await loadImage(path);
-                    if (bgImg) {
-                        console.log('✅ Fundo HNT detectado e carregado.');
-                        break;
-                    }
-                }
-                if (bgImg) ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+                // Desenhar Fundo HNT (Ring) Manualmente primeiro
+                const ringImg = await loadImage('Icons/RingHNT.jpeg') || await loadImage('RingHNT.jpeg');
+                if (ringImg) ctx.drawImage(ringImg, 0, 0, canvas.width, canvas.height);
 
-                // 3. Desenhar Camadas do Produto (Shorts, Moletom, etc)
-                const layerSelectors = [
-                    '.product-layer img',
-                    '.layer img',
-                    '.simulator-wrapper .product-layer img',
-                    '.simulator-wrapper .layer img'
-                ];
-
-                // Pegar todos os elementos excluindo duplicados
-                const layers = Array.from(new Set(layerSelectors.flatMap(s => Array.from(document.querySelectorAll(s)))));
-                console.log(`📊 Camadas do produto encontradas: ${layers.length}`);
-
-                for (const imgEl of layers) {
-                    // Ignorar se não tiver src ou for base64 pequeno (handle etc)
-                    if (!imgEl.src || imgEl.src.includes('data:image/') || imgEl.classList.contains('drag-handle')) continue;
-
-                    const img = await loadImage(imgEl.src);
-                    if (img) {
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        console.log(`✅ Camada desenhada: ${imgEl.src.split('/').pop()}`);
-                    }
+                const container = document.querySelector('.simulator-wrapper') || document.querySelector('.zoom-container');
+                if (!container) {
+                    console.error('❌ Container .simulator-wrapper não encontrado!');
+                    resolve(null);
+                    return;
                 }
 
-                // 4. Desenhar Customizações (Logos/Fotos)
-                const customImgs = Array.from(document.querySelectorAll('.customization-layer .custom-element-img'));
-                console.log(`🖼️ Customizações detectadas: ${customImgs.length}`);
+                const containerRect = container.getBoundingClientRect();
+                const scale = canvas.width / containerRect.width;
 
-                const container = document.querySelector('.zoom-container') || document.querySelector('.simulator-wrapper') || document.querySelector('.simulator-area');
-                const containerRect = container ? container.getBoundingClientRect() : { width: 1, height: 1, left: 0, top: 0 };
+                // 2. Coletar Elementos Visuais Recursivamente (Crawler)
+                const visualElements = [];
+                const crawl = (el) => {
+                    const style = window.getComputedStyle(el);
+                    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return;
 
-                for (const imgEl of customImgs) {
-                    const img = await loadImage(imgEl.src);
-                    if (img && container) {
-                        const rect = imgEl.getBoundingClientRect();
-                        const scale = canvas.width / containerRect.width;
-                        const x = (rect.left - containerRect.left) * scale;
-                        const y = (rect.top - containerRect.top) * scale;
-                        const w = rect.width * scale;
-                        const h = rect.height * scale;
+                    const rect = el.getBoundingClientRect();
 
-                        ctx.drawImage(img, x, y, w, h);
-                        console.log(`✅ Customização desenhada: ${imgEl.src.split('/').pop()}`);
+                    // Capturar IMGs
+                    if (el.tagName === 'IMG' && el.src) {
+                        visualElements.push({
+                            type: 'img',
+                            src: el.src,
+                            rect: rect,
+                            zIndex: parseInt(style.zIndex) || 0,
+                            order: visualElements.length
+                        });
                     }
-                }
 
-                // 5. Desenhar Textos
-                const customTexts = Array.from(document.querySelectorAll('.customization-layer .custom-text'));
-                console.log(`✍️ Textos detectados: ${customTexts.length}`);
+                    // Capturar Background-Images
+                    const bg = style.backgroundImage;
+                    if (bg && bg !== 'none' && bg.includes('url')) {
+                        const url = bg.match(/url\(['"]?(.*?)['"]?\)/)?.[1];
+                        if (url) {
+                            visualElements.push({
+                                type: 'bg',
+                                src: url,
+                                rect: rect,
+                                zIndex: parseInt(style.zIndex) || 0,
+                                order: visualElements.length
+                            });
+                        }
+                    }
 
-                for (const txtEl of customTexts) {
-                    if (container) {
-                        const rect = txtEl.getBoundingClientRect();
-                        const scale = canvas.width / containerRect.width;
-                        const style = window.getComputedStyle(txtEl);
+                    // Capturar Texto Direto
+                    Array.from(el.childNodes).forEach(node => {
+                        if (node.nodeType === 3 && node.textContent.trim().length > 0) {
+                            visualElements.push({
+                                type: 'text',
+                                content: node.textContent.trim(),
+                                rect: rect,
+                                style: style,
+                                zIndex: parseInt(style.zIndex) || 0,
+                                order: visualElements.length
+                            });
+                        }
+                    });
 
-                        ctx.font = `${style.fontWeight} ${parseFloat(style.fontSize) * scale}px ${style.fontFamily}`;
-                        ctx.fillStyle = style.color;
+                    Array.from(el.children).forEach(crawl);
+                };
+
+                crawl(container);
+
+                // 3. Ordenar por Z-Index e Document Order (Camadas)
+                visualElements.sort((a, b) => (a.zIndex - b.zIndex) || (a.order - b.order));
+                console.log(`📊 Crawler capturou ${visualElements.length} elementos visuais.`);
+
+                // 4. Renderizar Ordem Final
+                for (const item of visualElements) {
+                    const x = (item.rect.left - containerRect.left) * scale;
+                    const y = (item.rect.top - containerRect.top) * scale;
+                    const w = item.rect.width * scale;
+                    const h = item.rect.height * scale;
+
+                    if (item.type === 'img' || item.type === 'bg') {
+                        const img = await loadImage(item.src);
+                        if (img) {
+                            ctx.drawImage(img, x, y, w, h);
+                            console.log(`✅ Desenhei ${item.type}: ${item.src.split('/').pop()}`);
+                        }
+                    } else if (item.type === 'text') {
+                        const s = item.style;
+                        ctx.font = `${s.fontWeight} ${parseFloat(s.fontSize) * scale}px ${s.fontFamily}`;
+                        ctx.fillStyle = s.color;
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-
-                        const x = (rect.left - containerRect.left + rect.width / 2) * scale;
-                        const y = (rect.top - containerRect.top + rect.height / 2) * scale;
-
-                        ctx.fillText(txtEl.innerText, x, y);
+                        ctx.fillText(item.content, x + w / 2, y + h / 2);
+                        console.log(`✅ Desenhei texto: ${item.content.substring(0, 10)}...`);
                     }
                 }
 
                 const result = canvas.toDataURL('image/jpeg', 0.9);
-                console.log('✅ Snapshot Nuclear Finalizado.');
+                console.log('☢️ Snapshot Nuclear v15.3 CONCLUÍDO.');
                 resolve(result);
             } catch (e) {
-                console.error('❌ Erro Crítico no Motor Nuclear:', e);
+                console.error('❌ Erro Crítico no Crawler Nuclear:', e);
                 resolve(null);
             }
         });
