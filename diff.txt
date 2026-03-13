@@ -1,0 +1,121 @@
+diff --git a/c:/Users/Nitro v15/Documents/GitHub/SimuladorHNT/IndexFightShorts.html b/C:/Users/Nitro v15/.gemini/antigravity/scratch/Backup/SimulatorHNT - Copia102261204/IndexFightShorts.html
+index b9971f2..b9decf1 100644
+--- a/c:/Users/Nitro v15/Documents/GitHub/SimuladorHNT/IndexFightShorts.html	
++++ b/C:/Users/Nitro v15/.gemini/antigravity/scratch/Backup/SimulatorHNT - Copia102261204/IndexFightShorts.html	
+@@ -9,9 +9,10 @@
+         href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Advent+Pro:wght@400;700&family=Alex+Brush&family=Alfa+Slab+One&family=Allerta+Stencil&family=Allura&family=Anton&family=Archivo:wght@400;700&family=Bebas+Neue&family=Black+Ops+One&family=Cabin:wght@400;700&family=Cinzel:wght@400;700&family=Creepster&family=DM+Sans:wght@400;700&family=Dancing+Script:wght@400;700&family=Exo+2:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Merienda:wght@400;700&family=Montserrat:wght@400;700&family=Nunito:wght@400;700&family=Open+Sans:wght@400;700&family=Orbitron:wght@400;700&family=Oswald:wght@400;700&family=Outfit:wght@300;400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Playwrite+Magyarorszag:wght@100..400&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Rubik:wght@400;700&family=Russo+One&family=Sacramento&family=Satisfy&family=Stardos+Stencil:wght@400;700&family=Teko:wght@400;700&family=Ubuntu:wght@400;700&family=Work+Sans:wght@400;700&family=Yellowtail&family=Zilla+Slab:wght@400;700&display=swap"
+         rel="stylesheet">
+     <link rel="stylesheet" href="css/common.css">
+-    <link rel="stylesheet" href="css/shorts-style.css?v=4074">
++    <link rel="stylesheet" href="css/shorts-style.css?v=4073">
++
+     <link rel="stylesheet" href="css/shorts-gallery.css">
+-    <link rel="stylesheet" href="css/simulator.css?v=202603091900">
++    <link rel="stylesheet" href="css/simulator.css?v=20260124">
+     <!-- <link rel="stylesheet" href="css/main.css"> -->
+ 
+ 
+@@ -32,24 +33,20 @@
+         </div>
+ 
+         <div class="header-right">
+-            <div class="mobile-menu-container" id="mobile-sim-menu">
+-                <button class="mobile-menu-trigger" onclick="this.parentElement.classList.toggle('active')">
+-                    👕 <small>SIMULADORES</small>
+-                </button>
+-                <div class="header-icon-nav">
+-                    <a href="IndexFightShorts.html" class="nav-icon active" data-tooltip="Fight Shorts"><img
+-                            src="assets/ui-icons/icon-fight-shorts.png" alt="Fight Shorts"></a>
+-                    <a href="IndexShortsLegging.html" class="nav-icon" data-tooltip="Shorts Legging"><img
+-                            src="assets/ui-icons/icon-shorts-calca-legging.png" alt="Shorts Legging"></a>
+-                    <a href="IndexCalcaLegging.html" class="nav-icon" data-tooltip="Calça Legging"><img
+-                            src="assets/ui-icons/icon-calca-legging.png" alt="Calça Legging"></a>
+-                    <a href="IndexMoletom.html" class="nav-icon" data-tooltip="Moletom"><img
+-                            src="assets/ui-icons/icon-moletom.png" alt="Moletom"></a>
+-                    <a href="IndexTop.html" class="nav-icon" data-tooltip="Top"><img src="assets/ui-icons/icon-top.png"
+-                            alt="Top"></a>
+-                    <a href="IndexFaq.html" class="nav-icon" data-tooltip="FAQ">❓</a>
+-                </div>
++            <div class="header-icon-nav">
++                <a href="IndexFightShorts.html" class="nav-icon active" data-tooltip="Fight Shorts"><img
++                        src="assets/ui-icons/icon-fight-shorts.png" alt="Fight Shorts"></a>
++                <a href="IndexShortsLegging.html" class="nav-icon" data-tooltip="Shorts Legging"><img
++                        src="assets/ui-icons/icon-shorts-calca-legging.png" alt="Shorts Legging"></a>
++                <a href="IndexCalcaLegging.html" class="nav-icon" data-tooltip="Calça Legging"><img
++                        src="assets/ui-icons/icon-calca-legging.png" alt="Calça Legging"></a>
++                <a href="IndexMoletom.html" class="nav-icon" data-tooltip="Moletom"><img
++                        src="assets/ui-icons/icon-moletom.png" alt="Moletom"></a>
++                <a href="IndexTop.html" class="nav-icon" data-tooltip="Top"><img src="assets/ui-icons/icon-top.png"
++                        alt="Top"></a>
++                <a href="IndexFaq.html" class="nav-icon" data-tooltip="FAQ">❓</a>
+             </div>
++            <span class="header-icon">🔍</span>
+             <a href="IndexPedidoSimulador.html" class="header-icon" style="text-decoration:none; color: inherit;">
+                 🛒
+                 <span class="cart-badge" id="cart-count">0</span>
+@@ -72,7 +69,6 @@
+             <div class="zoom-controls">
+                 <button id="zoom-out" class="zoom-btn">-</button>
+                 <button id="zoom-in" class="zoom-btn">+</button>
+-                <button id="lock-interaction" class="zoom-btn lock-btn" title="Bloquear/Liberar Interação">🔓</button>
+             </div>
+         </div>
+ 
+@@ -160,20 +156,9 @@
+                         <!-- JS Injects Here -->
+                     </tbody>
+                 </table>
+-                <div style="margin-top: 20px;">
+-                    <!-- PDF Progress Bar Container -->
+-                    <div id="pdf-progress-container"
+-                        style="display:none; margin-bottom: 15px; background: #333; height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid #444;">
+-                        <div id="pdf-progress-bar"
+-                            style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold), #fff); transition: width 0.4s ease;">
+-                        </div>
+-                    </div>
+-
+-                    <div style="text-align: right;">
+-                        <button class="btn-action btn-primary-action" onclick="PDFGenerator.generateBackgroundPDF()"
+-                            style="width: 100%; padding: 15px; font-weight: bold; font-size: 1rem; border-radius: 8px;">🖨️
+-                            GERAR FICHA TÉCNICA (PDF EXPERT)</button>
+-                    </div>
++                <div style="margin-top: 20px; text-align: right;">
++                    <button class="btn-action btn-primary-action" onclick="PDFGenerator.generate()">🖨️ Imprimir /
++                        PDF</button>
+                 </div>
+             </div>
+         </div>
+@@ -188,18 +173,17 @@
+     <script src="js/modules/common/data/gallery-database.js"></script>
+     <script src="js/modules/common/utils/font-loader.js"></script>
+ 
+-    <!-- Supabase Integration -->
+-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+-    <script src="js/modules/auth/supabase-client.js"></script>
+-    <script src="js/modules/common/supabase-adapter.js?v=12"></script>
+-
++    <!-- Common Modules -->
++    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+     <script src="js/modules/common/asset-loader.js"></script>
+     <script src="js/modules/common/db-integration.js"></script>
+     <script src="js/modules/common/database-manager.js"></script>
+     <!-- PDF Generation Libs -->
++    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/2.8.0/dom-to-image-more.min.js"></script>
+-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+-    <script src="js/modules/common/pdf-generator-v2.js?v=8"></script>
++    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/2.8.0/dom-to-image-more.min.js"></script>
++    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
++    <script src="js/modules/common/pdf-generator.js"></script>
+ 
+     <!-- Specific Modules -->
+     <script src="js/modules/common/emb-manager.js?v=1.0"></script>
+@@ -224,7 +208,7 @@
+     <script src="js/modules/shorts/parts/ui-gallery.js?v=1.0"></script>
+     <script src="js/modules/shorts/parts/ui-sections.js?v=1.0"></script>
+ 
+-    <script src="js/modules/shorts/ui-render.js?v=3.2"></script>
++    <script src="js/modules/shorts/ui-render.js?v=1.2"></script>
+     <script src="js/modules/shorts/logic.js?v=1.1"></script>
+     <script src="js/modules/common/utils/help-system.js"></script>
+     <script src="js/modules/common/utils/info-system.js"></script>
