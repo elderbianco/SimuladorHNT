@@ -102,7 +102,7 @@ function getFormattedId() {
     return `${orderPart}-${state.productInitial}-${state.simNumber}`;
 }
 
-const state = {
+window.state = {
     simulationId: '',
     simNumber: generateUUID(),
     orderNumber: '',
@@ -131,6 +131,8 @@ const state = {
     isLocked: false
 };
 
+globalThis.state = window.state;
+var state = window.state;
 state.simulationId = getFormattedId();
 
 // Initialize text zones
