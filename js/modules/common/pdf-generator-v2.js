@@ -50,8 +50,8 @@ const PDFGenerator = {
                 }
 
                 // Proporção Landscape 3:2 (Perfeita para preencher largura da folha A4 e deixar resto da página livre para o QR Code)
-                const cropHeight = targetHeight;
-                const cropWidth = Math.floor(targetHeight * 1.5);
+                const cropWidth = 1200;
+                const cropHeight = 800;
 
                 const ghost = originalArea.cloneNode(true);
                 ghost.id = 'simulator-ghost-v1528';
@@ -72,7 +72,8 @@ const PDFGenerator = {
                     padding: '0',
                     display: 'flex',                 // ALINHAMENTO MANDATÓRIO
                     justifyContent: 'center',        // O container dos calções fica no exato centro
-                    alignItems: 'center'             // Grudado no topo e no fundo sem padding
+                    alignItems: 'center',            // Grudado no topo e no fundo sem padding
+                    backgroundPosition: 'center 70%' // Sobe o background para aparecer o chão
                 });
 
                 // Blindar o container filho do short contra redimensionamento surpresa
@@ -85,7 +86,8 @@ const PDFGenerator = {
                         maxHeight: 'none',
                         minWidth: 'auto',
                         minHeight: 'auto',
-                        flexShrink: '0'
+                        flexShrink: '0',
+                        transform: 'scale(1.4)'
                     });
                 }
 
