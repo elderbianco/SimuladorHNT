@@ -354,7 +354,7 @@ function renderControls_legacy() {
     // === FORMULÁRIO FINAL ===
     const finalInputs = document.createElement('div');
     finalInputs.innerHTML = `
-            < div style = "margin-top:15px; border-top: 1px solid #333; padding-top: 15px;" >
+            <div style = "margin-top:15px; border-top: 1px solid #333; padding-top: 15px;" >
             <label style="font-weight:bold; display:block; margin-bottom:5px; color:#fff;">Observações:</label>
             <textarea id="obs-input" style="width:100%; border:1px solid #444; background:#222; color:#fff; padding:8px; border-radius:4px;" rows="3" placeholder="Ex: Detalhes específicos de arte, posições, etc."></textarea>
         </div >
@@ -407,11 +407,11 @@ function renderControls_legacy() {
                     suffix = generateNextSequenceNumber();
                 }
 
-                if (!val) state.simulationId = `HNT - LG - ${ suffix } `;
-                else state.simulationId = `${ val } -LG - ${ suffix } `;
+                if (!val) state.simulationId = `HNT - LG - `;
+                else state.simulationId = `-LG - `;
 
                 const simIdSpan = container.querySelector('div > span[style*="font-size:0.75rem"]');
-                if (simIdSpan) simIdSpan.innerText = `ID: ${ state.simulationId } `;
+                if (simIdSpan) simIdSpan.innerText = `ID: `;
 
                 saveState();
             };
@@ -455,7 +455,7 @@ function renderGallery(searchTerm = "") {
         const term = searchTerm.toLowerCase();
         const results = galleryData.filter(i => i.name.toLowerCase().includes(term));
         if (results.length === 0) {
-            g.innerHTML = `< div style = "text-align:center; padding:20px; color:#666; width:100%;" > Nenhuma imagem encontrada.</div > `;
+            g.innerHTML = `<div style = "text-align:center; padding:20px; color:#666; width:100%;" > Nenhuma imagem encontrada.</div>`;
             return;
         }
         results.forEach(i => appendGalleryItem(g, i));
@@ -483,7 +483,7 @@ function renderGallery(searchTerm = "") {
             const d = document.createElement('div');
             d.className = 'gallery-folder';
             const iconSrc = categoryIcons[cat] || "assets/Shorts/UiIcons/thumb_gerais.png";
-            d.innerHTML = `< img src = "${iconSrc}" class="folder-image-icon" > <div class="folder-label">${cat}</div>`;
+            d.innerHTML = `<img src = "${iconSrc}" class="folder-image-icon" > <div class="folder-label">${cat}</div>`;
             d.onclick = () => { currentGalleryCategory = cat; renderGallery(); };
             g.appendChild(d);
         });
@@ -503,7 +503,7 @@ function renderGallery(searchTerm = "") {
 function appendGalleryItem(container, i) {
     const d = document.createElement('div');
     d.className = 'gallery-item';
-    d.innerHTML = `< img src = "${i.src}" > <span>${i.name}</span>`;
+    d.innerHTML = `<img src = "${i.src}" > <span>${i.name}</span>`;
     d.onclick = () => {
         if (state.pending) {
             state.zoneLimits[state.pending] = true;
@@ -536,7 +536,7 @@ async function uploadFileToServer(file, base64, zoneId) {
     }
 }
 
-function addImage(z) { document.getElementById(`upload - ${ z } `).click(); }
+function addImage(z) { document.getElementById(`upload-`).click(); }
 function handleImageUpload(e, z) {
     const f = e.target.files[0]; if (!f) return;
     let fmt = f.name;
