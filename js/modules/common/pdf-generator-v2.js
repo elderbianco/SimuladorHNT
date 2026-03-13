@@ -29,7 +29,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.20 (Live DOM Engine) Ativado...');
+                console.log('☢️ Motor Nuclear v15.22 (Live DOM + CSS Nuke + Absolute Box) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -38,7 +38,7 @@ const PDFGenerator = {
                 }
 
                 // --- 1. PREPARAÇÃO DA CENA REAL (LIVE PREP) ---
-                console.log('🔄 Sincronizando DNA Digital na Cena Real v15.20...');
+                console.log('🔄 Sincronizando DNA Digital na Cena Real v15.22...');
 
                 // Conversor Base64 (Imuniza contra CORS sem piscar a tela)
                 const toBase64 = (url) => new Promise((res) => {
@@ -78,41 +78,47 @@ const PDFGenerator = {
                     }
                 }
 
-                // --- 2. OCULTAR UI DE CONTROLE INSTANTANEAMENTE (CLEAN FLASH) ---
-                const selectorsToHide = [
-                    '.zoom-controls', '.action-bar', '#whatsapp-btn',
-                    '.drag-handle', '.resize-handle', '.delete-btn',
-                    '.ui-resizable-handle', '.limit-layer', '.selection-border'
-                ];
-
-                // Salva estados anteriores para podermos restaurar
-                const hiddenElements = [];
-
-                selectorsToHide.forEach(selector => {
-                    originalArea.querySelectorAll(selector).forEach(el => {
-                        hiddenElements.push({ el: el, originalOpacity: el.style.opacity || '' });
-                        el.style.opacity = '0'; // Usamos opacity ao invés de display:none para não quebrar dimensões
-                    });
-                });
-
-                // Também remove temporariamente as bordas pontilhadas de seleção (Fabric/JQueryUI)
-                const selectedElements = originalArea.querySelectorAll('.ui-selected, [style*="outline"], [style*="border: dashed"]');
-                const borderStates = [];
-                selectedElements.forEach(el => {
-                    borderStates.push({ el: el, originalOutline: el.style.outline || '', originalBorder: el.style.border || '' });
-                    el.style.outline = 'none';
-                    if (el.style.border.includes('dashed') || el.style.border.includes('dotted')) {
-                        el.style.border = 'none';
+                // --- 2. CSS NUKE (DESTRUIÇÃO VISUAL TEMPORÁRIA DE BORDAS E HANDLERS) ---
+                console.log('🛡️ Anulando bordas de seleção JQuery/Fabric via CSS Injection...');
+                const nukeStyle = document.createElement('style');
+                nukeStyle.innerHTML = `
+                    .simulator-area .ui-selected, 
+                    .simulator-area .ui-wrapper, 
+                    .simulator-area .custom-element, 
+                    .simulator-area [style*="outline"], 
+                    .simulator-area [style*="border"] {
+                        outline: none !important;
+                        box-shadow: none !important;
+                        border: none !important;
                     }
-                });
+                    .ui-resizable-handle, 
+                    .delete-btn, 
+                    .zoom-controls, 
+                    .action-bar, 
+                    #whatsapp-btn, 
+                    .drag-handle, 
+                    .resize-handle, 
+                    .limit-layer,
+                    .selection-border {
+                        display: none !important;
+                        opacity: 0 !important;
+                        visibility: hidden !important;
+                    }
+                `;
+                document.head.appendChild(nukeStyle);
 
-                // --- 3. CAPTURA DIGITAL DIRETA (Html2Canvas in DOM) ---
+                // --- 3. CAPTURA DIGITAL DIRETA COM BOUNDS ABSOLUTOS ---
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Disparando Câmera no Fluxo Vivo...');
+                    console.log('📸 Disparando Câmera no Fluxo Vivo com Rigid Bounds...');
 
-                    // Pequeno delay para garantir reflow do CSS de opacidade (10ms não incomoda o usuário)
-                    await new Promise(r => setTimeout(r, 10));
+                    // Pequeno delay para garantir aplicação do CSS Nuke
+                    await new Promise(r => setTimeout(r, 50));
+
+                    // Pega as medidas exatas da moldura visível para não estourar em offsets invisíveis
+                    const rect = originalArea.getBoundingClientRect();
+                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
                     const canvas = await html2canvas(originalArea, {
                         scale: 1.5, // Altíssima Definição
@@ -120,23 +126,25 @@ const PDFGenerator = {
                         allowTaint: true,
                         backgroundColor: '#000000',
                         logging: false,
-                        // Não precisamos de ignoreElements porque já zeramos a opacidade de tudo
+                        width: Math.floor(rect.width),
+                        height: Math.floor(rect.height),
+                        x: scrollX + rect.left,
+                        y: scrollY + rect.top,
+                        windowWidth: document.documentElement.clientWidth,
+                        windowHeight: document.documentElement.clientHeight
                     });
 
-                    // Compressão jpeg leve p/ não travar a memória de PDFs pesados
                     snapshot = canvas.toDataURL('image/jpeg', 0.90);
                 }
 
                 // --- 4. RESTAURAÇÃO DA UI INSTANTÂNEA ---
-                hiddenElements.forEach(item => { item.el.style.opacity = item.originalOpacity; });
-                borderStates.forEach(item => {
-                    item.el.style.outline = item.originalOutline;
-                    if (item.originalBorder) item.el.style.border = item.originalBorder;
-                });
+                if (nukeStyle.parentNode) {
+                    nukeStyle.parentNode.removeChild(nukeStyle);
+                }
 
                 // --- 5. ENTREGA ---
                 if (snapshot) {
-                    console.log('✅ Print LIVE v15.20 CONCLUÍDO.');
+                    console.log('✅ Print LIVE ABSOLUTE v15.22 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     console.warn('⚠️ html2canvas falhou no DOM real. Tentando motor legado...');
@@ -144,7 +152,7 @@ const PDFGenerator = {
                     resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico Live Engine v15.20:', e);
+                console.error('❌ Erro Crítico Live Engine v15.22:', e);
                 resolve(null);
             }
         });
@@ -703,20 +711,28 @@ const PDFGenerator = {
 
             let currentY = drawExpertTemplate(doc);
 
-            // 2. IMAGEM (MAIOR ÁREA POSSÍVEL - PORTRAIT FORCE)
+            // 2. IMAGEM (MAIOR ÁREA POSSÍVEL, SEM EXTRAPOLAR A PÁGINA)
             if (this.cachedSnapshot && this.cachedSnapshot.length > 500) {
                 try {
                     const imgProps = doc.getImageProperties(this.cachedSnapshot);
                     const maxW = pageWidth - (margin * 2);
-                    const maxH = pageHeight * 0.85; // AUMENTADO MÁXIMO (85% da página)
+
+                    // O cabeçalho ocupa ~45mm e a imagem precisa deixar espaço para o título "RESUMO..." 
+                    // e evitar quebrar a marcação (QR codes, etc.). Altura máxima segura é ~65%
+                    const maxH = pageHeight * 0.65;
+
                     let imgW = maxW;
                     let imgH = (imgProps.height * imgW) / imgProps.width;
+
                     if (imgH > maxH) {
                         imgH = maxH;
                         imgW = (imgProps.width * imgH) / imgProps.height;
                     }
+
+                    // Centralizar a imagem horizontalmente
                     doc.addImage(this.cachedSnapshot, 'JPEG', (pageWidth - imgW) / 2, currentY, imgW, imgH);
                     currentY += imgH + 10;
+
                 } catch (e) {
                     console.warn("Falha ao adicionar imagem ao PDF:", e);
                     currentY += 10;
@@ -724,6 +740,13 @@ const PDFGenerator = {
             } else {
                 console.warn("Snapshot ausente ou inválido no momento da geração.");
                 currentY += 10;
+            }
+
+            // --- PROTEÇÃO CONTRA ESTOURO DE PÁGINA ---
+            // Se a imagem for muito alta, forçamos a tabela para começar numa margem segura
+            if (currentY > pageHeight - 40) {
+                doc.addPage();
+                currentY = margin;
             }
 
             // 3. RESUMO HORIZONTAL OTIMIZADO
