@@ -50,7 +50,8 @@ window.UIComponents.createSizeSelector = function (sizes, currentValues, config,
         inp.id = `input-qty-${s.label}`;
         inp.type = 'number';
         inp.min = 0;
-        inp.value = currentValues[s.label] || 0;
+        const safeVals = currentValues || {};
+        inp.value = safeVals[s.label] || 0;
         inp.className = 'size-input'; // Use class for styling ideally, but inline for now
 
         // Inline styles for consistency with current design
