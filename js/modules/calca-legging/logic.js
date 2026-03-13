@@ -145,11 +145,11 @@ function loadAdminConfig() {
         product: 'Legging',
         sizeModPrice: getVal(prices.sizeModPrice, 10.00), // Default to 10.00 only if undefined
         devFee: getVal(prices.devFee, 30.00),
-        // ✅ CORRIGIDO: Usar valores do config.json (14.9 e 9.9) em vez de hardcoded (15.00 e 50.00)
-        logoLatPrice: getVal(globalConfig.logoLatPrice, 14.9), // Corrigido de 15.00 para 14.9
-        textLatPrice: getVal(globalConfig.textLatPrice, 9.9),  // Corrigido de 15.00 para 9.9
-        logoLegPrice: getVal(globalConfig.legLeftPrice, 14.9), // Corrigido de 50.00 para 14.9
-        textLegPrice: getVal(globalConfig.textLatPrice, 9.9),  // Corrigido de 15.00 para 9.9
+        // ✅ CORRIGIDO: Ler preços de zonas do config da Legging (hnt_legging_config), NÃO do Fight Shorts
+        logoLatPrice: getVal(prices.logoLatPrice, 29.90),
+        textLatPrice: getVal(prices.textLatPrice, 9.90),
+        logoLegPrice: getVal(prices.logoLegPrice, 14.90),
+        textLegPrice: getVal(prices.textLegPrice, 0),
         // Wholesale Tiers
         price10: p10,
         price20: p20,
