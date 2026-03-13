@@ -29,7 +29,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.16 (Dynamic Frame Ghost) Ativado...');
+                console.log('☢️ Motor Nuclear v15.17 (Atomic Viewport Mirror) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -37,28 +37,28 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // 1. Criar Clone Fantasma Otimizado (Sem Clipping)
+                // 1. Criar Clone Fantasma "Espelho" (Captura EXATA do Viewport)
                 const ghost = originalArea.cloneNode(true);
                 ghost.id = 'simulator-ghost-capture';
 
-                // Forçar dimensões reais do conteúdo para evitar cortes
-                const fullWidth = originalArea.scrollWidth;
-                const fullHeight = originalArea.scrollHeight;
+                // Dimensões do Viewport Real (A janela que o usuário vê)
+                const viewW = originalArea.clientWidth;
+                const viewH = originalArea.clientHeight;
 
                 Object.assign(ghost.style, {
                     position: 'fixed',
-                    left: '-20000px',
+                    left: '-30000px',
                     top: '0',
-                    width: fullWidth + 'px',
-                    height: fullHeight + 'px',
-                    overflow: 'visible',
+                    width: viewW + 'px',
+                    height: viewH + 'px',
+                    overflow: 'hidden', // Cortar o que o usuário não vê (Fidelidade 1:1)
                     zIndex: '-1',
                     transform: 'none',
                     backgroundColor: '#000000'
                 });
                 document.body.appendChild(ghost);
 
-                // 2. Blindagem Universal Base64 (Apenas no Clone)
+                // 2. Blindagem Universal Base64 (Somente nos ativos do Ghost)
                 const toBase64 = (url) => new Promise((res) => {
                     if (!url || url.startsWith('data:')) return res(url);
                     const img = new Image();
@@ -75,7 +75,7 @@ const PDFGenerator = {
                     img.src = url;
                 });
 
-                console.log('🔄 Sincronizando DNA Digital no Fantasma v15.16...');
+                console.log('🔄 Sincronizando Print 1:1 no Ghost v15.17...');
 
                 const ghostImgs = Array.from(ghost.querySelectorAll('img'));
                 for (const img of ghostImgs) {
@@ -97,18 +97,16 @@ const PDFGenerator = {
                     }
                 }
 
-                // 4. Captura via html2canvas com Resolução Ultra
+                // 4. Captura Digital (html2canvas)
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Capturando Snapshot Full-Frame...');
                     const canvas = await html2canvas(ghost, {
-                        scale: 2, // Nitidez máxima
+                        scale: 1.5, // Equilíbrio entre qualidade e performance
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#000000',
-                        logging: false,
-                        width: fullWidth,
-                        height: fullHeight,
+                        width: viewW,
+                        height: viewH,
                         ignoreElements: (el) => {
                             return el.classList.contains('zoom-controls') ||
                                 el.classList.contains('action-bar') ||
@@ -117,23 +115,20 @@ const PDFGenerator = {
                                 el.classList.contains('resize-handle');
                         }
                     });
-                    snapshot = canvas.toDataURL('image/jpeg', 0.95);
+                    snapshot = canvas.toDataURL('image/jpeg', 0.90);
                 }
 
                 document.body.removeChild(ghost);
 
-                if (!snapshot || snapshot.length < 5000) {
-                    snapshot = await this.drawLegacyManualSnapshot();
-                }
-
                 if (snapshot) {
-                    console.log('✅ Snapshot v15.16 CONCLUÍDO.');
+                    console.log('✅ Print v15.17 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
-                    resolve(null);
+                    snapshot = await this.drawLegacyManualSnapshot();
+                    resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro no v15.16:', e);
+                console.error('❌ Erro Crítico v15.17:', e);
                 const ghost = document.getElementById('simulator-ghost-capture');
                 if (ghost) document.body.removeChild(ghost);
                 resolve(null);
