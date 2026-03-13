@@ -29,25 +29,37 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.13 (True Print 1:1) Ativado...');
+                console.log('☢️ Motor Nuclear v15.14 (Mirror Ghost Engine) Ativado...');
 
-                // Alvo expandido: Capturar toda a área do simulador (inclui ringue)
-                const simulatorArea = document.querySelector('.simulator-area');
-                const zoomContainer = document.getElementById('zoom-container');
-
-                if (!simulatorArea || !zoomContainer) {
-                    console.error('❌ Elementos do simulador não encontrados!');
+                const originalArea = document.querySelector('.simulator-area');
+                if (!originalArea) {
+                    console.error('❌ Simulador não encontrado!');
                     return resolve(null);
                 }
 
-                // 1. Sanitização em Tempo Real (Esconder UI)
-                document.body.classList.add('pdf-capturing');
+                // 1. Criar Clone Fantasma para Processamento Oculto
+                const ghost = originalArea.cloneNode(true);
+                ghost.id = 'simulator-ghost-capture';
+                Object.assign(ghost.style, {
+                    position: 'fixed',
+                    left: '-10000px',
+                    top: '0',
+                    width: originalArea.offsetWidth + 'px',
+                    height: originalArea.offsetHeight + 'px',
+                    zIndex: '-1',
+                    transform: 'none'
+                });
+                document.body.appendChild(ghost);
 
-                // 2. Reset de Geometria Sagrada (Garantir 1:1 sem distorção de Zoom/Pan)
-                const savedTransform = zoomContainer.style.transform;
-                zoomContainer.style.transform = 'none';
+                // 2. Reset de Geometria no Clone (Invisível para o usuário)
+                const ghostZoomContainer = ghost.querySelector('#zoom-container');
+                if (ghostZoomContainer) {
+                    ghostZoomContainer.style.transform = 'none';
+                    ghostZoomContainer.style.left = '0';
+                    ghostZoomContainer.style.top = '0';
+                }
 
-                // 3. Blindagem Universal Base64 (Imagens e Backgrounds)
+                // 3. Blindagem Universal Base64 (Apenas no Clone)
                 const toBase64 = (url) => new Promise((res) => {
                     if (!url || url.startsWith('data:')) return res(url);
                     const img = new Image();
@@ -64,23 +76,23 @@ const PDFGenerator = {
                     img.src = url;
                 });
 
-                console.log('🔄 Convertendo todos os ativos para Base64...');
+                console.log('🔄 Sincronizando DNA Digital (Base64) no Fantasma...');
 
                 // Blindar tags IMG
-                const imgs = Array.from(simulatorArea.querySelectorAll('img'));
-                for (const img of imgs) {
+                const ghostImgs = Array.from(ghost.querySelectorAll('img'));
+                for (const img of ghostImgs) {
                     if (img.src && !img.src.startsWith('data:')) {
                         img.src = await toBase64(img.src);
                     }
                 }
 
-                // Blindar Background Images (Ringue e Camadas)
-                const elsWithBg = Array.from(simulatorArea.querySelectorAll('*')).filter(el => {
+                // Blindar Background Images
+                const ghostWithBg = Array.from(ghost.querySelectorAll('*')).filter(el => {
                     const bg = window.getComputedStyle(el).backgroundImage;
                     return bg && bg !== 'none' && bg.includes('url(');
                 });
 
-                for (const el of elsWithBg) {
+                for (const el of ghostWithBg) {
                     const bgUrl = window.getComputedStyle(el).backgroundImage.slice(4, -1).replace(/"/g, "");
                     if (!bgUrl.startsWith('data:')) {
                         const b64 = await toBase64(bgUrl);
@@ -88,44 +100,46 @@ const PDFGenerator = {
                     }
                 }
 
-                // 4. Captura via html2canvas (Motor Ouro)
+                // 4. Captura via html2canvas no Alvo Invisível
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Capturando Snapshot 1:1...');
-                    const canvas = await html2canvas(simulatorArea, {
-                        scale: 1.5, // Resolução equilibrada
+                    console.log('📸 Capturando Snapshot Oculto 1:1...');
+                    const canvas = await html2canvas(ghost, {
+                        scale: 1.5,
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#000000',
                         logging: false,
                         ignoreElements: (el) => {
-                            // Ignorar controles de interface
                             return el.classList.contains('zoom-controls') ||
                                 el.classList.contains('action-bar') ||
-                                el.id === 'whatsapp-btn';
+                                el.id === 'whatsapp-btn' ||
+                                el.classList.contains('drag-handle') ||
+                                el.classList.contains('resize-handle');
                         }
                     });
                     snapshot = canvas.toDataURL('image/jpeg', 0.90);
                 }
 
-                // 5. Verificação e Fallback
+                // 5. Destruir Fantasma (Limpeza de Memória)
+                document.body.removeChild(ghost);
+
+                // 6. Verificação e Fallback
                 if (!snapshot || snapshot.length < 5000) {
+                    console.warn('⚠️ html2canvas falhou no clone. Tentando fallback...');
                     snapshot = await this.drawLegacyManualSnapshot();
                 }
 
-                // 6. Restauração Total
-                zoomContainer.style.transform = savedTransform;
-                document.body.classList.remove('pdf-capturing');
-
                 if (snapshot) {
-                    console.log('✅ Snapshot Nuclear v15.13 CONCLUÍDO.');
+                    console.log('✅ Snapshot v15.14 (Mirror Ghost) CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     resolve(null);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico no Print 1:1 v15.13:', e);
-                document.body.classList.remove('pdf-capturing');
+                console.error('❌ Erro Crítico no Mirror Ghost v15.14:', e);
+                const ghost = document.getElementById('simulator-ghost-capture');
+                if (ghost) document.body.removeChild(ghost);
                 resolve(null);
             }
         });
