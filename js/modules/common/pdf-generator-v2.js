@@ -34,53 +34,76 @@ const PDFGenerator = {
                 canvas.width = 1200;
                 canvas.height = 1200;
 
+                console.log('☢️ Iniciando renderização manual...');
+
                 // 1. Fundo Branco Base
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Helper para carregar imagem
+                // Helper inteligente para carregar imagens
                 const loadImage = (src) => new Promise((res) => {
+                    if (!src) return res(null);
                     const img = new Image();
-                    img.crossOrigin = "anonymous";
+
+                    // Só aplica CORS se for externa
+                    if (src.startsWith('http') && !src.includes(window.location.hostname)) {
+                        img.crossOrigin = "anonymous";
+                    }
+
                     img.onload = () => res(img);
-                    img.onerror = () => res(null);
+                    img.onerror = () => {
+                        console.warn('❌ Erro ao carregar asset para snapshot:', src);
+                        res(null);
+                    };
                     img.src = src;
                 });
 
                 // 2. Desenhar Fundo HNT (Ring)
-                // Tentativa múltipla de caminhos para o fundo
                 const bgPaths = ['RingHNT.jpeg', 'Icons/RingHNT.jpeg', 'assets/simulator/Background_RingHNT.jpeg'];
                 let bgImg = null;
                 for (const path of bgPaths) {
                     bgImg = await loadImage(path);
                     if (bgImg) {
-                        console.log(`🖼️ Fundo carregado via: ${path}`);
+                        console.log('✅ Fundo HNT detectado e carregado.');
                         break;
                     }
                 }
+                if (bgImg) ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-                if (bgImg) {
-                    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-                } else {
-                    console.warn('⚠️ Nenhum fundo HNT encontrado. Usando base branca.');
-                }
+                // 3. Desenhar Camadas do Produto (Shorts, Moletom, etc)
+                const layerSelectors = [
+                    '.product-layer img',
+                    '.layer img',
+                    '.simulator-wrapper .product-layer img',
+                    '.simulator-wrapper .layer img'
+                ];
 
-                // 3. Desenhar Camadas do Produto
-                const layers = Array.from(document.querySelectorAll('.product-layer img, .layer img'));
+                // Pegar todos os elementos excluindo duplicados
+                const layers = Array.from(new Set(layerSelectors.flatMap(s => Array.from(document.querySelectorAll(s)))));
+                console.log(`📊 Camadas do produto encontradas: ${layers.length}`);
+
                 for (const imgEl of layers) {
+                    // Ignorar se não tiver src ou for base64 pequeno (handle etc)
+                    if (!imgEl.src || imgEl.src.includes('data:image/') || imgEl.classList.contains('drag-handle')) continue;
+
                     const img = await loadImage(imgEl.src);
-                    if (img) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    if (img) {
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        console.log(`✅ Camada desenhada: ${imgEl.src.split('/').pop()}`);
+                    }
                 }
 
                 // 4. Desenhar Customizações (Logos/Fotos)
                 const customImgs = Array.from(document.querySelectorAll('.customization-layer .custom-element-img'));
+                console.log(`🖼️ Customizações detectadas: ${customImgs.length}`);
+
+                const container = document.querySelector('.zoom-container') || document.querySelector('.simulator-wrapper') || document.querySelector('.simulator-area');
+                const containerRect = container ? container.getBoundingClientRect() : { width: 1, height: 1, left: 0, top: 0 };
+
                 for (const imgEl of customImgs) {
                     const img = await loadImage(imgEl.src);
-                    if (img) {
+                    if (img && container) {
                         const rect = imgEl.getBoundingClientRect();
-                        const container = (document.querySelector('.zoom-container') || document.querySelector('.simulator-area'));
-                        const containerRect = container.getBoundingClientRect();
-
                         const scale = canvas.width / containerRect.width;
                         const x = (rect.left - containerRect.left) * scale;
                         const y = (rect.top - containerRect.top) * scale;
@@ -88,32 +111,37 @@ const PDFGenerator = {
                         const h = rect.height * scale;
 
                         ctx.drawImage(img, x, y, w, h);
+                        console.log(`✅ Customização desenhada: ${imgEl.src.split('/').pop()}`);
                     }
                 }
 
                 // 5. Desenhar Textos
                 const customTexts = Array.from(document.querySelectorAll('.customization-layer .custom-text'));
+                console.log(`✍️ Textos detectados: ${customTexts.length}`);
+
                 for (const txtEl of customTexts) {
-                    const rect = txtEl.getBoundingClientRect();
-                    const container = (document.querySelector('.zoom-container') || document.querySelector('.simulator-area'));
-                    const containerRect = container.getBoundingClientRect();
-                    const scale = canvas.width / containerRect.width;
-                    const style = window.getComputedStyle(txtEl);
+                    if (container) {
+                        const rect = txtEl.getBoundingClientRect();
+                        const scale = canvas.width / containerRect.width;
+                        const style = window.getComputedStyle(txtEl);
 
-                    ctx.font = `${style.fontWeight} ${parseFloat(style.fontSize) * scale}px ${style.fontFamily}`;
-                    ctx.fillStyle = style.color;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
+                        ctx.font = `${style.fontWeight} ${parseFloat(style.fontSize) * scale}px ${style.fontFamily}`;
+                        ctx.fillStyle = style.color;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
 
-                    const x = (rect.left - containerRect.left + rect.width / 2) * scale;
-                    const y = (rect.top - containerRect.top + rect.height / 2) * scale;
+                        const x = (rect.left - containerRect.left + rect.width / 2) * scale;
+                        const y = (rect.top - containerRect.top + rect.height / 2) * scale;
 
-                    ctx.fillText(txtEl.innerText, x, y);
+                        ctx.fillText(txtEl.innerText, x, y);
+                    }
                 }
 
-                resolve(canvas.toDataURL('image/jpeg', 0.9));
+                const result = canvas.toDataURL('image/jpeg', 0.9);
+                console.log('✅ Snapshot Nuclear Finalizado.');
+                resolve(result);
             } catch (e) {
-                console.error('Falha no desenho manual:', e);
+                console.error('❌ Erro Crítico no Motor Nuclear:', e);
                 resolve(null);
             }
         });
