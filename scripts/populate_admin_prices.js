@@ -71,16 +71,20 @@ const topConfig = {
 
 // MOLETOM
 const moletomConfig = {
-    basePrice: 0,
-    sizeModPrice: 0,
-    devFee: 0,
-    logoFrontPrice: 0,
-    textFrontPrice: 0,
-    logoBackPrice: 0,
-    textBackPrice: 0,
-    price10: 0,
-    price20: 0,
-    price30: 0,
+    basePrice: 189.90,
+    sizeModPrice: 10.00,
+    devFee: 30.00,
+    logoFrontPrice: 29.90,
+    textFrontPrice: 19.90,
+    logoBackPrice: 29.90,
+    textBackPrice: 19.90,
+    logoSleevePrice: 14.90,
+    textSleevePrice: 9.90,
+    logoHoodPrice: 14.90,
+    textHoodPrice: 9.90,
+    price10: 170.90,
+    price20: 151.90,
+    price30: 132.90,
     artWaiver: true
 };
 
