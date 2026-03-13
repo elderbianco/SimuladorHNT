@@ -72,68 +72,84 @@ const PDFGenerator = {
             }
 
             const canvas = await html2canvas(captureTarget, {
-                scale: 1, // Full scale for maximum quality
+                scale: 1, // Alta qualidade
                 useCORS: true,
-                allowTaint: false,
-                backgroundColor: '#ffffff', // Use solid bg instead of null for better compatibility
+                allowTaint: true,
+                backgroundColor: '#ffffff',
                 logging: false,
-                imageTimeout: 5000, // Wait up to 5s for images
+                imageTimeout: 10000,
                 removeContainer: true,
                 onclone: (clonedDoc) => {
-                    // Force capture area size for the clone
                     const target = clonedDoc.querySelector('.zoom-container') || clonedDoc.querySelector('.simulator-wrapper');
                     const originalArea = document.querySelector('.simulator-area');
 
                     if (target) {
-                        // Preservar Background do Simulador no Clone
+                        // 1. Preservar Background (Forçar URL Absoluta)
                         if (originalArea) {
-                            const bgStyle = window.getComputedStyle(originalArea).backgroundImage;
+                            let bgStyle = window.getComputedStyle(originalArea).backgroundImage;
                             if (bgStyle && bgStyle !== 'none') {
+                                // Garantir caminho absoluto se for relativo
+                                if (bgStyle.includes('../../')) {
+                                    const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+                                    bgStyle = bgStyle.replace('../../', baseUrl);
+                                }
                                 target.style.backgroundImage = bgStyle;
                                 target.style.backgroundSize = 'cover';
                                 target.style.backgroundPosition = 'center bottom';
+                                target.style.backgroundRepeat = 'no-repeat';
                             }
                         }
 
+                        // 2. Normalizar Dimensões para Captura Quadrada
                         target.style.width = '1000px';
                         target.style.height = '1000px';
                         target.style.transform = 'none';
                         target.style.position = 'relative';
-                        target.style.margin = '0 auto';
+                        target.style.display = 'block';
                         target.style.visibility = 'visible';
-                        target.style.opacity = '1';
 
-                        // Normalização de camadas para "Print"
+                        // 3. Normalização Profunda de Camadas (Flattening)
                         target.querySelectorAll('.product-layer, .layer, .customization-layer').forEach(l => {
-                            const style = window.getComputedStyle(l);
-                            if (style.display !== 'none') {
-                                l.style.position = 'absolute';
-                                l.style.top = '0';
-                                l.style.left = '0';
-                                l.style.width = '100%';
-                                l.style.height = '100%';
-                                l.style.display = l.classList.contains('customization-layer') ? 'block' : 'flex';
-                                l.style.justifyContent = 'center';
-                                l.style.alignItems = 'center';
-                                l.style.transform = 'none';
-                                l.style.visibility = 'visible';
-                                l.style.opacity = '1';
+                            l.style.position = 'absolute';
+                            l.style.top = '0';
+                            l.style.left = '0';
+                            l.style.width = '100%';
+                            l.style.height = '100%';
+                            l.style.display = 'block';
+                            l.style.visibility = 'visible';
+                            l.style.opacity = '1';
+                            l.style.transform = 'none';
 
-                                const img = l.querySelector('img');
-                                if (img) {
-                                    img.style.maxWidth = '100%';
-                                    img.style.maxHeight = '100%';
+                            // Logos/Imagens
+                            l.querySelectorAll('img').forEach(img => {
+                                img.style.display = 'block';
+                                img.style.visibility = 'visible';
+                                img.style.opacity = '1';
+                                if (!img.classList.contains('custom-element-img')) {
+                                    img.style.width = '100%';
+                                    img.style.height = '100%';
                                     img.style.objectFit = 'contain';
-                                    img.style.margin = '0 auto';
-                                    img.style.visibility = 'visible';
-                                    img.style.opacity = '1';
                                 }
-                            }
+                            });
+
+                            // Textos Customizados (Expert Fix)
+                            l.querySelectorAll('.custom-text').forEach(txt => {
+                                const originalTxt = document.querySelector(`[data-id="${txt.dataset.id}"] .custom-text`) || txt;
+                                const style = window.getComputedStyle(originalTxt);
+                                txt.style.fontFamily = style.fontFamily;
+                                txt.style.fontSize = style.fontSize;
+                                txt.style.color = style.color;
+                                txt.style.fontWeight = style.fontWeight;
+                                txt.style.textAlign = style.textAlign;
+                                txt.style.display = 'block';
+                                txt.style.visibility = 'visible';
+                            });
                         });
 
-                        // Esconder elementos de UI
-                        clonedDoc.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle, .limit-layer, .zoom-controls').forEach(el => {
+                        // 4. Esconder Elementos de Controle e UI
+                        clonedDoc.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle, .limit-layer, .zoom-controls, .delete-btn').forEach(el => {
                             el.style.display = 'none';
+                            el.style.visibility = 'hidden';
                         });
                     }
                 }
