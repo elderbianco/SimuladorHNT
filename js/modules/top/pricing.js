@@ -37,6 +37,13 @@ function updatePrice() {
 }
 
 function getZonePrice(id, type) {
+    if (!state.config) return 0;
+
+    // 1. Preço Granular do Admin (Prioridade Máxima)
+    if (state.config.zonePrices && state.config.zonePrices[id] !== undefined) {
+        return parseFloat(state.config.zonePrices[id]);
+    }
+
     if (type === 'image') {
         if (id.includes('frente')) return state.config.logoFrontPrice || 0;
         if (id.includes('costas')) return state.config.logoBackPrice || 0;
@@ -117,8 +124,8 @@ function calculateFullPrice() {
 
     // 5. Calculate Fees and Waivers
     const devFees = customUploadsCount * (state.config.devFee || 0);
-    // Waiver: >10 pieces AND (custom images OR customization cost)
-    let waiver = (state.config.artWaiver && totalQty > 10 && (customUploadsCount > 0 || customizationCost > 0)) ? (state.config.devFee || 0) : 0;
+    // Waiver: >= 10 pieces AND (custom images OR customization cost)
+    let waiver = (state.config.artWaiver && totalQty >= 10 && customUploadsCount > 0) ? (state.config.devFee || 0) : 0;
 
     // 6. Final Total
     const finalTotal = netTotal + devFees - waiver;
