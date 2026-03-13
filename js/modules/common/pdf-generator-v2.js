@@ -166,20 +166,31 @@ const PDFGenerator = {
                 const shortsImg = await loadImage(shortsDataUrl);
                 if (shortsImg) {
                     // Calcular proporção para que ocupe quase toda a tela do canvas 1600x1200
-                    const marginY = 80;
-                    const marginX = 80;
+                    const marginY = 20;
+                    const marginX = 20;
                     const targetW = finalCanvas.width - (marginX * 2);
                     const targetH = finalCanvas.height - (marginY * 2);
 
-                    const scaleX = targetW / shortsImg.width;
-                    const scaleY = targetH / shortsImg.height;
-                    const scale = Math.min(scaleX, scaleY); // Manter proporção
+                    let scale = Math.min(targetW / shortsImg.width, targetH / shortsImg.height); // Manter proporção
+
+                    // Aumentar agressivamente a escala
+                    scale = scale * 1.5;
+
+                    // Limitar a largura do canvas
+                    if (shortsImg.width * scale > finalCanvas.width * 0.95) {
+                        scale = (finalCanvas.width * 0.95) / shortsImg.width;
+                    }
+
+                    // Limitar a altura do canvas
+                    if (shortsImg.height * scale > finalCanvas.height * 0.95) {
+                        scale = (finalCanvas.height * 0.95) / shortsImg.height;
+                    }
 
                     const drawW = shortsImg.width * scale;
                     const drawH = shortsImg.height * scale;
 
                     const drawX = (finalCanvas.width - drawW) / 2;
-                    const drawY = (finalCanvas.height - drawH) / 2;
+                    const drawY = ((finalCanvas.height - drawH) / 2) + 40; // Mover levemente para baixo no ring
 
                     ctx.drawImage(shortsImg, drawX, drawY, drawW, drawH);
                 }
@@ -219,12 +230,20 @@ const PDFGenerator = {
                 const rect = container.getBoundingClientRect();
 
                 // Padronizando scale
-                const padding = 100;
-                const areaSize = Math.min(1600 - padding * 2, 1200 - padding * 2);
-                const scale = Math.min((1600 - padding * 2) / rect.width, (1200 - padding * 2) / rect.height);
+                const padding = 20;
+                let scale = Math.min((1600 - padding * 2) / rect.width, (1200 - padding * 2) / rect.height);
+
+                // Ampliando agressivamente o scale manual
+                scale = scale * 1.5;
+                if (rect.width * scale > 1600 * 0.95) {
+                    scale = (1600 * 0.95) / rect.width;
+                }
+                if (rect.height * scale > 1200 * 0.95) {
+                    scale = (1200 * 0.95) / rect.height;
+                }
 
                 const offsetX = (1600 - (rect.width * scale)) / 2;
-                const offsetY = (1200 - (rect.height * scale)) / 2;
+                const offsetY = ((1200 - (rect.height * scale)) / 2) + 40;
 
                 const loadImage = (src) => new Promise((res) => {
                     const img = new Image();
