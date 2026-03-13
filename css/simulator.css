@@ -811,7 +811,8 @@ body.pdf-capturing .action-bar {
 body.pdf-capturing .simulator-wrapper {
     box-shadow: none !important;
     border: none !important;
-    background: #fff !important;
+    background: transparent !important;
+    /* Mantém a estética escura durante a captura */
 }
 
 /* Enhanced Color Selector */

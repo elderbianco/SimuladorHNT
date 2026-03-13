@@ -179,6 +179,8 @@ const PDFGenerator = {
     },
 
     showCaptureFlash() {
+        // Desativado na v15.8 para evitar incômodo visual
+        /*
         const flash = document.createElement('div');
         flash.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:100000; pointer-events:none; opacity:1; transition: opacity 0.4s ease-out;';
         document.body.appendChild(flash);
@@ -186,6 +188,7 @@ const PDFGenerator = {
             flash.style.opacity = '0';
             setTimeout(() => flash.remove(), 400);
         });
+        */
     },
 
     getVisualFallback() {
