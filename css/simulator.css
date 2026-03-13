@@ -802,10 +802,15 @@ body.pdf-capturing .ui-draggable-handle,
 body.pdf-capturing .limit-layer,
 body.pdf-capturing .ui-resizable-handle,
 body.pdf-capturing .zoom-controls,
-body.pdf-capturing .action-bar {
+body.pdf-capturing .action-bar,
+body.pdf-capturing #lock-interaction {
     display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
+}
+
+body.pdf-capturing .simulator-area {
+    background-color: #000000 !important;
+    border: none !important;
+    padding: 0 !important;
 }
 
 body.pdf-capturing .simulator-wrapper {
