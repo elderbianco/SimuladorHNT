@@ -33,15 +33,26 @@ class BaseSimulator {
     ensureStandardData() {
         if (!window.DATA) window.DATA = {};
 
-        // Fallback for categories if not defined
+        // 1. Fallback for categories if not defined
         if (!window.DATA.categories) {
             window.DATA.categories = window.CONFIG?.categories || [
                 { id: 'Geral', name: 'Geral' }
             ];
         }
 
-        // Always ensure Personalização category
-        const hasCustom = window.DATA.categories.find(c => c.id === 'Personalizacao' || c.name === 'Personalização' || c.id === 'Personalização');
+        // 2. Always ensure 'Geral' category
+        const hasGeral = window.DATA.categories.find(c => c.id === 'Geral' || c.name === 'Geral');
+        if (!hasGeral) {
+            window.DATA.categories.unshift({ id: 'Geral', name: 'Geral' });
+        }
+
+        // 3. Always ensure 'Personalizacao' category
+        const hasCustom = window.DATA.categories.find(c =>
+            c.id === 'Personalizacao' ||
+            c.name === 'Personalização' ||
+            c.id === 'Personalização' ||
+            c.name === 'Personalizacao'
+        );
         if (!hasCustom) {
             window.DATA.categories.push({ id: 'Personalizacao', name: 'Personalização' });
         }
