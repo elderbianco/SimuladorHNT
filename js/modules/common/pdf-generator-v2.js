@@ -143,16 +143,22 @@ const PDFGenerator = {
                 // --- 4. FOTOGRAFIA ESTÁTICA EM STUDIO ---
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Disparando Câmera Landscape v15.28...');
+                    console.log('📸 Disparando Câmera Fiel 1:1 v15.29...');
 
                     const canvas = await html2canvas(ghost, {
-                        scale: 2, // Resolução Máxima pra compensar a tela
+                        scale: 2, // Resolução Elevada para PDF
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#000000',
                         logging: false,
-                        width: cropWidth,
-                        height: cropHeight
+                        width: Math.floor(hostRect.width),
+                        height: Math.floor(hostRect.height),
+                        windowWidth: document.documentElement.offsetWidth,
+                        windowHeight: document.documentElement.offsetHeight,
+                        x: 0,
+                        y: 0,
+                        scrollX: 0,
+                        scrollY: 0
                     });
 
                     snapshot = canvas.toDataURL('image/jpeg', 0.90);
@@ -162,7 +168,7 @@ const PDFGenerator = {
                 document.body.removeChild(ghost);
 
                 if (snapshot) {
-                    console.log('✅ Print ISOLATED CLONE v15.28 CONCLUÍDO.');
+                    console.log('✅ Print ISOLATED CLONE v15.29 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     console.warn('⚠️ html2canvas falhou no clone estático. Tentando motor legado...');
@@ -170,8 +176,8 @@ const PDFGenerator = {
                     resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico Clone Engine v15.28:', e);
-                const ghost = document.getElementById('simulator-ghost-v1528');
+                console.error('❌ Erro Crítico Clone Engine v15.29:', e);
+                const ghost = document.getElementById('simulator-ghost-v1529');
                 if (ghost) document.body.removeChild(ghost);
                 resolve(null);
             }
