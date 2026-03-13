@@ -37,37 +37,28 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // --- 1. CRIANDO O CLONE FANTASMA (O ESTÚDIO FOTOGRÁFICO) ---
-                console.log('🔄 Sincronizando DNA Digital para Estúdio Isolado v15.26...');
-                const ghost = originalArea.cloneNode(true);
-                ghost.id = 'simulator-ghost-v1526';
+                // --- 1. CRIANDO O CLONE FANTASMA NAS DIMENSÕES EXATAS ---
+                console.log('🔄 Sincronizando DNA Digital para Estúdio Responsivo v15.27...');
 
-                // Congelar dimensões do estúdio para 1000x1000 (Garante Shorts Gigante e Sem Barriga Preta)
+                const hostRect = originalArea.getBoundingClientRect();
+                const ghost = originalArea.cloneNode(true);
+                ghost.id = 'simulator-ghost-v1527';
+
+                // Congelar as dimensões do estúdio com a visão perfeitamente enquadrada do usuário
                 Object.assign(ghost.style, {
-                    position: 'fixed',
+                    position: 'absolute',
                     left: '-20000px', // Oculto da tela
                     top: '0px',
-                    width: '1000px',
-                    height: '1000px',
-                    maxWidth: '1000px',
-                    maxHeight: '1000px',
-                    aspectRatio: '1/1',
+                    width: `${Math.floor(hostRect.width)}px`,
+                    height: `${Math.floor(hostRect.height)}px`,
+                    maxWidth: `${Math.floor(hostRect.width)}px`,
+                    maxHeight: `${Math.floor(hostRect.height)}px`,
                     overflow: 'hidden',
                     zIndex: '-999',
                     transform: 'none',
                     margin: '0',
                     padding: '0'
                 });
-
-                // Os containers internos (ex: zoom-container) que penderem pra dimensões menores devem expandir pra 100% no clone
-                const zoomContainer = ghost.querySelector('.zoom-container');
-                if (zoomContainer) {
-                    zoomContainer.style.width = '1000px';
-                    zoomContainer.style.height = '1000px';
-                    zoomContainer.style.maxWidth = '1000px';
-                    zoomContainer.style.maxHeight = '1000px';
-                    zoomContainer.style.transform = 'scale(1) translate(0px, 0px)'; // Reset de posições
-                }
 
                 document.body.appendChild(ghost);
 
@@ -127,16 +118,16 @@ const PDFGenerator = {
                 // --- 4. FOTOGRAFIA ESTÁTICA EM STUDIO ---
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Disparando Câmera no Hard-Bake Clone...');
+                    console.log('📸 Disparando Macro Câmera v15.27...');
 
                     const canvas = await html2canvas(ghost, {
-                        scale: 1.5, // Resolução Estúdio
+                        scale: 2, // Resolução Máxima pra compensar a tela
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#000000',
                         logging: false,
-                        width: 1000,
-                        height: 1000
+                        width: Math.floor(hostRect.width),
+                        height: Math.floor(hostRect.height)
                     });
 
                     snapshot = canvas.toDataURL('image/jpeg', 0.90);
@@ -146,7 +137,7 @@ const PDFGenerator = {
                 document.body.removeChild(ghost);
 
                 if (snapshot) {
-                    console.log('✅ Print ISOLATED CLONE v15.26 CONCLUÍDO.');
+                    console.log('✅ Print ISOLATED CLONE v15.27 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     console.warn('⚠️ html2canvas falhou no clone estático. Tentando motor legado...');
@@ -154,8 +145,8 @@ const PDFGenerator = {
                     resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico Clone Engine v15.26:', e);
-                const ghost = document.getElementById('simulator-ghost-v1526');
+                console.error('❌ Erro Crítico Clone Engine v15.27:', e);
+                const ghost = document.getElementById('simulator-ghost-v1527');
                 if (ghost) document.body.removeChild(ghost);
                 resolve(null);
             }
