@@ -5,7 +5,17 @@
 
 window.UIComponents = window.UIComponents || {};
 
-window.UIComponents.createSizeSelector = function (sizes, currentValues, config, onChange) {
+window.UIComponents.createSizeSelector = function (sizes, currentValues, configOrOnChange, onChangeFallback) {
+    // ✅ COMPATIBILIDADE: Detecta se o 3º argumento é o callback direto (padrão antigo) ou config (novo)
+    let config, onChange;
+    if (typeof configOrOnChange === 'function') {
+        config = {};
+        onChange = configOrOnChange;
+    } else {
+        config = configOrOnChange || {};
+        onChange = onChangeFallback;
+    }
+
     const qtyWrap = document.createElement('div');
     qtyWrap.className = 'category-group';
 
