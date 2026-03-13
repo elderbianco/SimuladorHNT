@@ -245,6 +245,8 @@ class BaseSimulator {
         const uploadZones = this.provideCustomCategoryZones?.('upload') || window.DATA?.uploadZones || (window.CONFIG?.zones ? Object.values(window.CONFIG.zones) : []);
         const textZones = this.provideCustomCategoryZones?.('text') || window.DATA?.textZones || (window.CONFIG?.textZones || []);
 
+        console.log(`[BaseSimulator] Rendering customizations for ${cat.id}. Found ${uploadZones.length} upload zones and ${textZones.length} text zones.`);
+
         uploadZones.forEach(u => {
             if (u.id.endsWith('_ii')) return;
 
