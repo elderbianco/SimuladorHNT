@@ -91,7 +91,7 @@ function getFormattedId() {
 }
 
 // Estado Global
-const state = {
+window.state = {
     simulationId: '',
     simNumber: generateUUID(),
     orderNumber: '',
