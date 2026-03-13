@@ -29,7 +29,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.17 (Atomic Viewport Mirror) Ativado...');
+                console.log('☢️ Motor Nuclear v15.18 (Portrait Force & Instant Sync) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -37,24 +37,41 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // 1. Criar Clone Fantasma "Espelho" (Captura EXATA do Viewport)
+                // 1. Criar Clone Fantasma "Portrait" (Exclusivo para o PDF/Modal)
                 const ghost = originalArea.cloneNode(true);
                 ghost.id = 'simulator-ghost-capture';
 
                 // Dimensões do Viewport Real (A janela que o usuário vê)
-                const viewW = originalArea.clientWidth;
                 const viewH = originalArea.clientHeight;
+                // Forçar formato retrato (Portrait) cortando as sobras laterais
+                // Um A4 é mais estreito que alto. Usamos uma proporção ex: 1:1.3 (w/h)
+                const portraitW = Math.min(originalArea.clientWidth, viewH * 0.85);
+
+                // Centralizar o conteúdo dentro da nova "moldura" estreita
+                const ghostZoomContainer = ghost.querySelector('#zoom-container');
+                if (ghostZoomContainer) {
+                    // Manter a escala atual
+                    const currentTransform = ghostZoomContainer.style.transform;
+                    // Se a tela for mais larga que a moldura portrait, deslocamos o container para a esquerda
+                    // para manter o produto no centro geométrico da nova moldura.
+                    const moveLeft = (originalArea.clientWidth - portraitW) / 2;
+                    if (moveLeft > 0) {
+                        ghostZoomContainer.style.marginLeft = `-${moveLeft}px`;
+                    }
+                }
 
                 Object.assign(ghost.style, {
                     position: 'fixed',
-                    left: '-30000px',
+                    left: '-40000px',
                     top: '0',
-                    width: viewW + 'px',
+                    width: portraitW + 'px',
                     height: viewH + 'px',
-                    overflow: 'hidden', // Cortar o que o usuário não vê (Fidelidade 1:1)
+                    overflow: 'hidden', // Cortar o que está fora do quadro Portrait
                     zIndex: '-1',
                     transform: 'none',
-                    backgroundColor: '#000000'
+                    backgroundColor: '#000000',
+                    display: 'flex',
+                    justifyContent: 'center'
                 });
                 document.body.appendChild(ghost);
 
@@ -75,7 +92,7 @@ const PDFGenerator = {
                     img.src = url;
                 });
 
-                console.log('🔄 Sincronizando Print 1:1 no Ghost v15.17...');
+                console.log('🔄 Sincronizando Print Portrait no Ghost v15.18...');
 
                 const ghostImgs = Array.from(ghost.querySelectorAll('img'));
                 for (const img of ghostImgs) {
@@ -105,7 +122,7 @@ const PDFGenerator = {
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#000000',
-                        width: viewW,
+                        width: portraitW,
                         height: viewH,
                         ignoreElements: (el) => {
                             return el.classList.contains('zoom-controls') ||
@@ -121,14 +138,14 @@ const PDFGenerator = {
                 document.body.removeChild(ghost);
 
                 if (snapshot) {
-                    console.log('✅ Print v15.17 CONCLUÍDO.');
+                    console.log('✅ Print Portrait v15.18 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     snapshot = await this.drawLegacyManualSnapshot();
                     resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico v15.17:', e);
+                console.error('❌ Erro Crítico v15.18:', e);
                 const ghost = document.getElementById('simulator-ghost-capture');
                 if (ghost) document.body.removeChild(ghost);
                 resolve(null);
@@ -395,6 +412,9 @@ const PDFGenerator = {
         const modal = document.getElementById('summary-modal');
         if (!modal) return;
 
+        // Resetar estado do botão para "Iniciando..." e bloquear preview temporariamente
+        this.updateModalButton('loading');
+
         // Sincronizar dados da tabela (Instantâneo)
         const source = document.getElementById('summary-body');
         const target = document.getElementById('summary-body-modal');
@@ -405,16 +425,19 @@ const PDFGenerator = {
             titleEl.innerText = `RESUMO DO PEDIDO (#${this.context.state.simulationId})`;
         }
 
-        // Resetar estado do botão para "Iniciando..."
-        this.updateModalButton('generating');
-
-        // Renderizar prévia INSTANTÂNEA usando cache (agora atualizado)
-        this.renderPreviewInModal();
-
         modal.style.display = 'flex';
 
-        // --- NOVO: GERAR PDF EM BACKGROUND E SALVAR ---
-        // Agora que o usuário está vendo o resumo, geramos o PDF real e salvamos no servidor.
+        // --- NOVO: FORÇAR CAPTURA INSTANTÂNEA E RENDERIZAR SÓ DEPOIS ---
+        console.log('🔄 Forçando Atualização de Cache Visual v15.18...');
+        // Limpar cache antigo para não piscar
+        this.cachedSnapshot = null;
+
+        await this.updateSnapshot(true); // Bloqueia até o retrato estar pronto
+
+        // Renderizar prévia INSTANTÂNEA com a FOTO FRESCA da tela
+        this.renderPreviewInModal();
+
+        // Gerar PDF em background
         this.generateBackgroundPDF();
     },
 
@@ -618,10 +641,13 @@ const PDFGenerator = {
         const id = this.context.state?.simulationId || 'HNT_PEDIDO';
 
         try {
-            // 1. FORÇAR ATUALIZAÇÃO (Feedback Visual)
-            this.updateModalButton('loading');
-            console.log('🔄 Sincronizando canvas e resumo...');
-            await this.updateSnapshot(true); // Força novo snapshot
+            // Se chamado pelo openPreview, o snapshot já foi atualizado!
+            // Se chamado do background (carrinho), força a atualização
+            if (!this.cachedSnapshot) {
+                this.updateModalButton('loading');
+                console.log('🔄 Sincronizando canvas para Background PDF...');
+                await this.updateSnapshot(true);
+            }
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
@@ -655,14 +681,7 @@ const PDFGenerator = {
                     } catch (e) { }
                 }
 
-                // 3. Moldura HNT (Dourada) - REMOVIDO na v15.9 a pedido do usuário
-                /*
-                docArg.setDrawColor(212, 175, 55);
-                docArg.setLineWidth(0.5);
-                docArg.rect(margin - 2, margin - 2, width - (margin * 2) + 4, height - (margin * 2) + 4, 'S');
-                */
-
-                // 4. Cabeçalho HNT
+                // 3. Cabeçalho HNT
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(24);
                 docArg.setTextColor(30, 30, 30);
@@ -672,7 +691,7 @@ const PDFGenerator = {
                 docArg.setTextColor(120, 120, 120);
                 docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT MODE', margin, margin + 18);
 
-                // 5. Metadados do Pedido
+                // 4. Metadados do Pedido
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(11);
                 docArg.setTextColor(0, 0, 0);
@@ -687,12 +706,12 @@ const PDFGenerator = {
 
             let currentY = drawExpertTemplate(doc);
 
-            // 2. IMAGEM (MAIOR ÁREA POSSÍVEL)
+            // 2. IMAGEM (MAIOR ÁREA POSSÍVEL - PORTRAIT FORCE)
             if (this.cachedSnapshot && this.cachedSnapshot.length > 500) {
                 try {
                     const imgProps = doc.getImageProperties(this.cachedSnapshot);
                     const maxW = pageWidth - (margin * 2);
-                    const maxH = pageHeight * 0.80; // FOCO TOTAL (80% da página)
+                    const maxH = pageHeight * 0.85; // AUMENTADO MÁXIMO (85% da página)
                     let imgW = maxW;
                     let imgH = (imgProps.height * imgW) / imgProps.width;
                     if (imgH > maxH) {
