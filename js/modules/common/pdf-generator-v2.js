@@ -23,13 +23,13 @@ const PDFGenerator = {
     },
 
     /**
-     * Motor de Renderização Nuclear v15.6 (Ghost Clone)
-     * Cria um dublê do simulador em Base64 para garantir 100% de importação de elementos.
+     * Motor de Renderização Nuclear v15.7 (Live Capture)
+     * Captura direta do DOM real com sanitização expressa.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.6 (Ghost Clone) Ativado...');
+                console.log('☢️ Motor Nuclear v15.7 (Live Capture) Ativado...');
 
                 const originalWrapper = document.querySelector('.simulator-wrapper');
                 if (!originalWrapper) {
@@ -37,100 +37,115 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // 1. Criar o Container Oculto (Ghost Room)
-                const ghostRoom = document.createElement('div');
-                ghostRoom.id = 'ghost-capture-room';
-                ghostRoom.style.cssText = 'position:fixed; top:-9999px; left:-9999px; width:1200px; height:1200px; background:#fff;';
-                document.body.appendChild(ghostRoom);
+                // 1. Sanitização em Tempo Real (Esconder UI)
+                document.body.classList.add('pdf-capturing');
 
-                // 2. Criar o Dublê (Clone Profundo)
-                const clone = originalWrapper.cloneNode(true);
-                clone.style.cssText = 'position:relative; transform:none !important; scale:1 !important; left:0 !important; top:0 !important; width:100% !important; height:100% !important;';
+                // Pequeno delay para garantir que o CSS de sanitização foi aplicado
+                await new Promise(r => setTimeout(r, 100));
 
-                // Limpar elementos de UI no clone
-                clone.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle, .limit-layer').forEach(el => el.remove());
-                ghostRoom.appendChild(clone);
-
-                // 3. Conversor Atômico Base64 (Força Bruta)
-                const toBase64 = (img) => new Promise((res) => {
-                    if (img.src.startsWith('data:')) return res(img.src);
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = img.naturalWidth || img.width;
-                    canvas.height = img.naturalHeight || img.height;
-                    try {
-                        ctx.drawImage(img, 0, 0);
-                        res(canvas.toDataURL('image/png'));
-                    } catch (e) {
-                        console.warn('⚠️ Erro ao converter para Base64:', img.src);
-                        res(img.src); // Mantém original se falhar
-                    }
-                });
-
-                // 4. Sanitização de Média - Transformar TUDO em Base64 dentro do Clone
-                console.log('🔄 Sanitizando imagens do clone...');
-                const imgs = Array.from(clone.querySelectorAll('img'));
-                for (const img of imgs) {
-                    if (img.src) {
-                        const b64 = await toBase64(img);
-                        img.src = b64;
-                    }
-                }
-
-                // Processar fundos (background-image)
-                const allElements = clone.querySelectorAll('*');
-                for (const el of allElements) {
-                    const bg = window.getComputedStyle(el).backgroundImage;
-                    if (bg && bg.includes('url')) {
-                        const url = bg.match(/url\(['"]?(.*?)['"]?\)/)?.[1];
-                        if (url && !url.startsWith('data:')) {
-                            const tempImg = new Image();
-                            tempImg.crossOrigin = 'anonymous';
-                            tempImg.src = url;
-                            await new Promise(r => { tempImg.onload = r; tempImg.onerror = r; });
-                            const b64 = await toBase64(tempImg);
-                            el.style.backgroundImage = `url("${b64}")`;
-                        }
-                    }
-                }
-
-                // 5. Captura Profissional via dom-to-image-more (ou fallback se não carregado)
+                // 2. Captura via dom-to-image-more (ou fallback manual)
                 let snapshot = null;
                 const lib = window.domToImage || window.domtoimage;
 
                 if (lib && typeof lib.toJpeg === 'function') {
-                    console.log('📸 Capturando via dom-to-image-more...');
-                    snapshot = await lib.toJpeg(clone, {
+                    console.log('📸 Tirando foto do DOM vivo...');
+
+                    // Configurações agressivas de captura
+                    snapshot = await lib.toJpeg(originalWrapper, {
                         quality: 0.95,
-                        width: 1200,
-                        height: 1200,
-                        style: { transform: 'none' }
+                        width: originalWrapper.offsetWidth,
+                        height: originalWrapper.offsetHeight,
+                        bgcolor: '#ffffff',
+                        style: {
+                            'transform': 'none',
+                            'left': '0',
+                            'top': '0',
+                            'margin': '0'
+                        },
+                        // Garantir que imagens dinâmicas (Blob/CORS) sejam carregadas
+                        cacheBust: true
                     });
-                } else {
-                    console.warn('⚠️ dom-to-image-more ausente, usando fallback manual v15.5');
-                    // Fallback para o motor manual se a lib falhar por algum motivo
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = 1200; canvas.height = 1200;
-                    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 1200, 1200);
-                    // Aqui reinjetaria a lógica simplificada do v15.5 se necessário
-                    snapshot = canvas.toDataURL('image/jpeg');
                 }
 
-                // Limpeza
-                ghostRoom.remove();
+                // 3. Verificação de Integridade (Prevenir imagens em branco)
+                if (!snapshot || snapshot.length < 5000) {
+                    console.warn('⚠️ Captura dom-to-image falhou ou retornou imagem vazia. Usando Força Bruta Manual v15.5...');
+                    // Se falhar o dom-to-image, revertemos para o motor de desenho manual que reconstrói a cena
+                    snapshot = await this.drawLegacyManualSnapshot();
+                }
+
+                // 4. Restaurar UI
+                document.body.classList.remove('pdf-capturing');
 
                 if (snapshot) {
-                    console.log('✅ Snapshot Nuclear v15.6 CONCLUÍDO.');
+                    console.log('✅ Snapshot Nuclear v15.7 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     resolve(null);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico no Ghost Clone v15.6:', e);
-                if (document.getElementById('ghost-capture-room')) document.getElementById('ghost-capture-room').remove();
+                console.error('❌ Erro Crítico no Live Capture v15.7:', e);
+                document.body.classList.remove('pdf-capturing');
                 resolve(null);
             }
+        });
+    },
+
+    /**
+     * Motor de Backup Low-Level (v15.5)
+     * Reconstrói o canvas elemento por elemento se as libs de captura falharem.
+     */
+    async drawLegacyManualSnapshot() {
+        return new Promise(async (resolve) => {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 1200; canvas.height = 1200;
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const container = document.querySelector('.simulator-wrapper');
+                const rect = container.getBoundingClientRect();
+                const scale = 1200 / rect.width;
+
+                const loadImage = (src) => new Promise((res) => {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => res(img);
+                    img.onerror = () => res(null);
+                    img.src = src;
+                });
+
+                // Desenhar Fundo
+                const ringImg = await loadImage('Icons/RingHNT.jpeg') || await loadImage('RingHNT.jpeg');
+                if (ringImg) ctx.drawImage(ringImg, 0, 0, 1200, 1200);
+
+                const items = Array.from(container.querySelectorAll('img, [style*="background-image"]'));
+                for (const item of items) {
+                    const s = window.getComputedStyle(item);
+                    const r = item.getBoundingClientRect();
+                    const src = (item.tagName === 'IMG' ? item.src : s.backgroundImage.match(/url\(['"]?(.*?)['"]?\)/)?.[1]);
+
+                    if (src) {
+                        const img = await loadImage(src);
+                        if (img) {
+                            ctx.save();
+                            const x = (r.left - rect.left + r.width / 2) * scale;
+                            const y = (r.top - rect.top + r.height / 2) * scale;
+                            ctx.translate(x, y);
+
+                            if (s.transform !== 'none') {
+                                const m = s.transform.match(/matrix\((.+)\)/)?.[1].split(',').map(parseFloat);
+                                if (m) ctx.transform(m[0], m[1], m[2], m[3], 0, 0);
+                            }
+                            ctx.drawImage(img, -(r.width * scale) / 2, -(r.height * scale) / 2, r.width * scale, r.height * scale);
+                            ctx.restore();
+                        }
+                    }
+                }
+                resolve(canvas.toDataURL('image/jpeg', 0.9));
+            } catch (e) { resolve(null); }
         });
     },
 
