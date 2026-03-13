@@ -29,7 +29,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.19 (Viewport Mirror Reverted) Ativado...');
+                console.log('☢️ Motor Nuclear v15.20 (Live DOM Engine) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -37,28 +37,10 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // 1. Criar Clone Fantasma "Espelho" (Captura EXATA do Viewport)
-                const ghost = originalArea.cloneNode(true);
-                ghost.id = 'simulator-ghost-capture';
+                // --- 1. PREPARAÇÃO DA CENA REAL (LIVE PREP) ---
+                console.log('🔄 Sincronizando DNA Digital na Cena Real v15.20...');
 
-                // Dimensões do Viewport Real (A janela que o usuário vê)
-                const viewW = originalArea.clientWidth;
-                const viewH = originalArea.clientHeight;
-
-                Object.assign(ghost.style, {
-                    position: 'fixed',
-                    left: '-30000px',
-                    top: '0',
-                    width: viewW + 'px',
-                    height: viewH + 'px',
-                    overflow: 'hidden', // Cortar o que o usuário não vê (Fidelidade 1:1)
-                    zIndex: '-1',
-                    transform: 'none',
-                    backgroundColor: '#000000'
-                });
-                document.body.appendChild(ghost);
-
-                // 2. Blindagem Universal Base64 (Somente nos ativos do Ghost)
+                // Conversor Base64 (Imuniza contra CORS sem piscar a tela)
                 const toBase64 = (url) => new Promise((res) => {
                     if (!url || url.startsWith('data:')) return res(url);
                     const img = new Image();
@@ -75,21 +57,20 @@ const PDFGenerator = {
                     img.src = url;
                 });
 
-                console.log('🔄 Sincronizando Print 1:1 no Ghost v15.19...');
-
-                const ghostImgs = Array.from(ghost.querySelectorAll('img'));
-                for (const img of ghostImgs) {
+                // Injetar Base64 nas imagens e backgrounds reais silenciosamente
+                const realImgs = Array.from(originalArea.querySelectorAll('img'));
+                for (const img of realImgs) {
                     if (img.src && !img.src.startsWith('data:')) {
                         img.src = await toBase64(img.src);
                     }
                 }
 
-                const ghostWithBg = Array.from(ghost.querySelectorAll('*')).filter(el => {
+                const realWithBg = Array.from(originalArea.querySelectorAll('*')).filter(el => {
                     const bg = window.getComputedStyle(el).backgroundImage;
                     return bg && bg !== 'none' && bg.includes('url(');
                 });
 
-                for (const el of ghostWithBg) {
+                for (const el of realWithBg) {
                     const bgUrl = window.getComputedStyle(el).backgroundImage.slice(4, -1).replace(/"/g, "");
                     if (!bgUrl.startsWith('data:')) {
                         const b64 = await toBase64(bgUrl);
@@ -97,40 +78,73 @@ const PDFGenerator = {
                     }
                 }
 
-                // 4. Captura Digital (html2canvas)
+                // --- 2. OCULTAR UI DE CONTROLE INSTANTANEAMENTE (CLEAN FLASH) ---
+                const selectorsToHide = [
+                    '.zoom-controls', '.action-bar', '#whatsapp-btn',
+                    '.drag-handle', '.resize-handle', '.delete-btn',
+                    '.ui-resizable-handle', '.limit-layer', '.selection-border'
+                ];
+
+                // Salva estados anteriores para podermos restaurar
+                const hiddenElements = [];
+
+                selectorsToHide.forEach(selector => {
+                    originalArea.querySelectorAll(selector).forEach(el => {
+                        hiddenElements.push({ el: el, originalOpacity: el.style.opacity || '' });
+                        el.style.opacity = '0'; // Usamos opacity ao invés de display:none para não quebrar dimensões
+                    });
+                });
+
+                // Também remove temporariamente as bordas pontilhadas de seleção (Fabric/JQueryUI)
+                const selectedElements = originalArea.querySelectorAll('.ui-selected, [style*="outline"], [style*="border: dashed"]');
+                const borderStates = [];
+                selectedElements.forEach(el => {
+                    borderStates.push({ el: el, originalOutline: el.style.outline || '', originalBorder: el.style.border || '' });
+                    el.style.outline = 'none';
+                    if (el.style.border.includes('dashed') || el.style.border.includes('dotted')) {
+                        el.style.border = 'none';
+                    }
+                });
+
+                // --- 3. CAPTURA DIGITAL DIRETA (Html2Canvas in DOM) ---
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    const canvas = await html2canvas(ghost, {
-                        scale: 1.5, // Equilíbrio entre qualidade e performance
+                    console.log('📸 Disparando Câmera no Fluxo Vivo...');
+
+                    // Pequeno delay para garantir reflow do CSS de opacidade (10ms não incomoda o usuário)
+                    await new Promise(r => setTimeout(r, 10));
+
+                    const canvas = await html2canvas(originalArea, {
+                        scale: 1.5, // Altíssima Definição
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#000000',
-                        width: viewW,
-                        height: viewH,
-                        ignoreElements: (el) => {
-                            return el.classList.contains('zoom-controls') ||
-                                el.classList.contains('action-bar') ||
-                                el.id === 'whatsapp-btn' ||
-                                el.classList.contains('drag-handle') ||
-                                el.classList.contains('resize-handle');
-                        }
+                        logging: false,
+                        // Não precisamos de ignoreElements porque já zeramos a opacidade de tudo
                     });
+
+                    // Compressão jpeg leve p/ não travar a memória de PDFs pesados
                     snapshot = canvas.toDataURL('image/jpeg', 0.90);
                 }
 
-                document.body.removeChild(ghost);
+                // --- 4. RESTAURAÇÃO DA UI INSTANTÂNEA ---
+                hiddenElements.forEach(item => { item.el.style.opacity = item.originalOpacity; });
+                borderStates.forEach(item => {
+                    item.el.style.outline = item.originalOutline;
+                    if (item.originalBorder) item.el.style.border = item.originalBorder;
+                });
 
+                // --- 5. ENTREGA ---
                 if (snapshot) {
-                    console.log('✅ Print v15.19 CONCLUÍDO.');
+                    console.log('✅ Print LIVE v15.20 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
+                    console.warn('⚠️ html2canvas falhou no DOM real. Tentando motor legado...');
                     snapshot = await this.drawLegacyManualSnapshot();
                     resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico v15.19:', e);
-                const ghost = document.getElementById('simulator-ghost-capture');
-                if (ghost) document.body.removeChild(ghost);
+                console.error('❌ Erro Crítico Live Engine v15.20:', e);
                 resolve(null);
             }
         });
