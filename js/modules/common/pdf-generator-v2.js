@@ -29,7 +29,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.25 (Reboot Limpo API) Ativado...');
+                console.log('☢️ Motor Nuclear v15.26 (Hard-Bake Clone & Nuke) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -37,10 +37,57 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // --- 1. PREPARAÇÃO DA CENA REAL (LIVE PREP) ---
-                console.log('🔄 Sincronizando DNA Digital na Cena Real v15.25...');
+                // --- 1. CRIANDO O CLONE FANTASMA (O ESTÚDIO FOTOGRÁFICO) ---
+                console.log('🔄 Sincronizando DNA Digital para Estúdio Isolado v15.26...');
+                const ghost = originalArea.cloneNode(true);
+                ghost.id = 'simulator-ghost-v1526';
 
-                // Conversor Base64
+                // Congelar dimensões do estúdio para 1000x1000 (Garante Shorts Gigante e Sem Barriga Preta)
+                Object.assign(ghost.style, {
+                    position: 'fixed',
+                    left: '-20000px', // Oculto da tela
+                    top: '0px',
+                    width: '1000px',
+                    height: '1000px',
+                    maxWidth: '1000px',
+                    maxHeight: '1000px',
+                    aspectRatio: '1/1',
+                    overflow: 'hidden',
+                    zIndex: '-999',
+                    transform: 'none',
+                    margin: '0',
+                    padding: '0'
+                });
+
+                // Os containers internos (ex: zoom-container) que penderem pra dimensões menores devem expandir pra 100% no clone
+                const zoomContainer = ghost.querySelector('.zoom-container');
+                if (zoomContainer) {
+                    zoomContainer.style.width = '1000px';
+                    zoomContainer.style.height = '1000px';
+                    zoomContainer.style.maxWidth = '1000px';
+                    zoomContainer.style.maxHeight = '1000px';
+                    zoomContainer.style.transform = 'scale(1) translate(0px, 0px)'; // Reset de posições
+                }
+
+                document.body.appendChild(ghost);
+
+                // --- 2. CSS NUKE INTERNO (EXTERMÍNIO DE UI) ---
+                // Aplica inline os comandos de sumiço sem depender de engine global
+                const elementsToHide = ghost.querySelectorAll('.zoom-controls, .action-bar, #whatsapp-btn, .drag-handle, .resize-handle, .delete-btn, .ui-resizable-handle, .limit-layer, .selection-border');
+                elementsToHide.forEach(el => {
+                    el.style.setProperty('display', 'none', 'important');
+                    el.style.setProperty('opacity', '0', 'important');
+                    el.style.setProperty('visibility', 'hidden', 'important');
+                });
+
+                const targetBorders = ghost.querySelectorAll('.ui-selected, .ui-wrapper, .custom-element');
+                targetBorders.forEach(el => {
+                    el.style.setProperty('outline', 'none', 'important');
+                    el.style.setProperty('box-shadow', 'none', 'important');
+                    el.style.setProperty('border', 'none', 'important');
+                });
+
+                // --- 3. IMUNIZAÇÃO BASE64 ABSOLUTA NO CLONE ---
                 const toBase64 = (url) => new Promise((res) => {
                     if (!url || url.startsWith('data:')) return res(url);
                     const img = new Image();
@@ -57,20 +104,19 @@ const PDFGenerator = {
                     img.src = url;
                 });
 
-                // Injetar Base64 nas imagens e backgrounds reais
-                const realImgs = Array.from(originalArea.querySelectorAll('img'));
-                for (const img of realImgs) {
+                const ghostImgs = Array.from(ghost.querySelectorAll('img'));
+                for (const img of ghostImgs) {
                     if (img.src && !img.src.startsWith('data:')) {
                         img.src = await toBase64(img.src);
                     }
                 }
 
-                const realWithBg = Array.from(originalArea.querySelectorAll('*')).filter(el => {
+                const ghostWithBg = Array.from(ghost.querySelectorAll('*')).filter(el => {
                     const bg = window.getComputedStyle(el).backgroundImage;
                     return bg && bg !== 'none' && bg.includes('url(');
                 });
 
-                for (const el of realWithBg) {
+                for (const el of ghostWithBg) {
                     const bgUrl = window.getComputedStyle(el).backgroundImage.slice(4, -1).replace(/"/g, "");
                     if (!bgUrl.startsWith('data:')) {
                         const b64 = await toBase64(bgUrl);
@@ -78,72 +124,39 @@ const PDFGenerator = {
                     }
                 }
 
-                // --- 2. CSS NUKE STRICT (LIMPEZA EXCLUSIVA DE BORDAS INTERATIVAS) ---
-                // Não alterar o overflow ou geometry da 'simulator-area' para não bugar o corte da imagem.
-                console.log('🛡️ Anulando falsas bordas via CSS Injection Cirúrgica...');
-                const nukeStyle = document.createElement('style');
-                nukeStyle.innerHTML = `
-                    .simulator-area .ui-selected, 
-                    .simulator-area .ui-wrapper, 
-                    .simulator-area .custom-element, 
-                    .simulator-area [style*="outline"], 
-                    .simulator-area [style*="border"] {
-                        outline: none !important;
-                        box-shadow: none !important;
-                        border: none !important;
-                    }
-                    .ui-resizable-handle, 
-                    .delete-btn, 
-                    .zoom-controls, 
-                    .action-bar, 
-                    #whatsapp-btn, 
-                    .drag-handle, 
-                    .resize-handle, 
-                    .limit-layer,
-                    .selection-border {
-                        display: none !important;
-                        opacity: 0 !important;
-                        visibility: hidden !important;
-                    }
-                `;
-                document.head.appendChild(nukeStyle);
-
-                // --- 3. CAPTURA DIGITAL DIRETA (Default Scale 1.5)
+                // --- 4. FOTOGRAFIA ESTÁTICA EM STUDIO ---
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Disparando Câmera no Fluxo Vivo sem Hack Geométrico...');
+                    console.log('📸 Disparando Câmera no Hard-Bake Clone...');
 
-                    // Pequeno delay para garantir aplicação do CSS Nuke
-                    await new Promise(r => setTimeout(r, 50));
-
-                    const canvas = await html2canvas(originalArea, {
-                        scale: 1.5, // Definição Excelente
+                    const canvas = await html2canvas(ghost, {
+                        scale: 1.5, // Resolução Estúdio
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#000000',
-                        logging: false
-                        // NENHUM offsetX/Y, width/height injetado forçadamente pra evitar fatiamento negro
+                        logging: false,
+                        width: 1000,
+                        height: 1000
                     });
 
                     snapshot = canvas.toDataURL('image/jpeg', 0.90);
                 }
 
-                // --- 4. RESTAURAÇÃO DA UI INSTANTÂNEA ---
-                if (nukeStyle.parentNode) {
-                    nukeStyle.parentNode.removeChild(nukeStyle);
-                }
+                // --- 5. ENTREGA E LIMPEZA ---
+                document.body.removeChild(ghost);
 
-                // --- 5. ENTREGA ---
                 if (snapshot) {
-                    console.log('✅ Print PURE REBOOT v15.25 CONCLUÍDO.');
+                    console.log('✅ Print ISOLATED CLONE v15.26 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
-                    console.warn('⚠️ html2canvas falhou no DOM real. Tentando motor legado...');
+                    console.warn('⚠️ html2canvas falhou no clone estático. Tentando motor legado...');
                     snapshot = await this.drawLegacyManualSnapshot();
                     resolve(snapshot);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico Reboot Engine v15.25:', e);
+                console.error('❌ Erro Crítico Clone Engine v15.26:', e);
+                const ghost = document.getElementById('simulator-ghost-v1526');
+                if (ghost) document.body.removeChild(ghost);
                 resolve(null);
             }
         });
