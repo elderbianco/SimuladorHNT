@@ -213,7 +213,7 @@ function updatePrice(preCalculated = null) {
         const p = preCalculated || calculateFullPrice();
 
         const display = document.getElementById('price-display');
-        const qty = Object.values(state.sizes).reduce((a, b) => a + b, 0);
+        const qty = Object.values(state.sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
 
         const infoTotal = (typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_total_geral') : '';
         const infoMatriz = (typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_matriz') : '';
