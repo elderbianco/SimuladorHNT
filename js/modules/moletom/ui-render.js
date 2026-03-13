@@ -236,7 +236,7 @@ function renderCustomizationSection() {
     return group;
 }
 
-function renderControls() {
+function renderControls_legacy() {
     const container = document.getElementById('controls-container');
     if (!container) return;
 
@@ -306,7 +306,7 @@ function renderControls() {
 
         state.simulationId = `${orderPrefix}-ML-${newSeq}`;
 
-        
+
         // 1. Mostrar Notificação de Carregamento imediata
         const loader = document.createElement('div');
         loader.innerHTML = \`
@@ -391,11 +391,11 @@ function renderControls() {
                     suffix = generateNextSequenceNumber();
                 }
 
-                if (!val) state.simulationId = `HNT-ML-${suffix}`;
-                else state.simulationId = `${val}-ML-${suffix}`;
+                if (!val) state.simulationId = `HNT - ML - ${ suffix } `;
+                else state.simulationId = `${ val } -ML - ${ suffix } `;
 
                 const simIdSpan = container.querySelector('div > span[style*="font-size:0.75rem"]');
-                if (simIdSpan) simIdSpan.innerText = `ID: ${state.simulationId}`;
+                if (simIdSpan) simIdSpan.innerText = `ID: ${ state.simulationId } `;
 
                 saveState();
             };
@@ -421,10 +421,10 @@ function renderControls() {
 function renderFinalForm() {
     const finalInputs = document.createElement('div');
     finalInputs.innerHTML = `
-        <div style="margin-top:10px; border-top:1px solid #333; padding-top:10px;">
+            < div style = "margin-top:10px; border-top:1px solid #333; padding-top:10px;" >
             <label style="font-weight:bold; display:block; color:#fff;">Observações:</label>
             <textarea id="obs-input" style="width:100%; height:60px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; padding:5px;"></textarea>
-        </div>
+        </div >
         <div style="margin-top:10px; background:rgba(212, 175, 55, 0.05); padding:12px; border:1px solid var(--gold-primary); border-radius:var(--radius-md);">
             <label style="font-weight:bold; display:block; color:var(--gold-primary); margin-bottom:8px;">Telefone <span style="color:red">*</span> ${(typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_telefone', 'Necessário para contato sobre ajustes técnicos e análise de produção') : ''}</label>
             <input type="tel" id="phone-input" style="width:100%; padding:10px; border:1px solid #444; background:#111; color:#fff; border-radius:4px;" placeholder="(XX) XXXXX-XXXX">
@@ -441,7 +441,7 @@ function renderFinalForm() {
                 <span>EU LI E CONCORDO COM OS TERMOS E CONDIÇÕES ACIMA <span style="color:red">*</span></span>
             </label>
         </div>
-    `;
+        `;
     return finalInputs;
 }
 
@@ -470,7 +470,7 @@ function renderGallery(searchTerm = "") {
         const term = searchTerm.toLowerCase();
         const results = galleryData.filter(i => i.name.toLowerCase().includes(term));
         if (results.length === 0) {
-            g.innerHTML = `<div style="text-align:center; padding:20px; color:#666; width:100%;">Nenhuma imagem encontrada.</div>`;
+            g.innerHTML = `< div style = "text-align:center; padding:20px; color:#666; width:100%;" > Nenhuma imagem encontrada.</div > `;
             return;
         }
         results.forEach(i => appendGalleryItem(g, i));
@@ -491,7 +491,7 @@ function renderGallery(searchTerm = "") {
             const d = document.createElement('div');
             d.className = 'gallery-folder';
             const iconSrc = categoryIcons[cat] || "assets/Shorts/UiIcons/thumb_gerais.png";
-            d.innerHTML = `<img src="${iconSrc}" class="folder-image-icon"><div class="folder-label">${cat}</div>`;
+            d.innerHTML = `< img src = "${iconSrc}" class="folder-image-icon" > <div class="folder-label">${cat}</div>`;
             d.onclick = () => { currentGalleryCategory = cat; renderGallery(); };
             g.appendChild(d);
         });
@@ -511,7 +511,7 @@ function renderGallery(searchTerm = "") {
 function appendGalleryItem(container, i) {
     const d = document.createElement('div');
     d.className = 'gallery-item';
-    d.innerHTML = `<img src="${i.src}"><span>${i.name}</span>`;
+    d.innerHTML = `< img src = "${i.src}" > <span>${i.name}</span>`;
     d.onclick = () => {
         if (state.pendingUploadZone) {
             state.zoneLimits[state.pendingUploadZone] = true;
@@ -544,7 +544,7 @@ async function uploadFileToServer(file, base64, zoneId) {
     }
 }
 
-function addImage(z) { document.getElementById(`upload-${z}`).click(); }
+function addImage(z) { document.getElementById(`upload - ${ z } `).click(); }
 function handleImageUpload(e, z) {
     const f = e.target.files[0]; if (!f) return;
     let fmt = f.name;
