@@ -69,8 +69,8 @@ class MoletomSimulator extends BaseSimulator {
     }
 
     provideCustomCategoryZones(type) {
-        const zones = (type === 'upload') ? window.DATA?.uploadZones : window.DATA?.textZones;
-        if (!zones) return [];
+        let zones = (type === 'upload') ? (window.DATA?.uploadZones || (window.DATA?.zones ? Object.values(window.DATA.zones) : null)) : window.DATA?.textZones;
+        if (!zones) return undefined;
         return zones.map(z => ({
             ...z,
             category: z.category || 'Personalizacao'
