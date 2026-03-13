@@ -78,8 +78,31 @@ function generateFormattedFilename(zoneId, originalName, source = 'EXT') {
 }
 
 function loadAdminConfig() {
-    const prices = JSON.parse(localStorage.getItem('hnt_moletom_config') || '{}');
+    let prices = JSON.parse(localStorage.getItem('hnt_moletom_config') || '{}');
     const globalConfig = JSON.parse(localStorage.getItem('hnt_pricing_config') || '{}');
+
+    // ✅ AUTO-INIT: Se basePrice for 0 ou undefined (dados corrompidos), re-inicializar com defaults reais
+    if (!prices.basePrice || prices.basePrice === 0) {
+        prices = {
+            basePrice: 189.90,
+            sizeModPrice: 10.00,
+            devFee: 30.00,
+            logoFrontPrice: 29.90,
+            textFrontPrice: 19.90,
+            logoBackPrice: 29.90,
+            textBackPrice: 19.90,
+            logoSleevePrice: 14.90,
+            textSleevePrice: 9.90,
+            logoHoodPrice: 14.90,
+            textHoodPrice: 9.90,
+            price10: 170.90,
+            price20: 151.90,
+            price30: 132.90,
+            artWaiver: true
+        };
+        localStorage.setItem('hnt_moletom_config', JSON.stringify(prices));
+        console.log('✅ Moletom: preços padrão auto-inicializados (localStorage estava zerado).');
+    }
 
     // Calculate Global Discount % from Shorts Config (Reference)
     // We now use specific tier prices if available, so these legacy discounts are just fallbacks or 0.
