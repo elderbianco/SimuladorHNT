@@ -24,12 +24,12 @@ const PDFGenerator = {
 
     /**
      * Motor de Renderização Nuclear v15.12 (Hyper-Fidelity)
-     * Usa html2canvas + Pré-processamento Base64 para garantir rotação e escala exatas.
+     * Usa html2canvas + Pré-processamento Base66 para garantir rotação e escala exatas.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v15.14 (Mirror Ghost Engine) Ativado...');
+                console.log('☢️ Motor Nuclear v15.16 (Dynamic Frame Ghost) Ativado...');
 
                 const originalArea = document.querySelector('.simulator-area');
                 if (!originalArea) {
@@ -37,33 +37,36 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // 1. Criar Clone Fantasma para Processamento Oculto
+                // 1. Criar Clone Fantasma Otimizado (Sem Clipping)
                 const ghost = originalArea.cloneNode(true);
                 ghost.id = 'simulator-ghost-capture';
+
+                // Forçar dimensões reais do conteúdo para evitar cortes
+                const fullWidth = originalArea.scrollWidth;
+                const fullHeight = originalArea.scrollHeight;
+
                 Object.assign(ghost.style, {
                     position: 'fixed',
-                    left: '-10000px',
+                    left: '-20000px',
                     top: '0',
-                    width: originalArea.offsetWidth + 'px',
-                    height: originalArea.offsetHeight + 'px',
+                    width: fullWidth + 'px',
+                    height: fullHeight + 'px',
+                    overflow: 'visible',
                     zIndex: '-1',
-                    transform: 'none'
+                    transform: 'none',
+                    backgroundColor: '#000000'
                 });
                 document.body.appendChild(ghost);
 
-                // 2. Sincronização de Geometria (Manter Zoom/Pan do Usuário)
-                // Removido reset para garantir que o PDF seja um print fiel do que o usuário vê.
-                // O ghost já herda o transform via cloneNode(true).
-
-                // 3. Blindagem Universal Base64 (Apenas no Clone)
+                // 2. Blindagem Universal Base64 (Apenas no Clone)
                 const toBase64 = (url) => new Promise((res) => {
                     if (!url || url.startsWith('data:')) return res(url);
                     const img = new Image();
                     img.crossOrigin = 'Anonymous';
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
+                        canvas.width = img.naturalWidth || img.width;
+                        canvas.height = img.naturalHeight || img.height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0);
                         res(canvas.toDataURL('image/png'));
@@ -72,9 +75,8 @@ const PDFGenerator = {
                     img.src = url;
                 });
 
-                console.log('🔄 Sincronizando DNA Digital (Base64) no Fantasma...');
+                console.log('🔄 Sincronizando DNA Digital no Fantasma v15.16...');
 
-                // Blindar tags IMG
                 const ghostImgs = Array.from(ghost.querySelectorAll('img'));
                 for (const img of ghostImgs) {
                     if (img.src && !img.src.startsWith('data:')) {
@@ -82,7 +84,6 @@ const PDFGenerator = {
                     }
                 }
 
-                // Blindar Background Images
                 const ghostWithBg = Array.from(ghost.querySelectorAll('*')).filter(el => {
                     const bg = window.getComputedStyle(el).backgroundImage;
                     return bg && bg !== 'none' && bg.includes('url(');
@@ -96,16 +97,18 @@ const PDFGenerator = {
                     }
                 }
 
-                // 4. Captura via html2canvas no Alvo Invisível
+                // 4. Captura via html2canvas com Resolução Ultra
                 let snapshot = null;
                 if (typeof html2canvas !== 'undefined') {
-                    console.log('📸 Capturando Snapshot Oculto 1:1...');
+                    console.log('📸 Capturando Snapshot Full-Frame...');
                     const canvas = await html2canvas(ghost, {
-                        scale: 1.5,
+                        scale: 2, // Nitidez máxima
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#000000',
                         logging: false,
+                        width: fullWidth,
+                        height: fullHeight,
                         ignoreElements: (el) => {
                             return el.classList.contains('zoom-controls') ||
                                 el.classList.contains('action-bar') ||
@@ -114,26 +117,23 @@ const PDFGenerator = {
                                 el.classList.contains('resize-handle');
                         }
                     });
-                    snapshot = canvas.toDataURL('image/jpeg', 0.90);
+                    snapshot = canvas.toDataURL('image/jpeg', 0.95);
                 }
 
-                // 5. Destruir Fantasma (Limpeza de Memória)
                 document.body.removeChild(ghost);
 
-                // 6. Verificação e Fallback
                 if (!snapshot || snapshot.length < 5000) {
-                    console.warn('⚠️ html2canvas falhou no clone. Tentando fallback...');
                     snapshot = await this.drawLegacyManualSnapshot();
                 }
 
                 if (snapshot) {
-                    console.log('✅ Snapshot v15.14 (Mirror Ghost) CONCLUÍDO.');
+                    console.log('✅ Snapshot v15.16 CONCLUÍDO.');
                     resolve(snapshot);
                 } else {
                     resolve(null);
                 }
             } catch (e) {
-                console.error('❌ Erro Crítico no Mirror Ghost v15.14:', e);
+                console.error('❌ Erro no v15.16:', e);
                 const ghost = document.getElementById('simulator-ghost-capture');
                 if (ghost) document.body.removeChild(ghost);
                 resolve(null);
@@ -697,7 +697,7 @@ const PDFGenerator = {
                 try {
                     const imgProps = doc.getImageProperties(this.cachedSnapshot);
                     const maxW = pageWidth - (margin * 2);
-                    const maxH = pageHeight * 0.45; // 45% da página para dar espaço ao texto
+                    const maxH = pageHeight * 0.60; // Destaque Máximo (60% da página)
                     let imgW = maxW;
                     let imgH = (imgProps.height * imgW) / imgProps.width;
                     if (imgH > maxH) {
