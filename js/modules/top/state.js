@@ -8,7 +8,7 @@ function generateUUID() {
     return (array[0] % 100000).toString().padStart(6, '0');
 }
 
-const CONFIG = {
+window.CONFIG = {
     product: 'Top',
     basePrice: 0,
     legZoneAddonPrice: 0, // Legacy
@@ -48,6 +48,19 @@ const CONFIG = {
         { id: 'text_frente', name: 'Texto Frente', parentZone: 'frente_centro', x: 25.66, y: 54.26 },
         { id: 'text_costas', name: 'Texto Costas', parentZone: 'costas_centro', x: 74.24, y: 45.39 }
     ]
+};
+const CONFIG = window.CONFIG;
+
+// Ensure DATA exists for BaseSimulator
+window.DATA = window.DATA || {
+    categories: [
+        { id: 'Geral', name: 'Geral' },
+        { id: 'Personalizacao', name: 'Personalização' }
+    ],
+    colors: CONFIG.colors,
+    sizes: CONFIG.sizes,
+    uploadZones: Object.values(CONFIG.zones),
+    textZones: CONFIG.textZones
 };
 
 const HNT_LOGO_COLORS = [
