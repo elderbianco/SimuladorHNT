@@ -22,6 +22,12 @@ const RegistrationController = {
             }),
             whatsapp: IMask(document.getElementById('whatsapp'), {
                 mask: '(00) 00000-0000'
+            }),
+            phone: IMask(document.getElementById('phone'), {
+                mask: [
+                    { mask: '(00) 0000-0000' },
+                    { mask: '(00) 00000-0000' }
+                ]
             })
         };
     },
@@ -129,6 +135,7 @@ const RegistrationController = {
             email: document.getElementById('email').value,
             name: document.getElementById('full-name').value,
             document: docVal.replace(/\D/g, ''),
+            ie: document.getElementById('ie').value,
             address: document.getElementById('address').value,
             number: document.getElementById('number').value,
             complement: document.getElementById('complement').value,
@@ -137,6 +144,7 @@ const RegistrationController = {
             city: document.getElementById('city').value,
             state: document.getElementById('state').value,
             whatsapp: document.getElementById('whatsapp').value.replace(/\D/g, ''),
+            phone: document.getElementById('phone').value.replace(/\D/g, ''),
             marketing: document.getElementById('marketing').checked
         };
 
@@ -158,15 +166,16 @@ const RegistrationController = {
                         auth_user_id: userId,
                         nome_comprador: userData.name,
                         cpf_cnpj_comprador: userData.document,
+                        inscricao_estadual: userData.ie,
                         endereco_comprador: userData.address,
                         bairro_comprador: userData.neighborhood,
                         numero_comprador: userData.number,
                         complemento_comprador: userData.complement,
                         cep_comprador: userData.zipcode,
                         cidade_comprador: userData.city,
-                        uf_comprador: userData.state, // Captura o valor do SELECT (agora SC por padrão)
-                        telefone_comprador: userData.whatsapp, // Mapeado para Telefone
-                        celular_comprador: userData.whatsapp,  // Mapeado para Celular (Bling exige ambos ou um)
+                        uf_comprador: userData.state,
+                        telefone_comprador: userData.phone || userData.whatsapp,
+                        celular_comprador: userData.whatsapp,
                         email_comprador: userData.email,
                         consentimento_marketing: userData.marketing,
                         atualizado_em: new Date().toISOString()
