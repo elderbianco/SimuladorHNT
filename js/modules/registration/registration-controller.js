@@ -156,20 +156,20 @@ const RegistrationController = {
                     .from('clientes_cadastrados')
                     .upsert({
                         auth_user_id: userId,
-                        email: userData.email,
-                        nome_completo: userData.name,
-                        documento_cpf_cnpj: userData.document,
-                        cep: userData.zipcode,
-                        endereco: userData.address,
-                        numero: userData.number,
-                        complemento: userData.complement,
-                        bairro: userData.neighborhood,
-                        cidade: userData.city,
-                        estado_uf: userData.state,
-                        whatsapp: userData.whatsapp,
+                        nome_comprador: userData.name,
+                        cpf_cnpj_comprador: userData.document,
+                        endereco_comprador: userData.address,
+                        bairro_comprador: userData.neighborhood,
+                        numero_comprador: userData.number,
+                        complemento_comprador: userData.complement,
+                        cep_comprador: userData.zipcode,
+                        cidade_comprador: userData.city,
+                        uf_comprador: userData.state,
+                        celular_comprador: userData.whatsapp,
+                        email_comprador: userData.email,
                         consentimento_marketing: userData.marketing,
                         atualizado_em: new Date().toISOString()
-                    }, { onConflict: 'documento_cpf_cnpj' });
+                    }, { onConflict: 'cpf_cnpj_comprador' });
 
                 if (error) {
                     console.error('Erro ao sincronizar com Supabase:', error);
