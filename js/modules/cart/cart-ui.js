@@ -40,8 +40,10 @@ window.CartUI = {
                     <div style="color:var(--gold); font-size:1.5rem; font-weight:bold;">${group.totalVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
                 </div>
     
-                <div style="text-align:right; margin-left: 20px; display:flex; gap:15px; align-items:center;">
-                    <button class="btn btn-danger" style="padding: 8px 12px; font-size: 0.7rem;" onclick="deleteGroup([${group.items.map(i => i._index).join(',')}])">🗑️ Excluir Pedido</button>
+                <div style="text-align:right; margin-left: 20px; display:flex; gap:12px; align-items:center;">
+                    <button class="btn btn-modern btn-delete-tiny" style="width:auto; padding: 0 15px; font-size: 0.75rem;" onclick="deleteGroup([${group.items.map(i => i._index).join(',')}])">
+                        🗑️ <span class="btn-text-mobile">Excluir Pedido</span>
+                    </button>
                     <div class="toggle-wrapper" onclick="CartUI.toggleCard(this.parentElement.parentElement)" style="cursor:pointer; width:35px; height:35px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; transition:0.3s;">
                         <span class="toggle-icon" style="color:var(--gold); font-size: 0.8rem; display:inline-block; transition: transform 0.3s; transform: rotate(0deg);">▼</span>
                     </div>
@@ -96,30 +98,25 @@ window.CartUI = {
                     <div style="color:var(--gold); font-weight:bold;">${(pricing?.unit_price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
                  </div>
 
-                 <div style="text-align:right; display:flex; gap:10px; align-items:center;">
+                 <div style="text-align:right; display:flex; gap:12px; align-items:center;">
                     ${(order.pdfUrl || item.pdf_path) ? `
                     <a href="${order.pdfUrl || item.pdf_path}" 
                        target="_blank" 
                        onclick="event.stopPropagation()"
                        title="Abrir Ficha Técnica (PDF)"
-                       class="pdf-link-pulsing"
-                       style="text-decoration:none; background: #c0392b; border: 2px solid #e74c3c; color: #fff; font-size: 0.9rem; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 900; transition: all 0.3s ease; display:flex; align-items:center; gap:8px; box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);"
-                       onmouseover="this.style.transform='scale(1.05)'; this.style.background='#e74c3c';"
-                       onmouseout="this.style.transform='scale(1)'; this.style.background='#c0392b';">
-                       <span style="font-size: 1.2rem;">📄</span> VISUALIZAR PDF
+                       class="btn-modern btn-pdf">
+                       <span style="font-size: 1.1rem;">📄</span> <span class="btn-text-mobile">VISUALIZAR PDF</span>
                     </a>` : `
-                    <div style="font-size: 0.75rem; color: #666; font-style: italic;">PDF não gerado</div>
+                    <div style="font-size: 0.75rem; color: #666; font-style: italic; margin-right: 10px;">PDF Pendente</div>
                     `}
 
-
-                    <button class="btn-edit" 
-                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: #fff; font-size: 0.85rem; cursor: pointer; padding: 8px 15px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;"
+                    <button class="btn-modern btn-edit-modern" 
                             onclick="event.stopPropagation(); editOrder(${index})" 
-                            title="Editar este produto"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(102, 126, 234, 0.4)';"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">✏️ Editar</button>
-                    <button class="btn-danger" 
-                            style="background:transparent; border:none; color:#ff4d4d; font-size:1.2rem; cursor:pointer; padding:5px 10px;" 
+                            title="Editar este produto">
+                        ✏️ <span class="btn-text-mobile">Editar</span>
+                    </button>
+                    
+                    <button class="btn-delete-tiny" 
                             onclick="event.stopPropagation(); deleteOrder(${index})" 
                             title="Remover este item">✖</button>
                  </div>
@@ -206,7 +203,7 @@ window.CartUI = {
                         </div>
                     </div>
                     <div style="margin-top:20px; border-top:1px solid #333; padding-top:15px; text-align:right;">
-                        <button class="btn btn-danger" style="border:none;" onclick="deleteOrder(${index})">🗑️ Excluir Item Definitivamente</button>
+                        <button class="btn-modern btn-pdf" style="background:#c0392b; border:none;" onclick="deleteOrder(${index})">🗑️ Excluir Item Definitivamente</button>
                     </div>
                 </div>
             </div>
