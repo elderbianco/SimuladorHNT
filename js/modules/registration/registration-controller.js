@@ -3,12 +3,9 @@
  * Orchestrates form behavior, masks, and submission
  */
 const RegistrationController = {
-    privacyAccepted: false,
-
     init: async function () {
         this.setupMasks();
         this.bindEvents();
-        this.checkPrivacyStatus();
         await this.checkExistingSession();
     },
 
@@ -66,22 +63,6 @@ const RegistrationController = {
 
         // Form Submission
         form.addEventListener('submit', (e) => this.handleSubmit(e));
-    },
-
-    checkPrivacyStatus: function () {
-        const accepted = localStorage.getItem('hnt_privacy_accepted');
-        if (!accepted) {
-            const modal = document.getElementById('privacy-modal');
-            if (modal) modal.style.display = 'flex';
-        } else {
-            this.privacyAccepted = true;
-        }
-    },
-
-    acceptPrivacy: function () {
-        localStorage.setItem('hnt_privacy_accepted', 'true');
-        this.privacyAccepted = true;
-        document.getElementById('privacy-modal').style.display = 'none';
     },
 
     checkExistingSession: async function () {
@@ -184,8 +165,10 @@ const RegistrationController = {
     handleSubmit: async function (e) {
         e.preventDefault();
 
-        if (!this.privacyAccepted) {
-            document.getElementById('privacy-modal').style.display = 'flex';
+        // Check if privacy policy is checked (DOM required attribute handles most of it, but let's double check)
+        const privacyCheck = document.getElementById('privacy-policy');
+        if (privacyCheck && !privacyCheck.checked) {
+            alert('Por favor, aceite a Política de Privacidade para continuar.');
             return;
         }
 
