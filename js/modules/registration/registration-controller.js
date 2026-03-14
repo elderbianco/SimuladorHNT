@@ -172,44 +172,49 @@ const RegistrationController = {
         // --- MANUAL VALIDATION ---
         // 1. Privacy
         const privacyCheck = document.getElementById('privacy-policy');
-        if (privacyCheck && !privacyCheck.checked) {
-            errors.push('Aceite a Política de Privacidade.');
-        }
-
         // 2. Email
         const email = document.getElementById('email').value.trim();
-        if (!email) errors.push('O e-mail é obrigatório.');
-
         // 3. Document (Special validation)
         const docField = document.getElementById('document');
-        if (!RegistrationValidation.validateDocument(docField.value)) {
-            errors.push('CPF ou CNPJ inválido.');
-        }
-
-        // 4. Name
-        if (!document.getElementById('full-name').value.trim()) {
-            errors.push('O nome completo é obrigatório.');
-        }
-
         // 5. Address (Zipcode)
         const zip = document.getElementById('zipcode').value.replace(/\D/g, '');
-        if (zip.length !== 8) {
-            errors.push('O CEP deve conter 8 dígitos.');
-        }
-        if (!document.getElementById('number').value.trim()) {
-            errors.push('O número do endereço é obrigatório.');
-        }
-
         // 6. WhatsApp (Primary phone)
         const whats = document.getElementById('whatsapp').value.replace(/\D/g, '');
-        if (whats.length < 10) {
-            errors.push('O WhatsApp principal deve ter DDD e número.');
-        }
+
+        const fields = {
+            'privacy-policy': !!privacyCheck?.checked,
+            'email': !!email,
+            'document': RegistrationValidation.validateDocument(docField.value),
+            'full-name': !!document.getElementById('full-name').value.trim(),
+            'zipcode': zip.length === 8,
+            'number': !!document.getElementById('number').value.trim(),
+            'whatsapp': whats.length >= 10
+        };
+
+        // Reset borders
+        Object.keys(fields).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.borderColor = '';
+        });
+
+        if (!fields['privacy-policy']) errors.push('Aceite a Política de Privacidade.');
+        if (!fields['email']) errors.push('O e-mail é obrigatório.');
+        if (!fields['document']) errors.push('CPF ou CNPJ inválido.');
+        if (!fields['full-name']) errors.push('O nome completo é obrigatório.');
+        if (!fields['zipcode']) errors.push('O CEP deve conter 8 dígitos.');
+        if (!fields['number']) errors.push('O número do endereço é obrigatório.');
+        if (!fields['whatsapp']) errors.push('O WhatsApp principal deve ter DDD e número.');
 
         // NOTE: Fixed phone (Telefone Fixo) is NOT checked on purpose (optional).
-        // -------------------------
 
         if (errors.length > 0) {
+            // Apply red borders
+            Object.keys(fields).forEach(id => {
+                if (!fields[id]) {
+                    const el = document.getElementById(id);
+                    if (el) el.style.borderColor = 'var(--danger)';
+                }
+            });
             errorContainer.style.display = 'block';
             errorListEl.innerHTML = errors.map(err => `<li>${err}</li>`).join('');
 
@@ -232,6 +237,7 @@ const RegistrationController = {
             localStorage.setItem('hnt_client_id', storedClientId);
         }
 
+        const docVal = document.getElementById('document').value;
         const userData = {
             clientId: storedClientId,
             email: document.getElementById('email').value,
