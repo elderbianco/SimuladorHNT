@@ -16,6 +16,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     loadDashboard();
 
+    // 2. Atualizar UI se o cliente estiver logado/cadastrado
+    const profileStr = localStorage.getItem('hnt_customer_profile');
+    if (profileStr) {
+        try {
+            const profile = JSON.parse(profileStr);
+            const linkCadastro = document.getElementById('link-cadastro');
+            if (linkCadastro) {
+                linkCadastro.innerHTML = `👤 Olá, ${profile.name.split(' ')[0]} (Ver Cadastro)`;
+                linkCadastro.title = "Cadastro Vinculado. ID: " + (profile.clientId || '...');
+            }
+        } catch (e) { }
+    }
+
     document.getElementById('btn-clear-all').onclick = clearAll;
     document.getElementById('btn-export-all').onclick = exportExcel;
 });
