@@ -41,11 +41,11 @@ window.CartUI = {
                 </div>
     
                 <div style="text-align:right; margin-left: 20px; display:flex; gap:12px; align-items:center;">
-                    <button class="btn btn-modern btn-delete-tiny" style="width:auto; padding: 0 15px; font-size: 0.75rem;" onclick="deleteGroup([${group.items.map(i => i._index).join(',')}])">
+                    <button class="btn-delete-group" onclick="deleteGroup([${group.items.map(i => i._index).join(',')}])">
                         🗑️ <span class="btn-text-mobile">Excluir Pedido</span>
                     </button>
-                    <div class="toggle-wrapper" onclick="CartUI.toggleCard(this.parentElement.parentElement)" style="cursor:pointer; width:35px; height:35px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; transition:0.3s;">
-                        <span class="toggle-icon" style="color:var(--gold); font-size: 0.8rem; display:inline-block; transition: transform 0.3s; transform: rotate(0deg);">▼</span>
+                    <div class="toggle-btn-modern" onclick="CartUI.toggleCard(this.parentElement.parentElement)" title="Expandir/Recolher">
+                        <span class="toggle-icon" style="font-size: 0.8rem; transition: transform 0.3s;">▼</span>
                     </div>
                 </div>
             </div>
