@@ -88,8 +88,8 @@ window.CartUI = {
                  <div class="product-icon-container" style="width: 50px; height: 50px; flex-shrink:0; background: #333; border-radius: 8px; display:flex; align-items:center; justify-content:center; border: 1px solid #444;">
                     ${this.getProductIconElement(item, order)}
                  </div>
-                 <div class="toggle-wrapper" style="margin-left: 10px; width:24px; height:24px; border-radius:50%; border:1px solid #555; display:flex; align-items:center; justify-content:center;">
-                    <span class="toggle-icon" style="font-size: 0.6rem; color: #888; transition: transform 0.3s;">▼</span>
+                 <div class="toggle-btn-modern" style="margin-left: 10px;">
+                    <span class="toggle-icon">▼</span>
                  </div>
                  
                  <div style="flex:1; margin-left: 15px;">
