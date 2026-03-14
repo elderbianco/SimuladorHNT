@@ -26,6 +26,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 linkCadastro.innerHTML = `👤 Olá, ${profile.name.split(' ')[0]} (Ver Cadastro)`;
                 linkCadastro.title = "Cadastro Vinculado. ID: " + (profile.clientId || '...');
             }
+
+            // Auto-fill global info inputs if empty
+            const globalNameInp = document.getElementById('global-client-name');
+            const globalPhoneInp = document.getElementById('global-client-phone');
+            if (globalNameInp && !globalNameInp.value) {
+                globalNameInp.value = profile.name;
+            }
+            if (globalPhoneInp && !globalPhoneInp.value) {
+                globalPhoneInp.value = profile.whatsapp || profile.phone || '';
+            }
         } catch (e) { }
     }
 
