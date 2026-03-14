@@ -212,12 +212,25 @@ function applyGlobalInfo() {
     }
 
     const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let profile = null;
+    try {
+        const pStr = localStorage.getItem('hnt_customer_profile');
+        if (pStr) profile = JSON.parse(pStr);
+    } catch (e) { }
+
     history.forEach(item => {
         if (globalId) item.order_id = globalId;
         if (!item.client_info) item.client_info = {};
 
         if (globalName) item.client_info.name = globalName;
         if (globalPhone) item.client_info.phone = globalPhone;
+
+        // If profile matches the name we're setting, enrich with extra profile data
+        if (profile && profile.name && globalName && profile.name.toLowerCase() === globalName.toLowerCase()) {
+            item.client_info.clientId = profile.clientId;
+            item.client_info.email = profile.email;
+            item.client_info.document = profile.document;
+        }
     });
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
