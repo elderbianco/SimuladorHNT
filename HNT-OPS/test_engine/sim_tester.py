@@ -14,6 +14,9 @@ except ImportError:
     print("Por favor, instale as dependências: pip install faker rich pandas")
     exit(1)
 
+import time
+import subprocess
+
 try:
     from rich.console import Console
     from rich.table import Table
@@ -189,6 +192,17 @@ def export_json(conn):
     if console:
         console.print("[bold green]💾 Exportado também para experimental_mock_data.json[/]")
 
+def continuous_generation(interval: int, count_per_tick: int, conn):
+    console.print(f"[bold yellow]🚀 Iniciando modo contínuo (Daemon)...[/]")
+    console.print(f"Gerando {count_per_tick} pedidos a cada {interval} segundos. Pressione Ctrl+C para parar.\n")
+    try:
+        while True:
+            generate_orders(count_per_tick, conn)
+            export_json(conn)
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        console.print("\n[bold red]🛑 Monitoramento contínuo encerrado.[/]")
+
 def main():
     parser = argparse.ArgumentParser(description="HNT-OPS Test Engine (Data Generator/Reporter)")
     subparsers = parser.add_subparsers(dest="command", help="Comandos disponíveis")
@@ -197,6 +211,11 @@ def main():
     gen_parser = subparsers.add_parser("generate", help="Gera pedidos fictícios no banco local experimental")
     gen_parser.add_argument("count", type=int, nargs="?", default=50, help="Quantidade (padrão 50)")
     gen_parser.add_argument("--reset", action="store_true", help="Limpa o banco antes de gerar")
+
+    # Daemon cmd
+    daemon_parser = subparsers.add_parser("daemon", help="Geração contínua independente")
+    daemon_parser.add_argument("--interval", type=int, default=10, help="Intervalo em segundos (default 10)")
+    daemon_parser.add_argument("--tick", type=int, default=2, help="Pedidos por hit (default 2)")
     
     # Report cmd
     rep_parser = subparsers.add_parser("report", help="Gera relatórios de análise de testes")
@@ -210,6 +229,8 @@ def main():
             reset_db(conn)
         generate_orders(args.count, conn)
         export_json(conn)
+    elif args.command == "daemon":
+        continuous_generation(args.interval, args.tick, conn)
     elif args.command == "report":
         show_reports(conn)
     else:
