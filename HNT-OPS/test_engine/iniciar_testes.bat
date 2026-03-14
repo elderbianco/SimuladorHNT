@@ -13,8 +13,9 @@ echo 1. Gerar 50 pedidos iniciais (limpar banco)
 echo 2. Iniciar modo continuo (Daemon - 2 pedidos/10s)
 echo 3. Ver relatorio de metricas e observacoes
 echo 4. Exportar JSON para o simulador
-echo 5. Sair
-echo.
+echo 5. Iniciar BOT ROBOTIZADO (Automacao E2E)
+echo 6. Sair
+ echo.
 set /p opt="Escolha uma opcao: "
 
 if "%opt%"=="1" (
@@ -42,7 +43,14 @@ if "%opt%"=="4" (
     pause
     goto :menu
 )
-if "%opt%"=="5" goto :eof
+if "%opt%"=="5" (
+    echo [BOT] Iniciando automacao visual...
+    py bot_hnt_factory.py --visible
+    if %errorlevel% neq 0 python bot_hnt_factory.py --visible
+    pause
+    goto :menu
+)
+if "%opt%"=="6" goto :eof
 
 :menu
 cls

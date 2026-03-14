@@ -1,3 +1,5 @@
 faker
 rich
 pandas
+playwright
+pytest-playwright

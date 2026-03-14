@@ -49,19 +49,32 @@ def run_simulation(headless=False):
                 print("✍️ Inserindo textos de personalização...")
                 text_toggles = page.query_selector_all(".toggle-wrapper input[type='checkbox']")
                 for toggle in text_toggles:
-                    if random.random() < 0.5: # 50% de chance de ativar cada zona de texto
-                        toggle.check()
-                        time.sleep(0.5)
+                    if random.random() < 0.4: # 40% de chance de ativar cada zona de texto
+                        if not toggle.is_checked():
+                            toggle.check()
+                            time.sleep(0.5)
                         
-                        # Encontrar o input de texto que apareceu (pai do toggle -> wrap -> subPanel -> input)
-                        # Usamos um seletor mais genérico de input de texto ativo
+                        # Encontrar o input de texto que apareceu
                         inputs = page.query_selector_all(".text-input")
                         for inp in inputs:
                             if inp.is_visible():
                                 inp.fill(random.choice(TEXTS))
                                 time.sleep(0.3)
 
-                # 3. Selecionar Tamanhos
+                # 3. Usar Banco de Imagens (Simulação de Logo)
+                print("🖼️ Selecionando logotipo do banco de imagens...")
+                btn_gallery = page.query_selector("button:has-text('BANCO IMAGENS')")
+                if btn_gallery:
+                    btn_gallery.click()
+                    time.sleep(1)
+                    # No modal da Galeria
+                    gallery_items = page.query_selector_all(".gallery-item")
+                    if gallery_items:
+                        random.choice(gallery_items).click()
+                        time.sleep(1)
+                        print("✅ Logo selecionado.")
+
+                # 4. Selecionar Tamanhos
                 print("📏 Definindo quantidades e tamanhos...")
                 qty_inputs = page.query_selector_all("input.qty-input")
                 if not qty_inputs: # Tenta pelo tipo de componente
