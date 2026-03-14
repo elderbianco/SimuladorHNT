@@ -1,0 +1,80 @@
+{
+    "name": "HNT-OPS N8N — Pendência Notifier",
+    "nodes": [
+        {
+            "id": "webhook-trigger",
+            "name": "🔔 Pendência Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "note": "STUB — configurar URL no Supabase Edge Function",
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "hnt-pendencia",
+                "responseMode": "onReceived"
+            }
+        },
+        {
+            "id": "format-message",
+            "name": "📝 Formatar Mensagem WhatsApp",
+            "type": "n8n-nodes-base.set",
+            "note": "STUB — Personalizar template da mensagem",
+            "parameters": {
+                "values": {
+                    "string": [
+                        {
+                            "name": "mensagem",
+                            "value": "🚨 *PENDÊNCIA ABERTA*\n\n*Pedido:* {{$json.numero}}\n*Cliente:* {{$json.cliente}}\n*De:* {{$json.etapa_anterior}} → Pendência\n*Horário:* {{$json.timestamp}}\n\n_Acesse o HNT-OPS para detalhes._"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "whatsapp-send",
+            "name": "📱 Enviar WhatsApp (Evolution API)",
+            "type": "n8n-nodes-base.httpRequest",
+            "note": "STUB — Configurar URL e token da Evolution API / Z-API",
+            "parameters": {
+                "method": "POST",
+                "url": "={{$env.EVOLUTION_API_URL}}/message/sendText/hnt-instance",
+                "authentication": "headerAuth",
+                "headers": {
+                    "apikey": "={{$env.EVOLUTION_API_TOKEN}}"
+                },
+                "body": {
+                    "number": "={{$env.WHATSAPP_GERENTE}}",
+                    "text": "={{$node['Formatar Mensagem WhatsApp'].json.mensagem}}"
+                }
+            }
+        },
+        {
+            "id": "log-sheets",
+            "name": "📊 Log Google Sheets",
+            "type": "n8n-nodes-base.googleSheets",
+            "note": "STUB — Opcional. Registrar cada pendência em planilha de auditoria",
+            "parameters": {
+                "operation": "append",
+                "sheetId": "TODO: ID_DA_PLANILHA",
+                "range": "Pendências!A:F",
+                "values": "={{ [$json.numero, $json.cliente, $json.etapa_anterior, $json.timestamp, 'Pendência', 'Notificado'] }}"
+            }
+        },
+        {
+            "id": "error-handler",
+            "name": "❌ Fallback por E-mail",
+            "type": "n8n-nodes-base.emailSend",
+            "note": "STUB — Configurar SMTP. Disparado se WhatsApp falhar.",
+            "parameters": {
+                "fromEmail": "ops@hntfight.com.br",
+                "toEmail": "={{$env.EMAIL_GERENTE}}",
+                "subject": "🚨 HNT-OPS — Pendência: {{$json.numero}}",
+                "text": "Pedido {{$json.numero}} entrou em Pendência.\nCliente: {{$json.cliente}}\nHorário: {{$json.timestamp}}"
+            }
+        }
+    ],
+    "_meta": {
+        "status": "STUB — NÃO IMPORTAR NO N8N — AGUARDANDO FASE 7",
+        "created": "2026-03-14",
+        "version": "0.1.0-draft",
+        "docs": "Ver ROADMAP_FASE7_INTEGRACOES.md"
+    }
+}
