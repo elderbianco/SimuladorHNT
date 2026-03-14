@@ -85,8 +85,8 @@ function loadAdminConfig() {
     if (!prices.basePrice || prices.basePrice === 0) {
         prices = {
             basePrice: 189.90,
-            sizeModPrice: 10.00,
-            devFee: 30.00,
+            sizeModPrice: 0,   // Admin padrão = 0
+            devFee: 0,         // Admin padrão = 0
             logoFrontPrice: 29.90,
             textFrontPrice: 19.90,
             logoBackPrice: 29.90,

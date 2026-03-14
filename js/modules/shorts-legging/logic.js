@@ -90,14 +90,14 @@ function loadAdminConfig() {
     state.config = {
         basePrice: base,
         product: 'Shorts Legging',
-        sizeModPrice: getVal(prices.sizeModPrice, 10.00),
-        devFee: getVal(prices.devFee, 30.00),
+        sizeModPrice: getVal(prices.sizeModPrice, 0), // Admin padrão = 0
+        devFee: getVal(prices.devFee, 0), // Admin padrão = 0
 
         // Use Global fallbacks for zone prices if local is missing
         logoLatPrice: getVal(prices.logoLatPrice || globalConfig.logoLatPrice, 29.90),
         textLatPrice: getVal(prices.textLatPrice || globalConfig.textLatPrice, 9.90),
         logoLegPrice: getVal(prices.logoLegPrice || globalConfig.legLeftPrice, 14.90),
-        textLegPrice: getVal(prices.textLegPrice || globalConfig.textLatPrice, 9.90),
+        textLegPrice: getVal(prices.textLegPrice, 0), // Admin padrão = 0
 
         // Wholesale Tiers
         price10: p10,

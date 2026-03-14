@@ -102,13 +102,13 @@ function loadAdminConfig() {
     const getVal = (val, def) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : def;
     const getAdminVal = (val) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : undefined;
 
-    // 1. Resolve Base Price (Top Specific > Default)
-    const base = getVal(prices.basePrice, 129.90);
+    // 1. Resolve Base Price (Top Specific > Default) — alinhado com resetTopToTable (Jan/2026)
+    const base = getVal(prices.basePrice, 89.90);
 
     // 2. Resolve Wholesale Prices (Top Specific)
-    const p10 = getVal(prices.price10, 115.90);
-    const p20 = getVal(prices.price20, 100.90);
-    const p30 = getVal(prices.price30, 85.90);
+    const p10 = getVal(prices.price10, 80.90);
+    const p20 = getVal(prices.price20, 71.90);
+    const p30 = getVal(prices.price30, 62.90);
 
     // 3. Calculate Discounts Dynamically
     let d20 = 0;
@@ -122,14 +122,14 @@ function loadAdminConfig() {
     }
 
     state.config = {
-        basePrice: (getVal(prices.basePrice, 129.90) || 129.90), // Force fallback if 0
+        basePrice: (getVal(prices.basePrice, 89.90) || 89.90), // Force fallback if 0 — admin Jan/2026
         product: 'Top',
-        sizeModPrice: getVal(prices.sizeModPrice, 5.00),
-        devFee: getVal(prices.devFee, 30.00),
-        logoFrontPrice: getVal(prices.logoFrontPrice, 15.00),
-        logoBackPrice: getVal(prices.logoBackPrice, 15.00),
-        textFrontPrice: getVal(prices.textFrontPrice, 15.00),
-        textBackPrice: getVal(prices.textBackPrice, 15.00),
+        sizeModPrice: getVal(prices.sizeModPrice, 0), // Admin padrão = 0
+        devFee: getVal(prices.devFee, 0), // Admin padrão = 0
+        logoFrontPrice: getVal(prices.logoFrontPrice, 14.90),
+        logoBackPrice: getVal(prices.logoBackPrice, 0),
+        textFrontPrice: getVal(prices.textFrontPrice, 9.90),
+        textBackPrice: getVal(prices.textBackPrice, 0),
 
         // HNT Logos
         logoHntFrontPrice: getVal(prices.logoHntFrontPrice, 0),
@@ -140,8 +140,8 @@ function loadAdminConfig() {
         price20: p20,
         price30: p30,
         // Legacy Fallbacks for UI compatibility
-        logoCenterPrice: getVal(prices.logoFrontPrice, 15.00),
-        textPrice: getVal(prices.textFrontPrice, 15.00),
+        logoCenterPrice: getVal(prices.logoFrontPrice, 14.90),
+        textPrice: getVal(prices.textFrontPrice, 9.90),
         discount20: d20,
         discount40: d40,
         artWaiver: prices.artWaiver !== undefined ? prices.artWaiver : (globalConfig.artWaiver !== undefined ? globalConfig.artWaiver : (CONFIG.artWaiver !== undefined ? CONFIG.artWaiver : true)),
