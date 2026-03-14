@@ -618,9 +618,84 @@
             }
         }
 
-        /* Suprime ações de exportação/limpeza conforme solicitado */
-        .suppressed-actions {
-            display: none !important;
+        /* --- CHECKOUT BAR --- */
+        .checkout-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid var(--gold);
+            padding: 20px 40px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            box-shadow: 0 15px 50px rgba(212, 175, 55, 0.4);
+            backdrop-filter: blur(15px);
+            z-index: 5000;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .checkout-total {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .checkout-total span:first-child {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .checkout-total span:last-child {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--gold);
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        .btn-checkout {
+            background: var(--gold);
+            color: #000;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-checkout:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(212, 175, 55, 0.5);
+            background: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .checkout-bar {
+                width: 90%;
+                bottom: 20px;
+                padding: 15px 25px;
+                gap: 20px;
+                justify-content: space-between;
+                border-radius: 15px;
+            }
+
+            .checkout-total span:last-child {
+                font-size: 1.4rem;
+            }
+
+            .btn-checkout {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -731,6 +806,19 @@
                 <p>Nenhuma simulação encontrada.</p>
                 <br>
                 <a href="IndexFightShorts.html" class="btn-modern btn-edit-modern">🚀 Ir para Simulador</a>
+            </div>
+        </div>
+
+        <!-- Floating Checkout Bar -->
+        <div id="checkout-container" style="display:none;">
+            <div class="checkout-bar">
+                <div class="checkout-total">
+                    <span>Total do Pedido</span>
+                    <span id="final-checkout-total">R$ 0,00</span>
+                </div>
+                <button class="btn-checkout" onclick="window.goToPayment()">
+                    Confirmar Pedido ➔
+                </button>
             </div>
         </div>
 

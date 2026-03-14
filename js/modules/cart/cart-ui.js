@@ -547,6 +547,7 @@ window.CartUI = {
                         'SH': 'Shorts Fight',
                         'TP': 'Top',
                         'LG': 'Legging',
+                        'CL': 'Calça Legging',
                         'ML': 'Moletom',
                         'SL': 'Shorts Legging'
                     };
@@ -557,7 +558,16 @@ window.CartUI = {
             }
         }
 
-        return item.model_name || 'Produto Personalizado';
+        const fallbackMap = {
+            'shorts': 'Shorts Fight',
+            'top': 'Top',
+            'legging': 'Legging',
+            'moletom': 'Moletom',
+            'shorts_legging': 'Shorts Legging',
+            'calca_legging': 'Calça Legging'
+        };
+
+        return fallbackMap[item.simulator_type?.toLowerCase()] || item.model_name || 'Produto Personalizado';
     },
 
     // --- INTERACTION HANDLERS ---
@@ -600,7 +610,7 @@ window.CartUI = {
             'top': 'assets/ui-icons/icon-top.png'
         };
 
-        const iconPath = iconMap[type.toLowerCase().replace(/\s+/g, '_')] || iconMap[type.toLowerCase()] || '';
+        const iconPath = iconMap[type.toLowerCase().replace(/\s+/g, '_')] || iconMap[type.toLowerCase()] || 'assets/ui-icons/icon-fight-shorts.png';
 
         if (iconPath) {
             return `<img src="${iconPath}" alt="${type}" style="width:70%; height:70%; object-fit:contain; filter: brightness(1.2);">`;

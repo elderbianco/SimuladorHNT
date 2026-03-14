@@ -209,6 +209,39 @@ function updateStats(items, pieces, value) {
     if (elCount) elCount.innerText = items;
     if (elPieces) elPieces.innerText = pieces;
     if (elTotal) elTotal.innerText = value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    // Floating Bar Sync
+    const checkoutContainer = document.getElementById('checkout-container');
+    const finalTotalEl = document.getElementById('final-checkout-total');
+    if (checkoutContainer) {
+        checkoutContainer.style.display = items > 0 ? 'block' : 'none';
+        if (finalTotalEl) finalTotalEl.innerText = value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+}
+
+async function goToPayment() {
+    // Basic verification: customer info is essential for payment
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const history = raw ? JSON.parse(raw) : [];
+
+    // Check if we have at least one item
+    if (history.length === 0) {
+        alert("Adicione itens ao carrinho para prosseguir.");
+        return;
+    }
+
+    // Check if customer profile exists (from registration)
+    const profile = localStorage.getItem('hnt_customer_profile');
+    if (!profile) {
+        if (confirm("Você ainda não completou seu cadastro. Deseja fazer isso agora para garantir a entrega?")) {
+            window.location.href = "indexCadastro.html?redirect=IndexPedidoSimulador.html";
+            return;
+        }
+    }
+
+    // Prossiga para pagamento
+    console.log("🚀 Redirecionando para checkout...");
+    window.location.href = "payment.html";
 }
 
 
@@ -418,6 +451,7 @@ function exportExcel() {
 }
 
 // Expose functions globally for legacy inline calls (onclick="...")
+window.goToPayment = goToPayment;
 window.loadDashboard = loadDashboard;
 window.applyGlobalInfo = applyGlobalInfo;
 window.deleteGroup = deleteGroup;
