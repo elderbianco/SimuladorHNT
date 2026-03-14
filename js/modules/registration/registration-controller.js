@@ -297,7 +297,7 @@ const RegistrationController = {
             }
         }
 
-        alert('Cadastro realizado com sucesso!');
+        console.log('✅ Cadastro realizado e sincronizado com sucesso!');
 
         // Update cart if possible
         let cartItems = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
