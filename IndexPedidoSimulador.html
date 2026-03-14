@@ -220,56 +220,56 @@
             font-family: 'Outfit', sans-serif;
         }
 
-        /* Form Controls */
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-
-        .input-modern {
-            width: 100%;
-            background: #111;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 12px 15px;
+        /* Buttons */
+        .btn {
+            padding: 12px 25px;
             border-radius: 6px;
-            font-size: 1rem;
-            transition: 0.3s;
-        }
-
-        .input-modern:focus {
-            border-color: var(--gold);
-            outline: none;
-            box-shadow: 0 0 10px var(--gold-glow);
-        }
-
-        .card-header {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 80px 2fr 1fr 1fr 100px 50px;
-            gap: 20px;
-            align-items: center;
-            background: #2a2a2a;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
             cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        /* Conflict Fix: !important used to override common.css if needed */
-        .expanded .card-details {
-            display: block;
+        .btn-primary {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 4px 15px var(--gold-glow);
         }
 
-        /* HIDDEN ELEMENTS ALERTS */
-        /* Alerta para desenvolvedor: Os botões de exportação foram suprimidos a pedido do usuário. 
-           Se não forem reativados em abas futuras, devem ser removidos do código permanentemente. */
-        .suppressed-actions {
-            display: none;
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--gold);
+            filter: brightness(1.1);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #333;
+            color: #888;
+        }
+
+        .btn-outline:hover {
+            border-color: #666;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-danger {
+            background: rgba(255, 77, 77, 0.1);
+            color: #ff4d4d;
+            border: 1px solid rgba(255, 77, 77, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: #ff4d4d;
+            color: #fff;
         }
 
         /* --- MOBILE ADAPTATION (Accordion Experience) --- */
@@ -280,17 +280,20 @@
             }
 
             .main-tab-btn {
-                padding: 12px 15px;
-                font-size: 1rem;
+                padding: 12px 10px;
+                font-size: 0.9rem;
+                flex: 1;
+                text-align: center;
             }
 
             .main-tab-content {
-                padding: 20px 15px;
+                padding: 20px 10px;
             }
 
             .card-header {
                 grid-template-columns: 50px 1fr 40px !important;
                 padding: 15px !important;
+                gap: 10px !important;
             }
 
             .card-header div:nth-child(3),
@@ -303,6 +306,10 @@
                 flex-direction: column;
                 align-items: flex-start !important;
                 gap: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
         }
 

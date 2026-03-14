@@ -6,6 +6,134 @@
 
 const STORAGE_KEY = 'hnt_all_orders_db';
 
+/**
+ * Global Controller for the Cart Dashboard
+ */
+window.CartController = {
+    /**
+     * Switch between main tabs (Identification, Cart, Production, Financial)
+     */
+    switchMainTab: function (tabId, btn) {
+        // Update Buttons
+        document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+
+        // Update Content
+        document.querySelectorAll('.main-tab-content').forEach(c => c.classList.remove('active'));
+        const target = document.getElementById(tabId);
+        if (target) target.classList.add('active');
+
+        // Trigger updates based on tab
+        if (tabId === 'tab-production') this.renderProductionSummary();
+        if (tabId === 'tab-financial') this.renderFinancialSummary();
+    },
+
+    /**
+     * Consolidates all pieces from all items in the cart
+     */
+    renderProductionSummary: function () {
+        const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const container = document.getElementById('production-summary-container');
+        if (!container) return;
+
+        if (history.length === 0) {
+            container.innerHTML = '<p style="color:#666; font-style:italic;">Nenhum item no carrinho.</p>';
+            return;
+        }
+
+        const summary = {};
+        history.forEach(order => {
+            if (!order.item) return;
+            const name = window.CartUI.getProductName(order.item, order);
+            if (!summary[name]) summary[name] = {};
+
+            const sizes = order.item.specs?.sizes || {};
+            Object.entries(sizes).forEach(([size, qty]) => {
+                if (qty > 0) {
+                    summary[name][size] = (summary[name][size] || 0) + parseInt(qty);
+                }
+            });
+        });
+
+        let html = '<div style="display:grid; gap:20px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">';
+        Object.entries(summary).forEach(([model, sizes]) => {
+            const totalModel = Object.values(sizes).reduce((a, b) => a + b, 0);
+            html += `
+                <div class="card-dark" style="padding:20px; border-top: 3px solid var(--accent-blue);">
+                    <div style="font-family:'Bebas Neue'; font-size:1.4rem; color:var(--gold); margin-bottom:15px;">${model}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        ${Object.entries(sizes).map(([s, q]) => `
+                            <div style="background:#222; padding:10px; border-radius:6px; min-width:60px; text-align:center; border:1px solid #333;">
+                                <div style="font-size:0.75rem; color:#666;">${s}</div>
+                                <div style="font-size:1.2rem; font-weight:bold; color:#fff;">${q}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#666; font-size:0.8rem;">TOTAL DO MODELO</span>
+                        <span style="font-size:1.3rem; font-weight:bold; color:var(--accent-blue);">${totalModel} pçs</span>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    },
+
+    /**
+     * Renders a consolidated financial view
+     */
+    renderFinancialSummary: function () {
+        const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const container = document.getElementById('financial-summary-container');
+        if (!container) return;
+
+        let totalValue = 0;
+        let totalPieces = 0;
+        let totalDiscounts = 0;
+        let totalFees = 0;
+
+        history.forEach(o => {
+            if (o.item) {
+                totalValue += (o.item.pricing?.total_price || 0);
+                totalPieces += (o.item.qty_total || 0);
+                if (o.item.pricing?.breakdown) {
+                    totalDiscounts += (o.item.pricing.breakdown.discounts || 0);
+                    totalFees += (o.item.pricing.breakdown.dev_fees || 0);
+                }
+            }
+        });
+
+        container.innerHTML = `
+            <div class="card-dark" style="max-width: 600px; margin: 0 auto; border-left: 5px solid var(--accent-blue);">
+                <div style="margin-bottom:25px;">
+                    <div style="color:#666; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">SUBTOTAL BRUTO</div>
+                    <div style="font-size:1.5rem; color:#fff;">${(totalValue + totalDiscounts - totalFees).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:25px; padding:20px 0; border-top:1px solid #222; border-bottom:1px solid #222;">
+                    <div>
+                        <div style="color:#666; font-size:0.7rem; text-transform:uppercase;">TOTAL DESCONTOS</div>
+                        <div style="color:#28a745; font-weight:bold;">- ${totalDiscounts.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                    </div>
+                    <div>
+                        <div style="color:#666; font-size:0.7rem; text-transform:uppercase;">TOTAL TAXAS (MATRIZ)</div>
+                        <div style="color:#ffa500; font-weight:bold;">+ ${totalFees.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                    </div>
+                </div>
+                <div style="background:var(--accent-blue); color:#000; padding:25px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-family:'Bebas Neue'; font-size:1.1rem; letter-spacing:1px; opacity:0.8;">TOTAL FINAL DO PEDIDO</div>
+                        <div style="font-size:0.85rem; opacity:0.7;">Para ${totalPieces} peças customizadas</div>
+                    </div>
+                    <div style="font-size:2.2rem; font-weight:bold; font-family:'Outfit';">
+                        ${totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Sincronizar com Supabase antes de carregar
     if (typeof SupabaseAdapter !== 'undefined') {
@@ -16,8 +144,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     loadDashboard();
 
-    document.getElementById('btn-clear-all').onclick = clearAll;
-    document.getElementById('btn-export-all').onclick = exportExcel;
+    // Eventos (Fallbacks para botões suprimidos)
+    const btnClear = document.getElementById('btn-clear-all');
+    const btnExport = document.getElementById('btn-export-all');
+    if (btnClear) btnClear.onclick = clearAll;
+    if (btnExport) btnExport.onclick = exportExcel;
 });
 
 function loadDashboard() {
