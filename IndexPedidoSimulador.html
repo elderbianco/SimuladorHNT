@@ -458,6 +458,89 @@
             }
         }
 
+        /* Modern Button Refinement */
+        .btn-modern {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-pdf {
+            background: #d63031;
+            /* Modern Red */
+            color: white;
+            box-shadow: 0 4px 12px rgba(214, 48, 49, 0.2);
+        }
+
+        .btn-pdf:hover {
+            background: #ff7675;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(214, 48, 49, 0.3);
+        }
+
+        .btn-edit-modern {
+            background: #6c5ce7;
+            /* Modern Purple */
+            color: white;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
+        }
+
+        .btn-edit-modern:hover {
+            background: #a29bfe;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.3);
+        }
+
+        .btn-delete-tiny {
+            background: rgba(255, 77, 77, 0.1);
+            color: #ff4d4d;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            border: 1px solid rgba(255, 77, 77, 0.2);
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        .btn-delete-tiny:hover {
+            background: #d63031;
+            color: white;
+            border-color: #d63031;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .btn-modern {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+                gap: 5px;
+            }
+
+            .btn-pdf {
+                padding: 10px;
+            }
+
+            .btn-text-mobile {
+                display: none;
+            }
+        }
+
         /* Suprime ações de exportação/limpeza conforme solicitado */
         .suppressed-actions {
             display: none !important;
