@@ -224,28 +224,35 @@
         /* --- SOCIAL BUTTONS --- */
         .btn-google {
             width: 100%;
-            padding: 12px;
-            background: #fff;
-            color: #000;
-            border: none;
+            padding: 14px;
+            background: #0a0a0a;
+            color: #fff;
+            border: 1px solid var(--gold);
             border-radius: 8px;
             font-family: 'Outfit', sans-serif;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.9rem;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1);
+            letter-spacing: 1px;
         }
 
         .btn-google:hover {
-            background: #f1f1f1;
+            background: var(--gold);
+            color: #000;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-google img {
+            width: 22px;
+            filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.2));
         }
 
         .divider {
@@ -253,10 +260,11 @@
             align-items: center;
             text-align: center;
             margin-bottom: 30px;
-            color: #444;
-            font-size: 0.8rem;
+            color: #666;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 2.5px;
+            font-weight: 600;
         }
 
         .divider::before,
@@ -323,19 +331,13 @@
                         required>
                 </div>
 
-                <div class="input-row">
-                    <div class="input-group">
-                        <label class="input-label" for="document">CPF ou CNPJ (apenas números)</label>
-                        <input type="text" id="document" class="input-field"
-                            placeholder="000.000.000-00 ou 00.000.000/0000-00" maxlength="18" required>
-                        <div id="document-error"
-                            style="color: #ff4d4d; font-size: 0.75rem; margin-top: 5px; display: none;">Documento
-                            inválido. Verifique os números.</div>
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label" for="ie">Inscrição Estadual (Opcional)</label>
-                        <input type="text" id="ie" class="input-field" placeholder="Isento ou Número">
-                    </div>
+                <div class="input-group">
+                    <label class="input-label" for="document">CPF ou CNPJ (apenas números)</label>
+                    <input type="text" id="document" class="input-field"
+                        placeholder="000.000.000-00 ou 00.000.000/0000-00" maxlength="18" required>
+                    <div id="document-error"
+                        style="color: #ff4d4d; font-size: 0.75rem; margin-top: 5px; display: none;">Documento
+                        inválido. Verifique os números.</div>
                 </div>
             </div>
 
