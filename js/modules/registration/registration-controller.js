@@ -114,13 +114,14 @@ const RegistrationController = {
         }
     },
 
-    handleSubmit: function (e) {
+    handleSubmit: async function(e) {
         e.preventDefault();
 
-        const docVal = document.getElementById('document').value;
+        const docField = document.getElementById('document');
+        const docVal = docField.value;
         if (!RegistrationValidation.validateDocument(docVal)) {
             alert('Por favor, insira um CPF ou CNPJ válido.');
-            document.getElementById('document').focus();
+            docField.focus();
             return;
         }
 
@@ -136,11 +137,48 @@ const RegistrationController = {
             city: document.getElementById('city').value,
             state: document.getElementById('state').value,
             whatsapp: document.getElementById('whatsapp').value.replace(/\D/g, ''),
-            marketing: document.getElementById('marketing').checked,
-            updatedAt: new Date().toISOString()
+            marketing: document.getElementById('marketing').checked
         };
 
-        localStorage.setItem('hnt_customer_profile', JSON.stringify(userData));
+        // 1. Salvar no LocalStorage para uso imediato no carrinho
+        localStorage.setItem('hnt_customer_profile', JSON.stringify({
+            ...userData,
+            updatedAt: new Date().toISOString()
+        }));
+
+        // 2. Sincronizar com Banco de Dados Supabase (NT_CUSTOMERS)
+        if (typeof supabase !== 'undefined') {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const userId = session?.user?.id || null;
+
+                const { error } = await supabase
+                    .from('hnt_customers')
+                    .upsert({
+                        auth_user_id: userId,
+                        email: userData.email,
+                        full_name: userData.name,
+                        document: userData.document,
+                        zipcode: userData.zipcode,
+                        address: userData.address,
+                        number: userData.number,
+                        complement: userData.complement,
+                        neighborhood: userData.neighborhood,
+                        city: userData.city,
+                        state: userData.state,
+                        whatsapp: userData.whatsapp,
+                        marketing_consent: userData.marketing,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'document' });
+
+                if (error) {
+                    console.error('Erro ao sincronizar com Supabase:', error);
+                }
+            } catch (err) {
+                console.error('Falha na persistência remota:', err);
+            }
+        }
+
         alert('Cadastro realizado com sucesso!');
         window.location.href = 'IndexPedidoSimulador.html';
     }
