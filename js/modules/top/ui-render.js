@@ -142,7 +142,7 @@ function renderCustomizationSection() {
                 textState: tState,
                 config: state.config,
                 fonts: avalFonts,
-                colors: (state.config.textColors && state.config.textColors.length > 0) ? DATA.colors.filter(c => state.config.textColors.includes(c.id)) : DATA.colors,
+                colors: (state.config.textColors && state.config.textColors.length > 0) ? CONFIG.colors.filter(c => state.config.textColors.includes(c.id)) : CONFIG.colors,
                 callbacks: {
                     onToggle: (zoneId, enabled) => { tState.enabled = enabled; if (enabled) state.zoneLimits[z.id] = true; else if (checkZoneEmpty(z.id)) state.zoneLimits[z.id] = false; updateLimits(); updatePrice(); renderControls(); saveState(); },
                     onTextChange: (zoneId, content) => { tState.content = content; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); },

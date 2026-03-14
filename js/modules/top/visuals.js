@@ -173,3 +173,58 @@ function updateLogoLayers() {
     });
 }
 
+
+function addImage(zoneId, src, filename = "Imagem Enviada", isCustom = true) {
+    const wrap = document.getElementById('customization-layer');
+    if (!wrap) return;
+
+    // Remover anterior se existir naquela zona
+    removeZoneElements(zoneId);
+
+    const el = document.createElement('img');
+    el.src = src;
+    el.className = 'custom-element draggable';
+    el.dataset.zone = zoneId;
+    el.dataset.filename = filename;
+    el.dataset.isCustom = isCustom;
+    el.dataset.type = 'image';
+
+    // Position in center of zone
+    const zone = CONFIG.zones[zoneId];
+    if (zone) {
+        el.style.left = zone.x + '%';
+        el.style.top = zone.y + '%';
+        el.style.width = zone.width + '%'; // Default width
+    } else {
+        el.style.left = '50%'; el.style.top = '50%'; el.style.width = '20%';
+    }
+
+    el.style.transform = 'translate(-50%, -50%)';
+    el.style.zIndex = '1500';
+
+    wrap.appendChild(el);
+
+    if (!state.elements[zoneId]) state.elements[zoneId] = [];
+    state.elements[zoneId].push(el);
+
+    if (typeof updatePrice === 'function') updatePrice();
+    saveState();
+}
+
+function removeZoneElements(zoneId) {
+    const wrap = document.getElementById('customization-layer');
+    if (!wrap) return;
+
+    // 1. Remove from DOM
+    const elements = wrap.querySelectorAll(`.custom-element[data-zone="${zoneId}"]`);
+    elements.forEach(el => el.remove());
+
+    // 2. Remove from state
+    state.elements[zoneId] = [];
+    state.zoneLimits[zoneId] = false;
+
+    // 3. Update Visuals
+    updateLimits();
+    if (typeof updatePrice === 'function') updatePrice();
+    saveState();
+}
