@@ -153,28 +153,34 @@ const RegistrationController = {
             updatedAt: new Date().toISOString()
         }));
 
-        // 2. Sincronizar com Banco de Dados Supabase (Tabela: clientes_cadastrados)
+        // 2. Sincronizar com Banco de Dados Supabase (Sequência Rigorosa Bling)
         if (typeof supabase !== 'undefined') {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 const userId = session?.user?.id || null;
+                const hoje = new Date().toLocaleDateString('pt-BR');
 
                 const { error } = await supabase
                     .from('clientes_cadastrados')
                     .upsert({
+                        // Ordem idêntica à fornecida no Excel:
+                        numero_pedido: null,             // 1 (Vazio no cadastro)
+                        nome_comprador: userData.name,   // 2
+                        data_pedido: hoje,               // 3 (Data do Cadastro)
+                        cpf_cnpj_comprador: userData.document, // 4
+                        endereco_comprador: userData.address,  // 5
+                        bairro_comprador: userData.neighborhood, // 6
+                        numero_comprador: userData.number,      // 7
+                        complemento_comprador: userData.complement, // 8
+                        cep_comprador: userData.zipcode,         // 9
+                        cidade_comprador: userData.city,         // 10
+                        uf_comprador: userData.state || 'SC',    // 11
+                        telefone_comprador: userData.phone || userData.whatsapp, // 12
+                        celular_comprador: userData.whatsapp,    // 13
+                        email_comprador: userData.email,         // 14
+
+                        // Campos extras técnicos
                         auth_user_id: userId,
-                        nome_comprador: userData.name,
-                        cpf_cnpj_comprador: userData.document,
-                        endereco_comprador: userData.address,
-                        bairro_comprador: userData.neighborhood,
-                        numero_comprador: userData.number,
-                        complemento_comprador: userData.complement,
-                        cep_comprador: userData.zipcode,
-                        cidade_comprador: userData.city,
-                        uf_comprador: userData.state,
-                        telefone_comprador: userData.phone || userData.whatsapp,
-                        celular_comprador: userData.whatsapp,
-                        email_comprador: userData.email,
                         consentimento_marketing: userData.marketing,
                         atualizado_em: new Date().toISOString()
                     }, { onConflict: 'cpf_cnpj_comprador' });
