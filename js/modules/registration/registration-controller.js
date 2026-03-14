@@ -165,20 +165,66 @@ const RegistrationController = {
     handleSubmit: async function (e) {
         e.preventDefault();
 
-        // Check if privacy policy is checked (DOM required attribute handles most of it, but let's double check)
+        const errors = [];
+        const errorListEl = document.getElementById('error-list');
+        const errorContainer = document.getElementById('validation-errors');
+
+        // --- MANUAL VALIDATION ---
+        // 1. Privacy
         const privacyCheck = document.getElementById('privacy-policy');
         if (privacyCheck && !privacyCheck.checked) {
-            alert('Por favor, aceite a Política de Privacidade para continuar.');
+            errors.push('Aceite a Política de Privacidade.');
+        }
+
+        // 2. Email
+        const email = document.getElementById('email').value.trim();
+        if (!email) errors.push('O e-mail é obrigatório.');
+
+        // 3. Document (Special validation)
+        const docField = document.getElementById('document');
+        if (!RegistrationValidation.validateDocument(docField.value)) {
+            errors.push('CPF ou CNPJ inválido.');
+        }
+
+        // 4. Name
+        if (!document.getElementById('full-name').value.trim()) {
+            errors.push('O nome completo é obrigatório.');
+        }
+
+        // 5. Address (Zipcode)
+        const zip = document.getElementById('zipcode').value.replace(/\D/g, '');
+        if (zip.length !== 8) {
+            errors.push('O CEP deve conter 8 dígitos.');
+        }
+        if (!document.getElementById('number').value.trim()) {
+            errors.push('O número do endereço é obrigatório.');
+        }
+
+        // 6. WhatsApp (Primary phone)
+        const whats = document.getElementById('whatsapp').value.replace(/\D/g, '');
+        if (whats.length < 10) {
+            errors.push('O WhatsApp principal deve ter DDD e número.');
+        }
+
+        // NOTE: Fixed phone (Telefone Fixo) is NOT checked on purpose (optional).
+        // -------------------------
+
+        if (errors.length > 0) {
+            errorContainer.style.display = 'block';
+            errorListEl.innerHTML = errors.map(err => `<li>${err}</li>`).join('');
+
+            // Scroll to the error list container
+            errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
-        const docField = document.getElementById('document');
-        const docVal = docField.value;
-        if (!RegistrationValidation.validateDocument(docVal)) {
-            alert('Por favor, insira um CPF ou CNPJ válido.');
-            docField.focus();
-            return;
-        }
+        // Hide error container if everything is fine now
+        errorContainer.style.display = 'none';
+
+        // Proceed to save logic...
+        const btn = document.getElementById('btn-submit');
+        btn.disabled = true;
+        btn.innerHTML = '🕒 SALVANDO CADASTRO...';
 
         let storedClientId = localStorage.getItem('hnt_client_id');
         if (!storedClientId) {

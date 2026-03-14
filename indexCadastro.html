@@ -350,7 +350,7 @@
             <div class="form-section">
                 <div class="section-title">🛡️ Termos e Privacidade</div>
                 <label class="checkbox-group">
-                    <input type="checkbox" id="privacy-policy" class="checkbox-field" required>
+                    <input type="checkbox" id="privacy-policy" class="checkbox-field">
                     <span class="checkbox-label">
                         Declaro que li, compreendi e concordo integralmente com os termos da
                         <a href="https://docs.google.com/document/d/18MZF45XqKZ3UTCVJVQcWGWUBiB1XHMpgOYdyVA_cZoQ/edit?usp=sharing"
@@ -369,7 +369,7 @@
                         <span class="tooltip-trigger"
                             title="E-mail principal para envio de notas e rastreamento.">ⓘ</span>
                     </label>
-                    <input type="email" id="email" class="input-field" placeholder="exemplo@email.com" required>
+                    <input type="email" id="email" class="input-field" placeholder="exemplo@email.com">
                     <span class="input-helper">Utilize o mesmo e-mail da sua conta principal para facilitar a
                         sincronização.</span>
                 </div>
@@ -380,7 +380,7 @@
                         <span class="tooltip-trigger"
                             title="Insira o nome exatamente como consta no documento.">ⓘ</span>
                     </label>
-                    <input type="text" id="full-name" class="input-field" placeholder="Nome Completo" required>
+                    <input type="text" id="full-name" class="input-field" placeholder="Nome Completo">
                     <small class="input-helper">Importante para a emissão correta da Nota Fiscal.</small>
                 </div>
 
@@ -390,8 +390,7 @@
                         <span class="tooltip-trigger"
                             title="Apenas números. O sistema validará o formato automaticamente.">ⓘ</span>
                     </label>
-                    <input type="text" id="document" class="input-field" placeholder="000.000.000-00" maxlength="18"
-                        required>
+                    <input type="text" id="document" class="input-field" placeholder="000.000.000-00" maxlength="18">
                     <div id="document-error"
                         style="color: var(--danger); font-size: 0.8rem; margin-top: 8px; display: none; font-weight: 700;">
                         ⚠️ Documento inválido. Por favor, revise os números.
@@ -411,8 +410,7 @@
                             title="Ao preencher o CEP, o endereço será buscado automaticamente.">ⓘ</span>
                     </label>
                     <div style="display: flex; gap: 15px;">
-                        <input type="text" id="zipcode" class="input-field" placeholder="00000-000" maxlength="9"
-                            required>
+                        <input type="text" id="zipcode" class="input-field" placeholder="00000-000" maxlength="9">
                         <button type="button" onclick="RegistrationController.clearAddress()"
                             style="background: #222; color: #FFF; border: 1px solid #444; border-radius: 8px; padding: 0 25px; font-weight: 700; cursor: pointer;">LIMPAR</button>
                     </div>
@@ -429,7 +427,7 @@
                 <div class="input-row">
                     <div class="input-group">
                         <label class="input-label" for="number">Número</label>
-                        <input type="text" id="number" class="input-field" placeholder="Ex: 123" required>
+                        <input type="text" id="number" class="input-field" placeholder="Ex: 123">
                     </div>
                     <div class="input-group">
                         <label class="input-label" for="complement">Complemento</label>
@@ -462,11 +460,11 @@
                     <div class="input-group">
                         <label class="input-label" for="whatsapp">WhatsApp (Principal)</label>
                         <input type="text" id="whatsapp" class="input-field" placeholder="(00) 00000-0000"
-                            maxlength="15" required>
+                            maxlength="15">
                         <span class="input-helper">Usaremos este número para dúvidas rápidas sobre o pedido.</span>
                     </div>
                     <div class="input-group">
-                        <label class="input-label" for="phone">Telefone Fixo / Recado</label>
+                        <label class="input-label" for="phone">Telefone Fixo (Opcional)</label>
                         <input type="text" id="phone" class="input-field" placeholder="(00) 0000-0000">
                     </div>
                 </div>
@@ -489,7 +487,13 @@
                 </label>
             </div>
 
-            <button type="submit" class="btn-submit">🚀 FINALIZAR E SALVAR CADASTRO</button>
+            <div id="validation-errors"
+                style="display: none; background: rgba(255, 77, 77, 0.1); border: 1px solid var(--danger); padding: 15px; border-radius: 8px; margin-top: 25px; color: var(--danger); font-size: 0.9rem;">
+                <strong>⚠️ Verifique os seguintes campos:</strong>
+                <ul id="error-list" style="margin-top: 10px; margin-bottom: 0; padding-left: 20px;"></ul>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btn-submit">🚀 FINALIZAR E SALVAR CADASTRO</button>
             <p style="text-align: center; color: #666; font-size: 0.8rem; margin-top: 20px;">
                 Dúvidas ou correções? Entre em contato: <strong>contato@hanuthai.com.br</strong>
             </p>
