@@ -366,80 +366,106 @@
         </div>
     </header>
 
-    <div class="dashboard-container">
+    <nav class="main-tabs-nav">
+        <button class="main-tab-btn active" onclick="CartController.switchMainTab('tab-identification', this)">🏷️
+            Identificação</button>
+        <button class="main-tab-btn" onclick="CartController.switchMainTab('tab-simulations', this)">📦 Simulações
+            (Carrinho)</button>
+        <button class="main-tab-btn" onclick="CartController.switchMainTab('tab-production', this)">🏭 Resumo de
+            Produção</button>
+        <button class="main-tab-btn" onclick="CartController.switchMainTab('tab-financial', this)">💰
+            Financeiro</button>
+    </nav>
 
-        <div class="page-header">
-            <div>
-                <h1>Gestão de Pedidos</h1>
-                <p style="color:#888; margin-top:5px;">Agrupamento inteligente por cliente e simulação</p>
+    <main class="dashboard-body">
+        <!-- TAB: IDENTIFICATION -->
+        <section id="tab-identification" class="main-tab-content active">
+            <div class="section-header">
+                <h2>Dados do Pedido & Cliente</h2>
+                <p>Informações compartilhadas por todos os itens deste orçamento</p>
             </div>
-            <div class="actions">
-                <button id="btn-clear-all" class="btn btn-outline" style="margin-right: 10px;">🗑️ Limpar Tudo</button>
-                <button id="btn-export-db" class="btn btn-primary"
-                    onclick="if(typeof DatabaseManager !== 'undefined') DatabaseManager.exportToExcel(); else alert('Erro: DatabaseManager não carregado.');"
-                    style="background:#28a745; margin-right: 10px;">📊 Baixar Banco de Dados (Excel)</button>
-                <button id="btn-export-all" class="btn btn-primary">📤 Exportar Planilha de Produção</button>
-            </div>
-        </div>
 
-        <!-- NEW: Global Order Header (Editable if needed, or summary) -->
-        <div class="order-global-info"
-            style="background: #222; border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 30px; border-left: 5px solid var(--gold);">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 20px; align-items: flex-end;">
-                <div>
-                    <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Número
-                        do Pedido (Geral)</label>
-                    <input type="text" id="global-order-id" placeholder="Ex: PED-2024-001"
-                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: var(--gold); font-size: 1.2rem; font-weight: bold; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px;">
+            <div class="card-dark" style="border-left: 5px solid var(--gold);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div class="input-group">
+                        <label>Número do Pedido (Ref. Geral)</label>
+                        <input type="text" id="global-order-id" class="input-modern" placeholder="Ex: HNT-2024-001"
+                            style="color: var(--gold); font-family: 'Bebas Neue'; font-size: 1.4rem;">
+                    </div>
+                    <div class="input-group">
+                        <label>Nome do Cliente / Empresa</label>
+                        <input type="text" id="global-client-name" class="input-modern"
+                            placeholder="Digite o nome completo...">
+                    </div>
+                    <div class="input-group">
+                        <label>Telefone / WhatsApp</label>
+                        <input type="text" id="global-client-phone" class="input-modern" placeholder="(00) 00000-0000">
+                    </div>
                 </div>
-                <div>
-                    <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Nome
-                        do Cliente / Empresa</label>
-                    <input type="text" id="global-client-name" placeholder="Nome para o cliente..."
-                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: #fff; font-size: 1rem;">
-                </div>
-                <div>
-                    <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Telefone
-                        / WhatsApp</label>
-                    <input type="text" id="global-client-phone" placeholder="(00) 00000-0000"
-                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: #fff; font-size: 1rem;">
-                </div>
-                <div>
-                    <button class="btn btn-primary" style="height: 46px;" onclick="applyGlobalInfo()">✅ Aplicar aos
-                        Itens</button>
+                <div style="margin-top: 15px; text-align: right;">
+                    <button class="btn btn-primary" onclick="applyGlobalInfo()"
+                        style="padding: 10px 20px; background: var(--gold); color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">✅
+                        Aplicar a Todos os Itens</button>
                 </div>
             </div>
-        </div>
 
-        <div class="stats-bar">
-            <div class="stat-card">
-                <div class="stat-label">Itens no Carrinho</div>
-                <div class="stat-value" id="st-count">0</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Modelos Distintos</div>
+                    <div class="stat-value" id="st-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Quantidade de Peças</div>
+                    <div class="stat-value" id="st-pieces">0</div>
+                </div>
+                <div class="stat-card gold">
+                    <div class="stat-label">Valor Total Estimado</div>
+                    <div class="stat-value" id="st-total">R$ 0,00</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Quantidade de Peças</div>
-                <div class="stat-value" id="st-pieces">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Valor Total Estimado</div>
-                <div class="stat-value gold" id="st-total">R$ 0,00</div>
-            </div>
-        </div>
+        </section>
 
-        <div id="orders-list">
-            <!-- JS RENDERS CARDS HERE -->
-            <div class="empty-state">
-                <h2>Seu carrinho está vazio</h2>
-                <p>Nenhuma simulação encontrada.</p>
-                <br>
-                <a href="IndexFightShorts.html" class="btn btn-primary">Ir para Simulador</a>
+        <!-- TAB: SIMULATIONS (THE CART) -->
+        <section id="tab-simulations" class="main-tab-content">
+            <div class="section-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
+                <div>
+                    <h2>Itens Customizados</h2>
+                    <p>Ficha técnica e personalizações detalhadas por modelo</p>
+                </div>
+                <div class="suppressed-actions" style="display:none">
+                    <!-- BOTÕES SUPRIMIDOS A PEDIDO DO USUÁRIO. REMOVER SE NÃO USAR POSTERIORMENTE -->
+                    <button id="btn-clear-all" class="btn btn-outline" onclick="clearAll()">🗑️ Limpar Tudo</button>
+                    <button id="btn-export-all" class="btn btn-primary" onclick="exportExcel()">📤 Exportar</button>
+                </div>
             </div>
-        </div>
 
-    </div>
+            <div id="orders-list">
+                <!-- JS RENDERS CARDS OVER THIS -->
+                <div class="empty-state">
+                    <h2>Nenhum item adicionado</h2>
+                    <p>Você precisa finalizar uma simulação para que ela apareça aqui.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: PRODUCTION SUMMARY -->
+        <section id="tab-production" class="main-tab-content">
+            <div class="section-header">
+                <h2>Resumo de Produção</h2>
+                <p>Consolidado quantitativo para confecção</p>
+            </div>
+            <div id="production-summary-container"></div>
+        </section>
+
+        <!-- TAB: FINANCIAL -->
+        <section id="tab-financial" class="main-tab-content">
+            <div class="section-header">
+                <h2>Resumo Financeiro</h2>
+                <p>Detalhamento de custos totais e descontos aplicados</p>
+            </div>
+            <div id="financial-summary-container"></div>
+        </section>
+    </main>
 
     <!-- SheetJS -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
