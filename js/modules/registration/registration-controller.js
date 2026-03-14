@@ -221,7 +221,10 @@ const RegistrationController = {
         }
 
         alert('Cadastro realizado com sucesso!');
-        window.location.href = 'IndexPedidoSimulador.html';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect') || 'IndexPedidoSimulador.html';
+        window.location.href = redirect;
     }
 };
 
