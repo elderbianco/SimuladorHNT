@@ -45,15 +45,22 @@ function renderSummary(items) {
     container.innerHTML = '';
 
     items.forEach(order => {
-        const item = order.item;
-        const subtotal = item.pricing?.total_price || 0;
-        total += subtotal;
+        // Try getting price from various places (Supabase column, simulator item, or raw technical pricing)
+        const price = order.PRECO_FINAL || (order.item && order.item.pricing ? order.item.pricing.total_price : 0) || order.total_price || 0;
+
+        // Try getting qty
+        const qty = order.QUANTIDADE || (order.item ? order.item.qty_total : 1) || 1;
+
+        // Try getting name
+        const name = order.TIPO_PRODUTO || (order.item ? order.item.model_name : 'Produto');
+
+        total += parseFloat(price);
 
         const div = document.createElement('div');
         div.className = 'summary-item';
         div.innerHTML = `
-            <span>${item.qty_total}x ${item.model_name || 'Produto'}</span>
-            <span>${subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+            <span>${qty}x ${name}</span>
+            <span>${parseFloat(price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
         `;
         container.appendChild(div);
     });
