@@ -158,9 +158,9 @@ function init() {
     // 5. Ajustar Zoom Inicial
     const applyInitialZoom = () => {
         if (window.innerWidth <= 768) {
-            currentZoom = 1.0; // Mobile - zoom neutro para ver o produto completo
+            currentZoom = 1.2; // Mobile - Leve zoom para destaque
         } else {
-            currentZoom = 1.45; // Desktop - valor calibrado para as zonas ficarem sobre o produto
+            currentZoom = 2.2; // Desktop - valor calibrado para preencher o Ring
         }
         state.zoom = currentZoom;
         panOffset = { x: 0, y: 0 };
