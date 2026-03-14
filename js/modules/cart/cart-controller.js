@@ -58,49 +58,34 @@ function loadDashboard() {
         let data = order;
 
         // --- NORMALIZAÇÃO DE CAMPOS (Supabase → UI) ---
-        // A tabela real utiliza nomes que podem vir em UPPER ou lower case dependendo do client
-        // Normalizamos tudo para o padrão esperado pelo CartUI
-        if (!data.pdfUrl) data.pdfUrl = data.pdf_url || data.PDF_URL;
-        if (!data.created_at) data.created_at = data.criado_em || data.CRIADO_EM;
-        if (!data.order_id) data.order_id = data.ID_PEDIDO || data.id_pedido;
-
-        // Normalização do Cliente
-        if (!data.client_info) {
-            data.client_info = {
-                name: data.NOME_CLIENTE || data.nome_cliente || 'Cliente',
-                phone: data.TELEFONE_CLIENTE || data.telefone_cliente || ''
-            };
-        }
-
-        // Preço e Quantidade (Case Insensitive e fallback robusto para estruturas planas ou aninhadas)
-        const dbPrice = parseFloat(data.PRECO_FINAL || data.preco_final || data.total_price || data.item?.pricing?.total_price || 0);
-        const dbQty = parseInt(data.QUANTIDADE || data.quantidade || data.item?.qty_total || 1);
-        const dbUnitPrice = parseFloat(data.PRECO_UNITARIO || data.preco_unitario || data.item?.pricing?.unit_price || 0);
-
-        if (data.DADOS_TECNICOS_JSON === undefined && (data.json_tec || data.JSON_TEC)) {
-            const jtec = data.json_tec || data.JSON_TEC;
-            data.DADOS_TECNICOS_JSON = typeof jtec === 'string' ? jtec : JSON.stringify(jtec);
+        // A tabela real usa: criado_em, ID_PEDIDO, pdf_url
+        // A UI espera:       created_at, order_id,  pdfUrl
+        if (data.pdf_url && !data.pdfUrl) data.pdfUrl = data.pdf_url;
+        if (data.criado_em && !data.created_at) data.created_at = data.criado_em;
+        if (data.ID_PEDIDO && !data.order_id) data.order_id = data.ID_PEDIDO;
+        if (data.DADOS_TECNICOS_JSON === undefined && data.json_tec) {
+            // json_tec is the Supabase column for technical data (already parsed jsonb)
+            data.DADOS_TECNICOS_JSON = typeof data.json_tec === 'string'
+                ? data.json_tec
+                : JSON.stringify(data.json_tec);
         }
 
         // CRITICAL FIX: If item is missing but we have technical data, reconstruct the item
         if (!data.item && data.DADOS_TECNICOS_JSON) {
             try {
-                const originalPdfUrl = data.pdfUrl;
+                const originalPdfUrl = data.pdfUrl || data.pdf_url; // Preserve top-level PDF link (both formats)
                 const technicalData = (typeof data.DADOS_TECNICOS_JSON === 'string')
                     ? JSON.parse(data.DADOS_TECNICOS_JSON)
                     : data.DADOS_TECNICOS_JSON;
-
-                // Preço unitário fallback (se houver total e quantidade)
-                const unitPriceFallback = dbPrice > 0 ? (dbPrice / dbQty) : 0;
 
                 // Reconstruct the 'item' structure expected by the rest of the logic and CartUI
                 data.item = {
                     simulator_type: technicalData.productInitial ? "shorts" : (technicalData.simulator_type || "shorts"),
                     model_name: technicalData.productInitial ? "Shorts " + technicalData.productInitial : (technicalData.model_name || "Simulação"),
-                    qty_total: dbQty,
+                    qty_total: technicalData.qty_total || data.QUANTIDADE || data.quantity || 1,
                     pricing: {
-                        total_price: dbPrice || (technicalData.pricing ? technicalData.pricing.total_price : 0),
-                        unit_price: dbUnitPrice || (technicalData.pricing ? technicalData.pricing.unit_price : unitPriceFallback)
+                        total_price: data.PRECO_FINAL || data.total_price || (technicalData.pricing ? technicalData.pricing.total_price : 0),
+                        unit_price: data.PRECO_UNITARIO || (technicalData.pricing ? technicalData.pricing.unit_price : 0)
                     },
                     specs: {
                         parts: technicalData.parts || {},
@@ -112,9 +97,10 @@ function loadDashboard() {
                     pdf_path: originalPdfUrl || ""
                 };
 
-                // Ensure basic record fields if missing
+                // Ensure basic record fields
                 if (!data.order_id) data.order_id = technicalData.simulationId || technicalData.orderNumber || `PEDIDO_${index}`;
                 if (!data.created_at) data.created_at = new Date().toISOString();
+                if (originalPdfUrl) data.pdfUrl = originalPdfUrl;
             } catch (e) {
                 console.error('Error parsing DADOS_TECNICOS_JSON:', e);
                 return; // Skip this item
@@ -216,25 +202,10 @@ function applyGlobalInfo() {
     location.reload();
 }
 
-async function deleteGroup(indices) {
-    if (!confirm('Deseja excluir este pedido completo e todos os seus itens (Local e no Banco de Dados)?')) return;
+function deleteGroup(indices) {
+    if (!confirm('Deseja excluir este pedido completo e todos os seus itens?')) return;
 
     let history = JSON.parse(localStorage.getItem(STORAGE_KEY));
-
-    // --- SUPABASE SYNC ---
-    if (typeof SupabaseAdapter !== 'undefined') {
-        try {
-            const idsToDelete = indices.map(idx => history[idx]?.order_id || history[idx]?.ID_PEDIDO).filter(id => !!id);
-            if (idsToDelete.length > 0) {
-                console.log('🗑️ Excluindo grupo de pedidos do Supabase:', idsToDelete);
-                await SupabaseAdapter.deletePedidos(idsToDelete);
-            }
-        } catch (e) {
-            console.error('Erro ao excluir grupo do Supabase:', e);
-        }
-    }
-    // ---------------------
-
     // Remove indices in descending order to avoid shift issues
     const sortedIndices = indices.sort((a, b) => b - a);
     sortedIndices.forEach(idx => history.splice(idx, 1));
@@ -340,23 +311,12 @@ function editOrder(index) {
 
 
 async function clearAll() {
-    if (!confirm('Deseja limpar TODO o histórico de pedidos (Local e no Banco de Dados)?')) return;
+    if (!confirm('Deseja limpar TODO o histórico de pedidos?')) return;
 
-    // --- SUPABASE SYNC ---
-    if (typeof SupabaseAdapter !== 'undefined') {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            const history = raw ? JSON.parse(raw) : [];
-            const ids = history.map(o => o.order_id || o.ID_PEDIDO).filter(id => !!id);
-
-            if (ids.length > 0) {
-                console.log('🗑️ Excluindo todos os pedidos do Supabase...');
-                await SupabaseAdapter.deletePedidos(ids);
-            }
-        } catch (e) {
-            console.error('Erro ao excluir pedidos do Supabase durante limpeza total:', e);
-        }
-    }
+    // --- SUPABASE SYNC (DANGEROUS BUT FOR USER CONVENIENCE) ---
+    // If we wanted to clear everything from Supabase, we'd need a bulk delete.
+    // For now, we clear local and user can re-sync if they want.
+    // Alternatively, we could delete all rows matching a criteria.
     // ---------------------
 
     localStorage.removeItem(STORAGE_KEY);
