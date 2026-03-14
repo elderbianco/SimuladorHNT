@@ -121,13 +121,13 @@ function loadAdminConfig() {
     const getAdminVal = (val) => (val !== undefined && val !== null && val !== "") ? parseFloat(val) : undefined;
 
     // 1. Resolve Base Price (Legging Specific > Default)
-    // Force fallback if 0
-    const base = (getVal(prices.basePrice, 149.90) || 149.90);
+    // Force fallback if 0 — valores alinhados com resetLeggingToTable (Jan/2026)
+    const base = (getVal(prices.basePrice, 139.90) || 139.90);
 
     // 2. Resolve Wholesale Prices
-    const p10 = getVal(prices.price10, 135.90);
-    const p20 = getVal(prices.price20, 120.90);
-    const p30 = getVal(prices.price30, 105.90);
+    const p10 = getVal(prices.price10, 125.90);
+    const p20 = getVal(prices.price20, 111.90);
+    const p30 = getVal(prices.price30, 97.90);
 
     // 3. Calculate Discounts Dynamically
     let d20 = 0;
@@ -143,8 +143,8 @@ function loadAdminConfig() {
     state.config = {
         basePrice: base,
         product: 'Legging',
-        sizeModPrice: getVal(prices.sizeModPrice, 10.00), // Default to 10.00 only if undefined
-        devFee: getVal(prices.devFee, 30.00),
+        sizeModPrice: getVal(prices.sizeModPrice, 0), // Admin padrão = 0
+        devFee: getVal(prices.devFee, 0),
         // ✅ CORRIGIDO: Ler preços de zonas do config da Legging (hnt_legging_config), NÃO do Fight Shorts
         logoLatPrice: getVal(prices.logoLatPrice, 29.90),
         textLatPrice: getVal(prices.textLatPrice, 9.90),
