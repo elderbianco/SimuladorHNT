@@ -115,8 +115,8 @@ function loadAdminConfig() {
     state.config = {
         basePrice: (getVal(prices.basePrice, 189.90) || 189.90), // Force fallback if 0
         product: 'Moletom',
-        sizeModPrice: getVal(prices.sizeModPrice, 10.00),
-        devFee: getVal(prices.devFee, 30.00),
+        sizeModPrice: getVal(prices.sizeModPrice, 0),
+        devFee: getVal(prices.devFee, 0),
 
         // Correct Zones Matching Admin
         logoFrontPrice: getVal(prices.logoFrontPrice, 29.90),
