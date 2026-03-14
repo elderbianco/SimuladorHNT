@@ -15,18 +15,14 @@
     <style>
         :root {
             --gold: #D4AF37;
-            --gold-glow: rgba(212, 175, 55, 0.3);
-            --dark-bg: #0a0a0a;
-            --card-bg: #151515;
-            --card-hover: #1c1c1c;
-            --border: #222;
-            --text-muted: #666;
-            --accent-blue: #00b4d8;
-            --radius-md: 8px;
+            --dark-bg: #1a1a1a;
+            --card-bg: #252525;
+            --border: #333;
+            --text-muted: #888;
         }
 
         body {
-            background: var(--dark-bg);
+            background: #111;
             color: #fff;
             margin: 0;
             font-family: 'Outfit', sans-serif;
@@ -35,222 +31,115 @@
             flex-direction: column;
         }
 
-        /* --- MODERN SCROLLBAR --- */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #050505;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #222;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--gold);
-        }
-
         /* --- HEADER --- */
         .premium-header {
             background: #000;
-            padding: 15px 30px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #222;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            border-bottom: 2px solid #333;
         }
 
         .header-title {
             color: var(--gold);
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.8rem;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px var(--gold-glow);
-        }
-
-        /* --- MAIN TABS (DASHBOARD) --- */
-        .main-tabs-nav {
-            display: flex;
-            background: #000;
-            padding: 0 20px;
-            gap: 10px;
-            border-bottom: 1px solid #222;
-            position: sticky;
-            top: 65px;
-            z-index: 999;
-            overflow-x: auto;
-        }
-
-        .main-tab-btn {
-            padding: 15px 25px;
-            background: transparent;
-            border: none;
-            color: #555;
-            cursor: pointer;
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             letter-spacing: 1px;
-            transition: 0.3s;
-            position: relative;
-            white-space: nowrap;
         }
 
-        .main-tab-btn:hover {
+        .nav-link {
+            text-decoration: none;
             color: #ccc;
+            margin-left: 20px;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .main-tab-btn.active {
-            color: var(--gold);
+        .nav-link:hover {
+            color: #fff;
         }
 
-        .main-tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--gold);
-            box-shadow: 0 0 10px var(--gold);
-        }
-
-        .main-tab-content {
-            display: none;
-            padding: 30px 20px;
+        /* --- LAYOUT --- */
+        .dashboard-container {
             max-width: 1400px;
-            margin: 0 auto;
+            margin: 30px auto;
+            padding: 0 20px;
             width: 100%;
             box-sizing: border-box;
-            animation: fadeIn 0.4s ease;
+            flex: 1;
         }
 
-        .main-tab-content.active {
-            display: block;
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* --- DASHBOARD ELEMENTS --- */
-        .section-header {
-            margin-bottom: 25px;
-            border-left: 4px solid var(--gold);
-            padding-left: 15px;
-        }
-
-        .section-header h2 {
+        h1 {
+            color: var(--gold);
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 2rem;
-            color: #fff;
+            font-size: 2.5rem;
             margin: 0;
-        }
-
-        .section-header p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin: 5px 0 0;
-        }
-
-        /* Cards & Grids */
-        .card-dark {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 25px;
-            margin-bottom: 20px;
+            letter-spacing: 1px;
         }
 
         /* Stats Bar */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+        .stats-bar {
+            display: flex;
+            gap: 15px;
             margin-bottom: 30px;
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #151515 0%, #0a0a0a 100%);
-            padding: 20px;
-            border-radius: var(--radius-md);
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 6px;
             border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 100%;
-            background: var(--accent-blue);
-        }
-
-        .stat-card.gold::before {
-            background: var(--gold);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .stat-label {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-top: 10px;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        /* Form Controls */
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-
-        .input-modern {
-            width: 100%;
-            background: #111;
-            border: 1px solid #333;
+            font-size: 1.5rem;
+            font-weight: bold;
             color: #fff;
-            padding: 12px 15px;
-            border-radius: 6px;
-            font-size: 1rem;
-            transition: 0.3s;
-            font-family: 'Outfit', sans-serif;
+            margin-top: 5px;
         }
 
-        .input-modern:focus {
-            border-color: var(--gold);
-            outline: none;
-            box-shadow: 0 0 10px var(--gold-glow);
+        .stat-value.gold {
+            color: var(--gold);
         }
 
+        /* --- ORDER CARDS --- */
+        #orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .order-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        /* Card Header (Summary) */
         .card-header {
             padding: 20px;
             display: grid;
@@ -261,267 +150,420 @@
             cursor: pointer;
         }
 
+        .card-header:hover {
+            background: #303030;
+        }
+
+        .thumb-placeholder {
+            width: 60px;
+            height: 60px;
+            background: #444;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.7rem;
+        }
+
+        .item-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .item-subtitle {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .expanded .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Card Details (Tabs) */
+        .card-details {
+            display: none;
+            border-top: 1px solid #333;
+            background: #1f1f1f;
+        }
+
         .expanded .card-details {
             display: block;
         }
 
-        .suppressed-actions {
+        /* Tabs Navigation */
+        .tabs-nav {
+            display: flex;
+            border-bottom: 1px solid #333;
+            background: #222;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-weight: 500;
+            border-right: 1px solid #333;
+            transition: 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+            background: #2a2a2a;
+        }
+
+        .tab-btn.active {
+            color: var(--gold);
+            background: #1f1f1f;
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .tab-content {
+            padding: 25px;
             display: none;
         }
 
-        /* Buttons */
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Content Styling */
+        .grid-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-grp {
+            margin-bottom: 15px;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .info-val {
+            font-size: 0.95rem;
+            color: #ddd;
+        }
+
+        .info-val strong {
+            color: #fff;
+        }
+
+        .size-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .size-box {
+            background: #333;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-align: center;
+            min-width: 40px;
+        }
+
+        .size-bx-label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .size-bx-val {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
         .btn {
-            padding: 12px 25px;
-            border-radius: 6px;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 10px 20px;
             border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
         }
 
         .btn-primary {
             background: var(--gold);
             color: #000;
-            box-shadow: 0 4px 15px var(--gold-glow);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px var(--gold);
-            filter: brightness(1.1);
+            background: #b5952f;
         }
 
         .btn-outline {
             background: transparent;
-            border: 1px solid #333;
-            color: #888;
+            border: 1px solid #666;
+            color: #ccc;
         }
 
         .btn-outline:hover {
-            border-color: #666;
+            border-color: #fff;
             color: #fff;
-            background: rgba(255, 255, 255, 0.05);
         }
 
         .btn-danger {
-            background: rgba(255, 77, 77, 0.1);
-            color: #ff4d4d;
-            border: 1px solid rgba(255, 77, 77, 0.2);
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+            background: transparent;
         }
 
         .btn-danger:hover {
-            background: #ff4d4d;
-            color: #fff;
+            background: rgba(255, 107, 107, 0.1);
         }
 
-        /* --- MOBILE ADAPTATION (Accordion Experience) --- */
-        @media (max-width: 768px) {
-            .main-tabs-nav {
-                padding: 0 10px;
-                gap: 5px;
-            }
-
-            .main-tab-btn {
-                padding: 12px 10px;
-                font-size: 0.9rem;
-                flex: 1;
-                text-align: center;
-            }
-
-            .main-tab-content {
-                padding: 20px 10px;
-            }
-
-            .card-header {
-                grid-template-columns: 50px 1fr 40px !important;
-                padding: 15px !important;
-                gap: 10px !important;
-            }
-
-            .card-header div:nth-child(3),
-            .card-header div:nth-child(4),
-            .card-header div:nth-child(5) {
-                display: none !important;
-            }
-
-            .sub-item-rich .card-header {
-                flex-direction: column;
-                align-items: flex-start !important;
-                gap: 10px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
         }
 
-        /* Quick-Access Navigator (Floating) */
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .modal-box {
+            background: #222;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid #444;
+        }
+
+        /* Quick-Access Navigator */
         .quick-nav {
             position: fixed;
-            bottom: 20px;
+            top: 20px;
             right: 20px;
             display: flex;
+            flex-direction: column;
             gap: 10px;
             z-index: 2000;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(10, 10, 10, 0.8);
             padding: 10px;
-            border-radius: 40px;
-            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
             border: 1px solid #333;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
         }
 
         .quick-nav-item {
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             background: #1a1a1a;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            transition: 0.3s;
-            border: 1px solid #333;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1px solid #444;
         }
 
         .quick-nav-item:hover {
-            transform: translateY(-5px);
-            border-color: var(--gold);
+            transform: scale(1.1);
+            background: #00f0ff;
+            border-color: #fff;
+        }
+
+        .quick-nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            right: 50px;
+            background: #000;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            border: 1px solid #00f0ff;
+        }
+
+        .quick-nav-item:hover::after {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+            }
+
+            .order-global-info>div {
+                grid-template-columns: 1fr !important;
+            }
+
+            .card-header {
+                grid-template-columns: 60px 1fr 50px;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .card-header>div:nth-child(3),
+            .card-header>div:nth-child(4),
+            .card-header>div:nth-child(5) {
+                display: none;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .quick-nav {
+                top: auto;
+                bottom: 15px;
+                right: 15px;
+                flex-direction: row;
+                border-radius: 40px;
+                padding: 8px;
+            }
+
+            .quick-nav-item::after {
+                display: none;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Quick Navigator (Floating) -->
+    <!-- Quick Navigator -->
     <div class="quick-nav">
-        <a href="IndexFightShorts.html" class="quick-nav-item" title="Fight Shorts"><img
-                src="assets/ui-icons/icon-fight-shorts.png" alt="FS" style="width:24px;"></a>
-        <a href="IndexShortsLegging.html" class="quick-nav-item" title="Shorts Legging"><img
-                src="assets/ui-icons/icon-shorts-calca-legging.png" alt="SL" style="width:24px;"></a>
-        <a href="IndexCalcaLegging.html" class="quick-nav-item" title="Calça Legging"><img
-                src="assets/ui-icons/icon-calca-legging.png" alt="CL" style="width:24px;"></a>
-        <a href="IndexMoletom.html" class="quick-nav-item" title="Moletom"><img src="assets/ui-icons/icon-moletom.png"
-                alt="ML" style="width:24px;"></a>
-        <a href="IndexTop.html" class="quick-nav-item" title="Top"><img src="assets/ui-icons/icon-top.png" alt="TP"
-                style="width:24px;"></a>
-        <a href="index.html" class="quick-nav-item" title="Início">🏠</a>
+        <a href="IndexFightShorts.html" class="quick-nav-item" data-tooltip="Fight Shorts"><img
+                src="assets/ui-icons/icon-fight-shorts.png" alt="Fight Shorts"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexShortsLegging.html" class="quick-nav-item" data-tooltip="Shorts Legging"><img
+                src="assets/ui-icons/icon-shorts-calca-legging.png" alt="Shorts Legging"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexCalcaLegging.html" class="quick-nav-item" data-tooltip="Calça Legging"><img
+                src="assets/ui-icons/icon-calca-legging.png" alt="Calça Legging"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexMoletom.html" class="quick-nav-item" data-tooltip="Moletom"><img
+                src="assets/ui-icons/icon-moletom.png" alt="Moletom"
+                style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexTop.html" class="quick-nav-item" data-tooltip="Top"><img src="assets/ui-icons/icon-top.png"
+                alt="Top" style="width:24px;height:24px;object-fit:contain;"></a>
+        <a href="IndexFaq.html" class="quick-nav-item" data-tooltip="Ajuda / FAQ"
+            style="background: #0066cc; font-weight: bold; font-family: sans-serif;">?</a>
+        <a href="index.html" class="quick-nav-item" data-tooltip="Início" style="background: #333;">🏠</a>
     </div>
 
     <header class="premium-header">
-        <div style="display:flex; align-items:center; gap:20px;">
-            <a href="index.html" style="text-decoration:none; transform: scale(1.5);">🏠</a>
-            <div class="header-title">HANUTHAI DASHBOARD</div>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <a href="index.html" style="text-decoration:none; font-size:1.5rem;">🏠</a>
+            <div class="header-title">HANUTHAI - GESTÃO DE PEDIDOS</div>
         </div>
     </header>
 
-    <nav class="main-tabs-nav">
-        <button class="main-tab-btn active" onclick="CartController.switchMainTab('tab-identification', this)">🏷️
-            Identificação</button>
-        <button class="main-tab-btn" onclick="CartController.switchMainTab('tab-simulations', this)">📦 Simulações
-            (Carrinho)</button>
-        <button class="main-tab-btn" onclick="CartController.switchMainTab('tab-production', this)">🏭 Resumo de
-            Produção</button>
-        <button class="main-tab-btn" onclick="CartController.switchMainTab('tab-financial', this)">💰
-            Financeiro</button>
-    </nav>
+    <div class="dashboard-container">
 
-    <main class="dashboard-body">
-        <!-- TAB: IDENTIFICATION -->
-        <section id="tab-identification" class="main-tab-content active">
-            <div class="section-header">
-                <h2>Dados do Pedido & Cliente</h2>
-                <p>Informações compartilhadas por todos os itens deste orçamento</p>
+        <div class="page-header">
+            <div>
+                <h1>Gestão de Pedidos</h1>
+                <p style="color:#888; margin-top:5px;">Agrupamento inteligente por cliente e simulação</p>
             </div>
-
-            <div class="card-dark" style="border-left: 5px solid var(--gold);">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                    <div class="input-group">
-                        <label>Número do Pedido (Ref. Geral)</label>
-                        <input type="text" id="global-order-id" class="input-modern" placeholder="Ex: HNT-2024-001"
-                            style="color: var(--gold); font-family: 'Bebas Neue'; font-size: 1.4rem;">
-                    </div>
-                    <div class="input-group">
-                        <label>Nome do Cliente / Empresa</label>
-                        <input type="text" id="global-client-name" class="input-modern"
-                            placeholder="Digite o nome completo...">
-                    </div>
-                    <div class="input-group">
-                        <label>Telefone / WhatsApp</label>
-                        <input type="text" id="global-client-phone" class="input-modern" placeholder="(00) 00000-0000">
-                    </div>
-                </div>
-                <div style="margin-top: 15px; text-align: right;">
-                    <button class="btn btn-primary" onclick="applyGlobalInfo()"
-                        style="padding: 10px 20px; background: var(--gold); color: #000; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">✅
-                        Aplicar a Todos os Itens</button>
-                </div>
+            <div class="actions">
+                <button id="btn-clear-all" class="btn btn-outline" style="margin-right: 10px;">🗑️ Limpar Tudo</button>
+                <button id="btn-export-db" class="btn btn-primary"
+                    onclick="if(typeof DatabaseManager !== 'undefined') DatabaseManager.exportToExcel(); else alert('Erro: DatabaseManager não carregado.');"
+                    style="background:#28a745; margin-right: 10px;">📊 Baixar Banco de Dados (Excel)</button>
+                <button id="btn-export-all" class="btn btn-primary">📤 Exportar Planilha de Produção</button>
             </div>
+        </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Modelos Distintos</div>
-                    <div class="stat-value" id="st-count">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Quantidade de Peças</div>
-                    <div class="stat-value" id="st-pieces">0</div>
-                </div>
-                <div class="stat-card gold">
-                    <div class="stat-label">Valor Total Estimado</div>
-                    <div class="stat-value" id="st-total">R$ 0,00</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB: SIMULATIONS (THE CART) -->
-        <section id="tab-simulations" class="main-tab-content">
-            <div class="section-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <!-- NEW: Global Order Header (Editable if needed, or summary) -->
+        <div class="order-global-info"
+            style="background: #222; border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 30px; border-left: 5px solid var(--gold);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 20px; align-items: flex-end;">
                 <div>
-                    <h2>Itens Customizados</h2>
-                    <p>Ficha técnica e personalizações detalhadas por modelo</p>
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Número
+                        do Pedido (Geral)</label>
+                    <input type="text" id="global-order-id" placeholder="Ex: PED-2024-001"
+                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: var(--gold); font-size: 1.2rem; font-weight: bold; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px;">
                 </div>
-                <div class="suppressed-actions" style="display:none">
-                    <!-- BOTÕES SUPRIMIDOS A PEDIDO DO USUÁRIO. REMOVER SE NÃO USAR POSTERIORMENTE -->
-                    <button id="btn-clear-all" class="btn btn-outline" onclick="clearAll()">🗑️ Limpar Tudo</button>
-                    <button id="btn-export-all" class="btn btn-primary" onclick="exportExcel()">📤 Exportar</button>
+                <div>
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Nome
+                        do Cliente / Empresa</label>
+                    <input type="text" id="global-client-name" placeholder="Nome para o cliente..."
+                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: #fff; font-size: 1rem;">
+                </div>
+                <div>
+                    <label
+                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Telefone
+                        / WhatsApp</label>
+                    <input type="text" id="global-client-phone" placeholder="(00) 00000-0000"
+                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: #fff; font-size: 1rem;">
+                </div>
+                <div>
+                    <button class="btn btn-primary" style="height: 46px;" onclick="applyGlobalInfo()">✅ Aplicar aos
+                        Itens</button>
                 </div>
             </div>
+        </div>
 
-            <div id="orders-list">
-                <!-- JS RENDERS CARDS OVER THIS -->
-                <div class="empty-state">
-                    <h2>Nenhum item adicionado</h2>
-                    <p>Você precisa finalizar uma simulação para que ela apareça aqui.</p>
-                </div>
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">Itens no Carrinho</div>
+                <div class="stat-value" id="st-count">0</div>
             </div>
-        </section>
+            <div class="stat-card">
+                <div class="stat-label">Quantidade de Peças</div>
+                <div class="stat-value" id="st-pieces">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Valor Total Estimado</div>
+                <div class="stat-value gold" id="st-total">R$ 0,00</div>
+            </div>
+        </div>
 
-        <!-- TAB: PRODUCTION SUMMARY -->
-        <section id="tab-production" class="main-tab-content">
-            <div class="section-header">
-                <h2>Resumo de Produção</h2>
-                <p>Consolidado quantitativo para confecção</p>
+        <div id="orders-list">
+            <!-- JS RENDERS CARDS HERE -->
+            <div class="empty-state">
+                <h2>Seu carrinho está vazio</h2>
+                <p>Nenhuma simulação encontrada.</p>
+                <br>
+                <a href="IndexFightShorts.html" class="btn btn-primary">Ir para Simulador</a>
             </div>
-            <div id="production-summary-container"></div>
-        </section>
+        </div>
 
-        <!-- TAB: FINANCIAL -->
-        <section id="tab-financial" class="main-tab-content">
-            <div class="section-header">
-                <h2>Resumo Financeiro</h2>
-                <p>Detalhamento de custos totais e descontos aplicados</p>
-            </div>
-            <div id="financial-summary-container"></div>
-        </section>
-    </main>
+    </div>
 
     <!-- SheetJS -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
