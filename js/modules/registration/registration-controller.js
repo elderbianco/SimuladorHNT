@@ -114,7 +114,7 @@ const RegistrationController = {
         }
     },
 
-    handleSubmit: async function(e) {
+    handleSubmit: async function (e) {
         e.preventDefault();
 
         const docField = document.getElementById('document');
@@ -146,30 +146,30 @@ const RegistrationController = {
             updatedAt: new Date().toISOString()
         }));
 
-        // 2. Sincronizar com Banco de Dados Supabase (NT_CUSTOMERS)
+        // 2. Sincronizar com Banco de Dados Supabase (Tabela: clientes_cadastrados)
         if (typeof supabase !== 'undefined') {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 const userId = session?.user?.id || null;
 
                 const { error } = await supabase
-                    .from('hnt_customers')
+                    .from('clientes_cadastrados')
                     .upsert({
                         auth_user_id: userId,
                         email: userData.email,
-                        full_name: userData.name,
-                        document: userData.document,
-                        zipcode: userData.zipcode,
-                        address: userData.address,
-                        number: userData.number,
-                        complement: userData.complement,
-                        neighborhood: userData.neighborhood,
-                        city: userData.city,
-                        state: userData.state,
+                        nome_completo: userData.name,
+                        documento_cpf_cnpj: userData.document,
+                        cep: userData.zipcode,
+                        endereco: userData.address,
+                        numero: userData.number,
+                        complemento: userData.complement,
+                        bairro: userData.neighborhood,
+                        cidade: userData.city,
+                        estado_uf: userData.state,
                         whatsapp: userData.whatsapp,
-                        marketing_consent: userData.marketing,
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'document' });
+                        consentimento_marketing: userData.marketing,
+                        atualizado_em: new Date().toISOString()
+                    }, { onConflict: 'documento_cpf_cnpj' });
 
                 if (error) {
                     console.error('Erro ao sincronizar com Supabase:', error);
