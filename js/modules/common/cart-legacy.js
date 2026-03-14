@@ -13,6 +13,22 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadCart() {
+    const profileRaw = localStorage.getItem('hnt_customer_profile');
+    const linkCadastro = document.getElementById('link-cadastro');
+    if (linkCadastro) {
+        if (profileRaw) {
+            const profile = JSON.parse(profileRaw);
+            const firstName = profile.name ? profile.name.split(' ')[0] : 'Cliente';
+            linkCadastro.innerHTML = `👤 Meus Dados (${firstName})`;
+            linkCadastro.style.borderColor = '#D4AF37';
+            linkCadastro.style.color = '#D4AF37';
+        } else {
+            linkCadastro.innerHTML = `⚠️ Completar Cadastro`;
+            linkCadastro.style.borderColor = '#ff6b6b';
+            linkCadastro.style.color = '#ff6b6b';
+        }
+    }
+
     const raw = localStorage.getItem(STORAGE_KEY);
     const history = raw ? JSON.parse(raw) : [];
 
