@@ -311,49 +311,74 @@ class BaseSimulator {
                 }
                 const tState = this.state.texts[relatedText.id];
                 const textEditor = window.UIComponents.createTextEditor({
-                    zoneId: relatedText.id,
-                    zoneName: relatedText.name,
-                    parentZoneId: u.id,
-                    textObject: tState,
-                    price: (typeof window.getZonePrice === 'function') ? window.getZonePrice(u.id, 'text') : 0,
+                    zone: relatedText,
+                    textState: tState,
+                    config: this.state.config || window.CONFIG || {},
                     fonts: window.CONFIG?.fonts || window.DATA?.fonts || [],
                     colors: window.DATA?.colors || [],
-                    onUpdate: (field, val) => {
-                        tState[field] = val;
-                        if (field === 'enabled' && val && this.state.zoneLimits) this.state.zoneLimits[u.id] = true;
+                    callbacks: {
+                        onToggle: (zid, val) => {
+                            tState.enabled = val;
+                            if (val \u0026\u0026 this.state.zoneLimits) this.state.zoneLimits[u.id] = true;
+                if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                this.onStateUpdate();
+            },
+            onTextChange: (zid, val) => {
+                tState.content = val;
+                if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                this.saveState();
+            },
+                onLinesChange: (zid, val) => {
+                    tState.maxLines = val;
+                    if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                    this.saveState();
+                },
+                    onFontChange: (zid, val) => {
+                        tState.fontFamily = val;
                         if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
-                        this.onStateUpdate();
-                    }
+                        this.saveState();
+                    },
+                        onColorChange: (zid, val) => {
+                            tState.color = val;
+                            if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                            this.saveState();
+                        },
+                            onScaleChange: (zid, val) => {
+                                tState.scale = val;
+                                if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                                this.saveState();
+                            }
+        }
                 });
                 zoneDiv.appendChild(textEditor);
-            }
+}
 
-            container.appendChild(zoneDiv);
+container.appendChild(zoneDiv);
         });
     }
 
-    getCustomSections() { return []; }
+getCustomSections() { return []; }
 
-    onStateUpdate() {
-        if (typeof window.updateVisuals === 'function') window.updateVisuals();
-        if (typeof window.updatePrice === 'function') window.updatePrice();
-        this.saveState();
-        this.render();
-    }
+onStateUpdate() {
+    if (typeof window.updateVisuals === 'function') window.updateVisuals();
+    if (typeof window.updatePrice === 'function') window.updatePrice();
+    this.saveState();
+    this.render();
+}
 
     async handleAddToCart() {
-        if (!this.state.termsAccepted) {
-            alert("⚠️ Aceite os Termos para continuar.");
-            return;
-        }
-        if (typeof window.saveOrderToHistory === 'function') {
-            if (window.saveOrderToHistory()) {
-                if (confirm('✅ Adicionado ao carrinho! Ir para pedidos?')) window.location.href = 'IndexPedidoSimulador.html';
-            }
+    if (!this.state.termsAccepted) {
+        alert("⚠️ Aceite os Termos para continuar.");
+        return;
+    }
+    if (typeof window.saveOrderToHistory === 'function') {
+        if (window.saveOrderToHistory()) {
+            if (confirm('✅ Adicionado ao carrinho! Ir para pedidos?')) window.location.href = 'IndexPedidoSimulador.html';
         }
     }
+}
 
-    setupEventListeners() { }
+setupEventListeners() { }
 }
 
 window.BaseSimulator = BaseSimulator;
