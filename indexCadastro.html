@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Cliente - Hanuthai</title>
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=Bebas+Neue&family=Russo+One&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --gold-glow: rgba(212, 175, 55, 0.2);
+            --dark-bg: #000;
+            --card-bg: #0a0a0a;
+            --input-bg: #111;
+            --border: #222;
+            --text-muted: #666;
+            --accent-blue: #00b4d8;
+            --radius: 12px;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- HEADER --- */
+        .premium-header {
+            width: 100%;
+            background: #000;
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 2px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-title {
+            color: var(--gold);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        /* --- FORM CONTAINER --- */
+        .form-container {
+            max-width: 800px;
+            width: 90%;
+            margin: 40px auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #222;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            color: var(--gold);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- INPUTS --- */
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+            background: #151515;
+        }
+
+        .input-field::placeholder {
+            color: #444;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* --- SELECTS --- */
+        select.input-field {
+            appearance: none;
+            cursor: pointer;
+        }
+
+        /* --- CHECKBOXES --- */
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-field {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--gold);
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .checkbox-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            line-height: 1.4;
+        }
+
+        .checkbox-label a {
+            color: var(--gold);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: 0.2s;
+        }
+
+        .checkbox-label a:hover {
+            border-bottom-color: var(--gold);
+        }
+
+        /* --- BUTTONS --- */
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 25px;
+                margin: 20px auto;
+            }
+
+            .input-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .header-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Mobile Adjustments for Small Screens */
+        @media (max-width: 480px) {
+            .btn-submit {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="premium-header">
+        <div class="header-title">HANUTHAI - CADASTRO DE CLIENTE</div>
+    </header>
+
+    <div class="form-container">
+        <form id="cadastro-form">
+
+            <!-- SEÇÃO 1: PRIVACIDADE -->
+            <div class="form-section">
+                <div class="section-title">🛡️ Termos e Privacidade</div>
+
+                <div class="input-group">
+                    <label class="input-label" for="email">E-mail para Contato</label>
+                    <input type="email" id="email" class="input-field" placeholder="seuemail@exemplo.com" required>
+                </div>
+
+                <label class="checkbox-group">
+                    <input type="checkbox" id="privacy-policy" class="checkbox-field" required>
+                    <span class="checkbox-label">
+                        Declaro que li, compreendi e concordo integralmente com os termos da
+                        <a href="https://docs.google.com/document/d/18MZF45XqKZ3UTCVJVQcWGWUBiB1XHMpgOYdyVA_cZoQ/edit?usp=sharing"
+                            target="_blank">Política de Privacidade</a>.
+                    </span>
+                </label>
+            </div>
+
+            <!-- SEÇÃO 2: DADOS PESSOAIS -->
+            <div class="form-section">
+                <div class="section-title">👤 Identificação</div>
+
+                <div class="input-group">
+                    <label class="input-label" for="full-name">Nome Completo</label>
+                    <input type="text" id="full-name" class="input-field" placeholder="Insira seu nome completo"
+                        required>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label" for="document">CPF ou CNPJ (apenas números)</label>
+                    <input type="text" id="document" class="input-field" placeholder="00000000000" maxlength="14"
+                        required>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 3: ENDEREÇO -->
+            <div class="form-section">
+                <div class="section-title">📍 Endereço de Entrega</div>
+
+                <div class="input-row">
+                    <div class="input-group" style="grid-column: span 2;">
+                        <label class="input-label" for="address">Logradouro</label>
+                        <input type="text" id="address" class="input-field" placeholder="Rua, Avenida, etc." required>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label class="input-label" for="number">Número</label>
+                        <input type="text" id="number" class="input-field" placeholder="123" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="complement">Complemento</label>
+                        <input type="text" id="complement" class="input-field" placeholder="Casa, Apto, etc.">
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label class="input-group">
+                            <span class="input-label" for="neighborhood">Bairro</span>
+                            <input type="text" id="neighborhood" class="input-field" placeholder="Bairro" required>
+                        </label>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="zipcode">CEP</label>
+                        <input type="text" id="zipcode" class="input-field" placeholder="00000000" maxlength="8"
+                            required>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label class="input-label" for="city">Cidade</label>
+                        <input type="text" id="city" class="input-field" placeholder="Sua cidade" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="state">Estado (UF)</label>
+                        <select id="state" class="input-field" required>
+                            <option value="" disabled selected>Selecione...</option>
+                            <option value="AC">Acre</option>
+                            <option value="AL">Alagoas</option>
+                            <option value="AP">Amapá</option>
+                            <option value="AM">Amazonas</option>
+                            <option value="BA">Bahia</option>
+                            <option value="CE">Ceará</option>
+                            <option value="DF">Distrito Federal</option>
+                            <option value="ES">Espírito Santo</option>
+                            <option value="GO">Goiás</option>
+                            <option value="MA">Maranhão</option>
+                            <option value="MT">Mato Grosso</option>
+                            <option value="MS">Mato Grosso do Sul</option>
+                            <option value="MG">Minas Gerais</option>
+                            <option value="PA">Pará</option>
+                            <option value="PB">Paraíba</option>
+                            <option value="PR">Paraná</option>
+                            <option value="PE">Pernambuco</option>
+                            <option value="PI">Piauí</option>
+                            <option value="RJ">Rio de Janeiro</option>
+                            <option value="RN">Rio Grande do Norte</option>
+                            <option value="RS">Rio Grande do Sul</option>
+                            <option value="RO">Rondônia</option>
+                            <option value="RR">Roraima</option>
+                            <option value="SC">Santa Catarina</option>
+                            <option value="SP">São Paulo</option>
+                            <option value="SE">Sergipe</option>
+                            <option value="TO">Tocantins</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 4: CONTATO -->
+            <div class="form-section">
+                <div class="section-title">📱 Contato Final</div>
+
+                <div class="input-group">
+                    <label class="input-label" for="whatsapp">WhatsApp (DDD + Número)</label>
+                    <input type="text" id="whatsapp" class="input-field" placeholder="00912345678" maxlength="11"
+                        required>
+                </div>
+
+                <label class="checkbox-group">
+                    <input type="checkbox" id="marketing" class="checkbox-field">
+                    <span class="checkbox-label">Concordo em receber informações sobre produtos e promoções através dos
+                        canais informados.</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-submit">🚀 SALVAR E IR PARA O CARRINHO</button>
+        </form>
+    </div>
+
+    <!-- Scripts de Máscara e Lógica -->
+    <script src="https://unpkg.com/imask"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Máscaras de Input
+            IMask(document.getElementById('document'), {
+                mask: [
+                    { mask: '000.000.000-00', type: 'CPF' },
+                    { mask: '00.000.000/0000-00', type: 'CNPJ' }
+                ]
+            });
+
+            IMask(document.getElementById('zipcode'), {
+                mask: '00000-000'
+            });
+
+            IMask(document.getElementById('whatsapp'), {
+                mask: '(00) 00000-0000'
+            });
+
+            // Lógica de Submissão
+            const form = document.getElementById('cadastro-form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                // Coleta de dados
+                const userData = {
+                    email: document.getElementById('email').value,
+                    name: document.getElementById('full-name').value,
+                    document: document.getElementById('document').value.replace(/\D/g, ''),
+                    address: document.getElementById('address').value,
+                    number: document.getElementById('number').value,
+                    complement: document.getElementById('complement').value,
+                    neighborhood: document.getElementById('neighborhood').value,
+                    zipcode: document.getElementById('zipcode').value.replace(/\D/g, ''),
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    whatsapp: document.getElementById('whatsapp').value.replace(/\D/g, ''),
+                    marketing: document.getElementById('marketing').checked,
+                    updatedAt: new Date().toISOString()
+                };
+
+                // Armazenamento Local (Sincronizado com o Carrinho)
+                localStorage.setItem('hnt_customer_profile', JSON.stringify(userData));
+
+                alert('Cadastro realizado com sucesso! Redirecionando...');
+
+                // Redireciona para o Carrinho
+                window.location.href = 'IndexPedidoSimulador.html';
+            });
+        });
+    </script>
+</body>
+
+</html>
