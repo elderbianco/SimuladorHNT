@@ -161,12 +161,13 @@
             grid-template-columns: 80px 2fr 1fr 1fr 100px 50px;
             gap: 20px;
             align-items: center;
-            background: #2a2a2a;
+            background: #111;
             cursor: pointer;
+            border-bottom: 1px solid #222;
         }
 
         .card-header:hover {
-            background: #303030;
+            background: #181818;
         }
 
         .thumb-placeholder {
@@ -205,8 +206,7 @@
         /* Card Details (Tabs) */
         .card-details {
             display: none;
-            border-top: 1px solid #333;
-            background: #1f1f1f;
+            background: #080808;
         }
 
         .expanded .card-details {
@@ -216,29 +216,33 @@
         /* Tabs Navigation */
         .tabs-nav {
             display: flex;
-            border-bottom: 1px solid #333;
-            background: #222;
+            border-bottom: 1px solid #222;
+            background: #111;
         }
 
         .tab-btn {
             padding: 12px 20px;
             background: transparent;
             border: none;
-            color: #888;
+            color: #555;
             cursor: pointer;
             font-weight: 500;
-            border-right: 1px solid #333;
+            border-right: 1px solid #222;
             transition: 0.2s;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .tab-btn:hover {
             color: #fff;
-            background: #2a2a2a;
+            background: #1a1a1a;
         }
 
         .tab-btn.active {
             color: var(--gold);
-            background: #1f1f1f;
+            background: #080808;
             border-bottom: 2px solid var(--gold);
         }
 
@@ -263,9 +267,11 @@
         }
 
         .info-label {
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 3px;
+            font-size: 0.75rem;
+            color: #555;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .info-val {

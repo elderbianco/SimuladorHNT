@@ -12,16 +12,20 @@ window.CartUI = {
     createGroupCard: function (group) {
         const div = document.createElement('div');
         div.className = 'order-card';
-        div.style.borderLeft = "5px solid var(--gold)";
+        div.style.borderLeft = "4px solid var(--gold)";
         div.style.marginBottom = "30px";
+        div.style.background = "var(--card-bg)";
+        div.style.borderRadius = "12px";
+        div.style.overflow = "hidden";
+        div.style.boxShadow = "0 8px 30px rgba(0,0,0,0.4)";
 
         const isGeneric = group.clientName.toLowerCase() === 'cliente';
         const groupIndices = JSON.stringify(group.items.map(i => i._index));
 
         // Header for the Group
         div.innerHTML = `
-            <div class="card-header" style="background: #222; padding: 25px; cursor: default;">
-                <div style="font-size:1.8rem; cursor:pointer;" onclick="CartUI.toggleCard(this.parentElement)">📦</div>
+            <div class="card-header master-header" style="background: #111; padding: 25px; cursor: default; border-bottom: 1px solid #222;">
+                <div style="font-size:1.8rem; cursor:pointer; opacity: 0.8;" onclick="CartUI.toggleCard(this.parentElement)">📦</div>
                 
                 <div style="flex: 2; cursor:pointer;" onclick="CartUI.toggleCard(this.parentElement)">
                     <div style="font-size: 1.4rem; font-weight: bold; color:${isGeneric ? '#888' : 'var(--gold)'}">${group.clientName}</div>
@@ -50,9 +54,9 @@ window.CartUI = {
                 </div>
             </div>
     
-            <div class="card-details" style="display:block; padding:0; border-top: 1px solid #333;">
+            <div class="card-details" style="display:block; padding:0; background: transparent;">
                  <!-- ITEMS LIST (V1 Style Sub-cards) -->
-                 <div class="sub-items-container" style="background: #111; padding: 20px;">
+                 <div class="sub-items-container" style="background: #080808; padding: 20px;">
                     ${group.items.map(item => this.renderSubItemV1Style(item)).join('')}
                  </div>
             </div>
@@ -78,9 +82,9 @@ window.CartUI = {
         const client = order.client_info || {};
 
         return `
-        <div class="sub-item-rich" style="background: #252525; border: 1px solid #333; border-radius: 8px; margin-bottom: 20px; overflow: hidden;">
+        <div class="sub-item-rich" style="background: #151515; border: 1px solid #222; border-radius: 12px; margin-bottom: 20px; overflow: hidden; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
             <!-- Sub Header -->
-            <div class="card-header" onclick="CartUI.toggleSubTabs('${uid}')" style="background: #2a2a2a; padding: 15px 20px; border-bottom: 1px solid #333; cursor:pointer; display:flex; align-items:center;">
+            <div class="card-header sub-header" onclick="CartUI.toggleSubTabs('${uid}')" style="background: #1c1c1c; padding: 15px 20px; border-bottom: 1px solid #222; cursor:pointer; display:flex; align-items:center;">
                  <div class="product-icon-container" style="width: 50px; height: 50px; flex-shrink:0; background: #333; border-radius: 8px; display:flex; align-items:center; justify-content:center; border: 1px solid #444;">
                     ${this.getProductIconElement(item, order)}
                  </div>
