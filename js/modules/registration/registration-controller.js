@@ -3,9 +3,12 @@
  * Orchestrates form behavior, masks, and submission
  */
 const RegistrationController = {
+    privacyAccepted: false,
+
     init: async function () {
         this.setupMasks();
         this.bindEvents();
+        this.checkPrivacyStatus();
         await this.checkExistingSession();
     },
 
@@ -49,7 +52,7 @@ const RegistrationController = {
 
             if (!isValid && docField.value.length > 0) {
                 errorEl.style.display = 'block';
-                docField.style.borderColor = '#ff4d4d';
+                docField.style.borderColor = 'var(--danger)';
             } else {
                 errorEl.style.display = 'none';
                 docField.style.borderColor = '';
@@ -65,6 +68,22 @@ const RegistrationController = {
         form.addEventListener('submit', (e) => this.handleSubmit(e));
     },
 
+    checkPrivacyStatus: function () {
+        const accepted = localStorage.getItem('hnt_privacy_accepted');
+        if (!accepted) {
+            const modal = document.getElementById('privacy-modal');
+            if (modal) modal.style.display = 'flex';
+        } else {
+            this.privacyAccepted = true;
+        }
+    },
+
+    acceptPrivacy: function () {
+        localStorage.setItem('hnt_privacy_accepted', 'true');
+        this.privacyAccepted = true;
+        document.getElementById('privacy-modal').style.display = 'none';
+    },
+
     checkExistingSession: async function () {
         if (typeof supabase === 'undefined') return;
 
@@ -72,9 +91,27 @@ const RegistrationController = {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
                 const user = session.user;
-                document.getElementById('email').value = user.email || '';
-                document.getElementById('full-name').value = user.user_metadata?.full_name || '';
-                document.getElementById('email').readOnly = true;
+                const emailField = document.getElementById('email');
+                const nameField = document.getElementById('full-name');
+
+                if (emailField) {
+                    emailField.value = user.email || '';
+                    emailField.classList.add('read-only-field');
+                    emailField.readOnly = true;
+                }
+
+                if (nameField && !nameField.value) {
+                    nameField.value = user.user_metadata?.full_name || '';
+                }
+
+                // If logged in, help the user realize they are identified
+                const googleBtn = document.getElementById('btn-google-login');
+                if (googleBtn) {
+                    googleBtn.innerHTML = `✅ CONECTADO COMO: ${user.email.toUpperCase()}`;
+                    googleBtn.style.borderColor = 'var(--gold)';
+                    googleBtn.style.color = 'var(--gold)';
+                    googleBtn.disabled = true;
+                }
             }
         } catch (e) {
             console.warn('Supabase session check skipped or failed', e);
@@ -96,35 +133,32 @@ const RegistrationController = {
             document.getElementById('state').value = data.state;
 
             // Bloquear campos de endereço após preenchimento automático
-            document.getElementById('address').readOnly = true;
-            document.getElementById('neighborhood').readOnly = true;
-            document.getElementById('city').readOnly = true;
-            document.getElementById('state').readOnly = true;
+            document.getElementById('address').classList.add('read-only-field');
+            document.getElementById('neighborhood').classList.add('read-only-field');
+            document.getElementById('city').classList.add('read-only-field');
+            document.getElementById('state').classList.add('read-only-field');
 
             field.style.borderColor = 'var(--gold)';
             document.getElementById('number').focus();
         } else if (data && data.error) {
             alert(data.error);
-            field.style.borderColor = '#ff4d4d';
-            // Se houver erro, limpar e desbloquear os campos
+            field.style.borderColor = 'var(--danger)';
             this.clearAddress();
         }
     },
 
     clearAddress: function () {
-        document.getElementById('zipcode').value = '';
-        document.getElementById('address').value = '';
-        document.getElementById('neighborhood').value = '';
-        document.getElementById('city').value = '';
-        document.getElementById('state').value = '';
-        document.getElementById('number').value = '';
-        document.getElementById('complement').value = '';
-
-        // Desbloquear campos de endereço
-        document.getElementById('address').readOnly = false;
-        document.getElementById('neighborhood').readOnly = false;
-        document.getElementById('city').readOnly = false;
-        document.getElementById('state').readOnly = false;
+        const fields = ['zipcode', 'address', 'neighborhood', 'city', 'state', 'number', 'complement'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = '';
+                el.classList.remove('read-only-field');
+                if (id !== 'address' && id !== 'neighborhood' && id !== 'city' && id !== 'state') {
+                    el.readOnly = false;
+                }
+            }
+        });
 
         document.getElementById('zipcode').focus();
         this.masks.zipcode.updateValue();
@@ -149,6 +183,11 @@ const RegistrationController = {
 
     handleSubmit: async function (e) {
         e.preventDefault();
+
+        if (!this.privacyAccepted) {
+            document.getElementById('privacy-modal').style.display = 'flex';
+            return;
+        }
 
         const docField = document.getElementById('document');
         const docVal = docField.value;
@@ -197,32 +236,27 @@ const RegistrationController = {
                 const { error } = await supabase
                     .from('clientes_cadastrados')
                     .upsert({
-                        // Ordem idêntica à fornecida no Excel:
-                        numero_pedido: null,             // 1 (Vazio no cadastro)
-                        nome_comprador: userData.name,   // 2
-                        data_pedido: hoje,               // 3 (Data do Cadastro)
-                        cpf_cnpj_comprador: userData.document, // 4
-                        endereco_comprador: userData.address,  // 5
-                        bairro_comprador: userData.neighborhood, // 6
-                        numero_comprador: userData.number,      // 7
-                        complemento_comprador: userData.complement, // 8
-                        cep_comprador: userData.zipcode,         // 9
-                        cidade_comprador: userData.city,         // 10
-                        uf_comprador: userData.state || 'SC',    // 11
-                        telefone_comprador: userData.phone || userData.whatsapp, // 12
-                        celular_comprador: userData.whatsapp,    // 13
-                        email_comprador: userData.email,         // 14
-
-                        // Campos extras técnicos
+                        numero_pedido: null,
+                        nome_comprador: userData.name,
+                        data_pedido: hoje,
+                        cpf_cnpj_comprador: userData.document,
+                        endereco_comprador: userData.address,
+                        bairro_comprador: userData.neighborhood,
+                        numero_comprador: userData.number,
+                        complemento_comprador: userData.complement,
+                        cep_comprador: userData.zipcode,
+                        cidade_comprador: userData.city,
+                        uf_comprador: userData.state || 'SC',
+                        telefone_comprador: userData.phone || userData.whatsapp,
+                        celular_comprador: userData.whatsapp,
+                        email_comprador: userData.email,
                         auth_user_id: userId,
                         id_cliente: userData.clientId,
                         consentimento_marketing: userData.marketing,
                         atualizado_em: new Date().toISOString()
                     }, { onConflict: 'cpf_cnpj_comprador' });
 
-                if (error) {
-                    console.error('Erro ao sincronizar com Supabase:', error);
-                }
+                if (error) console.error('Erro ao sincronizar com Supabase:', error);
             } catch (err) {
                 console.error('Falha na persistência remota:', err);
             }
