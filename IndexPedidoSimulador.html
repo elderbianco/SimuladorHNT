@@ -220,6 +220,55 @@
             font-family: 'Outfit', sans-serif;
         }
 
+        /* Form Controls */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .input-modern {
+            width: 100%;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: 0.3s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .input-modern:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .card-header {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 80px 2fr 1fr 1fr 100px 50px;
+            gap: 20px;
+            align-items: center;
+            background: #2a2a2a;
+            cursor: pointer;
+        }
+
+        .expanded .card-details {
+            display: block;
+        }
+
+        .suppressed-actions {
+            display: none;
+        }
+
         /* Buttons */
         .btn {
             padding: 12px 25px;
