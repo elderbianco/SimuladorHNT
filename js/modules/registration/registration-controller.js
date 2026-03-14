@@ -164,8 +164,9 @@ const RegistrationController = {
                         complemento_comprador: userData.complement,
                         cep_comprador: userData.zipcode,
                         cidade_comprador: userData.city,
-                        uf_comprador: userData.state,
-                        celular_comprador: userData.whatsapp,
+                        uf_comprador: userData.state, // Captura o valor do SELECT (agora SC por padrão)
+                        telefone_comprador: userData.whatsapp, // Mapeado para Telefone
+                        celular_comprador: userData.whatsapp,  // Mapeado para Celular (Bling exige ambos ou um)
                         email_comprador: userData.email,
                         consentimento_marketing: userData.marketing,
                         atualizado_em: new Date().toISOString()
