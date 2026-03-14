@@ -457,6 +457,11 @@
                 display: none;
             }
         }
+
+        /* Suprime ações de exportação/limpeza conforme solicitado */
+        .suppressed-actions {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -497,7 +502,8 @@
                 <h1>Gestão de Pedidos</h1>
                 <p style="color:#888; margin-top:5px;">Agrupamento inteligente por cliente e simulação</p>
             </div>
-            <div class="actions">
+            <div class="actions suppressed-actions">
+                <!-- BOTÕES SUPRIMIDOS A PEDIDO DO USUÁRIO -->
                 <button id="btn-clear-all" class="btn btn-outline" style="margin-right: 10px;">🗑️ Limpar Tudo</button>
                 <button id="btn-export-db" class="btn btn-primary"
                     onclick="if(typeof DatabaseManager !== 'undefined') DatabaseManager.exportToExcel(); else alert('Erro: DatabaseManager não carregado.');"
