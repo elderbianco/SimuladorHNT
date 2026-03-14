@@ -723,63 +723,58 @@
         <a href="index.html" class="quick-nav-item" data-tooltip="Início" style="background: #333;">🏠</a>
     </div>
 
-    <header class="premium-header">
-        <div style="display:flex; align-items:center; gap:15px;">
-            <a href="index.html" style="text-decoration:none; font-size:1.5rem;">🏠</a>
-            <div class="header-title">HANUTHAI - GESTÃO DE PEDIDOS</div>
-        </div>
+    <header class="premium-header"
+        style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 15px 0; border-bottom: 2px solid var(--border); background: #000; position: sticky; top: 0; z-index: 1000;">
+        <img src="assets/Galeria/HanuthaiLogo/logohnttexte.png" alt="Hanuthai Logo" style="height: 40px; width: auto;">
+        <div class="header-title"
+            style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 2px;">
+            GESTÃO DE PEDIDOS</div>
+        <a href="index.html" style="text-decoration:none; font-size:1.5rem; position: absolute; left: 30px;">🏠</a>
     </header>
 
     <div class="dashboard-container">
 
-        <div class="page-header">
+        <div class="page-header" style="margin-bottom: 20px;">
             <div>
-                <h1>Gestão de Pedidos</h1>
-                <p style="color:#888; margin-top:5px;">Agrupamento inteligente por cliente e simulação</p>
-                <div style="margin-top: 10px;">
-                    <a href="indexCadastro.html?redirect=IndexPedidoSimulador.html" id="link-cadastro"
-                        class="btn btn-outline" style="text-decoration: none; font-size: 0.8rem; padding: 5px 10px;">👤
-                        Completar Cadastro</a>
-                </div>
+                <h1 style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: #fff;">Simulações no
+                    Carrinho</h1>
+                <p style="color:#888; margin-top:5px;">Revise seus itens antes de finalizar a produção.</p>
             </div>
-            <div class="actions suppressed-actions">
-                <!-- BOTÕES SUPRIMIDOS A PEDIDO DO USUÁRIO -->
-                <button id="btn-clear-all" class="btn btn-outline" style="margin-right: 10px;">🗑️ Limpar Tudo</button>
-                <button id="btn-export-db" class="btn btn-primary"
-                    onclick="if(typeof DatabaseManager !== 'undefined') DatabaseManager.exportToExcel(); else alert('Erro: DatabaseManager não carregado.');"
-                    style="background:#28a745; margin-right: 10px;">📊 Baixar Banco de Dados (Excel)</button>
-                <button id="btn-export-all" class="btn btn-primary">📤 Exportar Planilha de Produção</button>
+            <div style="display: flex; gap: 10px;">
+                <a href="indexCadastro.html?redirect=IndexPedidoSimulador.html" id="link-cadastro"
+                    class="btn btn-outline"
+                    style="text-decoration: none; font-size: 0.9rem; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--gold); color: var(--gold);">👤
+                    Meus Dados de Entrega</a>
+                <button id="btn-clear-all" class="btn btn-outline"
+                    style="font-size: 0.9rem; padding: 8px 15px; border-radius: 8px; border: 1px solid #444; color: #888;">🗑️
+                    Esvaziar Carrinho</button>
             </div>
         </div>
 
-        <!-- NEW: Global Order Header (Editable if needed, or summary) -->
+        <!-- Global Order Info Summary Card -->
         <div class="order-global-info"
-            style="background: #222; border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 30px; border-left: 5px solid var(--gold);">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 20px; align-items: flex-end;">
+            style="background: #111; border: 1px solid #222; border-radius: 12px; padding: 25px; margin-bottom: 30px; border-top: 2px solid var(--gold);">
+            <div style="display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 30px; align-items: flex-end;">
                 <div>
                     <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Número
-                        do Pedido (Geral)</label>
-                    <input type="text" id="global-order-id" placeholder="Ex: PED-2024-001"
-                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: var(--gold); font-size: 1.2rem; font-weight: bold; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px;">
+                        style="display: block; font-size: 0.7rem; color: #555; margin-bottom: 8px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Referência
+                        / Protocolo</label>
+                    <input type="text" id="global-order-id" placeholder="Automático..." readonly
+                        style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: var(--gold); font-size: 1.1rem; font-weight: bold; border-radius: 6px;">
                 </div>
                 <div>
                     <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Nome
-                        do Cliente / Empresa</label>
-                    <input type="text" id="global-client-name" placeholder="Nome para o cliente..."
-                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: #fff; font-size: 1rem;">
+                        style="display: block; font-size: 0.7rem; color: #555; margin-bottom: 8px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Nome
+                        Sincronizado</label>
+                    <input type="text" id="global-client-name" placeholder="Pendente de cadastro..." readonly
+                        style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; font-size: 1rem; border-radius: 6px;">
                 </div>
                 <div>
                     <label
-                        style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Telefone
-                        / WhatsApp</label>
-                    <input type="text" id="global-client-phone" placeholder="(00) 00000-0000"
-                        style="width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: #fff; font-size: 1rem;">
-                </div>
-                <div>
-                    <button class="btn btn-primary" style="height: 46px;" onclick="applyGlobalInfo()">✅ Aplicar aos
-                        Itens</button>
+                        style="display: block; font-size: 0.7rem; color: #555; margin-bottom: 8px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">WhatsApp
+                        de Contato</label>
+                    <input type="text" id="global-client-phone" placeholder="Pendente..." readonly
+                        style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; font-size: 1rem; border-radius: 6px;">
                 </div>
             </div>
         </div>
