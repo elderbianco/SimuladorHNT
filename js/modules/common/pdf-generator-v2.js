@@ -173,8 +173,13 @@ const PDFGenerator = {
 
                     let scale = Math.min(targetW / shortsImg.width, targetH / shortsImg.height); // Manter proporção
 
-                    // Aumentar agressivamente a escala
-                    scale = scale * 1.5;
+                    // Aumentar agressivamente a escala (Dinâmico por Produto)
+                    let extraScale = 1.6; // Padrão
+                    const prod = this.context.state?.productInitial;
+                    if (prod === 'TP' || prod === 'Top') {
+                        extraScale = 2.4; // Mega Zoom para o Top
+                    }
+                    scale = scale * extraScale;
 
                     // Limitar a largura do canvas
                     if (shortsImg.width * scale > finalCanvas.width * 0.95) {
@@ -190,7 +195,12 @@ const PDFGenerator = {
                     const drawH = shortsImg.height * scale;
 
                     const drawX = (finalCanvas.width - drawW) / 2;
-                    const drawY = ((finalCanvas.height - drawH) / 2) + 40; // Mover levemente para baixo no ring
+                    let drawY = ((finalCanvas.height - drawH) / 2) + 40;
+
+                    // Ajuste fino para o Top centralizar melhor no centro do ring
+                    if (prod === 'TP' || prod === 'Top') {
+                        drawY = ((finalCanvas.height - drawH) / 2) + 20;
+                    }
 
                     ctx.drawImage(shortsImg, drawX, drawY, drawW, drawH);
                 }
@@ -233,8 +243,13 @@ const PDFGenerator = {
                 const padding = 20;
                 let scale = Math.min((1600 - padding * 2) / rect.width, (1200 - padding * 2) / rect.height);
 
-                // Ampliando agressivamente o scale manual
-                scale = scale * 1.5;
+                // Ampliando agressivamente o scale manual (Dinâmico por Produto)
+                let extraScale = 1.6;
+                const prod = this.context.state?.productInitial;
+                if (prod === 'TP' || prod === 'Top') {
+                    extraScale = 2.4;
+                }
+                scale = scale * extraScale;
                 if (rect.width * scale > 1600 * 0.95) {
                     scale = (1600 * 0.95) / rect.width;
                 }
@@ -243,7 +258,11 @@ const PDFGenerator = {
                 }
 
                 const offsetX = (1600 - (rect.width * scale)) / 2;
-                const offsetY = ((1200 - (rect.height * scale)) / 2) + 40;
+                let offsetY = ((1200 - (rect.height * scale)) / 2) + 40;
+
+                if (prod === 'TP' || prod === 'Top') {
+                    offsetY = ((1200 - (rect.height * scale)) / 2) + 20;
+                }
 
                 const loadImage = (src) => new Promise((res) => {
                     const img = new Image();
