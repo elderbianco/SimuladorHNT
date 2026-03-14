@@ -95,12 +95,39 @@ const RegistrationController = {
             document.getElementById('city').value = data.city;
             document.getElementById('state').value = data.state;
 
+            // Bloquear campos de endereço após preenchimento automático
+            document.getElementById('address').readOnly = true;
+            document.getElementById('neighborhood').readOnly = true;
+            document.getElementById('city').readOnly = true;
+            document.getElementById('state').readOnly = true;
+
             field.style.borderColor = 'var(--gold)';
             document.getElementById('number').focus();
         } else if (data && data.error) {
             alert(data.error);
             field.style.borderColor = '#ff4d4d';
+            // Se houver erro, limpar e desbloquear os campos
+            this.clearAddress();
         }
+    },
+
+    clearAddress: function () {
+        document.getElementById('zipcode').value = '';
+        document.getElementById('address').value = '';
+        document.getElementById('neighborhood').value = '';
+        document.getElementById('city').value = '';
+        document.getElementById('state').value = '';
+        document.getElementById('number').value = '';
+        document.getElementById('complement').value = '';
+
+        // Desbloquear campos de endereço
+        document.getElementById('address').readOnly = false;
+        document.getElementById('neighborhood').readOnly = false;
+        document.getElementById('city').readOnly = false;
+        document.getElementById('state').readOnly = false;
+
+        document.getElementById('zipcode').focus();
+        this.masks.zipcode.updateValue();
     },
 
     handleGoogleLogin: async function () {

@@ -347,14 +347,19 @@
 
                 <div class="input-group">
                     <label class="input-label" for="zipcode">CEP (Preenchimento Automático)</label>
-                    <input type="text" id="zipcode" class="input-field" placeholder="00000-000" maxlength="9" required
-                        style="border-left: 4px solid var(--accent-blue);">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="zipcode" class="input-field" placeholder="00000-000" maxlength="9"
+                            required>
+                        <button type="button" onclick="RegistrationController.clearAddress()"
+                            style="background: #333; color: #888; border: 1px solid #444; border-radius: 8px; padding: 0 15px; font-size: 0.7rem; cursor: pointer;">LIMPAR</button>
+                    </div>
                 </div>
 
                 <div class="input-row">
                     <div class="input-group" style="grid-column: span 2;">
                         <label class="input-label" for="address">Logradouro (Rua, Avenida, etc.)</label>
-                        <input type="text" id="address" class="input-field" placeholder="Aguardando CEP..." required>
+                        <input type="text" id="address" class="input-field" placeholder="Aguardando CEP..." required
+                            readonly style="background: rgba(255,255,255,0.05); color: #888; cursor: not-allowed;">
                     </div>
                 </div>
 
@@ -372,46 +377,20 @@
                 <div class="input-row">
                     <div class="input-group">
                         <label class="input-label" for="neighborhood">Bairro</label>
-                        <input type="text" id="neighborhood" class="input-field" placeholder="Bairro" required>
+                        <input type="text" id="neighborhood" class="input-field" placeholder="Bairro" required readonly
+                            style="background: rgba(255,255,255,0.05); color: #888; cursor: not-allowed;">
                     </div>
                     <div class="input-group">
                         <label class="input-label" for="city">Cidade</label>
-                        <input type="text" id="city" class="input-field" placeholder="Cidade" required>
+                        <input type="text" id="city" class="input-field" placeholder="Cidade" required readonly
+                            style="background: rgba(255,255,255,0.05); color: #888; cursor: not-allowed;">
                     </div>
                 </div>
 
                 <div class="input-group">
                     <label class="input-label" for="state">Estado (UF)</label>
-                    <select id="state" class="input-field" required>
-                        <option value="" disabled selected>Selecione...</option>
-                        <option value="AC">Acre</option>
-                        <option value="AL">Alagoas</option>
-                        <option value="AP">Amapá</option>
-                        <option value="AM">Amazonas</option>
-                        <option value="BA">Bahia</option>
-                        <option value="CE">Ceará</option>
-                        <option value="DF">Distrito Federal</option>
-                        <option value="ES">Espírito Santo</option>
-                        <option value="GO">Goiás</option>
-                        <option value="MA">Maranhão</option>
-                        <option value="MT">Mato Grosso</option>
-                        <option value="MS">Mato Grosso do Sul</option>
-                        <option value="MG">Minas Gerais</option>
-                        <option value="PA">Pará</option>
-                        <option value="PB">Paraíba</option>
-                        <option value="PR">Paraná</option>
-                        <option value="PE">Pernambuco</option>
-                        <option value="PI">Piauí</option>
-                        <option value="RJ">Rio de Janeiro</option>
-                        <option value="RN">Rio Grande do Norte</option>
-                        <option value="RS">Rio Grande do Sul</option>
-                        <option value="RO">Rondônia</option>
-                        <option value="RR">Roraima</option>
-                        <option value="SC" selected>Santa Catarina</option>
-                        <option value="SP">São Paulo</option>
-                        <option value="SE">Sergipe</option>
-                        <option value="TO">Tocantins</option>
-                    </select>
+                    <input type="text" id="state" class="input-field" placeholder="UF" required readonly
+                        style="background: rgba(255,255,255,0.05); color: #888; cursor: not-allowed;">
                 </div>
             </div>
 
