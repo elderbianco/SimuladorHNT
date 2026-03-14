@@ -102,9 +102,22 @@ function loadDashboard() {
                     : data.DADOS_TECNICOS_JSON;
 
                 // Reconstruct the 'item' structure expected by the rest of the logic and CartUI
+                const initialMap = {
+                    'SH': 'shorts',
+                    'TP': 'top',
+                    'LG': 'legging',
+                    'ML': 'moletom',
+                    'SL': 'shorts_legging',
+                    'CL': 'calca_legging'
+                };
+
+                const detectedType = technicalData.productInitial
+                    ? (initialMap[technicalData.productInitial] || "shorts")
+                    : (technicalData.simulator_type || "shorts");
+
                 data.item = {
-                    simulator_type: technicalData.productInitial ? "shorts" : (technicalData.simulator_type || "shorts"),
-                    model_name: technicalData.productInitial ? "Shorts " + technicalData.productInitial : (technicalData.model_name || "Simulação"),
+                    simulator_type: detectedType,
+                    model_name: technicalData.model_name || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "Simulação") : "Simulação"),
                     qty_total: technicalData.qty_total || data.QUANTIDADE || data.quantity || 1,
                     pricing: {
                         total_price: data.PRECO_FINAL || data.total_price || (technicalData.pricing ? technicalData.pricing.total_price : 0),
