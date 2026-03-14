@@ -158,7 +158,14 @@ const RegistrationController = {
             return;
         }
 
+        let storedClientId = localStorage.getItem('hnt_client_id');
+        if (!storedClientId) {
+            storedClientId = 'CLI_' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
+            localStorage.setItem('hnt_client_id', storedClientId);
+        }
+
         const userData = {
+            clientId: storedClientId,
             email: document.getElementById('email').value,
             name: document.getElementById('full-name').value,
             document: docVal.replace(/\D/g, ''),
@@ -208,6 +215,7 @@ const RegistrationController = {
 
                         // Campos extras técnicos
                         auth_user_id: userId,
+                        id_cliente: userData.clientId,
                         consentimento_marketing: userData.marketing,
                         atualizado_em: new Date().toISOString()
                     }, { onConflict: 'cpf_cnpj_comprador' });
@@ -221,6 +229,25 @@ const RegistrationController = {
         }
 
         alert('Cadastro realizado com sucesso!');
+
+        // Update cart if possible
+        let cartItems = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
+        let updatedCount = 0;
+        cartItems.forEach(item => {
+            if (!item.client_info || !item.client_info.name || item.client_info.name === 'Cliente' || item.client_info.document === userData.document) {
+                item.client_info = {
+                    name: userData.name,
+                    phone: userData.whatsapp || userData.phone,
+                    email: userData.email,
+                    document: userData.document,
+                    clientId: userData.clientId
+                };
+                updatedCount++;
+            }
+        });
+        if (updatedCount > 0) {
+            localStorage.setItem('hnt_all_orders_db', JSON.stringify(cartItems));
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         const redirect = urlParams.get('redirect') || 'IndexPedidoSimulador.html';
