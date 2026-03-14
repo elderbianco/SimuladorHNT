@@ -221,10 +221,57 @@
         }
 
         /* Mobile Adjustments for Small Screens */
-        @media (max-width: 480px) {
-            .btn-submit {
-                font-size: 1.3rem;
-            }
+        /* --- SOCIAL BUTTONS --- */
+        .btn-google {
+            width: 100%;
+            padding: 12px;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-google:hover {
+            background: #f1f1f1;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #444;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #222;
+        }
+
+        .divider:not(:empty)::before {
+            margin-right: 15px;
+        }
+
+        .divider:not(:empty)::after {
+            margin-left: 15px;
         }
     </style>
 </head>
@@ -236,6 +283,15 @@
     </header>
 
     <div class="form-container">
+        <!-- Google Login -->
+        <button id="btn-google-login" class="btn-google">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo"
+                style="width: 20px;">
+            CONTINUAR COM O GOOGLE
+        </button>
+
+        <div class="divider">ou preencha manualmente</div>
+
         <form id="cadastro-form">
 
             <!-- SEÇÃO 1: PRIVACIDADE -->
@@ -372,10 +428,39 @@
         </form>
     </div>
 
+    <!-- Supabase Integration -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/modules/auth/supabase-client.js"></script>
+
     <!-- Scripts de Máscara e Lógica -->
     <script src="https://unpkg.com/imask"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // --- CONEXÃO COM SUPABASE ---
+            // Tenta recuperar sessão existente
+            async function checkUser() {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    const user = session.user;
+                    document.getElementById('email').value = user.email || '';
+                    document.getElementById('full-name').value = user.user_metadata?.full_name || '';
+                    // Desabilitar campos preenchidos para evitar erros
+                    document.getElementById('email').readOnly = true;
+                }
+            }
+            checkUser();
+
+            // Login Google
+            document.getElementById('btn-google-login').addEventListener('click', async () => {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href
+                    }
+                });
+                if (error) console.error('Erro ao entrar com Google:', error.message);
+            });
+
             // Máscaras de Input
             IMask(document.getElementById('document'), {
                 mask: [
