@@ -146,7 +146,7 @@ let currentWrapperRect = null;
 let isPanning = false;
 let panStart = { x: 0, y: 0 };
 let panOffset = { x: 0, y: 0 };
-let currentZoom = 2.2;
+let currentZoom = 1.8;
 let currentGalleryCategory = null;
 let eventsInitialized = false;
 
