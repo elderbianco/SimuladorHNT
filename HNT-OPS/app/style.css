@@ -795,13 +795,32 @@ input {
 
 .table-header {
   display: grid;
-  grid-template-columns: 70px 140px 85px 70px 1fr 120px 90px 100px 90px 56px;
+  grid-template-columns: 125px 140px 85px 70px 1fr 140px 150px 100px 90px 40px;
   gap: 0;
   padding: 0 16px;
   height: 36px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
   align-items: center;
+}
+
+.header-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+  cursor: pointer;
+}
+
+.header-shortcut:hover {
+  background: var(--surface-3);
+  border-color: var(--amber);
+  transform: translateY(-1px);
 }
 
 .table-header span {
