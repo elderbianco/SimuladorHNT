@@ -932,16 +932,11 @@ function bindQR() {
     const fab = document.querySelector('.mobile-fab');
     if (fab) fab.addEventListener('click', openQR);
 
-    // Batch Events
-    $('btn-batch').addEventListener('click', openBatchModal);
-    $('batch-cancel').addEventListener('click', closeBatchModal);
-    $('btn-batch-execute').addEventListener('click', executeBatchUpdate);
-    $('batch-target-etapa').addEventListener('change', updateBatchGlobalTarget);
-    $('batch-manual-input').addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-            processBatchManualInput();
-        }
-    });
+});
+
+// Novo Pedido Manual
+const btnNovo = $('btn-novo-pedido');
+if (btnNovo) btnNovo.addEventListener('click', openNovoPedidoModal);
 }
 
 let html5QrCode;
@@ -2662,5 +2657,68 @@ async function excluirPedidoUI() {
         }
     } catch (e) {
         alert("Erro ao excluir: " + e.message);
+    }
+}
+
+// ── Novo Pedido Manual ──
+function openNovoPedidoModal() {
+    const modal = $('novo-pedido-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('open'), 10);
+    $('manual-cliente').focus();
+}
+
+function closeNovoPedidoModal() {
+    const modal = $('novo-pedido-modal');
+    modal.classList.remove('open');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+async function confirmNovoPedidoManual() {
+    const cliente = $('manual-cliente').value.trim();
+    const produto = $('manual-produto').value.trim();
+    const tamanho = $('manual-tamanho').value.trim();
+    const tecnica = $('manual-tecnica').value.trim();
+    const qtd = parseInt($('manual-qtd').value) || 1;
+    const obs = $('manual-obs').value.trim();
+
+    if (!cliente || !produto) {
+        alert("Por favor, preencha pelo menos o Nome do Cliente e o Produto.");
+        return;
+    }
+
+    try {
+        if (typeof api !== 'undefined') {
+            // Pegar próximo número de pedido progressivo
+            const nextIdRes = await api.getNextOrderId();
+            const sku = 'MN-' + Math.random().toString(36).substring(2, 8).toUpperCase(); // SKU temporário para pedidos manuais
+
+            const novoPedido = {
+                numero_pedido: nextIdRes.numero,
+                cliente: cliente,
+                sku: sku,
+                tecnica: tecnica,
+                tamanho: tamanho,
+                quantidade: qtd,
+                etapa: 'Preparação',
+                status: 'Aguardando',
+                dados_tecnicos: JSON.stringify({
+                    parts: {
+                        Produto: { value: produto }
+                    },
+                    manual: true
+                }),
+                observacoes: obs,
+                criado_em: new Date().toISOString()
+            };
+
+            await api.createPedido(novoPedido);
+            alert(`Pedido ${nextIdRes.numero} criado com sucesso!`);
+            closeNovoPedidoModal();
+            location.reload();
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao criar pedido: " + e.message);
     }
 }
