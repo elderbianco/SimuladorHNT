@@ -77,8 +77,12 @@ function loadDashboard() {
     } catch (e) { }
 
     const getGroupKey = (order) => {
-        const clientName = order.client_info?.name || profile?.name || 'Cliente';
-        return clientName.trim().toLowerCase();
+        const name = order.client_info?.name;
+        const profileName = profile?.name;
+
+        // Se o nome no pedido for 'Cliente' (padrão) ou vazio, tenta usar o do perfil cadastrado
+        const finalName = (name && name !== 'Cliente') ? name : (profileName || 'Cliente');
+        return finalName.trim().toLowerCase();
     };
 
     history.forEach((order, index) => {
@@ -147,8 +151,12 @@ function loadDashboard() {
 
         const key = getGroupKey(data);
         if (!groups[key]) {
+            const rawName = data.client_info?.name;
+            const profileName = profile?.name;
+            const finalName = (rawName && rawName !== 'Cliente') ? rawName : (profileName || 'Cliente');
+
             groups[key] = {
-                clientName: data.client_info?.name || profile?.name || 'Cliente',
+                clientName: finalName,
                 phone: data.client_info?.phone || profile?.whatsapp || profile?.phone || '',
                 items: [],
                 totalVal: 0,
