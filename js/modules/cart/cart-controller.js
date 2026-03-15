@@ -196,6 +196,7 @@ function loadDashboard() {
                             sizes: technicalData.sizes || {},
                             uploads: uploadsArr,
                             texts: textsArr,
+                            orderNumber: technicalData.orderNumber || "",
                             observations: data.observations || data.observacoes || technicalData.observations || ""
                         },
                         pdf_path: finalPdf
