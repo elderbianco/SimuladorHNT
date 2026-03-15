@@ -474,15 +474,13 @@ function renderDrawerTab(p) {
 
 
 
-        // Administrative Actions for Admins
-        if (currentOperador && currentOperador.perfil === 'Admin') {
-            contentHtml += `
-            <div class="drawer-admin-actions">
-                <button class="btn btn-ghost btn-sm" onclick="toggleEdicao()">${isEditing ? '❌ Cancelar Edição' : '📝 Editar Dados'}</button>
-                <button class="btn btn-ghost btn-sm" style="color:var(--orange)" onclick="cancelarPedidoUI()">🚫 Cancelar Pedido</button>
-                <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirPedidoUI()">🗑️ Excluir Permanente</button>
-            </div>`;
-        }
+        // Administrative Actions - Always visible for quick access as per client feedback
+        contentHtml += `
+        <div class="drawer-admin-actions" style="margin-top:20px; border-top:1px dashed var(--border); padding-top:15px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <button class="btn btn-ghost" onclick="toggleEdicao()" style="width:100%">${isEditing ? '❌ Cancelar Edição' : '📝 Editar Dados'}</button>
+            <button class="btn btn-ghost" style="color:var(--orange); width:100%" onclick="cancelarPedidoUI()">🚫 Cancelar</button>
+            <button class="btn btn-ghost" style="color:var(--red); width:100%; grid-column: span 2;" onclick="excluirPedidoUI()">🗑️ Excluir Permanente</button>
+        </div>`;
     } else if (drawerTab === 'cliente') {
         contentHtml = `
       <div class="detail-section" style="margin-top:0">
