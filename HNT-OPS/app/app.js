@@ -167,7 +167,8 @@ function renderTable(data) {
         tr.innerHTML = `
       <div class="cell-order">
         <span class="order-num">${p.numero}</span>
-        <span class="order-sku" data-tooltip="Código Único do Produto">${p.sku}</span>
+        <span class="client-name-list" style="display:block; font-size:11px; font-weight:600; color:var(--text-1); margin-top:2px;">${p.cliente}</span>
+        <span class="order-sku" data-tooltip="Código Único do Produto" style="margin-top:1px;">${p.sku}</span>
       </div>
       <div class="cell-qty">${p.quantidade}×<br><span style="font-size:10px;color:var(--text-3)">${p.tamanho}</span></div>
       <div class="cell-client">
