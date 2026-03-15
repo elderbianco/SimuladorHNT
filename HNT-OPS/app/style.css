@@ -597,6 +597,19 @@ input {
   color: var(--text-1);
 }
 
+.btn-simulador {
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--amber) 0%, #e89209 100%);
+  color: #000 !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.btn-simulador:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, #fbbf24 0%, var(--amber) 100%);
+}
+
 .btn-danger {
   background: var(--red-dim);
   color: var(--red);
