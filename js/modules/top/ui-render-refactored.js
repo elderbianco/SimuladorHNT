@@ -286,7 +286,7 @@ function renderControls() {
         state.simulationId = `HNT-TP-${generateNextSequenceNumber()}`;
     }
     if ((!state.orderNumber || state.orderNumber === state.simulationId) && typeof generateNextOrderNumber === 'function') {
-        state.orderNumber = `HNT-PD-${generateNextOrderNumber()}`;
+        state.orderNumber = generateNextOrderNumber();
     }
 
     const headerRow = document.createElement('div');
@@ -321,7 +321,7 @@ function renderControls() {
         const orderInput = document.getElementById('order-input-top');
         if (orderInput) {
             orderInput.oninput = (e) => {
-                state.orderNumber = e.target.value.trim() || `HNT-PD-${generateNextOrderNumber()}`;
+                state.orderNumber = e.target.value.trim() || generateNextOrderNumber();
                 saveState();
             };
         }
@@ -377,7 +377,7 @@ function renderControls() {
             state.pdfUrl = pdfUrl;
         }
 
-        
+
         // 1. Mostrar Notificação de Carregamento imediata
         const loader = document.createElement('div');
         loader.innerHTML = \`
