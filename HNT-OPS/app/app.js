@@ -334,11 +334,12 @@ function renderDrawerTab(p) {
           <div class="detail-item"><div class="detail-item-label">Tamanho</div><div class="detail-item-value">${p.tamanho}</div></div>
           <div class="detail-item"><div class="detail-item-label">Quantidade</div><div class="detail-item-value">${p.quantidade} un.</div></div>
           <div class="detail-item"><div class="detail-item-label">Etapa Atual</div><div class="detail-item-value"><span class="etapa-badge etapa-${p.etapa}"><span class="etapa-icon">${iconAtual}</span>${labelAtual}</span></div></div>
-          <div class="detail-item"><div class="detail-item-label">SLA</div><div class="detail-item-value"><span class="alerta-tag alerta-${p.alerta}">${alertaIcon(p.alerta)} ${p.alerta} ${p.diasRestantes <= 0 ? '· vencido' : '· ' + p.diasRestantes + 'd'}</span></div></div>
+          <div class="detail-item"><div class="detail-item-label">SLA Etapa</div><div class="detail-item-value"><span class="alerta-tag alerta-${p.alerta}">${alertaIcon(p.alerta)} ${p.diasSlaEtapa <= 0 ? 'Vencido' : p.diasSlaEtapa + 'd.u.'}</span></div></div>
+          <div class="detail-item"><div class="detail-item-label">SLA Total</div><div class="detail-item-value">${p.diasSlaTotal <= 0 ? '<span style="color:var(--red);font-weight:700">Atrasado</span>' : p.diasSlaTotal + 'd.u.'}</div></div>
           <div class="detail-item"><div class="detail-item-label">Cor Centro</div><div class="detail-item-value">${p.corCentro}</div></div>
           <div class="detail-item"><div class="detail-item-label">Cor Laterais</div><div class="detail-item-value">${p.corLaterais}</div></div>
           <div class="detail-item full"><div class="detail-item-label">Cor Filete</div><div class="detail-item-value">${p.corFilete}</div></div>
-          <div class="detail-item full"><div class="detail-item-label">Prazo</div><div class="detail-item-value">${p.prazo}</div></div>
+          <div class="detail-item full"><div class="detail-item-label">Prazo Final</div><div class="detail-item-value">${p.prazo}</div></div>
           ${p.observacoes ? `<div class="detail-item full"><div class="detail-item-label">Observações</div><div class="detail-item-value">${p.observacoes}</div></div>` : ''}
         </div>
       </div>
