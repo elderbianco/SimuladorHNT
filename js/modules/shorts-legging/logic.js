@@ -28,13 +28,7 @@ function generateFormattedFilename(zoneId, originalName, source = 'EXT') {
 
     // 3. Composite ID (HNT-2026-XXXX-SL-XXXXXX)
     let cleanSimId = state.simulationId.replace(/^HNT-/, '');
-    let cleanOrderId = state.orderNumber;
-
-    // Garantir prefixo HNT
-    if (!cleanOrderId.startsWith('HNT-')) cleanOrderId = `HNT-${cleanOrderId}`;
-
-    // Remover PD redundante se existir
-    cleanOrderId = cleanOrderId.replace('HNT-PD-', 'HNT-');
+    let cleanOrderId = state.orderNumber; // Mantém estritamente numérico (ex: 010008)
 
     let compositeId = `${cleanOrderId}-${cleanSimId}`;
 
