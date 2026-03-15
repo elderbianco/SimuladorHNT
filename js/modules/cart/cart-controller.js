@@ -269,10 +269,22 @@ function applyGlobalInfo() {
     location.reload();
 }
 
-function deleteGroup(indices) {
+async function deleteGroup(indices) {
     if (!confirm('Deseja excluir este pedido completo e todos os seus itens?')) return;
 
     let history = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    const toDeleteIds = indices.map(idx => history[idx]?.order_id || history[idx]?.ID_PEDIDO).filter(id => id);
+
+    // --- SUPABASE SYNC ---
+    if (toDeleteIds.length > 0 && typeof SupabaseAdapter !== 'undefined') {
+        try {
+            await SupabaseAdapter.deletePedidos(toDeleteIds);
+        } catch (e) {
+            console.error('Erro ao excluir grupo no Supabase:', e);
+        }
+    }
+    // ---------------------
+
     // Remove indices in descending order to avoid shift issues
     const sortedIndices = indices.sort((a, b) => b - a);
     sortedIndices.forEach(idx => history.splice(idx, 1));
@@ -378,16 +390,27 @@ function editOrder(index) {
 
 
 async function clearAll() {
-    if (!confirm('Deseja limpar TODO o histórico de pedidos?')) return;
+    if (!confirm('Deseja limpar TODO o histórico de pedidos? Isso removerá os dados permanentemente do servidor.')) return;
 
-    // --- SUPABASE SYNC (DANGEROUS BUT FOR USER CONVENIENCE) ---
-    // If we wanted to clear everything from Supabase, we'd need a bulk delete.
-    // For now, we clear local and user can re-sync if they want.
-    // Alternatively, we could delete all rows matching a criteria.
-    // ---------------------
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const history = raw ? JSON.parse(raw) : [];
 
-    localStorage.removeItem(STORAGE_KEY);
-    loadDashboard();
+        // --- SUPABASE SYNC ---
+        if (history.length > 0 && typeof SupabaseAdapter !== 'undefined') {
+            const orderIds = history.map(h => h.order_id || h.ID_PEDIDO).filter(id => id);
+            if (orderIds.length > 0) {
+                await SupabaseAdapter.deletePedidos(orderIds);
+            }
+        }
+        // ---------------------
+
+        localStorage.removeItem(STORAGE_KEY);
+        loadDashboard();
+    } catch (e) {
+        console.error('Erro ao limpar tudo:', e);
+        alert('Erro ao limpar o histórico no servidor. Tente novamente.');
+    }
 }
 
 // --- LEGACY ADAPTER ---
