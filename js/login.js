@@ -25,8 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = emailInput.value.trim();
+        let email = emailInput.value.trim();
         const password = passwordInput.value;
+
+        // Alias para "e"
+        if (email === 'e') {
+            email = 'e@hanuthai.com.br';
+        }
 
         if (!email || !password) return;
 
