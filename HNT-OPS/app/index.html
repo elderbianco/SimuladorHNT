@@ -104,7 +104,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0018 4.5h-13.5A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5h3.75M9 15c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.1point25H7.875A1.125 1.125 0 016.75 17.625v-1.5c0-.621.504-1.125 1.125-1.125H9zM9 4.875c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125H7.875A1.125 1.125 0 016.75 7.5v-1.5c0-.621.504-1.125 1.125-1.125H9zM16.125 11.625c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125h-1.125a1.125 1.125 0 01-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h1.125z" />
+                            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0018 4.5h-13.5A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5h3.75M9 15c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125H7.875A1.125 1.125 0 016.75 17.625v-1.5c0-.621.504-1.125 1.125-1.125H9zM9 4.875c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125H7.875A1.125 1.125 0 016.75 7.5v-1.5c0-.621.504-1.125 1.125-1.125H9zM16.125 11.625c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125h-1.125a1.125 1.125 0 01-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h1.125z" />
                     </svg>
                     Ações em Lote
                 </button>
@@ -396,13 +396,52 @@
                     </thead>
                     <tbody id="stage-detail-body">
                         <!-- Gerado dinamicamente -->
-                    </tbody>
                 </table>
             </div>
 
             <div class="modal-footer">
                 <button class="btn-modal-cancel"
-                    onclick="$('stage-detail-modal').style.display='none'; $('stage-detail-modal').classList.remove('open')">Fechar</button>
+                    onclick="$('stage-detail-modal').classList.remove('open'); setTimeout(()=>$('stage-detail-modal').style.display='none',300)">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Novo Pedido Modal (MANUAL) ══ -->
+    <div class="modal-overlay" id="novo-pedido-modal">
+        <div class="modal" style="max-width:600px">
+            <div class="modal-title">🆕 Criar Novo Pedido Manual</div>
+            <div class="modal-sub">Insira os detalhes do produto e cliente para iniciar a produção.</div>
+
+            <div class="detail-grid" style="margin-top:20px; text-align:left">
+                <div class="detail-item full">
+                    <div class="detail-item-label">Cliente</div><input type="text" class="modal-input"
+                        id="manual-cliente" placeholder="Nome do cliente">
+                </div>
+                <div class="detail-item">
+                    <div class="detail-item-label">Produto</div><input type="text" class="modal-input"
+                        id="manual-produto" placeholder="Ex: Fight Shorts">
+                </div>
+                <div class="detail-item">
+                    <div class="detail-item-label">Tamanho</div><input type="text" class="modal-input"
+                        id="manual-tamanho" placeholder="Ex: G, 42, M">
+                </div>
+                <div class="detail-item">
+                    <div class="detail-item-label">Cor / Técnica</div><input type="text" class="modal-input"
+                        id="manual-tecnica" placeholder="Ex: Sublimação Total">
+                </div>
+                <div class="detail-item">
+                    <div class="detail-item-label">Quantidade</div><input type="number" class="modal-input"
+                        id="manual-qtd" value="1">
+                </div>
+                <div class="detail-item full">
+                    <div class="detail-item-label">Observações</div><textarea class="modal-input" id="manual-obs"
+                        style="height:80px; padding:10px" placeholder="Detalhes específicos do pedido..."></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-modal-cancel" onclick="closeNovoPedidoModal()">Cancelar</button>
+                <button class="btn-modal-confirm" onclick="confirmNovoPedidoManual()">✨ Criar Pedido</button>
             </div>
         </div>
     </div>
