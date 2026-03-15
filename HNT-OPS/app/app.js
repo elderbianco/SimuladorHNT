@@ -314,15 +314,29 @@ function renderDrawer(p) {
 
     // Stage mover com ícones
     const sb = $('stage-buttons');
-    sb.innerHTML = ETAPAS.filter(e => e !== 'Pendencia').map(e => `
+    sb.innerHTML = ETAPAS.filter(e => e !== 'Pendencia' && e !== 'Cancelado').map(e => `
     <button class="stage-btn ${e === p.etapa ? 'current' : ''}" onclick="moverEtapa('${p.id}','${e}')">
-      <span>${ETAPA_ICONS[e]}</span> ${ETAPA_LABELS[e]}
+      <span>${ETAPA_ICONS[e] || '📋'}</span> ${ETAPA_LABELS[e] || e}
     </button>
   `).join('') + `
-    <button class="stage-btn pendencia-btn" onclick="moverEtapa('${p.id}','Pendencia')">
+    <button class="stage-btn pendencia-btn ${p.etapa === 'Pendencia' ? 'current' : ''}" onclick="moverEtapa('${p.id}','Pendencia')">
       <span>⚠️</span> Pendência
     </button>
   `;
+
+    // NOVO: Menu de Ações Administrativas
+    const am = document.createElement('div');
+    am.className = 'drawer-admin-actions';
+    am.style = 'margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; gap: 8px; overflow-x: auto;';
+    am.innerHTML = `
+        <button class="btn btn-ghost btn-sm" onclick="toggleEdicao()">${isEditing ? '❌ Cancelar Edição' : '📝 Editar Dados'}</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--orange)" onclick="cancelarPedidoUI()">🚫 Cancelar Pedido</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirPedidoUI()">🗑️ Excluir Permanente</button>
+    `;
+
+    const existingAm = document.querySelector('.drawer-admin-actions');
+    if (existingAm) existingAm.remove();
+    $('drawer-header').appendChild(am);
 
     renderDrawerTab(p);
 }
@@ -332,100 +346,133 @@ function renderDrawerTab(p) {
     let contentHtml = '';
 
     if (drawerTab === 'detalhes') {
-        const iconAtual = ETAPA_ICONS[p.etapa] || '';
+        const iconAtual = ETAPA_ICONS[p.etapa] || '📋';
         const labelAtual = ETAPA_LABELS[p.etapa] || p.etapa;
 
-        // --- NOVO: Processamento de Dados Técnicos Detalhados ---
+        // --- Processamento de Dados Técnicos Detalhados ---
         const dt = p.dadosTecnicos || {};
         const parts = dt.parts || {};
         const texts = dt.texts || {};
         const renders = p.renders || {};
 
-        // Cores Dinâmicas
-        let colorsHtml = '';
-        Object.entries(parts).forEach(([part, data]) => {
-            const colorName = (typeof data === 'object') ? (data.value || data.name || '--') : data;
-            if (colorName && colorName !== '--') {
-                colorsHtml += `<div class="detail-item"><div class="detail-item-label">Cor ${part}</div><div class="detail-item-value">${colorName}</div></div>`;
-            }
-        });
+        if (isEditing) {
+            // MODO EDIÇÃO
+            contentHtml = `
+                <div class="detail-section" style="margin-top:0">
+                    <div class="detail-section-title">📝 Editar Informações do Pedido</div>
+                    <div class="edit-form" style="display:grid; gap:15px; padding:10px;">
+                        <div class="detail-item full">
+                            <label class="detail-item-label">SKU / Modelo</label>
+                            <input type="text" id="edit-sku" class="modal-input" value="${p.sku}" style="margin:5px 0">
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div class="detail-item">
+                                <label class="detail-item-label">Quantidade</label>
+                                <input type="number" id="edit-qtd" class="modal-input" value="${p.quantidade}" style="margin:5px 0">
+                            </div>
+                            <div class="detail-item">
+                                <label class="detail-item-label">Tamanho</label>
+                                <input type="text" id="edit-tam" class="modal-input" value="${p.tamanho}" style="margin:5px 0">
+                            </div>
+                        </div>
+                        <div class="detail-item full">
+                            <label class="detail-item-label">Observações de Produção</label>
+                            <textarea id="edit-obs" class="modal-input" style="height:80px; margin:5px 0; padding:10px;">${p.observacoes || ''}</textarea>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn btn-primary" onclick="saveEdicao()" style="flex:1; height:44px;">💾 Salvar Alterações</button>
+                            <button class="btn btn-ghost" onclick="toggleEdicao()" style="height:44px;">Voltar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // MODO VISUALIZAÇÃO (Original Refatorado)
+            let colorsHtml = '';
+            Object.entries(parts).forEach(([part, data]) => {
+                const colorName = (typeof data === 'object') ? (data.value || data.name || '--') : data;
+                if (colorName && colorName !== '--') {
+                    colorsHtml += `<div class="detail-item"><div class="detail-item-label">Cor ${part}</div><div class="detail-item-value">${colorName}</div></div>`;
+                }
+            });
 
-        // Textos Dinâmicos
-        let textsHtml = '';
-        Object.entries(texts).forEach(([key, data]) => {
-            if (data.active && data.content) {
-                textsHtml += `
-            <div class="personalization-item">
-                <div class="pers-label">✍️ Texto ${key}</div>
-                <div class="pers-content">"${data.content}"</div>
-                <div class="pers-meta">${data.fontFamily || 'Padrão'} · ${data.color || 'Preto'}</div>
-            </div>`;
-            }
-        });
+            let textsHtml = '';
+            Object.entries(texts).forEach(([key, data]) => {
+                if (data.active && data.content) {
+                    textsHtml += `
+                <div class="personalization-item">
+                    <div class="pers-label">✍️ Texto ${key}</div>
+                    <div class="pers-content">"${data.content}"</div>
+                    <div class="pers-meta">${data.fontFamily || 'Padrão'} · ${data.color || 'Preto'}</div>
+                </div>`;
+                }
+            });
 
-        contentHtml = `
-      <div class="detail-section" style="margin-top:0">
-        <div class="detail-section-title">📦 Produto</div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-item-label">SKU</div><div class="detail-item-value">${p.sku}</div></div>
-          <div class="detail-item"><div class="detail-item-label">Técnica</div><div class="detail-item-value">${p.tecnica}</div></div>
-          <div class="detail-item"><div class="detail-item-label">Tamanho</div><div class="detail-item-value">${p.tamanho}</div></div>
-          <div class="detail-item"><div class="detail-item-label">Quantidade</div><div class="detail-item-value">${p.quantidade} un.</div></div>
-          <div class="detail-item"><div class="detail-item-label">Etapa Atual</div><div class="detail-item-value"><span class="etapa-badge etapa-${p.etapa}"><span class="etapa-icon">${iconAtual}</span>${labelAtual}</span></div></div>
-          <div class="detail-item"><div class="detail-item-label">SLA Etapa</div><div class="detail-item-value"><span class="alerta-tag alerta-${p.alerta}">${alertaIcon(p.alerta)} ${p.diasSlaEtapa <= 0 ? 'Vencido' : p.diasSlaEtapa + 'd.u.'}</span></div></div>
-          <div class="detail-item"><div class="detail-item-label">SLA Total</div><div class="detail-item-value">${p.diasSlaTotal <= 0 ? '<span style="color:var(--red);font-weight:700">Atrasado</span>' : p.diasSlaTotal + 'd.u.'}</div></div>
-          
-          ${colorsHtml || `
-            <div class="detail-item"><div class="detail-item-label">Cor Centro</div><div class="detail-item-value">${p.corCentro}</div></div>
-            <div class="detail-item"><div class="detail-item-label">Cor Laterais</div><div class="detail-item-value">${p.corLaterais}</div></div>
-            <div class="detail-item full"><div class="detail-item-label">Cor Filete</div><div class="detail-item-value">${p.corFilete}</div></div>
-          `}
-          
-          <div class="detail-item full"><div class="detail-item-label">Prazo Final</div><div class="detail-item-value">${p.prazo}</div></div>
-          ${p.observacoes ? `<div class="detail-item full"><div class="detail-item-label">Observações</div><div class="detail-item-value">${p.observacoes}</div></div>` : ''}
-        </div>
-      </div>
-
-      ${textsHtml ? `
-      <div class="detail-section">
-        <div class="detail-section-title">🧵 Detalhes de Personalização</div>
-        <div class="personalization-grid">
-            ${textsHtml}
-        </div>
-      </div>` : ''}
-
-      <div class="detail-section">
-        <div class="detail-section-title">🎨 Artes e Arquivos</div>
-        <div class="art-grid">
-          <div class="art-thumb" style="cursor:pointer" onclick="${renders.frente ? `window.open('${renders.frente}','_blank')` : 'return false'}">
-            ${renders.frente ? `<img src="${renders.frente}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
-            <span>Frente</span>
+            contentHtml = `
+          <div class="detail-section" style="margin-top:0">
+            <div class="detail-section-title">📦 Produto</div>
+            <div class="detail-grid">
+              <div class="detail-item"><div class="detail-item-label">SKU</div><div class="detail-item-value">${p.sku}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Técnica</div><div class="detail-item-value">${p.tecnica}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Tamanho</div><div class="detail-item-value">${p.tamanho}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Quantidade</div><div class="detail-item-value">${p.quantidade} un.</div></div>
+              <div class="detail-item"><div class="detail-item-label">Etapa Atual</div><div class="detail-item-value"><span class="etapa-badge etapa-${p.etapa}"><span class="etapa-icon">${iconAtual}</span>${labelAtual}</span></div></div>
+              <div class="detail-item"><div class="detail-item-label">SLA Etapa</div><div class="detail-item-value"><span class="alerta-tag alerta-${p.alerta}">${alertaIcon(p.alerta)} ${p.diasSlaEtapa <= 0 ? 'Vencido' : p.diasSlaEtapa + 'd.u.'}</span></div></div>
+              <div class="detail-item"><div class="detail-item-label">SLA Total</div><div class="detail-item-value">${p.diasSlaTotal <= 0 ? '<span style="color:var(--red);font-weight:700">Atrasado</span>' : p.diasSlaTotal + 'd.u.'}</div></div>
+              
+              ${colorsHtml || `
+                <div class="detail-item"><div class="detail-item-label">Cor Centro</div><div class="detail-item-value">${p.corCentro}</div></div>
+                <div class="detail-item"><div class="detail-item-label">Cor Laterais</div><div class="detail-item-value">${p.corLaterais}</div></div>
+                <div class="detail-item full"><div class="detail-item-label">Cor Filete</div><div class="detail-item-value">${p.corFilete}</div></div>
+              `}
+              
+              <div class="detail-item full"><div class="detail-item-label">Prazo Final</div><div class="detail-item-value">${p.prazo}</div></div>
+              ${p.observacoes ? `<div class="detail-item full"><div class="detail-item-label">Observações</div><div class="detail-item-value">${p.observacoes}</div></div>` : ''}
+            </div>
           </div>
-          <div class="art-thumb" style="cursor:pointer" onclick="${renders.costas ? `window.open('${renders.costas}','_blank')` : 'return false'}">
-            ${renders.costas ? `<img src="${renders.costas}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
-            <span>Costas</span>
+
+          ${textsHtml ? `
+          <div class="detail-section">
+            <div class="detail-section-title">🧵 Detalhes de Personalização</div>
+            <div class="personalization-grid">
+                ${textsHtml}
+            </div>
+          </div>` : ''}
+
+          <div class="detail-section">
+            <div class="detail-section-title">🎨 Artes e Arquivos</div>
+            <div class="art-grid">
+              <div class="art-thumb" style="cursor:pointer" onclick="${renders.frente ? `window.open('${renders.frente}','_blank')` : 'return false'}">
+                ${renders.frente ? `<img src="${renders.frente}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
+                <span>Frente</span>
+              </div>
+              <div class="art-thumb" style="cursor:pointer" onclick="${renders.costas ? `window.open('${renders.costas}','_blank')` : 'return false'}">
+                ${renders.costas ? `<img src="${renders.costas}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
+                <span>Costas</span>
+              </div>
+              <div class="art-thumb" style="cursor:pointer" onclick="${renders.lateral ? `window.open('${renders.lateral}','_blank')` : 'return false'}">
+                ${renders.lateral ? `<img src="${renders.lateral}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
+                <span>Lateral</span>
+              </div>
+            </div>
+            <div class="file-links" style="margin-top:10px">
+              ${p.pdf ? `<a class="file-link" href="${p.pdf}" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                <span class="file-link-name">PDF de Simulação</span><span class="file-link-type">PDF</span>
+              </a>` : ''}
+              ${p.emb ? `<a class="file-link" href="${p.emb}" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                <span class="file-link-name">🧵 Matriz de Bordado</span><span class="file-link-type">.EMB</span>
+              </a>` : ''}
+              <a class="file-link" href="#" onclick="alert('Funcionalidade em desenvolvimento: Integração com Drive');return false">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                <span class="file-link-name">🎨 Pasta de Imagens</span><span class="file-link-type">PASTA</span>
+              </a>
+            </div>
           </div>
-          <div class="art-thumb" style="cursor:pointer" onclick="${renders.lateral ? `window.open('${renders.lateral}','_blank')` : 'return false'}">
-            ${renders.lateral ? `<img src="${renders.lateral}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
-            <span>Lateral</span>
-          </div>
-        </div>
-        <div class="file-links" style="margin-top:10px">
-          ${p.pdf ? `<a class="file-link" href="${p.pdf}" target="_blank">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-            <span class="file-link-name">PDF de Simulação</span><span class="file-link-type">PDF</span>
-          </a>` : ''}
-          ${p.emb ? `<a class="file-link" href="${p.emb}" target="_blank">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-            <span class="file-link-name">🧵 Matriz de Bordado</span><span class="file-link-type">.EMB</span>
-          </a>` : ''}
-          <a class="file-link" href="#" onclick="alert('Funcionalidade em desenvolvimento: Integração com Drive');return false">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
-            <span class="file-link-name">🎨 Pasta de Imagens</span><span class="file-link-type">PASTA</span>
-          </a>
-        </div>
-      </div>
-    `;
+        `;
+        }
+
 
 
     } else if (drawerTab === 'cliente') {
