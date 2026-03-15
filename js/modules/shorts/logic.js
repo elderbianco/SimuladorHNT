@@ -175,15 +175,25 @@ function generateNextSequenceNumber() {
 }
 
 /**
- * Gera o próximo número de PEDIDO seguindo o padrão HNT-YYYY-XXXX
+ * Gera o próximo número de PEDIDO - PADRÃO NUMÉRICO (ex: 010008)
  */
 function generateNextOrderNumber() {
-    const year = new Date().getFullYear();
-    let last = parseInt(localStorage.getItem('hnt_order_seq_id') || '1000');
+    // 1. Verificar configuração do Admin para número inicial
+    const orderConfig = JSON.parse(localStorage.getItem('hnt_order_config') || '{"nextNumber":1000}');
+    const startFrom = (parseInt(orderConfig.nextNumber) || 1000) - 1;
+
+    let last = parseInt(localStorage.getItem('hnt_order_seq_id') || '0');
+
+    // Se o número do admin for maior que o sequencial atual, utiliza o do admin
+    if (startFrom > last) {
+        last = startFrom;
+    }
+
     let next = last + 1;
     localStorage.setItem('hnt_order_seq_id', next);
-    // Padrão HNT-2026-0001
-    return `HNT-${year}-${String(next).padStart(4, '0')}`;
+
+    // Padrão: estritamente numérico com 6 dígitos
+    return String(next).padStart(6, '0');
 }
 
 /**
@@ -202,17 +212,9 @@ function generateFormattedFilename(zoneId, originalName, source = 'EXT') {
         state.orderNumber = generateNextOrderNumber();
     }
 
-    // 3. Composite ID (HNT-2026-XXXX-SH-XXXXXX)
-    // Clean Sim ID (remove prefix if present)
+    // 3. Composite ID (XXXXXX-SH-XXXXXX)
     let cleanSimId = state.simulationId.replace(/^HNT-/, '');
-    // Clean Order ID (ensure it follows HNT-YYYY-XXXX)
     let cleanOrderId = state.orderNumber;
-
-    // Fallback/Correction para garantir prefixo HNT se necessário
-    if (!cleanOrderId.startsWith('HNT-')) cleanOrderId = `HNT-${cleanOrderId}`;
-
-    // Remove PD redundante se existir por erro legado
-    cleanOrderId = cleanOrderId.replace('HNT-PD-', 'HNT-');
 
     let compositeId = `${cleanOrderId}-${cleanSimId}`;
     // 4. Sigla Local (Mapeamento Estrito)
