@@ -77,7 +77,16 @@
 
         <!-- ══ HEADER ══ -->
         <header class="header">
-            <div style="display:flex; align-items:center; gap:12px">
+            <div class="search-wrap" style="max-width: 300px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0015.804 15.803z" />
+                </svg>
+                <input id="search-input" type="search" placeholder="Busca rápida…">
+            </div>
+
+            <div style="display:flex; align-items:center; gap:16px; margin-left: 20px;">
                 <span class="header-title">HNT<span>-Ops</span></span>
                 <a href="../../index.html" class="header-shortcut-btn" title="Ir para Simuladores">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -90,14 +99,7 @@
                 </a>
             </div>
 
-            <div class="search-wrap">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0015.804 15.803z" />
-                </svg>
-                <input id="search-input" type="search" placeholder="Nome, HNT-ID, SKU, CPF…">
-            </div>
+            <div style="flex: 1"></div>
 
             <div class="header-actions">
                 <button class="btn btn-ghost" id="btn-batch">
