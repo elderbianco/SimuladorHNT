@@ -183,5 +183,23 @@ const api = {
             ativo: false
         });
         return result;
+    },
+
+    // 10. Gestão de Pedidos (Ações Administrativas)
+    async deletePedido(id) {
+        // Exclusão permanente (cascading no DB resolverá o resto)
+        return await apiFetch(`producao_pedidos?id=eq.${id}`, 'DELETE');
+    },
+
+    async cancelPedido(id) {
+        // Move para a etapa de cancelamento
+        return await this.updateEtapa(id, 'Cancelado');
+    },
+
+    async updatePedido(id, fields) {
+        // Atualiza campos genéricos (SKU, Qtd, etc)
+        const result = await apiFetch(`producao_pedidos?id=eq.${id}`, 'PATCH', fields);
+        return result && result.length > 0 ? result[0] : null;
     }
 };
+
