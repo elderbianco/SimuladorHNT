@@ -17,13 +17,15 @@ function generateNextSequenceNumber() {
 }
 
 /**
- * Gera o próximo número sequencial de PEDIDO (ex: 012975)
+ * Gera o próximo número de PEDIDO seguindo o padrão HNT-YYYY-XXXX
  */
 function generateNextOrderNumber() {
-    let last = parseInt(localStorage.getItem('hnt_order_seq_id') || '10000');
+    const year = new Date().getFullYear();
+    let last = parseInt(localStorage.getItem('hnt_order_seq_id') || '1000');
     let next = last + 1;
     localStorage.setItem('hnt_order_seq_id', next);
-    return String(next).padStart(6, '0');
+    // Padrão HNT-2026-0001
+    return `HNT-${year}-${String(next).padStart(4, '0')}`;
 }
 
 /**
@@ -39,14 +41,18 @@ function generateFormattedFilename(zoneId, originalName, source = 'EXT') {
         state.simulationId = `HNT-${productSigla}-${generateNextSequenceNumber()}`;
     }
     if (!state.orderNumber) {
-        state.orderNumber = `HNT-PD-${generateNextOrderNumber()}`;
+        state.orderNumber = generateNextOrderNumber();
     }
 
-    // 3. Composite ID
+    // 3. Composite ID (HNT-2026-XXXX-ML-XXXXXX)
     let cleanSimId = state.simulationId.replace(/^HNT-/, '');
     let cleanOrderId = state.orderNumber;
+
+    // Garantir prefixo HNT
     if (!cleanOrderId.startsWith('HNT-')) cleanOrderId = `HNT-${cleanOrderId}`;
-    if (!cleanOrderId.includes('PD') && /HNT-\d+/.test(cleanOrderId)) cleanOrderId = cleanOrderId.replace('HNT-', 'HNT-PD-');
+
+    // Remover PD redundante se existir
+    cleanOrderId = cleanOrderId.replace('HNT-PD-', 'HNT-');
 
     let compositeId = `${cleanOrderId}-${cleanSimId}`;
 
@@ -451,7 +457,7 @@ function resetSimulatorData() {
     // 4. Gerar novos IDs
     state.simNumber = generateNextSequenceNumber();
     state.simulationId = `HNT-ML-${state.simNumber}`;
-    state.orderNumber = `HNT-PD-${generateNextOrderNumber()}`;
+    state.orderNumber = generateNextOrderNumber();
 
     // 5. Persistir estado limpo
     saveState();
