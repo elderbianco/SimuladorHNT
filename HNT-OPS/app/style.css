@@ -396,7 +396,17 @@ input {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   grid-template-rows: var(--header-h) 1fr;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main {
+  grid-column: 2;
+  grid-row: 2;
+  padding: 16px 20px;
+  overflow-y: auto;
+  position: relative;
+  background: var(--bg);
 }
 
 /* ── Sidebar ── */
@@ -529,11 +539,13 @@ input {
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   padding: 0 20px;
+  height: var(--header-h);
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
 }
 
 .header-title {
@@ -589,7 +601,7 @@ input {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin-left: auto;
 }
 
