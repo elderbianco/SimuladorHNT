@@ -214,11 +214,17 @@ const api = {
     async getNextOrderId() {
         // Traz o último número de pedido para gerar o próximo
         const data = await apiFetch('producao_pedidos?select=numero_pedido&order=numero_pedido.desc&limit=1');
-        const lastNum = (data && data.length > 0) ? parseInt(data[0].numero_pedido.split('-').pop()) : 1000;
+
+        let lastNum = 1000;
+        if (data && data.length > 0 && data[0].numero_pedido) {
+            const raw = data[0].numero_pedido;
+            // Se tiver hifen, pega o último pedaço. Se não, usa o número todo.
+            lastNum = parseInt(raw.includes('-') ? raw.split('-').pop() : raw) || 1000;
+        }
+
         const nextNum = lastNum + 1;
-        const year = new Date().getFullYear();
         return {
-            numero: `HNT-${year}-${nextNum}`,
+            numero: String(nextNum).padStart(6, '0'),
             seq: nextNum
         };
     },
