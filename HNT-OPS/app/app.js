@@ -11,6 +11,7 @@ let ETAPA_COLORS = {};
 // ── State Data (Real) ─────────────────────────────────────
 let PEDIDOS = [];
 let OPERADORES = []; // Carregado via api.getOperadores()
+let ETAPA_DURACOES = {}; // SLA por etapa (dias úteis)
 const HISTORICO = {};
 const CHAT_MSGS = {};
 
@@ -38,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ETAPA_LABELS[m.etapa] = m.label || m.etapa;
                 ETAPA_ICONS[m.etapa] = m.icone || '📋';
                 ETAPA_COLORS[m.etapa] = m.cor || '#888';
+                ETAPA_DURACOES[m.etapa] = m.duracao || 1;
             });
         }
 
@@ -72,7 +74,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     prioridade: r.prioridade,
                     urgente: r.urgente,
                     alerta: r.alerta_prazo || 'Verde',
-                    diasRestantes: r.dias_na_etapa_atual >= 0 ? 0 : 0, // Ajustar lógica se necessário
+
+                    // Novos campos de SLA dinâmico
+                    diasRestantes: r.dias_restantes_etapa !== undefined ? r.dias_restantes_etapa : (r.dias_restantes_total || 0),
+                    diasSlaEtapa: r.dias_restantes_etapa,
+                    diasSlaTotal: r.dias_restantes_total,
+                    paradoHa: r.dias_na_etapa_atual || 0,
+
                     prazo: typeof r.prazo_entrega === 'string' ? r.prazo_entrega.split('-').reverse().join('/') : r.prazo_entrega,
                     cliente: r.cliente_nome || 'Sem Cliente',
                     cpf: r.cliente_cpf || '--',
@@ -1070,8 +1078,12 @@ async function sendChat() {
 
 // ── Helpers ───────────────────────────────────────────────
 function slaWidth(p) {
+    // Se estourou qualquer um, barra cheia (vermelho)
     if (p.diasRestantes <= 0) return 100;
-    return Math.max(5, Math.min(100, 100 - (p.diasRestantes / 21 * 100)));
+
+    // Calcula % baseado no SLA da etapa atual
+    const duracaoEtapa = ETAPA_DURACOES[p.etapa] || 7;
+    return Math.max(5, Math.min(100, 100 - (p.diasRestantes / duracaoEtapa * 100)));
 }
 function priorityDots(n) {
     return Array.from({ length: 5 }, (_, i) => `<div class="priority-dot ${i < n ? 'filled' : ''}"></div>`).join('');
@@ -1086,10 +1098,18 @@ function alertaIcon(a) {
  */
 function slaPhaseInfo(p) {
     const d = p.diasRestantes;
-    if (p.urgente && d <= 0) return { icon: '🔴', label: 'VENC + URG', sub: 'Atrasado — urgente' };
+    const isVencidoTotal = (p.diasSlaTotal !== undefined && p.diasSlaTotal <= 0);
+    const isVencidoEtapa = (p.diasSlaEtapa !== undefined && p.diasSlaEtapa <= 0);
+
+    if (p.urgente && (isVencidoEtapa || isVencidoTotal))
+        return { icon: '🔴', label: 'VENC + URG', sub: isVencidoTotal ? 'Prazo Total Estourado' : 'SLA da Etapa Estourado' };
+
     if (p.urgente) return { icon: '🔴', label: 'URGENTE', sub: `${d}d.u. restantes` };
-    if (d <= 0) return { icon: '⛔', label: 'VENCIDO', sub: 'Atrasado — cobrar' };
-    if (d === 1) return { icon: '🔴', label: 'CRÍTICO', sub: 'Entrega amanhã' };
+
+    if (isVencidoTotal) return { icon: '⛔', label: 'ATRASADO', sub: 'Prazo Final Vencido' };
+    if (isVencidoEtapa) return { icon: '🕒', label: 'VENCIDO', sub: 'Atrasado nesta etapa' };
+
+    if (d === 1) return { icon: '🔴', label: 'CRÍTICO', sub: 'Termina amanhã' };
     if (d <= 2) return { icon: '🟠', label: 'EM RISCO', sub: `${d}d.u. restantes` };
     if (d <= 4) return { icon: '🟡', label: 'ATENÇÃO', sub: `${d}d.u. restantes` };
     if (d <= 7) return { icon: '🟢', label: 'NO PRAZO', sub: `${d}d.u. restantes` };
