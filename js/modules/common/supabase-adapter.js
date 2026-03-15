@@ -243,17 +243,40 @@ const SupabaseAdapter = {
 
             console.log(`🚀 Iniciando aprovação de pedido ${orderId} para HNT-OPS...`);
 
-            // 1. Buscar o ID interno do cliente cadastrado (Foreign Key)
+            // 1. Buscar ou Criar o ID interno do cliente cadastrado (Foreign Key)
             let clienteInternalId = null;
             if (docComprador) {
+                const cpfLimp = docComprador.replace(/\D/g, '');
+
+                // Primeiro tenta buscar
                 const { data: client, error: clientErr } = await window.supabaseClient
                     .from('clientes_cadastrados')
                     .select('id')
-                    .eq('cpf_cnpj_comprador', docComprador.replace(/\D/g, ''))
+                    .eq('cpf_cnpj_comprador', cpfLimp)
                     .maybeSingle();
 
                 if (!clientErr && client) {
                     clienteInternalId = client.id;
+                } else {
+                    // Se não achou, vamos tentar criar um registro básico para o HNT-OPS não ficar sem nome
+                    const nomeFallback = item.client_info?.name || profile?.name || 'Cliente';
+                    if (nomeFallback !== 'Cliente') {
+                        console.log(`👤 Cliente não encontrado. Criando registro temporário para: ${nomeFallback}`);
+                        const { data: newClient, error: insErr } = await window.supabaseClient
+                            .from('clientes_cadastrados')
+                            .upsert({
+                                nome_comprador: nomeFallback,
+                                cpf_cnpj_comprador: cpfLimp,
+                                celular_comprador: item.client_info?.phone || profile?.whatsapp || '',
+                                email_comprador: item.client_info?.email || profile?.email || ''
+                            }, { onConflict: 'cpf_cnpj_comprador' })
+                            .select('id')
+                            .single();
+
+                        if (!insErr && newClient) {
+                            clienteInternalId = newClient.id;
+                        }
+                    }
                 }
             }
 
@@ -279,10 +302,10 @@ const SupabaseAdapter = {
             // Size Summary
             let sizeStr = 'Grade Única';
             if (specs.sizes) {
-                sizeStr = Object.entries(specs.sizes)
-                    .filter(([s, q]) => q > 0)
-                    .map(([s, q]) => `${q}x ${s}`)
-                    .join(', ') || 'Grade Única';
+                const entries = Object.entries(specs.sizes).filter(([s, q]) => q > 0);
+                if (entries.length > 0) {
+                    sizeStr = entries.map(([s, q]) => `${q}x ${s}`).join(', ');
+                }
             } else if (orderData.TAMANHO) {
                 sizeStr = orderData.TAMANHO;
             }
@@ -305,7 +328,8 @@ const SupabaseAdapter = {
 
                 prazo_entrega: prazo.toISOString().split('T')[0],
                 etapa_atual: 'Preparacao',
-                urgente: !!(orderData.urgente || false)
+                urgente: !!(orderData.urgente || false),
+                observacoes: specs.observations || ''
             };
 
             const { data: prodResult, error: prodErr } = await window.supabaseClient
