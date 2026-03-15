@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const realData = await api.loadDashboard();
         if (realData && realData.length > 0) {
             PEDIDOS = realData.map(r => {
-                let dt = r.dados_tecnicos;
+                let dt = r.dados_tecnicos_full || r.dados_tecnicos;
                 if (typeof dt === 'string') { try { dt = JSON.parse(dt); } catch (e) { } }
                 dt = dt || {};
 
@@ -73,10 +73,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     etapa: r.etapa_atual,
                     prioridade: r.prioridade,
                     urgente: r.urgente,
-                    alerta: r.alerta_prazo || 'Verde',
+                    alerta: r.alerta_cor || r.alerta_prazo || 'Verde',
 
                     // Novos campos de SLA dinâmico
-                    diasRestantes: r.dias_restantes_etapa !== undefined ? r.dias_restantes_etapa : (r.dias_restantes_total || 0),
+                    diasRestantes: r.dias_restantes_etapa,
                     diasSlaEtapa: r.dias_restantes_etapa,
                     diasSlaTotal: r.dias_restantes_total,
                     paradoHa: r.dias_na_etapa_atual || 0,
@@ -89,12 +89,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     pdf: r.link_pdf,
                     emb: r.link_arquivo_bordado,
                     observacoes: r.observacoes || '',
-                    corCentro: dt.cor_centro || '',
-                    corLaterais: dt.cor_laterais || '',
-                    corFilete: dt.cor_filete || ''
+
+                    // Technical Details Expansion
+                    dadosTecnicos: dt,
+                    renders: r.link_renders || {},
+
+                    // Legacy color support
+                    corCentro: (dt.parts?.Centro?.value || dt.parts?.Base?.value || dt.cor_centro || ''),
+                    corLaterais: (dt.parts?.Laterais?.value || dt.cor_laterais || ''),
+                    corFilete: (dt.parts?.Filete?.value || dt.parts?.Filetes?.value || dt.cor_filete || '')
                 };
             });
         }
+
     }
 
     renderStats();

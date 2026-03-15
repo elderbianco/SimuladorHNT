@@ -326,11 +326,28 @@ const SupabaseAdapter = {
                 // Technique Mapping (Fallback to Bordado)
                 tecnica: (parts.Tecnica || parts.tecnica || 'Bordado').includes('DTF') ? 'DTF' : 'Bordado',
 
+                // NOVO: Full Technical Details for HNT-OPS dynamic rendering
+                dados_tecnicos: {
+                    parts: parts,
+                    texts: specs.texts || {},
+                    extras: specs.extras || {},
+                    logoPunho: specs.logoPunho || null,
+                    simulationId: specs.simulationId
+                },
+
+                // NOVO: Render Links mapping
+                link_renders: {
+                    frente: orderData.render_frente || null,
+                    costas: orderData.render_costas || null,
+                    lateral: orderData.render_lateral || null
+                },
+
                 prazo_entrega: prazo.toISOString().split('T')[0],
                 etapa_atual: 'Preparacao',
                 urgente: !!(orderData.urgente || false),
                 observacoes: specs.observations || ''
             };
+
 
             const { data: prodResult, error: prodErr } = await window.supabaseClient
                 .from('producao_pedidos')
