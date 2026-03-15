@@ -108,6 +108,47 @@ function loadDashboard() {
                 const originalPdfUrl = data.pdfUrl || data.pdf_url;
                 const technicalData = (typeof data.DADOS_TECNICOS_JSON === 'string') ? JSON.parse(data.DADOS_TECNICOS_JSON) : data.DADOS_TECNICOS_JSON;
 
+                // Transformar objetos em arrays para a UI (que espera iteráveis)
+                const partsArr = {};
+                if (technicalData.parts) {
+                    Object.entries(technicalData.parts).forEach(([k, v]) => {
+                        const colorVal = (typeof v === 'object' && v !== null) ? (v.value || v.name || 'N/A') : (v || 'N/A');
+                        const colorHex = (typeof v === 'object' && v !== null) ? (v.hex || '#333') : '#333';
+                        partsArr[k] = { value: colorVal, hex: colorHex };
+                    });
+                }
+
+                const textsArr = [];
+                if (technicalData.texts) {
+                    Object.entries(technicalData.texts).forEach(([id, t]) => {
+                        if (t.enabled && t.content) {
+                            textsArr.push({
+                                zone_id: id,
+                                zone_label: id.replace(/_/g, ' ').toUpperCase(),
+                                content: t.content,
+                                font_family: t.fontFamily || 'Standard',
+                                color_name: t.colorName || 'Padrão',
+                                color_hex: t.color || '#fff'
+                            });
+                        }
+                    });
+                }
+
+                const uploadsArr = [];
+                if (technicalData.uploads) {
+                    Object.entries(technicalData.uploads).forEach(([id, u]) => {
+                        if (u.src || u.filename) {
+                            uploadsArr.push({
+                                zone_id: id,
+                                zone_label: id.replace(/_/g, ' ').toUpperCase(),
+                                file_name: u.filename || 'Imagem',
+                                file_url: u.src,
+                                is_custom: u.isCustom || false
+                            });
+                        }
+                    });
+                }
+
                 const initialMap = { 'SH': 'shorts', 'TP': 'top', 'LG': 'legging', 'ML': 'moletom', 'SL': 'shorts_legging', 'CL': 'calca_legging' };
                 const detectedType = technicalData.productInitial ? (initialMap[technicalData.productInitial] || "shorts") : (technicalData.simulator_type || "shorts");
 
@@ -120,11 +161,11 @@ function loadDashboard() {
                         unit_price: data.PRECO_UNITARIO || (technicalData.pricing ? technicalData.pricing.unit_price : 0)
                     },
                     specs: {
-                        parts: technicalData.parts || {},
+                        parts: partsArr,
                         sizes: technicalData.sizes || {},
-                        uploads: technicalData.uploads || {},
-                        texts: technicalData.texts || {},
-                        observations: technicalData.observations || ""
+                        uploads: uploadsArr,
+                        texts: textsArr,
+                        observations: technicalData.observations || data.observacoes || ""
                     },
                     pdf_path: originalPdfUrl || ""
                 };
