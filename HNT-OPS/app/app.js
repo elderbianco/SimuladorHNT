@@ -721,16 +721,16 @@ async function cancelarPedidoUI() {
     }
 }
 
-let isEditing = false;
+// isEditing declared at top
 function toggleEdicao() {
     isEditing = !isEditing;
-    const p = PEDIDOS.find(x => x.id === selectedId);
+    const p = PEDIDOS.find(x => x.id == selectedId);
     renderDrawerTab(p);
 }
 
 async function saveEdicao() {
     if (!selectedId) return;
-    const p = PEDIDOS.find(x => x.id === selectedId);
+    const p = PEDIDOS.find(x => x.id == selectedId);
 
     const fields = {
         sku: $('edit-sku').value,
