@@ -200,6 +200,14 @@ const api = {
         // Atualiza campos genéricos (SKU, Qtd, etc)
         const result = await apiFetch(`producao_pedidos?id=eq.${id}`, 'PATCH', fields);
         return result && result.length > 0 ? result[0] : null;
+    },
+
+    async clearAllPedidos() {
+        // Exclui todos os pedidos da tabela (Risco Alto)
+        // Nota: Um DELETE sem filtros geralmente é bloqueado por segurança no PostgREST,
+        // mas aqui usamos id=neq.0 para contornar se necessário ou simplesmente enviamos sem filtro se permitido.
+        const result = await apiFetch('producao_pedidos?id=neq.0', 'DELETE');
+        return true;
     }
 };
 

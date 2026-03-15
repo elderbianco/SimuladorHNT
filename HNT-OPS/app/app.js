@@ -327,20 +327,7 @@ function renderDrawer(p) {
     </button>
   `;
 
-    // NOVO: Menu de Ações Administrativas
-    const am = document.createElement('div');
-    am.className = 'drawer-admin-actions';
-    am.style = 'margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; gap: 8px; overflow-x: auto;';
-    am.innerHTML = `
-        <button class="btn btn-ghost btn-sm" onclick="toggleEdicao()">${isEditing ? '❌ Cancelar Edição' : '📝 Editar Dados'}</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--orange)" onclick="cancelarPedidoUI()">🚫 Cancelar Pedido</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirPedidoUI()">🗑️ Excluir Permanente</button>
-    `;
-
-    const existingAm = document.querySelector('.drawer-admin-actions');
-    if (existingAm) existingAm.remove();
-    $('drawer-header').appendChild(am);
-
+    // drawer-admin-actions logic removed from here and moved to renderDrawerTab
     renderDrawerTab(p);
 }
 
@@ -478,6 +465,15 @@ function renderDrawerTab(p) {
 
 
 
+        // Administrative Actions for Admins
+        if (currentOperador && currentOperador.perfil === 'Admin') {
+            contentHtml += `
+            <div class="drawer-admin-actions">
+                <button class="btn btn-ghost btn-sm" onclick="toggleEdicao()">${isEditing ? '❌ Cancelar Edição' : '📝 Editar Dados'}</button>
+                <button class="btn btn-ghost btn-sm" style="color:var(--orange)" onclick="cancelarPedidoUI()">🚫 Cancelar Pedido</button>
+                <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirPedidoUI()">🗑️ Excluir Permanente</button>
+            </div>`;
+        }
     } else if (drawerTab === 'cliente') {
         contentHtml = `
       <div class="detail-section" style="margin-top:0">
@@ -2583,4 +2579,39 @@ function closeStageDetailAndOpenDrawer(id) {
     modal.style.display = 'none';
     modal.classList.remove('open');
     openDrawer(id);
+}
+
+async function limparTodosPedidos() {
+    if (!confirm("⚠️ ATENÇÃO: Isso excluirá PERMANENTEMENTE todos os pedidos do sistema. Tem certeza?")) return;
+    if (!confirm("TEM CERTEZA ABSOLUTA? Esta ação é irreversível.")) return;
+
+    try {
+        if (typeof api !== 'undefined') {
+            const success = await api.clearAllPedidos();
+            if (success) {
+                alert("Sucesso! Todos os pedidos foram removidos.");
+                location.reload();
+            } else {
+                throw new Error("A API retornou falha.");
+            }
+        }
+    } catch (e) {
+        alert("Erro ao limpar banco: " + e.message);
+    }
+}
+
+async function excluirPedidoUI() {
+    if (!selectedId) return;
+    if (!confirm("Tem certeza que deseja EXCLUIR PERMANENTEMENTE este pedido?")) return;
+
+    try {
+        if (typeof api !== 'undefined') {
+            await api.deletePedido(selectedId);
+            alert("Pedido excluído com sucesso.");
+            closeDrawer();
+            location.reload();
+        }
+    } catch (e) {
+        alert("Erro ao excluir: " + e.message);
+    }
 }

@@ -1228,7 +1228,7 @@ input {
 }
 
 .drawer.open {
-  transform: translateX(0);
+  transform: translateX(0) !important;
 }
 
 .drawer-header {
@@ -1340,6 +1340,22 @@ input {
 .stage-btn svg {
   width: 12px;
   height: 12px;
+}
+
+/* Admin Actions in Drawer */
+.drawer-admin-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px dashed var(--border);
+  margin-top: 15px;
+  overflow-x: auto;
+}
+
+.drawer-admin-actions .btn {
+  white-space: nowrap;
+  font-size: 11px;
+  height: 30px;
 }
 
 .pendencia-btn {
