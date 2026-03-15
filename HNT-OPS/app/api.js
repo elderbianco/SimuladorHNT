@@ -208,6 +208,25 @@ const api = {
         // mas aqui usamos id=neq.0 para contornar se necessário ou simplesmente enviamos sem filtro se permitido.
         const result = await apiFetch('producao_pedidos?id=neq.0', 'DELETE');
         return true;
+    },
+
+    // 11. Novos Pedidos Manuais
+    async getNextOrderId() {
+        // Traz o último número de pedido para gerar o próximo
+        const data = await apiFetch('producao_pedidos?select=numero_pedido&order=numero_pedido.desc&limit=1');
+        const lastNum = (data && data.length > 0) ? parseInt(data[0].numero_pedido.split('-').pop()) : 1000;
+        const nextNum = lastNum + 1;
+        const year = new Date().getFullYear();
+        return {
+            numero: `HNT-${year}-${nextNum}`,
+            seq: nextNum
+        };
+    },
+
+    async createPedido(pedido) {
+        // Cria o registro na tabela principal
+        const result = await apiFetch('producao_pedidos', 'POST', pedido);
+        return result;
     }
 };
 
