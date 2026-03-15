@@ -202,13 +202,17 @@ function generateFormattedFilename(zoneId, originalName, source = 'EXT') {
         state.orderNumber = generateNextOrderNumber();
     }
 
-    // 3. Composite ID (HNT-PD-XXXXXX-SH-XXXXXX)
+    // 3. Composite ID (HNT-2026-XXXX-SH-XXXXXX)
     // Clean Sim ID (remove prefix if present)
     let cleanSimId = state.simulationId.replace(/^HNT-/, '');
-    // Clean Order ID (ensure prefix HNT-PD)
+    // Clean Order ID (ensure it follows HNT-YYYY-XXXX)
     let cleanOrderId = state.orderNumber;
+
+    // Fallback/Correction para garantir prefixo HNT se necessário
     if (!cleanOrderId.startsWith('HNT-')) cleanOrderId = `HNT-${cleanOrderId}`;
-    if (!cleanOrderId.includes('PD') && /HNT-\d+/.test(cleanOrderId)) cleanOrderId = cleanOrderId.replace('HNT-', 'HNT-PD-');
+
+    // Remove PD redundante se existir por erro legado
+    cleanOrderId = cleanOrderId.replace('HNT-PD-', 'HNT-');
 
     let compositeId = `${cleanOrderId}-${cleanSimId}`;
     // 4. Sigla Local (Mapeamento Estrito)

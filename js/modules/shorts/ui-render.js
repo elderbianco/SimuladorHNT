@@ -218,7 +218,7 @@ function renderControls() {
         state.simulationId = `HNT-SH-${generateNextSequenceNumber()}`;
     }
     if ((!state.orderNumber || state.orderNumber === state.simulationId) && typeof generateNextOrderNumber === 'function') {
-        state.orderNumber = `HNT-PD-${generateNextOrderNumber()}`;
+        state.orderNumber = generateNextOrderNumber();
     }
 
     const headerRow = document.createElement('div');
