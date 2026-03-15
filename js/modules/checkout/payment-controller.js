@@ -80,25 +80,19 @@ async function handleCheckout(items) {
         console.log("💳 Iniciando processamento de pagamento simulado...");
 
         // 1. Sincronizar com Supabase: Marcar como 'Aprovado' todos os itens do checkout
-        if (typeof SupabaseAdapter !== 'undefined' && window.supabaseClient) {
-
+        if (typeof SupabaseAdapter !== 'undefined' && window.SupabaseAdapter) {
+            // Loop through each order and approve it for production
             for (const order of items) {
                 const orderId = order.order_id || order.ID_PEDIDO;
-                if (!orderId) continue;
+                console.log(`⏳ Aprovando pedido: ${orderId}`);
 
-                console.log(`📤 Atualizando pedido ${orderId} para status: Aprovado`);
+                // Use the integrated bridge method of SupabaseAdapter
+                const success = await window.SupabaseAdapter.aprovarPedidoParaProducao(order);
 
-                const { error } = await window.supabaseClient
-                    .from('pedidos')
-                    .update({
-                        STATUS_PEDIDO: 'Aprovado',
-                        json_tec: order.item // Enrich with item data if needed
-                    })
-                    .eq('ID_PEDIDO', orderId);
-
-                if (error) throw error;
+                if (!success) {
+                    console.warn(`⚠️ Falha ao migrar pedido ${orderId} para HNT-OPS. Tentando próximo...`);
+                }
             }
-
             console.log("✅ Todos os pedidos foram marcados como Aprovados no Supabase.");
         } else {
             console.warn("⚠️ Supabase não disponível. Simulando apenas offline.");
