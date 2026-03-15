@@ -292,7 +292,7 @@ function bindKanbanEvents() {
 function openDrawer(id) {
     selectedId = id;
     drawerTab = 'detalhes';
-    const p = PEDIDOS.find(x => x.id === id);
+    const p = PEDIDOS.find(x => x.id == id);
     if (!p) return;
     document.querySelectorAll('.drawer-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'detalhes'));
     $('chat-input-row').style.display = 'none';
