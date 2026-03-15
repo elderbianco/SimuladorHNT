@@ -213,8 +213,23 @@ const SupabaseAdapter = {
 
         try {
             const orderId = orderData.order_id || orderData.ID_PEDIDO;
-            const item = orderData.item || {};
-            const specs = item.specs || {};
+
+            // --- DATA EXTRACTION & ROBUSTNESS ---
+            // If we don't have the 'item' object (standard simulator format), 
+            // try to reconstruct it from json_tec or DADOS_TECNICOS_JSON (Supabase format)
+            let item = orderData.item;
+            if (!item && (orderData.json_tec || orderData.DADOS_TECNICOS_JSON)) {
+                try {
+                    const rawJson = orderData.json_tec || orderData.DADOS_TECNICOS_JSON;
+                    item = (typeof rawJson === 'string') ? JSON.parse(rawJson) : rawJson;
+                    // If the parsed JSON is just the specs, wrap it
+                    if (item && !item.specs && (item.parts || item.sizes)) {
+                        item = { specs: item, simulator_type: orderData.TIPO_PRODUTO };
+                    }
+                } catch (e) { console.error("Erro ao parsear dados técnicos:", e); }
+            }
+            item = item || {};
+            const specs = item.specs || item; // Fallback to item itself if not wrapped
             const parts = specs.parts || {};
 
             // Extract profile for fallback or ID lookup
@@ -262,10 +277,15 @@ const SupabaseAdapter = {
             };
 
             // Size Summary
-            const sizeStr = specs.sizes ? Object.entries(specs.sizes)
-                .filter(([s, q]) => q > 0)
-                .map(([s, q]) => `${q}x ${s}`)
-                .join(', ') : 'Grade Única';
+            let sizeStr = 'Grade Única';
+            if (specs.sizes) {
+                sizeStr = Object.entries(specs.sizes)
+                    .filter(([s, q]) => q > 0)
+                    .map(([s, q]) => `${q}x ${s}`)
+                    .join(', ') || 'Grade Única';
+            } else if (orderData.TAMANHO) {
+                sizeStr = orderData.TAMANHO;
+            }
 
             const prodRow = {
                 pedido_origem_id: orderId,
