@@ -482,50 +482,70 @@ window.CartUI = {
     renderLogosAndTexts: function (specs) {
         let html = '';
 
-        // Uploads / Logos
-        if (specs.uploads && specs.uploads.length > 0) {
+        // Normalização: Converter objetos em arrays se necessário
+        const uploads = Array.isArray(specs.uploads) ? specs.uploads : (specs.uploads ? Object.entries(specs.uploads).map(([id, u]) => ({ ...u, zone_id: id, zone_label: id })) : []);
+        const texts = Array.isArray(specs.texts) ? specs.texts : (specs.texts ? Object.entries(specs.texts).map(([id, t]) => ({ ...t, zone_id: id, zone_label: id })) : []);
+
+        // 1. Logos
+        if (uploads.length > 0) {
             html += '<h4 style="color:var(--gold); border-bottom:1px solid #444; padding-bottom:5px; margin-top:20px;">🖼️ LOGOTIPOS & ARTES</h4>';
             html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:15px; margin-top:10px;">';
-            specs.uploads.forEach(u => {
+            uploads.forEach(u => {
+                const src = u.file_url || u.src;
+                const name = u.file_name || u.filename || 'Imagem';
+                const label = u.zone_label || u.zone_id;
+                const isCustom = u.is_custom || u.isCustom;
+
                 html += `
                 <div style="background:#222; padding:12px; border-radius:6px; border-left:3px solid var(--gold);">
-                    <div style="font-weight:bold; color:#fff; margin-bottom:5px;">${u.zone_label}</div>
+                    <div style="font-weight:bold; color:#fff; margin-bottom:5px;">${label}</div>
                     <div style="font-size:0.85rem; color:#888; line-height:1.4;">
-                        <strong>Arquivo:</strong> ${u.file_name}<br>
-                        <strong>Origem:</strong> ${u.is_custom ? 'Upload do Cliente' : 'Acervo Hanuthai'}<br>
-                        <span style="color:#ffa500;">${u.is_custom ? '⚠️ Criação de Matriz Necessária' : '✅ Matriz já existente'}</span>
+                        <strong>Arquivo:</strong> ${name}<br>
+                        <strong>Origem:</strong> ${isCustom ? 'Upload do Cliente' : 'Acervo Hanuthai'}<br>
+                        <span style="color:#ffa500;">${isCustom ? '⚠️ Criação de Matriz Necessária' : '✅ Matriz já existente'}</span>
                     </div>
-                    ${u.file_url ? `<a href="${u.file_url}" download="Logo_${u.zone_label}.png" class="btn btn-outline" style="font-size:0.7rem; padding:4px 8px; margin-top:10px; display:inline-block;">Baixar Arquivo</a>` : ''}
+                    ${src ? `<a href="${src}" download="Logo_${label}.png" class="btn btn-outline" style="font-size:0.7rem; padding:4px 8px; margin-top:10px; display:inline-block;">Baixar Arquivo</a>` : ''}
                 </div>`;
             });
             html += '</div>';
         }
 
-        // Texts
-        if (specs.texts && specs.texts.length > 0) {
+        // 2. Textos
+        if (texts.length > 0) {
             html += '<h4 style="color:var(--gold); border-bottom:1px solid #444; padding-bottom:5px; margin-top:25px;">🔤 TEXTOS PERSONALIZADOS</h4>';
             html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:15px; margin-top:10px;">';
-            specs.texts.forEach(t => {
+            texts.forEach(t => {
+                const content = t.content;
+                const label = t.zone_label || t.zone_id;
+                const colorHex = t.color_hex || t.color || '#fff';
+                const font = t.font_family || t.fontFamily || 'Standard';
+
                 html += `
-                <div style="background:#222; padding:12px; border-radius:6px; border-left:3px solid ${t.color_hex};">
-                    <div style="font-weight:bold; color:#fff; margin-bottom:5px;">${t.zone_label}</div>
-                    <div style="font-size:1.1rem; margin-bottom:8px; color:var(--gold);">"${t.content}"</div>
+                <div style="background:#222; padding:12px; border-radius:6px; border-left:3px solid ${colorHex};">
+                    <div style="font-weight:bold; color:#fff; margin-bottom:5px;">${label}</div>
+                    <div style="font-size:1.1rem; margin-bottom:8px; color:var(--gold);">"${content}"</div>
                     <div style="font-size:0.85rem; color:#888;">
-                        <strong>Fonte:</strong> ${t.font_family}<br>
-                        <strong>Cor:</strong> ${t.color_name || t.color_hex}
+                        <strong>Fonte:</strong> ${font}<br>
+                        <strong>Cor:</strong> ${t.color_name || colorHex}
                     </div>
                 </div>`;
             });
             html += '</div>';
         }
 
-        // Observations
-        if (specs.observations && specs.observations.trim().length > 0) {
+        // 3. Observations
+        const obs = specs.observations || specs.observacoes || "";
+        if (obs && obs.trim().length > 0) {
             html += '<h4 style="color:#fff; border-bottom:1px solid #444; padding-bottom:5px; margin-top:25px;">📝 OBSERVAÇÕES</h4>';
-            html += `<div style="background:#222; padding:15px; border-radius:6px; border-left:3px solid #ccc; color:#ddd; margin-top:10px; font-style:italic;">
-                        "${specs.observations.replace(/\n/g, '<br>')}"
+            html += `<div style="background:#222; padding:15px; border-radius:6px; border-left:3px solid #ccc; color:#ddd; margin-top:10px; font-style:italic; line-height:1.5;">
+                        "${obs.replace(/\n/g, '<br>')}"
                      </div>`;
         }
+
+        if (!html) html = '<p style="color:#666; font-style:italic; padding:20px;">Nenhuma personalização de imagem ou texto encontrada para este item.</p>';
+
+        return html;
+    },
 
         if (!html) html = '<p style="color:#666; font-style:italic; padding:20px;">Nenhuma personalização de imagem ou texto encontrada para este item.</p>';
 
