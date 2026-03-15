@@ -342,6 +342,7 @@ const SupabaseAdapter = {
                     lateral: orderData.render_lateral || null
                 },
 
+                numero_pedido: orderId, // Sincroniza número puro (010008) com HNT-OPS
                 prazo_entrega: prazo.toISOString().split('T')[0],
                 etapa_atual: 'Preparacao',
                 urgente: !!(orderData.urgente || false),
