@@ -841,6 +841,24 @@ function showAdminAuth(targetView, onSuccess) {
         if (result && (result.perfil === 'Admin' || result.perfil === 'Gerente')) {
             modal.style.display = 'none';
             modal.classList.remove('open');
+
+            // Sincroniza o operador global para liberar ações admin em todo o sistema
+            const op = OPERADORES.find(o => o.id === result.id);
+            if (op) {
+                currentOperador = op;
+            } else {
+                currentOperador = {
+                    id: result.id,
+                    nome: result.nome,
+                    usuario: result.usuario,
+                    iniciais: (result.nome || 'Admin').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
+                    perfil: result.perfil,
+                    setor: result.setor
+                };
+            }
+            localStorage.setItem('hnt_operator', JSON.stringify(currentOperador));
+            updateUserCard();
+
             // Log de acesso
             api.logAdminAccess(result.id, result.nome, navigator.userAgent);
             onSuccess();
