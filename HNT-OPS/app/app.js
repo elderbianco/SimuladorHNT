@@ -2188,6 +2188,26 @@ async function renderAdmin() {
       </div>
     </div>
 
+    </div>
+    
+    <!-- NOVO: Área de Risco / Limpeza de Dados -->
+    <div class="report-card" style="grid-column: span 3; border: 1px solid var(--red-dim); background: rgba(239, 68, 68, 0.05); margin-top: 15px;">
+        <div class="report-card-header" style="background: rgba(239, 68, 68, 0.1);">
+          <span class="report-card-icon" style="font-size:16px">⚠️</span>
+          <span class="report-card-title" style="color:var(--red)">Zona de Risco: Banco de Dados</span>
+          <span class="report-card-sub" style="font-size:10px">Ações permanentes e irreversíveis</span>
+        </div>
+        <div class="report-card-body" style="padding: 20px; text-align: center;">
+             <p style="font-size:13px; color:var(--text-2); margin-bottom:15px">
+               Deseja remover <strong>todos os pedidos</strong> do banco de dados para iniciar um novo ciclo? <br>
+               <span style="color:var(--text-3); font-size:11px">Isso não afetará os usuários (operadores) ou as configurações de etapas.</span>
+             </p>
+             <button class="btn" style="background:var(--red); color:white; border:none; padding:12px 25px; font-weight:800; border-radius:6px; cursor:pointer; box-shadow:var(--shadow-md);" onclick="limparTodosPedidos()">
+                🗑️ EXCLUIR TODOS OS LANÇAMENTOS (PEDIDOS)
+             </button>
+        </div>
+    </div>
+
     <!-- Modal de Gestão de Etapa -->
     <div id="etapa-modal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; z-index:2010">
         <div class="report-card" style="width:400px; box-shadow:var(--shadow-lg); animation: slideUp 0.3s ease-out">
