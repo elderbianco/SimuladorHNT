@@ -932,11 +932,20 @@ function bindQR() {
     const fab = document.querySelector('.mobile-fab');
     if (fab) fab.addEventListener('click', openQR);
 
-});
+    // Batch Events
+    $('btn-batch').addEventListener('click', openBatchModal);
+    $('batch-cancel').addEventListener('click', closeBatchModal);
+    $('btn-batch-execute').addEventListener('click', executeBatchUpdate);
+    $('batch-target-etapa').addEventListener('change', updateBatchGlobalTarget);
+    $('batch-manual-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            processBatchManualInput();
+        }
+    });
 
-// Novo Pedido Manual
-const btnNovo = $('btn-novo-pedido');
-if (btnNovo) btnNovo.addEventListener('click', openNovoPedidoModal);
+    // Novo Pedido Manual
+    const btnNovo = $('btn-novo-pedido');
+    if (btnNovo) btnNovo.addEventListener('click', openNovoPedidoModal);
 }
 
 let html5QrCode;
