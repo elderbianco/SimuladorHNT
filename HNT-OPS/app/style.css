@@ -795,7 +795,7 @@ input {
 
 .table-header {
   display: grid;
-  grid-template-columns: 125px 140px 85px 70px 1fr 140px 150px 100px 90px 40px;
+  grid-template-columns: 140px 140px 85px 70px 1fr 140px 180px 100px 100px 40px;
   gap: 0;
   padding: 0 16px;
   height: 36px;
@@ -804,23 +804,36 @@ input {
   align-items: center;
 }
 
-.header-shortcut {
+.header-shortcut-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
+  gap: 8px;
+  padding: 0 12px;
   height: 32px;
-  border-radius: var(--radius-sm);
   background: var(--surface-2);
   border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   transition: all var(--transition);
-  cursor: pointer;
 }
 
-.header-shortcut:hover {
-  background: var(--surface-3);
+.header-shortcut-btn svg {
+  width: 14px;
+  height: 14px;
+  color: var(--amber);
+}
+
+.header-shortcut-btn:hover {
+  background: white;
   border-color: var(--amber);
+  color: var(--text-1);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .table-header span {
@@ -833,7 +846,7 @@ input {
 
 .table-row {
   display: grid;
-  grid-template-columns: 125px 140px 85px 70px 1fr 140px 150px 100px 90px 40px;
+  grid-template-columns: 140px 140px 85px 70px 1fr 140px 180px 100px 100px 40px;
   gap: 0;
   padding: 0 16px;
   height: 48px;
@@ -884,7 +897,7 @@ input {
   font-family: var(--font-mono);
   font-weight: 800;
   color: var(--gold);
-  font-size: 11px;
+  font-size: 11.5px;
 }
 
 .order-sku {
