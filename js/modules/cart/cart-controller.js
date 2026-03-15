@@ -7,11 +7,41 @@
 const STORAGE_KEY = 'hnt_all_orders_db';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Sincronizar com Supabase antes de carregar
+    // 1. Sincronizar com Supabase antes de carregar (MESCLANDO em vez de sobrescrever)
     if (typeof SupabaseAdapter !== 'undefined') {
-        const pedidos = await SupabaseAdapter.getPedidos();
-        if (pedidos && pedidos.length > 0) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(pedidos));
+        try {
+            console.log('🔄 Sincronizando com Supabase...');
+            const serverPedidos = await SupabaseAdapter.getPedidos();
+            const localRaw = localStorage.getItem(STORAGE_KEY);
+            let localPedidos = localRaw ? JSON.parse(localRaw) : [];
+
+            if (serverPedidos && serverPedidos.length > 0) {
+                // Mesclar: Usar serverPedidos como base, mas manter itens locais que não estão no servidor
+                const merged = [...serverPedidos];
+                let addedLocally = 0;
+
+                localPedidos.forEach(localItem => {
+                    const localId = localItem.order_id || localItem.ID_PEDIDO || localItem.ID_SIMULACAO;
+                    if (!localId) return; // Ignorar itens sem ID
+
+                    const exists = serverPedidos.some(s => {
+                        const sId = s.order_id || s.ID_PEDIDO || s.ID_SIMULACAO;
+                        return sId === localId;
+                    });
+
+                    if (!exists) {
+                        merged.push(localItem);
+                        addedLocally++;
+                    }
+                });
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+                console.log(`✅ Sincronização concluída. Total: ${merged.length} (${serverPedidos.length} servidor, ${addedLocally} locais pendentes)`);
+            } else {
+                console.log('ℹ️ Supabase não retornou pedidos ou retornou lista vazia. Mantendo dados locais.');
+            }
+        } catch (e) {
+            console.error('❌ Erro na sincronização inicial:', e);
         }
     }
     loadDashboard();
@@ -57,7 +87,7 @@ function loadDashboard() {
         container.innerHTML = `
             <div class="empty-state">
                 <h2>Seu carrinho está vazio</h2>
-                <p>Nenhuma simulação encontrada no Banco de Dados local.</p>
+                <p>Nenhuma simulação encontrada no Banco de Dados local ou servidor.</p>
                 <br>
                 <a href="IndexFightShorts.html" class="btn btn-primary" style="text-decoration:none">Novo Short</a>
                 <a href="IndexTop.html" class="btn btn-primary" style="text-decoration:none; margin-left:10px;">Novo Top</a>
@@ -77,110 +107,121 @@ function loadDashboard() {
     } catch (e) { }
 
     const getGroupKey = (order) => {
-        const name = order.client_info?.name;
+        const name = order.client_info?.name || order.client_name;
         const profileName = profile?.name;
 
         // Se o nome no pedido for 'Cliente' (padrão) ou vazio, tenta usar o do perfil cadastrado
-        const finalName = (name && name !== 'Cliente') ? name : (profileName || 'Cliente');
+        const finalName = (name && name !== 'Cliente' && name !== '') ? name : (profileName || 'Cliente');
         return finalName.trim().toLowerCase();
     };
 
     history.forEach((order, index) => {
         let data = order;
 
-        // --- NORMALIZAÇÃO DE CAMPOS (Supabase → UI) ---
-        if (data.pdf_url && !data.pdfUrl) data.pdfUrl = data.pdf_url;
-        if (data.criado_em && !data.created_at) data.created_at = data.criado_em;
-        if (data.ID_PEDIDO && !data.order_id) data.order_id = data.ID_PEDIDO;
+        // --- NORMALIZAÇÃO DE CAMPOS (Supabase/Legacy → UI) ---
+        // Se vier do Supabase (json_tec) ou formatado (DADOS_TECNICOS_JSON)
+        const techDataRaw = data.DADOS_TECNICOS_JSON || data.json_tec;
 
-        // Ensure client_info is populated from profile if missing
-        if (!data.client_info) data.client_info = {};
-        if (!data.client_info.name && profile?.name) data.client_info.name = profile.name;
-        if (!data.client_info.phone && (profile?.whatsapp || profile?.phone)) data.client_info.phone = profile.whatsapp || profile.phone;
-
-        if (data.DADOS_TECNICOS_JSON === undefined && data.json_tec) {
-            data.DADOS_TECNICOS_JSON = typeof data.json_tec === 'string' ? data.json_tec : JSON.stringify(data.json_tec);
-        }
-
-        // CRITICAL FIX: If item is missing but we have technical data, reconstruct the item
-        if (!data.item && data.DADOS_TECNICOS_JSON) {
+        if (!data.item && techDataRaw) {
             try {
-                const originalPdfUrl = data.pdfUrl || data.pdf_url;
-                const technicalData = (typeof data.DADOS_TECNICOS_JSON === 'string') ? JSON.parse(data.DADOS_TECNICOS_JSON) : data.DADOS_TECNICOS_JSON;
+                const technicalData = (typeof techDataRaw === 'string') ? JSON.parse(techDataRaw) : techDataRaw;
 
-                // Transformar objetos em arrays para a UI (que espera iteráveis)
-                const partsArr = {};
-                if (technicalData.parts) {
-                    Object.entries(technicalData.parts).forEach(([k, v]) => {
-                        const colorVal = (typeof v === 'object' && v !== null) ? (v.value || v.name || 'N/A') : (v || 'N/A');
-                        const colorHex = (typeof v === 'object' && v !== null) ? (v.hex || '#333') : '#333';
-                        partsArr[k] = { value: colorVal, hex: colorHex };
-                    });
+                // Se o technicalData já tiver o objeto 'item' (formato novo completo)
+                if (technicalData && technicalData.item) {
+                    data.item = technicalData.item;
+                    if (!data.order_id) data.order_id = technicalData.order_id;
+                    if (!data.created_at) data.created_at = technicalData.created_at;
+                } else {
+                    // Re-mapear campos de topo se estiver no formato Supabase (ID_PEDIDO, etc)
+                    const finalId = data.ID_PEDIDO || data.ID_SIMULACAO || technicalData.simulationId || technicalData.order_id || `PEDIDO_${index}`;
+                    const finalName = data.NOME_CLIENTE || data.client_name || profile?.name || 'Cliente';
+                    const finalQty = data.QUANTIDADE || data.quantity || technicalData.qty_total || 1;
+                    const finalPrice = data.PRECO_FINAL || data.total_price || (technicalData.pricing ? technicalData.pricing.total_price : 0);
+                    const finalDate = data.criado_em || data.DATA_CRIACAO || data.created_at || new Date().toISOString();
+                    const finalPdf = data.pdf_url || data.pdfUrl || data.PDF_URL || "";
+
+                    // Reconstruir o item para o CartUI
+                    const partsArr = {};
+                    if (technicalData.parts) {
+                        Object.entries(technicalData.parts).forEach(([k, v]) => {
+                            const colorVal = (typeof v === 'object' && v !== null) ? (v.value || v.name || 'N/A') : (v || 'N/A');
+                            const colorHex = (typeof v === 'object' && v !== null) ? (v.hex || '#333') : '#333';
+                            partsArr[k] = { value: colorVal, hex: colorHex };
+                        });
+                    }
+
+                    const uploadsArr = [];
+                    if (technicalData.uploads) {
+                        Object.entries(technicalData.uploads).forEach(([id, u]) => {
+                            if (u && (u.src || u.filename || u.file_url)) {
+                                uploadsArr.push({
+                                    zone_id: id,
+                                    zone_label: u.zone_label || id.replace(/_/g, ' ').toUpperCase(),
+                                    file_name: u.file_name || u.filename || 'Imagem',
+                                    file_url: u.file_url || u.src,
+                                    is_custom: u.is_custom !== undefined ? u.is_custom : (u.isCustom || false)
+                                });
+                            }
+                        });
+                    }
+
+                    const textsArr = [];
+                    if (technicalData.texts) {
+                        Object.entries(technicalData.texts).forEach(([id, t]) => {
+                            if (t && t.enabled && t.content) {
+                                textsArr.push({
+                                    zone_id: id,
+                                    zone_label: t.zone_label || id.replace(/_/g, ' ').toUpperCase(),
+                                    content: t.content,
+                                    color: t.color,
+                                    font_family: t.fontFamily || t.font_family
+                                });
+                            }
+                        });
+                    }
+
+                    const initialMap = { 'SH': 'shorts', 'TP': 'top', 'LG': 'legging', 'ML': 'moletom', 'SL': 'shorts_legging', 'CL': 'calca_legging' };
+                    const detectedType = technicalData.productType || technicalData.simulator_type || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "shorts") : "shorts");
+
+                    data.item = {
+                        simulator_type: detectedType,
+                        model_name: technicalData.model_name || technicalData.product_type || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "Simulação") : "Simulação"),
+                        qty_total: finalQty,
+                        pricing: {
+                            total_price: finalPrice,
+                            unit_price: data.PRECO_UNITARIO || data.unit_price || (technicalData.pricing ? technicalData.pricing.unit_price : (finalPrice / finalQty))
+                        },
+                        specs: {
+                            parts: partsArr,
+                            sizes: technicalData.sizes || {},
+                            uploads: uploadsArr,
+                            texts: textsArr,
+                            observations: data.observations || data.observacoes || technicalData.observations || ""
+                        },
+                        pdf_path: finalPdf
+                    };
+
+                    data.order_id = finalId;
+                    data.client_name = finalName;
+                    data.quantity = finalQty;
+                    data.total_price = finalPrice;
+                    data.created_at = finalDate;
+                    data.pdfUrl = finalPdf;
                 }
-
-                const textsArr = [];
-                if (technicalData.texts) {
-                    Object.entries(technicalData.texts).forEach(([id, t]) => {
-                        if (t.enabled && t.content) {
-                            textsArr.push({
-                                zone_id: id,
-                                zone_label: id.replace(/_/g, ' ').toUpperCase(),
-                                content: t.content,
-                                font_family: t.fontFamily || 'Standard',
-                                color_name: t.colorName || 'Padrão',
-                                color_hex: t.color || '#fff'
-                            });
-                        }
-                    });
-                }
-
-                const uploadsArr = [];
-                if (technicalData.uploads) {
-                    Object.entries(technicalData.uploads).forEach(([id, u]) => {
-                        if (u.src || u.filename) {
-                            uploadsArr.push({
-                                zone_id: id,
-                                zone_label: id.replace(/_/g, ' ').toUpperCase(),
-                                file_name: u.filename || 'Imagem',
-                                file_url: u.src,
-                                is_custom: u.isCustom || false
-                            });
-                        }
-                    });
-                }
-
-                const initialMap = { 'SH': 'shorts', 'TP': 'top', 'LG': 'legging', 'ML': 'moletom', 'SL': 'shorts_legging', 'CL': 'calca_legging' };
-                const detectedType = technicalData.productInitial ? (initialMap[technicalData.productInitial] || "shorts") : (technicalData.simulator_type || "shorts");
-
-                data.item = {
-                    simulator_type: detectedType,
-                    model_name: technicalData.model_name || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "Simulação") : "Simulação"),
-                    qty_total: technicalData.qty_total || data.QUANTIDADE || data.quantity || 1,
-                    pricing: {
-                        total_price: data.PRECO_FINAL || data.total_price || (technicalData.pricing ? technicalData.pricing.total_price : 0),
-                        unit_price: data.PRECO_UNITARIO || (technicalData.pricing ? technicalData.pricing.unit_price : 0)
-                    },
-                    specs: {
-                        parts: partsArr,
-                        sizes: technicalData.sizes || {},
-                        uploads: uploadsArr,
-                        texts: textsArr,
-                        observations: technicalData.observations || data.observacoes || ""
-                    },
-                    pdf_path: originalPdfUrl || ""
-                };
-                if (!data.order_id) data.order_id = technicalData.simulationId || technicalData.orderNumber || `PEDIDO_${index}`;
-                if (!data.created_at) data.created_at = new Date().toISOString();
-                if (originalPdfUrl) data.pdfUrl = originalPdfUrl;
-            } catch (e) { console.error('Error parsing DADOS_TECNICOS_JSON:', e); return; }
+            } catch (e) {
+                console.error('❌ Erro na reconstrução do item:', e, data);
+            }
         }
 
-        // --- PDF LINK RESILIENCE ---
-        if (!data.pdfUrl && (!data.item || !data.item.pdf_path) && data.order_id) {
-            const fileName = `Pedido_${data.order_id}.pdf`.replace(/[^a-zA-Z0-9._-]/g, '_');
-            const predictedUrl = `assets/BancoDados/PedidosPDF/${fileName}`;
-            if (data.item) data.item.pdf_path = predictedUrl;
-            data.pdfUrl = predictedUrl;
+        // --- BACKUP NORMALIZATION ---
+        if (!data.order_id) data.order_id = data.ID_PEDIDO || `PEDIDO_${index}`;
+        if (!data.created_at) data.created_at = data.criado_em || data.DATA_CRIACAO || new Date().toISOString();
+        if (!data.client_info) {
+            data.client_info = {
+                name: data.client_name || data.NOME_CLIENTE || (profile?.name) || 'Cliente',
+                phone: data.client_phone || data.TELEFONE_CLIENTE || (profile?.whatsapp || profile?.phone) || '',
+                email: data.client_email || profile?.email || ''
+            };
         }
 
         // Legacy conversion if needed
@@ -192,13 +233,9 @@ function loadDashboard() {
 
         const key = getGroupKey(data);
         if (!groups[key]) {
-            const rawName = data.client_info?.name;
-            const profileName = profile?.name;
-            const finalName = (rawName && rawName !== 'Cliente') ? rawName : (profileName || 'Cliente');
-
             groups[key] = {
-                clientName: finalName,
-                phone: data.client_info?.phone || profile?.whatsapp || profile?.phone || '',
+                clientName: data.client_info.name || 'Cliente',
+                phone: data.client_info.phone || '',
                 items: [],
                 totalVal: 0,
                 totalQty: 0
@@ -212,7 +249,6 @@ function loadDashboard() {
         totalPieces += (data.item.qty_total || 0);
         totalValue += (data.item.pricing?.total_price || 0);
     });
-
     // Render each Group using CartUI
     if (window.CartUI) {
         Object.values(groups).forEach(group => {

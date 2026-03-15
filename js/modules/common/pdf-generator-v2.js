@@ -733,7 +733,8 @@ const PDFGenerator = {
             });
         };
 
-        const id = this.context.state?.simulationId || 'HNT_PEDIDO';
+        const sku = this.context.state?.simulationId || 'HNT_SKU';
+        const orderNum = this.context.state?.orderNumber || 'SN';
 
         try {
             // Se chamado pelo openPreview, o snapshot já foi atualizado!
@@ -790,11 +791,11 @@ const PDFGenerator = {
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(11);
                 docArg.setTextColor(0, 0, 0);
-                docArg.text(`PEDIDO: #${id}`, width - margin, margin + 10, { align: 'right' });
+                docArg.text(`PEDIDO: #${orderNum}`, width - margin, margin + 10, { align: 'right' });
                 docArg.setFontSize(8);
                 docArg.setFont('helvetica', 'normal');
                 docArg.setTextColor(100, 100, 100);
-                docArg.text(`SIMULADOR ID: ${id}`, width - margin, margin + 15, { align: 'right' });
+                docArg.text(`CÓDIGO SKU: ${sku}`, width - margin, margin + 15, { align: 'right' });
 
                 return margin + 25;
             };
@@ -849,52 +850,43 @@ const PDFGenerator = {
             // Função de Limpeza Ultra Sônica (v15.10): Remove emojis e normaliza texto para jsPDF
             const clean = (s) => {
                 if (!s) return '';
-                // 1. Remover Emojis e Símbolos Especiais (Regex Robusta)
-                let text = s.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
-                // 2. Filtrar apenas caracteres suportados (Safe for WinAnsi/jsPDF)
-                text = text.replace(/[^a-zA-Z0-9\u00C0-\u00FF\s.,:;()\[\]\-_+/\\|'"?!@#$%*R$<>]/g, ' ');
-                // 3. Normalizar espaços
-                return text.replace(/\s+/g, ' ').trim();
+                return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x00-\x7F]/g, "");
             };
-            // 3. Coleta de Itens do Resumo (Tabela Real) - v15.11
-            const rows = Array.from(document.querySelectorAll('#summary-body tr, #summary-body-modal tr')).filter(r => {
-                const text = r.innerText.trim();
-                return text && !text.includes('Total:') && !r.closest('thead');
+
+            // 4. RENDERIZAÇÃO DA TABELA (RESUMO TÉCNICO)
+            let tableData = [];
+
+            // A. Cores
+            Object.entries(this.context.state.parts || {}).forEach(([p, val]) => {
+                tableData.push(['COR: ' + p.toUpperCase(), clean(val.value || val)]);
             });
 
-            rows.forEach(row => {
-                const cols = Array.from(row.querySelectorAll('td'));
-                if (cols.length < 2) return;
-
-                let label = clean(cols[0].innerText || cols[0].textContent);
-                let detail = clean(cols[1].innerText || cols[1].textContent);
-                let price = cols.length > 2 ? clean(cols[2]?.innerText || cols[2]?.textContent) : '';
-
-                // Combinar detalhe ao label se houver
-                const fullLabel = detail ? `${label} (${detail})` : label;
-
-                doc.setFontSize(8.5);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(0, 0, 0);
-
-                // Proteção contra fim da página
-                if (currentY > pageHeight - 35) {
-                    doc.addPage();
-                    currentY = drawExpertTemplate(doc);
+            // B. Textos
+            Object.entries(this.context.state.texts || {}).forEach(([key, val]) => {
+                if (val.enabled && val.content) {
+                    tableData.push(['TEXTO: ' + key.toUpperCase(), clean(val.content)]);
                 }
-
-                // Quebra de Linha Inteligente
-                const maxLabelWidth = pageWidth - (margin * 2) - 35;
-                const labelLines = doc.splitTextToSize(fullLabel, maxLabelWidth);
-
-                doc.text(labelLines, margin, currentY);
-
-                if (price) {
-                    doc.text(price, pageWidth - margin, currentY, { align: 'right' });
-                }
-
-                currentY += (labelLines.length * 4.5) + 2;
             });
+
+            // C. Configurações Extras
+            Object.entries(this.context.state.extras || {}).forEach(([key, val]) => {
+                if (val.enabled) {
+                    tableData.push(['EXTRA: ' + key.toUpperCase(), 'ATIVADO']);
+                }
+            });
+
+            // Gerar Tabela Automática
+            doc.autoTable({
+                startY: currentY,
+                head: [['ATRIBUTO', 'ESPECIFICAÇÃO']],
+                body: tableData,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 2 },
+                headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255] },
+                margin: { left: margin, right: margin }
+            });
+
+            currentY = doc.lastAutoTable.finalY + 12;
 
             // 4. TOTAL EM DESTAQUE - Linha removida na v15.9
             /*
@@ -992,9 +984,9 @@ const PDFGenerator = {
 if (typeof window !== 'undefined') {
     window.PDFGenerator = PDFGenerator;
 
-    // Captura inicial após 3 segundos
+    // Captura inicial após 3 segundos (Apenas se estiver no Simulador)
     setTimeout(() => {
-        if (PDFGenerator.updateSnapshot) {
+        if (PDFGenerator.updateSnapshot && document.querySelector('.simulator-area')) {
             PDFGenerator.updateSnapshot();
         }
     }, 3000);

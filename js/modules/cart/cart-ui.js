@@ -285,17 +285,18 @@ window.CartUI = {
         }
 
         // 3. LOGOS/IMAGENS
-        const uploads = state.uploads || {};
-        const config = state.config || {};
-        const uploadEntries = Object.entries(uploads).filter(([zoneId, data]) => data && (data.src || data.filename));
+        const rawUploads = state.uploads || {};
+        const uploadEntries = Array.isArray(rawUploads)
+            ? rawUploads.map(u => [u.zone_id || 'pos', u])
+            : Object.entries(rawUploads).filter(([zoneId, data]) => data && (data.src || data.filename || data.file_name));
 
         if (uploadEntries.length > 0) {
             uploadEntries.forEach(([zoneId, data]) => {
-                const zoneName = zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                const fileName = data.filename || data.src || 'Imagem';
+                const zoneName = data.zone_label || zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const fileName = data.file_name || data.filename || data.file_url || data.src || 'Imagem';
                 let logoPrice = 0;
 
-                if (!data.isCustom) {
+                if (!data.isCustom && !data.is_custom) {
                     if (config.zonePrices && config.zonePrices[zoneId] !== undefined) {
                         logoPrice = config.zonePrices[zoneId];
                     } else {
@@ -311,7 +312,7 @@ window.CartUI = {
                 html += '<strong>Logo - ' + zoneName + '</strong><br>';
                 html += '<div style="font-size:0.85em; color:#bbb; line-height:1.3;">';
                 html += fileName;
-                if (data.isCustom) html += ' <span style="color:#FFA500; font-size:0.8em;">(Arquivo Próprio)</span>';
+                if (data.isCustom || data.is_custom) html += ' <span style="color:#FFA500; font-size:0.8em;">(Arquivo Próprio)</span>';
                 html += '</div></td>';
 
                 if (logoPrice > 0) {
@@ -320,8 +321,8 @@ window.CartUI = {
                     html += '<strong style="color:#28a745;">R$ ' + (logoPrice * item.qty_total).toFixed(2).replace('.', ',') + '</strong>';
                     html += '</td>';
                 } else {
-                    const note = data.isCustom ? 'Taxa Matriz (se aplicável)' : 'Incluído no Unitário';
-                    const style = data.isCustom ? 'color:#FFA500;' : 'color:#28a745;';
+                    const note = (data.isCustom || data.is_custom) ? 'Taxa Matriz (se aplicável)' : 'Incluído no Unitário';
+                    const style = (data.isCustom || data.is_custom) ? 'color:#FFA500;' : 'color:#28a745;';
                     html += `<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; ${style}">${note}</td>`;
                 }
                 html += '</tr>';
@@ -329,17 +330,19 @@ window.CartUI = {
         }
 
         // 4. TEXTOS
-        const texts = state.texts || {};
-        const textEntries = Object.entries(texts).filter(([zoneId, data]) => data && data.enabled && data.content);
+        const rawTexts = state.texts || {};
+        const textEntries = Array.isArray(rawTexts)
+            ? rawTexts.map(t => [t.zone_id || 'pos', t])
+            : Object.entries(rawTexts).filter(([zoneId, data]) => data && data.enabled && data.content);
 
         if (textEntries.length > 0) {
             textEntries.forEach(([zoneId, data]) => {
-                const zoneName = zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const zoneName = data.zone_label || zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 let textPrice = config.textPrice || 0;
 
                 if (zoneId.includes('lat')) {
                     const uId = zoneId.replace('text_', 'logo_');
-                    const hasImg = uploads[uId] && (uploads[uId].src || uploads[uId].filename);
+                    const hasImg = rawUploads[uId] && (rawUploads[uId].src || rawUploads[uId].filename);
                     if (hasImg) textPrice = config.textLatPrice || 9.90;
                     else textPrice = 0;
                 } else if (zoneId.includes('leg') || zoneId.includes('perna')) {
@@ -351,7 +354,7 @@ window.CartUI = {
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; word-break:break-word;">';
                 html += '<strong>Texto - ' + zoneName + '</strong><br>';
                 html += '<div style="font-size:0.85em; color:#bbb; line-height:1.3;">';
-                html += '"' + data.content + '" (' + (data.fontFamily || 'Padrão') + ')';
+                html += '"' + data.content + '" (' + (data.fontFamily || data.font_family || 'Padrão') + ')';
                 html += '</div></td>';
 
                 if (textPrice > 0) {

@@ -352,36 +352,28 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
         return false;
     }
 
-    // 2. Cálculo do ID Final (Sequencial) - Necessário ANTES do PDF
+    // 2. Identificação: SKU (Item) e Pedido (Grupo)
     const history = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
-    let sigla = 'SH';
+    let sigla = state.productInitial || 'SH';
     let typeCount = 0;
     const currentOrderNum = state.orderNumber;
 
+    // Conta quantos itens já existem NESTE pedido específico para gerar o sufixo
     history.forEach(h => {
-        if (h.DADOS_TECNICOS_JSON) {
-            try {
-                const hState = JSON.parse(h.DADOS_TECNICOS_JSON);
-                if ((hState.orderNumber === currentOrderNum) && h.order_id && h.order_id.includes(`-${sigla}-`)) {
-                    typeCount++;
-                }
-            } catch (e) { }
+        if (h.order_id === currentOrderNum) {
+            typeCount++;
         }
     });
 
     const sequenceSuffix = String(typeCount + 1).padStart(2, '0');
-    let finalId = `${state.simulationId}-${sequenceSuffix}`;
+    // simulationId já é o SKU (YY-HASH) vindo do state.js refatorado
+    const itemFullId = `${state.simulationId}-${sequenceSuffix}`;
 
-    // Verificação de Edição: Manter ID original se existir
-    if (state._editingIndex !== undefined && state._editingIndex !== null) {
-        if (state._editingOrderId) finalId = state._editingOrderId;
-    }
-
-    // 3. Geração de PDF Automática com ID Final
+    // 3. Geração de PDF Automática com ID do Item (para QR de Conferência)
     let pdfUrl = pdfUrlOverride;
     try {
         if (!pdfUrl && typeof PDFGenerator !== 'undefined') {
-            pdfUrl = await PDFGenerator.generateAndSaveForCart(finalId);
+            pdfUrl = await PDFGenerator.generateAndSaveForCart(itemFullId);
         }
     } catch (e) {
         console.error('❌ Erro ao gerar PDF para carrinho:', e);
@@ -390,7 +382,15 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     // 4. Formatação via Adapter e Persistência
     const pricing = calculateFullPrice();
     const newRow = DBAdapter.formatForDatabase(state, pricing, DATA, pdfUrl);
-    newRow.order_id = finalId; // Sincroniza ID final
+
+    // IMPORTANTE:
+    // newRow.order_id agora é o número puro (ex: 5001) vindo do state.orderNumber
+    // newRow.ID_SIMULACAO (dentro do DADOS_TECNICOS_JSON) será o SKU completo
+
+    // Atualizamos o simulationId no estado para salvar com o sufixo correto
+    const savedState = JSON.parse(newRow.DADOS_TECNICOS_JSON);
+    savedState.simulationId = itemFullId;
+    newRow.DADOS_TECNICOS_JSON = JSON.stringify(savedState);
 
     // --- SUPABASE SYNC ---
     if (typeof SupabaseAdapter !== 'undefined') {

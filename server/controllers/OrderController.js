@@ -144,25 +144,65 @@ class OrderController {
 
     /**
      * GET /api/next-order-id
-     * Retorna próximo ID sequencial de pedido
+     * Retorna próximo ID sequencial de pedido (Centralizado via Supabase)
      */
     async getNextOrderId(req, res) {
-        const seqFile = path.join(process.cwd(), 'assets', 'BancoDados', 'order_sequence.json');
+        const supabase = require('../utils/supabase');
 
         try {
-            let sequence = { lastId: 0 };
+            // 1. Tenta carregar a configuração do Admin
+            const { data: configData, error: configError } = await supabase
+                .from('adm_cfg')
+                .select('valor')
+                .eq('chave', 'hnt_order_config')
+                .single();
 
-            if (fs.existsSync(seqFile)) {
-                sequence = JSON.parse(fs.readFileSync(seqFile, 'utf-8'));
+            // 2. Busca o maior número de pedido já existente na produção
+            const { data: lastPedidos, error: pedidosError } = await supabase
+                .from('dashboard_pedidos') // View ou tabela que contém o número formatado
+                .select('numero_puro') // Assumindo que temos o número limpo
+                .order('numero_puro', { ascending: false })
+                .limit(1);
+
+            let nextId = 1000; // Fallback inicial
+
+            if (configData && configData.valor && configData.valor.nextNumber) {
+                nextId = parseInt(configData.valor.nextNumber);
             }
 
-            sequence.lastId++;
-            fs.writeFileSync(seqFile, JSON.stringify(sequence, null, 2));
+            if (lastPedidos && lastPedidos.length > 0) {
+                const lastNum = parseInt(lastPedidos[0].numero_puro);
+                if (lastNum >= nextId) {
+                    nextId = lastNum + 1;
+                }
+            }
 
-            res.json({ nextId: sequence.lastId });
+            // 3. Atualiza a configuração para o próximo que pedir (Reserva)
+            const nextReservation = nextId + 1;
+            await supabase.from('adm_cfg').upsert({
+                chave: 'hnt_order_config',
+                valor: { nextNumber: nextReservation },
+                atualizado_em: new Date().toISOString()
+            }, { onConflict: 'chave' });
+
+            console.log(`📡 Próximo ID Gerado e Reservado: ${nextId} (Próxima reserva: ${nextReservation})`);
+            res.json({ number: nextId }); // Retorna 'number' para manter compatibilidade com o front antigo que esperava 'number' ou 'nextId'
         } catch (err) {
-            console.error('❌ Erro ao gerar ID:', err);
-            res.status(500).json({ error: 'Erro de sequencia' });
+            console.error('❌ Erro ao gerar ID Centralizado:', err);
+
+            // Fallback local se o Supabase falhar (Proteção de Produção)
+            const seqFile = path.join(process.cwd(), 'assets', 'BancoDados', 'order_sequence.json');
+            try {
+                let sequence = { lastId: 999 };
+                if (fs.existsSync(seqFile)) {
+                    sequence = JSON.parse(fs.readFileSync(seqFile, 'utf-8'));
+                }
+                sequence.lastId++;
+                fs.writeFileSync(seqFile, JSON.stringify(sequence, null, 2));
+                return res.json({ number: sequence.lastId });
+            } catch (e) {
+                res.status(500).json({ error: 'Erro crítico de sequência' });
+            }
         }
     }
 }

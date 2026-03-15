@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     paradoHa: r.dias_na_etapa_atual || 0,
 
                     prazo: typeof r.prazo_entrega === 'string' ? r.prazo_entrega.split('-').reverse().join('/') : r.prazo_entrega,
+                    dataCriacao: r.criado_em ? new Date(r.criado_em).toLocaleDateString('pt-BR') : '--',
                     cliente: r.cliente_nome || 'Sem Cliente',
                     cpf: r.cliente_cpf || '--',
                     celular: r.cliente_celular || '--',
@@ -169,9 +170,11 @@ function renderTable(data) {
         tr.innerHTML = `
       <div class="cell-order">
         <span class="order-num">${p.numero}</span>
-        <span class="client-name-list" style="display:block; font-size:11px; font-weight:600; color:var(--text-1); margin-top:2px;">${p.cliente}</span>
-        <span class="order-sku" data-tooltip="Código Único do Produto" style="margin-top:1px;">${p.sku}</span>
       </div>
+      <div class="cell-sku">
+        <span class="sku-badge" data-tooltip="Clique para ver detalhes">${p.sku}</span>
+      </div>
+      <div class="cell-date" style="font-size:11px; color:var(--text-2); font-weight:500;">${p.dataCriacao}</div>
       <div class="cell-qty">${p.quantidade}×<br><span style="font-size:10px;color:var(--text-3)">${p.tamanho}</span></div>
       <div class="cell-client">
         <span class="client-name">${p.cliente}</span>
@@ -351,9 +354,15 @@ function renderDrawerTab(p) {
                 <div class="detail-section" style="margin-top:0">
                     <div class="detail-section-title">📝 Editar Informações do Pedido</div>
                     <div class="edit-form" style="display:grid; gap:15px; padding:10px;">
-                        <div class="detail-item full">
-                            <label class="detail-item-label">SKU / Modelo</label>
-                            <input type="text" id="edit-sku" class="modal-input" value="${p.sku}" style="margin:5px 0">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div class="detail-item">
+                                <label class="detail-item-label">Número do Pedido</label>
+                                <input type="text" id="edit-numero" class="modal-input" value="${p.numero}" style="margin:5px 0">
+                            </div>
+                            <div class="detail-item">
+                                <label class="detail-item-label">SKU / Modelo</label>
+                                <input type="text" id="edit-sku" class="modal-input" value="${p.sku}" style="margin:5px 0">
+                            </div>
                         </div>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                             <div class="detail-item">
@@ -729,6 +738,7 @@ async function saveEdicao() {
     const p = PEDIDOS.find(x => x.id == selectedId);
 
     const fields = {
+        numero_pedido: $('edit-numero').value,
         sku: $('edit-sku').value,
         quantidade: parseInt($('edit-qtd').value),
         tamanho: $('edit-tam').value,
@@ -741,7 +751,11 @@ async function saveEdicao() {
         }
 
         // Update local state
-        Object.assign(p, fields);
+        p.numero = fields.numero_pedido;
+        p.sku = fields.sku;
+        p.quantidade = fields.quantidade;
+        p.tamanho = fields.tamanho;
+        p.observacoes = fields.observacoes;
         isEditing = false;
         renderDrawer(p); // Re-render everything to show new SKU etc
         renderTable(filterData());
@@ -768,10 +782,9 @@ function filterData() {
     }
     const q = $('search-input').value.toLowerCase().trim();
     if (q) data = data.filter(p =>
-        p.numero.toLowerCase().includes(q) ||
+        p.numero.toString().includes(q) ||  // Match exato ou parcial do número
         p.sku.toLowerCase().includes(q) ||
-        p.cliente.toLowerCase().includes(q) ||
-        p.cpf.includes(q)
+        p.cliente.toLowerCase().includes(q)
     );
     return data;
 }
@@ -1002,9 +1015,9 @@ async function processQR() {
     const val = $('qr-manual-input').value.trim().toUpperCase();
     if (!val) return;
 
-    const p = PEDIDOS.find(x => x.numero === val || x.numero.includes(val));
+    const p = PEDIDOS.find(x => x.numero.toString() === val || x.sku === val);
     if (!p) {
-        alert('⚠️ Pedido não encontrado: ' + val);
+        alert('⚠️ Pedido ou SKU não encontrado: ' + val);
         return;
     }
 
@@ -1110,7 +1123,7 @@ function processBatchManualInput() {
 
 function addPedidoToBatch(rawText) {
     const val = rawText.trim().toUpperCase();
-    const p = PEDIDOS.find(x => x.numero === val || x.numero.includes(val));
+    const p = PEDIDOS.find(x => x.numero.toString() === val || x.sku === val);
     if (p && !batchList.some(item => item.p.id === p.id)) {
         batchList.unshift({ p: p, target: batchGlobalTarget });
         renderBatchList();

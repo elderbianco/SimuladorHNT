@@ -138,6 +138,10 @@ window.loadGlobalSettings = function () {
     // WhatsApp Load
     const priceConfig = JSON.parse(localStorage.getItem('hnt_pricing_config') || '{}');
     document.getElementById('whatsappNumber').value = priceConfig.whatsappNumber || '';
+
+    // Order Numbering Load
+    const orderConfig = JSON.parse(localStorage.getItem('hnt_order_config') || '{"nextNumber":1000}');
+    document.getElementById('global-next-order-number').value = orderConfig.nextNumber || 1000;
 };
 
 window.saveGlobalSettings = function () {
@@ -191,6 +195,12 @@ window.saveGlobalSettings = function () {
     // Production
     localStorage.setItem('hnt_production_config', JSON.stringify(prodConfig));
 
+    // Order Numbering
+    const orderConfig = {
+        nextNumber: parseInt(document.getElementById('global-next-order-number').value) || 1000
+    };
+    localStorage.setItem('hnt_order_config', JSON.stringify(orderConfig));
+
     // --- SERVER SYNC ---
     const sync = (key, data) => {
         fetch(`/api/admin/config/${key}`, {
@@ -204,6 +214,7 @@ window.saveGlobalSettings = function () {
     sync('hnt_preferred_fonts', preferredFonts);
     sync('hnt_text_colors', textColors);
     sync('hnt_production_config', prodConfig);
+    sync('hnt_order_config', orderConfig);
 };
 
 

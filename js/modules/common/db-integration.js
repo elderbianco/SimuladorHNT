@@ -71,7 +71,7 @@ const DBAdapter = {
         // NEW PROTOCOL STRUCTURE
         const record = {
             // Meta-dados do registro (para controle do Cart)
-            order_id: state.simulationId || `SIM_${Date.now()}`,
+            order_id: state.orderNumber || state.simulationId || `SIM_${Date.now()}`,
             created_at: now.toISOString(), // ISO format is safer for DB
             status: "saved_locally", // draft, saved_locally, submitted
             pdfUrl: pdfUrl, // Armazena link do PDF para o Cart

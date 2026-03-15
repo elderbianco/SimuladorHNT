@@ -33,10 +33,13 @@ const state = {
     embFiles: [] // Array de {filename, size, zones: []}
 };
 
-// Helper function to get the full formatted ID
+// Helper function to get the full formatted ID (SKU)
 function getFormattedId() {
-    const orderPart = state.orderNumber || 'HNT';
-    return `${orderPart}-${state.productInitial}-${state.simNumber}`;
+    if (typeof SKUGenerator !== 'undefined') {
+        return SKUGenerator.generateSKU(state);
+    }
+    // Fallback se o gerador falhar
+    return `${state.productInitial}-${state.simNumber}`;
 }
 state.simulationId = getFormattedId();
 
