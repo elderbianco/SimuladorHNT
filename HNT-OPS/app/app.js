@@ -298,6 +298,8 @@ function openDrawer(id) {
     renderDrawer(p);
     $('drawer-overlay').classList.add('open');
     $('drawer').classList.add('open');
+    // NOVO: Resetar estado de edição ao abrir
+    isEditing = false;
 }
 
 function closeDrawer() {
@@ -621,399 +623,450 @@ async function executeMove(id, novaEtapa, p) {
         setTimeout(() => {
             const card = document.querySelector(`.kanban-card[data-id="${id}"]`);
             if (card) {
-                card.classList.add('qr-updated');
-                setTimeout(() => card.classList.remove('qr-updated'), 3000);
+            } catch (e) {
+                alert("Erro ao excluir pedido: " + e.message);
             }
-        }, 100);
-    } catch (e) {
-        console.error("Erro ao mover etapa:", e);
-        alert("Erro ao salvar mudança no servidor.");
-    }
-}
+        }
 
-// ── Filters & Search ──────────────────────────────────────
-function filterData() {
-    let data = [...PEDIDOS];
-    if (currentFilter === 'urgente') data = data.filter(p => p.urgente || p.alerta === 'Vermelho');
-    if (currentFilter === 'atrasado') data = data.filter(p => p.diasRestantes <= 0);
-    if (currentFilter === 'hoje') data = data.filter(p => p.diasRestantes >= 0 && p.diasRestantes <= 1);
-    if (currentFilter === 'meu-setor' && currentOperador) {
-        data = data.filter(p => p.etapa === currentOperador.setor || currentOperador.setor === 'Fábrica');
-    }
-    const q = $('search-input').value.toLowerCase().trim();
-    if (q) data = data.filter(p =>
-        p.numero.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.cliente.toLowerCase().includes(q) ||
-        p.cpf.includes(q)
-    );
-    return data;
-}
+async function cancelarPedidoUI() {
+                if (!selectedId) return;
+                if (!confirm(`Deseja cancelar a produção deste pedido? ELE IRÁ PARA A ETAPA 'CANCELADO'.`)) return;
 
-function bindSearch() {
-    $('search-input').addEventListener('input', () => renderTable(filterData()));
-}
+                try {
+                    if (typeof api !== 'undefined') {
+                        await api.cancelPedido(selectedId);
+                    }
+                    moverEtapaLocal(selectedId, 'Cancelado');
+                    renderDrawerTab(PEDIDOS.find(x => x.id === selectedId));
+                    renderKanban();
+                    renderLista();
+                } catch (e) {
+                    alert("Erro ao cancelar pedido: " + e.message);
+                }
+            }
 
-// ── Nav & Tabs ────────────────────────────────────────────
-function bindNav() {
-    document.querySelectorAll('.nav-item[data-view]').forEach(el => {
-        el.addEventListener('click', () => {
-            const view = el.dataset.view;
+let isEditing = false;
+        function toggleEdicao() {
+            isEditing = !isEditing;
+            const p = PEDIDOS.find(x => x.id === selectedId);
+            renderDrawerTab(p);
+        }
 
-            // Proteção de Acesso para BI e Admin
-            if (view === 'relatorios' || view === 'admin') {
-                showAdminAuth(view, () => {
+        async function saveEdicao() {
+            if (!selectedId) return;
+            const p = PEDIDOS.find(x => x.id === selectedId);
+
+            const fields = {
+                sku: $('edit-sku').value,
+                quantidade: parseInt($('edit-qtd').value),
+                tamanho: $('edit-tam').value,
+                observacoes: $('edit-obs').value
+            };
+
+            try {
+                if (typeof api !== 'undefined') {
+                    await api.updatePedido(selectedId, fields);
+                }
+
+                // Update local state
+                Object.assign(p, fields);
+                isEditing = false;
+                renderDrawerTab(p);
+                renderKanban();
+                renderLista();
+            } catch (e) {
+                alert("Erro ao salvar alterações: " + e.message);
+            }
+        }
+
+        function moverEtapaLocal(id, novaEtapa) {
+            const p = PEDIDOS.find(x => x.id === id);
+            if (p) p.etapa = novaEtapa;
+        }
+
+        // ── Filters & Search ──────────────────────────────────────
+        function filterData() {
+            let data = [...PEDIDOS];
+            if (currentFilter === 'urgente') data = data.filter(p => p.urgente || p.alerta === 'Vermelho');
+            if (currentFilter === 'atrasado') data = data.filter(p => p.diasRestantes <= 0);
+            if (currentFilter === 'hoje') data = data.filter(p => p.diasRestantes >= 0 && p.diasRestantes <= 1);
+            if (currentFilter === 'meu-setor' && currentOperador) {
+                data = data.filter(p => p.etapa === currentOperador.setor || currentOperador.setor === 'Fábrica');
+            }
+            const q = $('search-input').value.toLowerCase().trim();
+            if (q) data = data.filter(p =>
+                p.numero.toLowerCase().includes(q) ||
+                p.sku.toLowerCase().includes(q) ||
+                p.cliente.toLowerCase().includes(q) ||
+                p.cpf.includes(q)
+            );
+            return data;
+        }
+
+        function bindSearch() {
+            $('search-input').addEventListener('input', () => renderTable(filterData()));
+        }
+
+        // ── Nav & Tabs ────────────────────────────────────────────
+        function bindNav() {
+            document.querySelectorAll('.nav-item[data-view]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const view = el.dataset.view;
+
+                    // Proteção de Acesso para BI e Admin
+                    if (view === 'relatorios' || view === 'admin') {
+                        showAdminAuth(view, () => {
+                            switchView(el);
+                        });
+                        return;
+                    }
+
                     switchView(el);
                 });
+            });
+        }
+
+        function switchView(el) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            currentView = el.dataset.view;
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            const target = $(currentView + '-view');
+            if (target) target.classList.add('active');
+        }
+
+        function showAdminAuth(targetView, onSuccess) {
+            const modal = $('admin-auth-modal');
+            const userInput = $('admin-user-input');
+            const passInput = $('admin-password-input');
+            const confirmBtn = $('auth-confirm');
+            const cancelBtn = $('auth-cancel');
+            const errorMsg = $('auth-error-msg');
+
+            if (!modal) return;
+
+            modal.style.display = 'flex';
+            modal.classList.add('open');
+            userInput.value = '';
+            passInput.value = '';
+            userInput.focus();
+            errorMsg.style.display = 'none';
+
+            // Limpar eventos anteriores
+            const newConfirm = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+            const newCancel = cancelBtn.cloneNode(true);
+            cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+            newConfirm.addEventListener('click', async () => {
+                const user = userInput.value.trim();
+                const pass = passInput.value.trim();
+                if (!user || !pass) return;
+
+                const result = await api.verifyAdminPassword(user, pass);
+
+                if (result && (result.perfil === 'Admin' || result.perfil === 'Gerente')) {
+                    modal.style.display = 'none';
+                    modal.classList.remove('open');
+                    // Log de acesso
+                    api.logAdminAccess(result.id, result.nome, navigator.userAgent);
+                    onSuccess();
+                } else {
+                    errorMsg.style.display = 'block';
+                    errorMsg.textContent = 'Usuário ou senha incorretos.';
+                    passInput.value = '';
+                    passInput.focus();
+                }
+            });
+
+            newCancel.addEventListener('click', () => {
+                modal.style.display = 'none';
+                modal.classList.remove('open');
+            });
+
+            userInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter') passInput.focus();
+            });
+
+            passInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter') newConfirm.click();
+            });
+        }
+
+        function bindTabs() {
+            document.querySelectorAll('.tab[data-filter]').forEach(el => {
+                el.addEventListener('click', () => {
+                    document.querySelectorAll('.tab[data-filter]').forEach(t => t.classList.remove('active'));
+                    el.classList.add('active');
+                    currentFilter = el.dataset.filter;
+                    renderTable(filterData());
+                });
+            });
+            document.querySelectorAll('.drawer-tab[data-tab]').forEach(el => {
+                el.addEventListener('click', () => {
+                    document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+                    el.classList.add('active');
+                    drawerTab = el.dataset.tab;
+                    $('chat-input-row').style.display = drawerTab === 'chat' ? 'flex' : 'none';
+                    const p = PEDIDOS.find(x => x.id === selectedId);
+                    if (p) renderDrawerTab(p);
+                });
+            });
+
+            const chatInput = $('chat-msg-input');
+            if (chatInput) {
+                chatInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') sendChat();
+                });
+            }
+        }
+
+        // ── QR Scanner ────────────────────────────────────────────
+        function bindQR() {
+            $('btn-qr').addEventListener('click', openQR);
+            $('qr-cancel').addEventListener('click', closeQR);
+            $('qr-confirm').addEventListener('click', processQR);
+            $('qr-manual-input').addEventListener('keydown', e => { if (e.key === 'Enter') processQR(); });
+            const fab = document.querySelector('.mobile-fab');
+            if (fab) fab.addEventListener('click', openQR);
+
+            // Batch Events
+            $('btn-batch').addEventListener('click', openBatchModal);
+            $('batch-cancel').addEventListener('click', closeBatchModal);
+            $('btn-batch-execute').addEventListener('click', executeBatchUpdate);
+            $('batch-target-etapa').addEventListener('change', updateBatchGlobalTarget);
+            $('batch-manual-input').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    processBatchManualInput();
+                }
+            });
+        }
+
+        let html5QrCode;
+
+        function openQRBase() {
+            $('qr-modal').classList.add('open');
+            setTimeout(() => {
+                $('qr-manual-input').focus();
+
+                // Start QR Scanner (Camera) - ONLY MOBILE
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile && typeof Html5Qrcode !== "undefined") {
+                    try {
+                        if (!html5QrCode) {
+                            html5QrCode = new Html5Qrcode("qr-reader");
+                        }
+                        const config = { fps: 10, qrbox: { width: 200, height: 200 } };
+
+                        html5QrCode.start(
+                            { facingMode: "environment" },
+                            config,
+                            (decodedText, decodedResult) => {
+                                // Success Callback
+                                $('qr-manual-input').value = decodedText;
+                                processQR();
+                            },
+                            (errorMessage) => {
+                                // Parse error, ignore
+                            }
+                        ).catch((err) => {
+                            console.log("Câmera indisponível ou permissão negada:", err);
+                            $('qr-placeholder').style.display = 'flex';
+                        });
+                    } catch (err) {
+                        console.error("Html5Qrcode init error", err);
+                        $('qr-placeholder').style.display = 'flex';
+                    }
+                } else {
+                    const reader = $('qr-reader');
+                    if (reader) reader.style.display = 'none';
+                    $('qr-placeholder').style.display = 'flex';
+                    $('qr-placeholder').innerHTML = `<div style="text-align:center;color:var(--text-3);font-size:12px;padding:20px;">Use o leitor USB ou digite o código de barras abaixo.</div>`;
+                }
+            }, 300);
+        }
+
+        function closeQR() {
+            $('qr-modal').classList.remove('open');
+
+            // Stop Camera if running
+            if (html5QrCode) {
+                try {
+                    const state = html5QrCode.getState();
+                    // 2 indicates SCANNING, 3 indicates SECURED (PAUSED)
+                    if (state === 2 || state === 3) {
+                        html5QrCode.stop().then(() => {
+                            html5QrCode.clear();
+                        }).catch((err) => {
+                            console.error("Failed to stop camera:", err);
+                        });
+                    }
+                } catch (e) {
+                    console.error("Error stopping qr:", e);
+                }
+            }
+        }
+
+        async function processQR() {
+            const val = $('qr-manual-input').value.trim().toUpperCase();
+            if (!val) return;
+
+            const p = PEDIDOS.find(x => x.numero === val || x.numero.includes(val));
+            if (!p) {
+                alert('⚠️ Pedido não encontrado: ' + val);
                 return;
             }
 
-            switchView(el);
-        });
-    });
-}
+            closeQR();
+            $('qr-manual-input').value = '';
 
-function switchView(el) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    el.classList.add('active');
-    currentView = el.dataset.view;
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    const target = $(currentView + '-view');
-    if (target) target.classList.add('active');
-}
+            // Fluxo Inteligente: Se detectar o pedido, pergunta quem é o operador para dar o "Check-in"
+            if (typeof openOpSelect === 'function') {
+                openOpSelect(async (op) => {
+                    currentOperador = op;
 
-function showAdminAuth(targetView, onSuccess) {
-    const modal = $('admin-auth-modal');
-    const userInput = $('admin-user-input');
-    const passInput = $('admin-password-input');
-    const confirmBtn = $('auth-confirm');
-    const cancelBtn = $('auth-cancel');
-    const errorMsg = $('auth-error-msg');
-
-    if (!modal) return;
-
-    modal.style.display = 'flex';
-    modal.classList.add('open');
-    userInput.value = '';
-    passInput.value = '';
-    userInput.focus();
-    errorMsg.style.display = 'none';
-
-    // Limpar eventos anteriores
-    const newConfirm = confirmBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
-    const newCancel = cancelBtn.cloneNode(true);
-    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-
-    newConfirm.addEventListener('click', async () => {
-        const user = userInput.value.trim();
-        const pass = passInput.value.trim();
-        if (!user || !pass) return;
-
-        const result = await api.verifyAdminPassword(user, pass);
-
-        if (result && (result.perfil === 'Admin' || result.perfil === 'Gerente')) {
-            modal.style.display = 'none';
-            modal.classList.remove('open');
-            // Log de acesso
-            api.logAdminAccess(result.id, result.nome, navigator.userAgent);
-            onSuccess();
-        } else {
-            errorMsg.style.display = 'block';
-            errorMsg.textContent = 'Usuário ou senha incorretos.';
-            passInput.value = '';
-            passInput.focus();
-        }
-    });
-
-    newCancel.addEventListener('click', () => {
-        modal.style.display = 'none';
-        modal.classList.remove('open');
-    });
-
-    userInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') passInput.focus();
-    });
-
-    passInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') newConfirm.click();
-    });
-}
-
-function bindTabs() {
-    document.querySelectorAll('.tab[data-filter]').forEach(el => {
-        el.addEventListener('click', () => {
-            document.querySelectorAll('.tab[data-filter]').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            currentFilter = el.dataset.filter;
-            renderTable(filterData());
-        });
-    });
-    document.querySelectorAll('.drawer-tab[data-tab]').forEach(el => {
-        el.addEventListener('click', () => {
-            document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            drawerTab = el.dataset.tab;
-            $('chat-input-row').style.display = drawerTab === 'chat' ? 'flex' : 'none';
-            const p = PEDIDOS.find(x => x.id === selectedId);
-            if (p) renderDrawerTab(p);
-        });
-    });
-
-    const chatInput = $('chat-msg-input');
-    if (chatInput) {
-        chatInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') sendChat();
-        });
-    }
-}
-
-// ── QR Scanner ────────────────────────────────────────────
-function bindQR() {
-    $('btn-qr').addEventListener('click', openQR);
-    $('qr-cancel').addEventListener('click', closeQR);
-    $('qr-confirm').addEventListener('click', processQR);
-    $('qr-manual-input').addEventListener('keydown', e => { if (e.key === 'Enter') processQR(); });
-    const fab = document.querySelector('.mobile-fab');
-    if (fab) fab.addEventListener('click', openQR);
-
-    // Batch Events
-    $('btn-batch').addEventListener('click', openBatchModal);
-    $('batch-cancel').addEventListener('click', closeBatchModal);
-    $('btn-batch-execute').addEventListener('click', executeBatchUpdate);
-    $('batch-target-etapa').addEventListener('change', updateBatchGlobalTarget);
-    $('batch-manual-input').addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-            processBatchManualInput();
-        }
-    });
-}
-
-let html5QrCode;
-
-function openQRBase() {
-    $('qr-modal').classList.add('open');
-    setTimeout(() => {
-        $('qr-manual-input').focus();
-
-        // Start QR Scanner (Camera) - ONLY MOBILE
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile && typeof Html5Qrcode !== "undefined") {
-            try {
-                if (!html5QrCode) {
-                    html5QrCode = new Html5Qrcode("qr-reader");
-                }
-                const config = { fps: 10, qrbox: { width: 200, height: 200 } };
-
-                html5QrCode.start(
-                    { facingMode: "environment" },
-                    config,
-                    (decodedText, decodedResult) => {
-                        // Success Callback
-                        $('qr-manual-input').value = decodedText;
-                        processQR();
-                    },
-                    (errorMessage) => {
-                        // Parse error, ignore
+                    // Registra entrada no Supabase se API ativa
+                    if (typeof api !== 'undefined') {
+                        console.log(`HNT-OPS: Registrando check-in de ${op.nome} no pedido ${p.numero}`);
+                        await api.checkInRastreamento(p.id, p.etapa, op.nome);
                     }
-                ).catch((err) => {
-                    console.log("Câmera indisponível ou permissão negada:", err);
-                    $('qr-placeholder').style.display = 'flex';
+
+                    openDrawer(p.id);
+                    const row = document.querySelector(`.table-row[data-id="${p.id}"]`);
+                    if (row) {
+                        row.classList.add('qr-updated');
+                        setTimeout(() => row.classList.remove('qr-updated'), 3000);
+                    }
                 });
-            } catch (err) {
-                console.error("Html5Qrcode init error", err);
-                $('qr-placeholder').style.display = 'flex';
+            } else {
+                openDrawer(p.id);
             }
-        } else {
-            const reader = $('qr-reader');
-            if (reader) reader.style.display = 'none';
-            $('qr-placeholder').style.display = 'flex';
-            $('qr-placeholder').innerHTML = `<div style="text-align:center;color:var(--text-3);font-size:12px;padding:20px;">Use o leitor USB ou digite o código de barras abaixo.</div>`;
         }
-    }, 300);
-}
 
-function closeQR() {
-    $('qr-modal').classList.remove('open');
+        // ── Lote Logic ────────────────────────────────────────────
+        let batchGlobalTarget = 'Preparacao';
 
-    // Stop Camera if running
-    if (html5QrCode) {
-        try {
-            const state = html5QrCode.getState();
-            // 2 indicates SCANNING, 3 indicates SECURED (PAUSED)
-            if (state === 2 || state === 3) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                }).catch((err) => {
-                    console.error("Failed to stop camera:", err);
-                });
-            }
-        } catch (e) {
-            console.error("Error stopping qr:", e);
+        function openBatchModal() {
+            batchList = [];
+
+            // Popular select global de etapas
+            const select = $('batch-target-etapa');
+            select.innerHTML = ETAPAS.map(e => `<option value="${e}">${ETAPA_ICONS[e] || ''} ${ETAPA_LABELS[e] || e}</option>`).join('');
+            batchGlobalTarget = select.value || 'Preparacao';
+
+            renderBatchList();
+
+            $('batch-modal').style.display = 'flex';
+            setTimeout(() => {
+                $('batch-modal').classList.add('open');
+                startBatchScanner();
+                $('batch-manual-input').focus();
+            }, 10);
         }
-    }
-}
 
-async function processQR() {
-    const val = $('qr-manual-input').value.trim().toUpperCase();
-    if (!val) return;
-
-    const p = PEDIDOS.find(x => x.numero === val || x.numero.includes(val));
-    if (!p) {
-        alert('⚠️ Pedido não encontrado: ' + val);
-        return;
-    }
-
-    closeQR();
-    $('qr-manual-input').value = '';
-
-    // Fluxo Inteligente: Se detectar o pedido, pergunta quem é o operador para dar o "Check-in"
-    if (typeof openOpSelect === 'function') {
-        openOpSelect(async (op) => {
-            currentOperador = op;
-
-            // Registra entrada no Supabase se API ativa
-            if (typeof api !== 'undefined') {
-                console.log(`HNT-OPS: Registrando check-in de ${op.nome} no pedido ${p.numero}`);
-                await api.checkInRastreamento(p.id, p.etapa, op.nome);
+        function closeBatchModal() {
+            $('batch-modal').classList.remove('open');
+            if (batchHtml5QrCode) {
+                batchHtml5QrCode.stop().then(() => {
+                    batchHtml5QrCode.clear();
+                    batchHtml5QrCode = null;
+                }).catch(e => console.error("Error stopping batch scanner", e));
             }
+            setTimeout(() => $('batch-modal').style.display = 'none', 300);
+        }
 
-            openDrawer(p.id);
-            const row = document.querySelector(`.table-row[data-id="${p.id}"]`);
-            if (row) {
-                row.classList.add('qr-updated');
-                setTimeout(() => row.classList.remove('qr-updated'), 3000);
-            }
-        });
-    } else {
-        openDrawer(p.id);
-    }
-}
+        function startBatchScanner() {
+            const isMobile = window.innerWidth <= 768;
 
-// ── Lote Logic ────────────────────────────────────────────
-let batchGlobalTarget = 'Preparacao';
+            if (isMobile && typeof Html5Qrcode !== "undefined") {
+                try {
+                    if (!batchHtml5QrCode) {
+                        batchHtml5QrCode = new Html5Qrcode("batch-qr-reader");
+                    }
+                    const config = { fps: 15, qrbox: { width: 180, height: 180 } };
 
-function openBatchModal() {
-    batchList = [];
-
-    // Popular select global de etapas
-    const select = $('batch-target-etapa');
-    select.innerHTML = ETAPAS.map(e => `<option value="${e}">${ETAPA_ICONS[e] || ''} ${ETAPA_LABELS[e] || e}</option>`).join('');
-    batchGlobalTarget = select.value || 'Preparacao';
-
-    renderBatchList();
-
-    $('batch-modal').style.display = 'flex';
-    setTimeout(() => {
-        $('batch-modal').classList.add('open');
-        startBatchScanner();
-        $('batch-manual-input').focus();
-    }, 10);
-}
-
-function closeBatchModal() {
-    $('batch-modal').classList.remove('open');
-    if (batchHtml5QrCode) {
-        batchHtml5QrCode.stop().then(() => {
-            batchHtml5QrCode.clear();
-            batchHtml5QrCode = null;
-        }).catch(e => console.error("Error stopping batch scanner", e));
-    }
-    setTimeout(() => $('batch-modal').style.display = 'none', 300);
-}
-
-function startBatchScanner() {
-    const isMobile = window.innerWidth <= 768;
-
-    if (isMobile && typeof Html5Qrcode !== "undefined") {
-        try {
-            if (!batchHtml5QrCode) {
-                batchHtml5QrCode = new Html5Qrcode("batch-qr-reader");
-            }
-            const config = { fps: 15, qrbox: { width: 180, height: 180 } };
-
-            batchHtml5QrCode.start(
-                { facingMode: "environment" },
-                config,
-                (decodedText) => {
-                    addPedidoToBatch(decodedText);
-                },
-                () => { }
-            ).catch(err => console.error("Batch camera error", err));
-        } catch (err) { console.error("Batch init error", err); }
-    } else {
-        const reader = $('batch-qr-reader');
-        if (reader) {
-            reader.innerHTML = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-3); font-size:12px; text-align:center; padding: 20px;">
+                    batchHtml5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        (decodedText) => {
+                            addPedidoToBatch(decodedText);
+                        },
+                        () => { }
+                    ).catch(err => console.error("Batch camera error", err));
+                } catch (err) { console.error("Batch init error", err); }
+            } else {
+                const reader = $('batch-qr-reader');
+                if (reader) {
+                    reader.innerHTML = `<div style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-3); font-size:12px; text-align:center; padding: 20px;">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:32px; height:32px; margin-bottom:8px; opacity:0.5;">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
                 </svg>
                 LEITOR DE CÓDIGO ATIVO<br>Posicione a caixa e bipe o pedido.
             </div>`;
+                }
+            }
         }
-    }
-}
 
-function processBatchManualInput() {
-    const input = $('batch-manual-input');
-    const val = input.value.trim();
-    if (val) {
-        addPedidoToBatch(val);
-        input.value = '';
-    }
-}
+        function processBatchManualInput() {
+            const input = $('batch-manual-input');
+            const val = input.value.trim();
+            if (val) {
+                addPedidoToBatch(val);
+                input.value = '';
+            }
+        }
 
-function addPedidoToBatch(rawText) {
-    const val = rawText.trim().toUpperCase();
-    const p = PEDIDOS.find(x => x.numero === val || x.numero.includes(val));
-    if (p && !batchList.some(item => item.p.id === p.id)) {
-        batchList.unshift({ p: p, target: batchGlobalTarget });
-        renderBatchList();
+        function addPedidoToBatch(rawText) {
+            const val = rawText.trim().toUpperCase();
+            const p = PEDIDOS.find(x => x.numero === val || x.numero.includes(val));
+            if (p && !batchList.some(item => item.p.id === p.id)) {
+                batchList.unshift({ p: p, target: batchGlobalTarget });
+                renderBatchList();
 
-        // Feedback visual rápido
-        const reader = $('batch-qr-reader');
-        reader.style.borderColor = 'var(--green)';
-        setTimeout(() => reader.style.borderColor = 'transparent', 500);
-    }
-}
+                // Feedback visual rápido
+                const reader = $('batch-qr-reader');
+                reader.style.borderColor = 'var(--green)';
+                setTimeout(() => reader.style.borderColor = 'transparent', 500);
+            }
+        }
 
-function updateBatchGlobalTarget(e) {
-    batchGlobalTarget = e.target.value;
-    // Update all items in the list to match the new global target
-    batchList.forEach(item => {
-        item.target = batchGlobalTarget;
-    });
-    renderBatchList();
-}
+        function updateBatchGlobalTarget(e) {
+            batchGlobalTarget = e.target.value;
+            // Update all items in the list to match the new global target
+            batchList.forEach(item => {
+                item.target = batchGlobalTarget;
+            });
+            renderBatchList();
+        }
 
-window.updateBatchItemTarget = function (id, value) {
-    const item = batchList.find(x => x.p.id === id);
-    if (item) {
-        item.target = value;
-    }
-};
+        window.updateBatchItemTarget = function (id, value) {
+            const item = batchList.find(x => x.p.id === id);
+            if (item) {
+                item.target = value;
+            }
+        };
 
-window.clearBatch = function () {
-    batchList = [];
-    renderBatchList();
-};
+        window.clearBatch = function () {
+            batchList = [];
+            renderBatchList();
+        };
 
-function renderBatchList() {
-    const wrap = $('batch-items-list');
-    const countLabel = $('batch-list-count-label');
+        function renderBatchList() {
+            const wrap = $('batch-items-list');
+            const countLabel = $('batch-list-count-label');
 
-    if (countLabel) countLabel.textContent = `FILA DE PEDIDOS LIDOS (${batchList.length})`;
-    $('btn-batch-execute').textContent = `🚀 PROCESSAR FILA (${batchList.length})`;
+            if (countLabel) countLabel.textContent = `FILA DE PEDIDOS LIDOS (${batchList.length})`;
+            $('btn-batch-execute').textContent = `🚀 PROCESSAR FILA (${batchList.length})`;
 
-    if (batchList.length === 0) {
-        wrap.innerHTML = '<div style="padding: 40px 20px; text-align:center; color:var(--text-3); font-size:13px;">A fila está vazia.<br><br>Comece a escanear códigos ou digite acima para adicionar itens.</div>';
-    } else {
-        const optionList = ETAPAS.map(e => `<option value="${e}">${ETAPA_ICONS[e] || ''} ${ETAPA_LABELS[e] || e}</option>`).join('');
+            if (batchList.length === 0) {
+                wrap.innerHTML = '<div style="padding: 40px 20px; text-align:center; color:var(--text-3); font-size:13px;">A fila está vazia.<br><br>Comece a escanear códigos ou digite acima para adicionar itens.</div>';
+            } else {
+                const optionList = ETAPAS.map(e => `<option value="${e}">${ETAPA_ICONS[e] || ''} ${ETAPA_LABELS[e] || e}</option>`).join('');
 
-        wrap.innerHTML = batchList.map((item, idx) => {
-            const p = item.p;
-            return `
+                wrap.innerHTML = batchList.map((item, idx) => {
+                    const p = item.p;
+                    return `
             <div class="batch-item" style="background:var(--surface); border:1px solid var(--border); border-radius:6px; margin-bottom:8px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <div style="width:24px; text-align:center; font-weight:700; color:var(--text-3); font-size:10px;">${batchList.length - idx}</div>
                 <div style="flex:1; min-width:150px;">
@@ -1035,197 +1088,197 @@ function renderBatchList() {
                 </div>
             </div>
         `}).join('');
-    }
-}
+            }
+        }
 
-window.removeFromBatch = function (id) {
-    batchList = batchList.filter(item => item.p.id !== id);
-    renderBatchList();
-};
+        window.removeFromBatch = function (id) {
+            batchList = batchList.filter(item => item.p.id !== id);
+            renderBatchList();
+        };
 
-async function executeBatchUpdate() {
-    if (batchList.length === 0) return;
-    const btn = $('btn-batch-execute');
+        async function executeBatchUpdate() {
+            if (batchList.length === 0) return;
+            const btn = $('btn-batch-execute');
 
-    if (!confirm(`Confirma o processamento de ${batchList.length} pedidos na fila?`)) return;
+            if (!confirm(`Confirma o processamento de ${batchList.length} pedidos na fila?`)) return;
 
-    btn.disabled = true;
-    btn.textContent = '⌛ Processando...';
+            btn.disabled = true;
+            btn.textContent = '⌛ Processando...';
 
-    let successCount = 0;
-    // Clona o array pois removeFromBatch será modificado durante o loop opcionalmente, mas aqui for iteramos
-    for (const item of batchList) {
-        const p = item.p;
-        const targetEtapa = item.target;
-        try {
-            if (typeof api !== 'undefined') {
-                await api.updateEtapa(p.id, targetEtapa);
-                if (currentOperador) {
-                    await api.checkInRastreamento(p.id, targetEtapa, currentOperador.nome);
+            let successCount = 0;
+            // Clona o array pois removeFromBatch será modificado durante o loop opcionalmente, mas aqui for iteramos
+            for (const item of batchList) {
+                const p = item.p;
+                const targetEtapa = item.target;
+                try {
+                    if (typeof api !== 'undefined') {
+                        await api.updateEtapa(p.id, targetEtapa);
+                        if (currentOperador) {
+                            await api.checkInRastreamento(p.id, targetEtapa, currentOperador.nome);
+                        }
+                    }
+                    p.etapa = targetEtapa;
+                    successCount++;
+                    btn.textContent = `⌛ ${successCount}/${batchList.length}...`;
+                } catch (e) {
+                    console.error(`Erro ao atualizar pedido ${p.numero}:`, e);
                 }
             }
-            p.etapa = targetEtapa;
-            successCount++;
-            btn.textContent = `⌛ ${successCount}/${batchList.length}...`;
-        } catch (e) {
-            console.error(`Erro ao atualizar pedido ${p.numero}:`, e);
-        }
-    }
 
-    alert(`Sucesso! ${successCount} pedidos atualizados.`);
-    closeBatchModal();
+            alert(`Sucesso! ${successCount} pedidos atualizados.`);
+            closeBatchModal();
 
-    // Refresh UI
-    renderTable(filterData());
-    renderKanban(filterData());
-    renderStats();
-}
-
-// ── Progress Bar ──────────────────────────────────────────
-function showProgress() {
-    $('progress-modal').classList.add('open');
-    const fill = $('progress-fill');
-    const lbl = $('progress-label-txt');
-    let pct = 0;
-    const steps = ['🧵 Verificando matriz...', '📁 Preparando arquivo...', '🗜️ Compactando...', '✅ Pronto!'];
-    const iv = setInterval(() => {
-        pct = Math.min(pct + Math.random() * 28, 100);
-        fill.style.width = pct + '%';
-        lbl.textContent = steps[Math.min(Math.floor(pct / 26), steps.length - 1)];
-        if (pct >= 100) {
-            clearInterval(iv);
-            setTimeout(() => { $('progress-modal').classList.remove('open'); fill.style.width = '0%'; }, 1100);
-        }
-    }, 320);
-}
-
-// ── Chat ──────────────────────────────────────────────────
-async function sendChat() {
-    const input = $('chat-msg-input');
-    const msg = input.value.trim();
-    if (!msg || !selectedId) return;
-
-    const p = PEDIDOS.find(x => x.id === selectedId);
-    if (!p) return;
-
-    try {
-        // 1. Enviar para o DB
-        if (typeof api !== 'undefined') {
-            await api.sendChat(selectedId, msg, currentOperador ? currentOperador.nome : 'Sistema', p.etapa);
+            // Refresh UI
+            renderTable(filterData());
+            renderKanban(filterData());
+            renderStats();
         }
 
-        // 2. UI Update (otimista)
-        const wrap = document.querySelector('.chat-wrap');
-        if (!wrap) return;
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble mine';
-        const now = new Date();
-        const hora = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        bubble.innerHTML = `
+        // ── Progress Bar ──────────────────────────────────────────
+        function showProgress() {
+            $('progress-modal').classList.add('open');
+            const fill = $('progress-fill');
+            const lbl = $('progress-label-txt');
+            let pct = 0;
+            const steps = ['🧵 Verificando matriz...', '📁 Preparando arquivo...', '🗜️ Compactando...', '✅ Pronto!'];
+            const iv = setInterval(() => {
+                pct = Math.min(pct + Math.random() * 28, 100);
+                fill.style.width = pct + '%';
+                lbl.textContent = steps[Math.min(Math.floor(pct / 26), steps.length - 1)];
+                if (pct >= 100) {
+                    clearInterval(iv);
+                    setTimeout(() => { $('progress-modal').classList.remove('open'); fill.style.width = '0%'; }, 1100);
+                }
+            }, 320);
+        }
+
+        // ── Chat ──────────────────────────────────────────────────
+        async function sendChat() {
+            const input = $('chat-msg-input');
+            const msg = input.value.trim();
+            if (!msg || !selectedId) return;
+
+            const p = PEDIDOS.find(x => x.id === selectedId);
+            if (!p) return;
+
+            try {
+                // 1. Enviar para o DB
+                if (typeof api !== 'undefined') {
+                    await api.sendChat(selectedId, msg, currentOperador ? currentOperador.nome : 'Sistema', p.etapa);
+                }
+
+                // 2. UI Update (otimista)
+                const wrap = document.querySelector('.chat-wrap');
+                if (!wrap) return;
+                const bubble = document.createElement('div');
+                bubble.className = 'chat-bubble mine';
+                const now = new Date();
+                const hora = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                bubble.innerHTML = `
         <div class="chat-avatar">OP</div>
         <div class="chat-msg-wrap">
           <div class="chat-who">Você · ${hora}</div>
           <div class="chat-text">${msg}</div>
         </div>`;
-        wrap.appendChild(bubble);
-        input.value = '';
-        bubble.scrollIntoView({ behavior: 'smooth' });
-    } catch (e) {
-        console.error("Erro ao enviar chat:", e);
-        alert("Erro ao enviar mensagem.");
-    }
-}
+                wrap.appendChild(bubble);
+                input.value = '';
+                bubble.scrollIntoView({ behavior: 'smooth' });
+            } catch (e) {
+                console.error("Erro ao enviar chat:", e);
+                alert("Erro ao enviar mensagem.");
+            }
+        }
 
-// ── Helpers ───────────────────────────────────────────────
-function slaWidth(p) {
-    // Se estourou qualquer um, barra cheia (vermelho)
-    if (p.diasRestantes <= 0) return 100;
+        // ── Helpers ───────────────────────────────────────────────
+        function slaWidth(p) {
+            // Se estourou qualquer um, barra cheia (vermelho)
+            if (p.diasRestantes <= 0) return 100;
 
-    // Calcula % baseado no SLA da etapa atual
-    const duracaoEtapa = ETAPA_DURACOES[p.etapa] || 7;
-    return Math.max(5, Math.min(100, 100 - (p.diasRestantes / duracaoEtapa * 100)));
-}
-function priorityDots(n) {
-    return Array.from({ length: 5 }, (_, i) => `<div class="priority-dot ${i < n ? 'filled' : ''}"></div>`).join('');
-}
-function alertaIcon(a) {
-    return { Verde: '🟢', Amarelo: '🟡', Laranja: '🟠', Vermelho: '🔴' }[a] || '';
-}
+            // Calcula % baseado no SLA da etapa atual
+            const duracaoEtapa = ETAPA_DURACOES[p.etapa] || 7;
+            return Math.max(5, Math.min(100, 100 - (p.diasRestantes / duracaoEtapa * 100)));
+        }
+        function priorityDots(n) {
+            return Array.from({ length: 5 }, (_, i) => `<div class="priority-dot ${i < n ? 'filled' : ''}"></div>`).join('');
+        }
+        function alertaIcon(a) {
+            return { Verde: '🟢', Amarelo: '🟡', Laranja: '🟠', Vermelho: '🔴' }[a] || '';
+        }
 
-/**
- * Returns { icon, label, sub } describing the SLA phase of a pedido,
- * based on diasRestantes and urgente flag.
- */
-function slaPhaseInfo(p) {
-    const d = p.diasRestantes;
-    const isVencidoTotal = (p.diasSlaTotal !== undefined && p.diasSlaTotal <= 0);
-    const isVencidoEtapa = (p.diasSlaEtapa !== undefined && p.diasSlaEtapa <= 0);
+        /**
+         * Returns { icon, label, sub } describing the SLA phase of a pedido,
+         * based on diasRestantes and urgente flag.
+         */
+        function slaPhaseInfo(p) {
+            const d = p.diasRestantes;
+            const isVencidoTotal = (p.diasSlaTotal !== undefined && p.diasSlaTotal <= 0);
+            const isVencidoEtapa = (p.diasSlaEtapa !== undefined && p.diasSlaEtapa <= 0);
 
-    if (p.urgente && (isVencidoEtapa || isVencidoTotal))
-        return { icon: '🔴', label: 'VENC + URG', sub: isVencidoTotal ? 'Prazo Total Estourado' : 'SLA da Etapa Estourado' };
+            if (p.urgente && (isVencidoEtapa || isVencidoTotal))
+                return { icon: '🔴', label: 'VENC + URG', sub: isVencidoTotal ? 'Prazo Total Estourado' : 'SLA da Etapa Estourado' };
 
-    if (p.urgente) return { icon: '🔴', label: 'URGENTE', sub: `${d}d.u. restantes` };
+            if (p.urgente) return { icon: '🔴', label: 'URGENTE', sub: `${d}d.u. restantes` };
 
-    if (isVencidoTotal) return { icon: '⛔', label: 'ATRASADO', sub: 'Prazo Final Vencido' };
-    if (isVencidoEtapa) return { icon: '🕒', label: 'VENCIDO', sub: 'Atrasado nesta etapa' };
+            if (isVencidoTotal) return { icon: '⛔', label: 'ATRASADO', sub: 'Prazo Final Vencido' };
+            if (isVencidoEtapa) return { icon: '🕒', label: 'VENCIDO', sub: 'Atrasado nesta etapa' };
 
-    if (d === 1) return { icon: '🔴', label: 'CRÍTICO', sub: 'Termina amanhã' };
-    if (d <= 2) return { icon: '🟠', label: 'EM RISCO', sub: `${d}d.u. restantes` };
-    if (d <= 4) return { icon: '🟡', label: 'ATENÇÃO', sub: `${d}d.u. restantes` };
-    if (d <= 7) return { icon: '🟢', label: 'NO PRAZO', sub: `${d}d.u. restantes` };
-    return { icon: '✅', label: 'CONFORTO', sub: `${d}d.u. restantes` };
-}
+            if (d === 1) return { icon: '🔴', label: 'CRÍTICO', sub: 'Termina amanhã' };
+            if (d <= 2) return { icon: '🟠', label: 'EM RISCO', sub: `${d}d.u. restantes` };
+            if (d <= 4) return { icon: '🟡', label: 'ATENÇÃO', sub: `${d}d.u. restantes` };
+            if (d <= 7) return { icon: '🟢', label: 'NO PRAZO', sub: `${d}d.u. restantes` };
+            return { icon: '✅', label: 'CONFORTO', sub: `${d}d.u. restantes` };
+        }
 
-function openLink(name) { alert('📄 Abrindo: ' + name); }
+        function openLink(name) { alert('📄 Abrindo: ' + name); }
 
-/* ============================================================
-   BI MODULE — Relatórios e Inteligência
-   ============================================================ */
+        /* ============================================================
+           BI MODULE — Relatórios e Inteligência
+           ============================================================ */
 
-// ── Mock BI Data ──────────────────────────────────────────
-// OPERADORES is now dynamic (defined at the top)
+        // ── Mock BI Data ──────────────────────────────────────────
+        // OPERADORES is now dynamic (defined at the top)
 
 
-const SETOR_BI = [
-    { etapa: 'Preparacao', pecas: 42, leadMedio: 0.4, metaDias: 0.5, color: 'green' },
-    { etapa: 'Separacao', pecas: 35, leadMedio: 0.7, metaDias: 0.8, color: 'green' },
-    { etapa: 'Arte', pecas: 28, leadMedio: 1.8, metaDias: 1.5, color: 'orange' },
-    { etapa: 'Bordado', pecas: 22, leadMedio: 3.2, metaDias: 2.0, color: 'red' },
-    { etapa: 'Costura', pecas: 18, leadMedio: 2.1, metaDias: 1.8, color: 'orange' },
-    { etapa: 'Qualidade', pecas: 15, leadMedio: 0.6, metaDias: 0.5, color: 'amber' },
-    { etapa: 'Expedicao', pecas: 31, leadMedio: 0.3, metaDias: 0.3, color: 'green' },
-];
+        const SETOR_BI = [
+            { etapa: 'Preparacao', pecas: 42, leadMedio: 0.4, metaDias: 0.5, color: 'green' },
+            { etapa: 'Separacao', pecas: 35, leadMedio: 0.7, metaDias: 0.8, color: 'green' },
+            { etapa: 'Arte', pecas: 28, leadMedio: 1.8, metaDias: 1.5, color: 'orange' },
+            { etapa: 'Bordado', pecas: 22, leadMedio: 3.2, metaDias: 2.0, color: 'red' },
+            { etapa: 'Costura', pecas: 18, leadMedio: 2.1, metaDias: 1.8, color: 'orange' },
+            { etapa: 'Qualidade', pecas: 15, leadMedio: 0.6, metaDias: 0.5, color: 'amber' },
+            { etapa: 'Expedicao', pecas: 31, leadMedio: 0.3, metaDias: 0.3, color: 'green' },
+        ];
 
-const PENDENCIA_TIPOS = [
-    { tipo: 'Erro de Arte', qtd: 12, color: '#f59e0b' },
-    { tipo: 'Insumo Faltante', qtd: 7, color: '#f97316' },
-    { tipo: 'Falha de Máquina', qtd: 5, color: '#ef4444' },
-    { tipo: 'Erro de Corte', qtd: 4, color: '#6b7280' },
-    { tipo: 'Outros', qtd: 3, color: '#8b5cf6' },
-];
+        const PENDENCIA_TIPOS = [
+            { tipo: 'Erro de Arte', qtd: 12, color: '#f59e0b' },
+            { tipo: 'Insumo Faltante', qtd: 7, color: '#f97316' },
+            { tipo: 'Falha de Máquina', qtd: 5, color: '#ef4444' },
+            { tipo: 'Erro de Corte', qtd: 4, color: '#6b7280' },
+            { tipo: 'Outros', qtd: 3, color: '#8b5cf6' },
+        ];
 
-const RETRABALHO = [
-    { origem: 'Arte', destino: 'Bordado', ocorrencias: 8, diasPerdidos: 3.2 },
-    { origem: 'Arte', destino: 'Costura', ocorrencias: 4, diasPerdidos: 1.8 },
-    { origem: 'Separação', destino: 'Bordado', ocorrencias: 3, diasPerdidos: 1.1 },
-    { origem: 'Costura', destino: 'Qualidade', ocorrencias: 2, diasPerdidos: 0.9 },
-];
+        const RETRABALHO = [
+            { origem: 'Arte', destino: 'Bordado', ocorrencias: 8, diasPerdidos: 3.2 },
+            { origem: 'Arte', destino: 'Costura', ocorrencias: 4, diasPerdidos: 1.8 },
+            { origem: 'Separação', destino: 'Bordado', ocorrencias: 3, diasPerdidos: 1.1 },
+            { origem: 'Costura', destino: 'Qualidade', ocorrencias: 2, diasPerdidos: 0.9 },
+        ];
 
-const FORECAST = [
-    { data: 'Hoje (14/03)', pedidos: 1, max: 5 },
-    { data: '15/03 (seg)', pedidos: 3, max: 5 },
-    { data: '16/03 (ter)', pedidos: 0, max: 5 },
-    { data: '17/03 (qua)', pedidos: 1, max: 5 },
-    { data: '18/03 (qui)', pedidos: 0, max: 5 },
-    { data: '19/03 (sex)', pedidos: 0, max: 5 },
-    { data: '20/03 (sáb)', pedidos: 0, max: 5 },
-];
+        const FORECAST = [
+            { data: 'Hoje (14/03)', pedidos: 1, max: 5 },
+            { data: '15/03 (seg)', pedidos: 3, max: 5 },
+            { data: '16/03 (ter)', pedidos: 0, max: 5 },
+            { data: '17/03 (qua)', pedidos: 1, max: 5 },
+            { data: '18/03 (qui)', pedidos: 0, max: 5 },
+            { data: '19/03 (sex)', pedidos: 0, max: 5 },
+            { data: '20/03 (sáb)', pedidos: 0, max: 5 },
+        ];
 
-// ── Render Reports Page ───────────────────────────────────
-function renderRelatorios() {
-    const view = $('relatorios-view');
-    if (!view) return;
-    view.innerHTML = `
+        // ── Render Reports Page ───────────────────────────────────
+        function renderRelatorios() {
+            const view = $('relatorios-view');
+            if (!view) return;
+            view.innerHTML = `
     <div class="report-toolbar">
       <span class="report-label">Período</span>
       <input class="report-input" type="date" id="r-from" value="2026-03-01">
@@ -1253,12 +1306,12 @@ function renderRelatorios() {
       ${renderReportFinanceiro()}
     </div>
   `;
-}
+        }
 
-// ── Report 1: Produtividade por Setor ─────────────────────
-function renderReportSetor() {
-    const maxLead = Math.max(...SETOR_BI.map(s => s.leadMedio));
-    return `
+        // ── Report 1: Produtividade por Setor ─────────────────────
+        function renderReportSetor() {
+            const maxLead = Math.max(...SETOR_BI.map(s => s.leadMedio));
+            return `
   <div class="report-card">
     <div class="report-card-header">
       <span class="report-card-icon">📊</span>
@@ -1268,11 +1321,11 @@ function renderReportSetor() {
     <div class="report-card-body">
       <div class="hbar-chart">
         ${SETOR_BI.map(s => {
-        const diff = (s.leadMedio - s.metaDias).toFixed(1);
-        const slaClass = s.leadMedio <= s.metaDias ? 'ok' : s.leadMedio <= s.metaDias * 1.5 ? 'warn' : 'danger';
-        const slaLabel = s.leadMedio <= s.metaDias ? `✓ ${diff}d` : `+${diff}d acima`;
-        const pct = Math.round((s.leadMedio / maxLead) * 100);
-        return `
+                const diff = (s.leadMedio - s.metaDias).toFixed(1);
+                const slaClass = s.leadMedio <= s.metaDias ? 'ok' : s.leadMedio <= s.metaDias * 1.5 ? 'warn' : 'danger';
+                const slaLabel = s.leadMedio <= s.metaDias ? `✓ ${diff}d` : `+${diff}d acima`;
+                const pct = Math.round((s.leadMedio / maxLead) * 100);
+                return `
           <div class="hbar-row">
             <div class="hbar-meta">
               <span class="hbar-icon">${ETAPA_ICONS[s.etapa]}</span>
@@ -1284,18 +1337,18 @@ function renderReportSetor() {
               <div class="hbar-fill ${s.color}" style="width:${pct}%"></div>
             </div>
           </div>`;
-    }).join('')}
+            }).join('')}
       </div>
     </div>
   </div>`;
-}
+        }
 
-// ── Report 2: Desempenho por Operador ─────────────────────
-function renderReportOperador() {
-    const sorted = [...OPERADORES].sort((a, b) => b.checkOuts - a.checkOuts);
-    const maxOuts = sorted[0].checkOuts;
-    const rankClass = i => ['gold', 'silver', 'bronze', '', ''][i] || '';
-    return `
+        // ── Report 2: Desempenho por Operador ─────────────────────
+        function renderReportOperador() {
+            const sorted = [...OPERADORES].sort((a, b) => b.checkOuts - a.checkOuts);
+            const maxOuts = sorted[0].checkOuts;
+            const rankClass = i => ['gold', 'silver', 'bronze', '', ''][i] || '';
+            return `
   <div class="report-card">
     <div class="report-card-header">
       <span class="report-card-icon">👤</span>
@@ -1313,10 +1366,10 @@ function renderReportOperador() {
         </thead>
         <tbody>
           ${sorted.map((op, i) => {
-        const errRate = ((op.erros / op.checkIns) * 100).toFixed(1);
-        const errClass = +errRate === 0 ? 'ok' : +errRate < 5 ? 'warn' : 'bad';
-        const pct = Math.round((op.checkOuts / maxOuts) * 100);
-        return `<tr>
+                const errRate = ((op.erros / op.checkIns) * 100).toFixed(1);
+                const errClass = +errRate === 0 ? 'ok' : +errRate < 5 ? 'warn' : 'bad';
+                const pct = Math.round((op.checkOuts / maxOuts) * 100);
+                return `<tr>
               <td><span class="op-rank ${rankClass(i)}">${i + 1}</span></td>
               <td><strong>${op.nome}</strong></td>
               <td><span style="font-size:10.5px;color:var(--text-3)">${op.setor}</span></td>
@@ -1327,26 +1380,26 @@ function renderReportOperador() {
               <td><span class="error-rate ${errClass}">${errRate}%</span></td>
               <td>${op.tMedio}d</td>
             </tr>`;
-    }).join('')}
+            }).join('')}
         </tbody>
       </table>
     </div>
   </div>`;
-}
+        }
 
-// ── Report 3: Qualidade e Pendências ─────────────────────
-function renderReportQualidade() {
-    const total = PENDENCIA_TIPOS.reduce((s, t) => s + t.qtd, 0);
-    const totalDias = RETRABALHO.reduce((s, r) => s + r.diasPerdidos, 0);
-    // Build conic-gradient
-    let deg = 0;
-    const gradParts = PENDENCIA_TIPOS.map(t => {
-        const pct = (t.qtd / total) * 360;
-        const part = `${t.color} ${deg}deg ${deg + pct}deg`;
-        deg += pct;
-        return part;
-    });
-    return `
+        // ── Report 3: Qualidade e Pendências ─────────────────────
+        function renderReportQualidade() {
+            const total = PENDENCIA_TIPOS.reduce((s, t) => s + t.qtd, 0);
+            const totalDias = RETRABALHO.reduce((s, r) => s + r.diasPerdidos, 0);
+            // Build conic-gradient
+            let deg = 0;
+            const gradParts = PENDENCIA_TIPOS.map(t => {
+                const pct = (t.qtd / total) * 360;
+                const part = `${t.color} ${deg}deg ${deg + pct}deg`;
+                deg += pct;
+                return part;
+            });
+            return `
   <div class="report-card">
     <div class="report-card-header">
       <span class="report-card-icon">⚠️</span>
@@ -1389,22 +1442,22 @@ function renderReportQualidade() {
       </div>
     </div>
   </div>`;
-}
+        }
 
-// ── Report 4: Fluxo Financeiro ────────────────────────────
-function renderReportFinanceiro() {
-    // Cálculo real baseado nos pedidos carregados (Ticket fixo estimado em 180 para demonstração)
-    const activeOrders = PEDIDOS.length;
-    const totalVal = PEDIDOS.reduce((s, p) => s + (p.quantidade * 180), 0);
-    const ticketMedio = activeOrders > 0 ? Math.round(totalVal / activeOrders) : 0;
+        // ── Report 4: Fluxo Financeiro ────────────────────────────
+        function renderReportFinanceiro() {
+            // Cálculo real baseado nos pedidos carregados (Ticket fixo estimado em 180 para demonstração)
+            const activeOrders = PEDIDOS.length;
+            const totalVal = PEDIDOS.reduce((s, p) => s + (p.quantidade * 180), 0);
+            const ticketMedio = activeOrders > 0 ? Math.round(totalVal / activeOrders) : 0;
 
-    // Status Críticos Reais
-    const criticos = PEDIDOS.filter(p => p.prioridade >= 3).length;
-    const urgentesVencidos = PEDIDOS.filter(p => p.urgente || p.diasRestantes <= 0).length;
+            // Status Críticos Reais
+            const criticos = PEDIDOS.filter(p => p.prioridade >= 3).length;
+            const urgentesVencidos = PEDIDOS.filter(p => p.urgente || p.diasRestantes <= 0).length;
 
-    const maxF = Math.max(...FORECAST.map(f => f.pedidos), 1);
+            const maxF = Math.max(...FORECAST.map(f => f.pedidos), 1);
 
-    return `
+            return `
   <div class="report-card">
     <div class="report-card-header">
       <span class="report-card-icon">💰</span>
@@ -1452,100 +1505,100 @@ function renderReportFinanceiro() {
       </div>
     </div>
   </div>`;
-}
-
-// ── Operator Selector Logic ──────────────────────────────
-let currentOperador = JSON.parse(localStorage.getItem('hnt_operator')) || null;
-
-function selectOp(nome, btn) {
-    const op = OPERADORES.find(o => o.nome === nome);
-    if (!op) return;
-    currentOperador = op;
-    localStorage.setItem('hnt_operator', JSON.stringify(op));
-    updateUserCard();
-    const wrap = $('op-select-wrap');
-    if (wrap) wrap.remove();
-    if (window._opCallback) {
-        window._opCallback(op);
-        window._opCallback = null;
-    }
-}
-
-function logoutOp() {
-    currentOperador = null;
-    localStorage.removeItem('hnt_operator');
-    updateUserCard();
-    alert("Operador desconectado.");
-}
-
-function updateUserCard() {
-    const card = $('current-user-card');
-    const tabSetor = $('tab-meu-setor');
-    const navRel = $('nav-relatorios');
-    const navAdm = $('nav-admin');
-
-    // Mantemos os ícones visíveis, mas com dica de senha
-    if (navRel) {
-        navRel.style.display = 'flex';
-        navRel.setAttribute('data-tooltip', 'Requer Senha Administrativa');
-    }
-    if (navAdm) {
-        navAdm.style.display = 'flex';
-        navAdm.setAttribute('data-tooltip', 'Requer Senha Administrativa');
-    }
-
-    if (!currentOperador) {
-        card.style.display = 'none';
-        if (tabSetor) tabSetor.style.display = 'none';
-
-        // Dica visual no rodapé
-        const footerUser = document.querySelector('.sidebar-user');
-        if (footerUser) footerUser.setAttribute('data-tooltip', 'Clique para entrar');
-
-        // Se estava na tab meu-setor e deslogou, volta pra todos
-        if (currentFilter === 'meu-setor') {
-            document.querySelectorAll('.tab[data-filter]').forEach(t => t.classList.remove('active'));
-            document.querySelector('.tab[data-filter="todos"]').classList.add('active');
-            currentFilter = 'todos';
-            renderTable(filterData());
         }
-        return;
-    }
-    card.style.display = 'flex';
-    $('sidebar-user-avatar').textContent = currentOperador.iniciais;
-    $('sidebar-user-name').textContent = currentOperador.nome || 'Operador';
-    $('sidebar-user-setor').textContent = (currentOperador.setor || 'Fábrica') + ` (${currentOperador.perfil})`;
 
-    if (tabSetor) {
-        tabSetor.style.display = 'inline-flex';
-        renderStats(); // Update contagem
-    }
+        // ── Operator Selector Logic ──────────────────────────────
+        let currentOperador = JSON.parse(localStorage.getItem('hnt_operator')) || null;
 
-    // RBAC: Show/Hide Nav based on Profile
-    const perf = currentOperador.perfil;
-    // navRel.style.display = (perf === 'Admin' || perf === 'Gerente') ? 'flex' : 'none'; // This is now handled by auth
-    // navAdm.style.display = (perf === 'Admin') ? 'flex' : 'none'; // This is now handled by auth
+        function selectOp(nome, btn) {
+            const op = OPERADORES.find(o => o.nome === nome);
+            if (!op) return;
+            currentOperador = op;
+            localStorage.setItem('hnt_operator', JSON.stringify(op));
+            updateUserCard();
+            const wrap = $('op-select-wrap');
+            if (wrap) wrap.remove();
+            if (window._opCallback) {
+                window._opCallback(op);
+                window._opCallback = null;
+            }
+        }
 
-    // Se o operador logar e estiver em um view proibida, redireciona pra lista
-    if (perf === 'Operador' && (currentView === 'relatorios' || currentView === 'admin')) {
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.querySelector('.nav-item[data-view="lista"]').classList.add('active');
-        currentView = 'lista';
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        const target = $('lista-view');
-        if (target) target.classList.add('active');
-    }
-}
+        function logoutOp() {
+            currentOperador = null;
+            localStorage.removeItem('hnt_operator');
+            updateUserCard();
+            alert("Operador desconectado.");
+        }
 
-function openOpSelect(callback) {
-    const modal = $('qr-modal');
-    window._opCallback = callback;
-    const existing = document.getElementById('op-select-wrap');
-    if (existing) existing.remove();
+        function updateUserCard() {
+            const card = $('current-user-card');
+            const tabSetor = $('tab-meu-setor');
+            const navRel = $('nav-relatorios');
+            const navAdm = $('nav-admin');
 
-    const wrap = document.createElement('div');
-    wrap.id = 'op-select-wrap';
-    wrap.innerHTML = `
+            // Mantemos os ícones visíveis, mas com dica de senha
+            if (navRel) {
+                navRel.style.display = 'flex';
+                navRel.setAttribute('data-tooltip', 'Requer Senha Administrativa');
+            }
+            if (navAdm) {
+                navAdm.style.display = 'flex';
+                navAdm.setAttribute('data-tooltip', 'Requer Senha Administrativa');
+            }
+
+            if (!currentOperador) {
+                card.style.display = 'none';
+                if (tabSetor) tabSetor.style.display = 'none';
+
+                // Dica visual no rodapé
+                const footerUser = document.querySelector('.sidebar-user');
+                if (footerUser) footerUser.setAttribute('data-tooltip', 'Clique para entrar');
+
+                // Se estava na tab meu-setor e deslogou, volta pra todos
+                if (currentFilter === 'meu-setor') {
+                    document.querySelectorAll('.tab[data-filter]').forEach(t => t.classList.remove('active'));
+                    document.querySelector('.tab[data-filter="todos"]').classList.add('active');
+                    currentFilter = 'todos';
+                    renderTable(filterData());
+                }
+                return;
+            }
+            card.style.display = 'flex';
+            $('sidebar-user-avatar').textContent = currentOperador.iniciais;
+            $('sidebar-user-name').textContent = currentOperador.nome || 'Operador';
+            $('sidebar-user-setor').textContent = (currentOperador.setor || 'Fábrica') + ` (${currentOperador.perfil})`;
+
+            if (tabSetor) {
+                tabSetor.style.display = 'inline-flex';
+                renderStats(); // Update contagem
+            }
+
+            // RBAC: Show/Hide Nav based on Profile
+            const perf = currentOperador.perfil;
+            // navRel.style.display = (perf === 'Admin' || perf === 'Gerente') ? 'flex' : 'none'; // This is now handled by auth
+            // navAdm.style.display = (perf === 'Admin') ? 'flex' : 'none'; // This is now handled by auth
+
+            // Se o operador logar e estiver em um view proibida, redireciona pra lista
+            if (perf === 'Operador' && (currentView === 'relatorios' || currentView === 'admin')) {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.querySelector('.nav-item[data-view="lista"]').classList.add('active');
+                currentView = 'lista';
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                const target = $('lista-view');
+                if (target) target.classList.add('active');
+            }
+        }
+
+        function openOpSelect(callback) {
+            const modal = $('qr-modal');
+            window._opCallback = callback;
+            const existing = document.getElementById('op-select-wrap');
+            if (existing) existing.remove();
+
+            const wrap = document.createElement('div');
+            wrap.id = 'op-select-wrap';
+            wrap.innerHTML = `
     <div style="font-size:12.5px;font-weight:700;color:var(--text-1);margin-bottom:4px">Quem está registrando?</div>
     <div style="font-size:11px;color:#888;margin-bottom:10px">Selecione seu nome para vincular ao check-in</div>
     <div class="op-select-grid">
@@ -1559,35 +1612,35 @@ function openOpSelect(callback) {
       </button>`).join('')}
     </div>
   `;
-    modal.querySelector('.modal').appendChild(wrap);
-}
+            modal.querySelector('.modal').appendChild(wrap);
+        }
 
-// Chamar no Init
-document.addEventListener('DOMContentLoaded', () => {
-    updateUserCard();
-});
+        // Chamar no Init
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUserCard();
+        });
 
-// Override openQR: Se não tiver operador, pede pra selecionar antes
-const _origOpenQR = openQRBase;
-window.openQR = function () {
-    if (!currentOperador) {
-        // Mostra o modal de QR só pra ter o fundo, mas abre a seleção
-        _origOpenQR();
-        openOpSelect();
-    } else {
-        _origOpenQR();
-    }
-};
+        // Override openQR: Se não tiver operador, pede pra selecionar antes
+        const _origOpenQR = openQRBase;
+        window.openQR = function () {
+            if (!currentOperador) {
+                // Mostra o modal de QR só pra ter o fundo, mas abre a seleção
+                _origOpenQR();
+                openOpSelect();
+            } else {
+                _origOpenQR();
+            }
+        };
 
-// ── Print Label ───────────────────────────────────────────
-function printLabel() {
-    if (!selectedId) return;
-    const p = PEDIDOS.find(x => x.id === selectedId);
-    if (!p) return;
+        // ── Print Label ───────────────────────────────────────────
+        function printLabel() {
+            if (!selectedId) return;
+            const p = PEDIDOS.find(x => x.id === selectedId);
+            if (!p) return;
 
-    // Abrimos uma nova janela para imprimir
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
-    printWindow.document.write(`
+            // Abrimos uma nova janela para imprimir
+            const printWindow = window.open('', '_blank', 'width=400,height=600');
+            printWindow.document.write(`
         <html>
         <head>
             <title>Etiqueta ${p.numero}</title>
@@ -1646,16 +1699,16 @@ function printLabel() {
         </body>
         </html>
     `);
-    printWindow.document.close();
-}
+            printWindow.document.close();
+        }
 
-function printFicha() {
-    if (!selectedId) return;
-    const p = PEDIDOS.find(x => x.id === selectedId);
-    if (!p) return;
+        function printFicha() {
+            if (!selectedId) return;
+            const p = PEDIDOS.find(x => x.id === selectedId);
+            if (!p) return;
 
-    const printWindow = window.open('', '_blank', 'width=800,height=900');
-    printWindow.document.write(`
+            const printWindow = window.open('', '_blank', 'width=800,height=900');
+            printWindow.document.write(`
         <html>
         <head>
             <title>Ficha A4 ${p.numero}</title>
@@ -1789,53 +1842,53 @@ function printFicha() {
         </body>
         </html>
     `);
-    printWindow.document.close();
-}
+            printWindow.document.close();
+        }
 
-// ── CSV Export ────────────────────────────────────────────
-function exportCSV() {
-    const rows = [
-        ['Número', 'SKU', 'Técnica', 'Tamanho', 'Quantidade', 'Etapa', 'SLA', 'Urgente', 'Prazo', 'Cliente', 'CPF'],
-        ...PEDIDOS.map(p => [
-            p.numero, p.sku, p.tecnica, p.tamanho, p.quantidade,
-            ETAPA_LABELS[p.etapa] || p.etapa, p.alerta,
-            p.urgente ? 'Sim' : 'Não', p.prazo, p.cliente, p.cpf
-        ])
-    ];
-    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'hnt-ops-pedidos.csv'; a.click();
-    URL.revokeObjectURL(url);
-}
+        // ── CSV Export ────────────────────────────────────────────
+        function exportCSV() {
+            const rows = [
+                ['Número', 'SKU', 'Técnica', 'Tamanho', 'Quantidade', 'Etapa', 'SLA', 'Urgente', 'Prazo', 'Cliente', 'CPF'],
+                ...PEDIDOS.map(p => [
+                    p.numero, p.sku, p.tecnica, p.tamanho, p.quantidade,
+                    ETAPA_LABELS[p.etapa] || p.etapa, p.alerta,
+                    p.urgente ? 'Sim' : 'Não', p.prazo, p.cliente, p.cpf
+                ])
+            ];
+            const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'hnt-ops-pedidos.csv'; a.click();
+            URL.revokeObjectURL(url);
+        }
 
-// ── Gestão de Prazos (Produção) ───────────────────────────
+        // ── Gestão de Prazos (Produção) ───────────────────────────
 
-async function renderAdmin() {
-    const view = $('admin-view');
-    if (!view) return;
+        async function renderAdmin() {
+            const view = $('admin-view');
+            if (!view) return;
 
-    // Carregar dados frescos
-    const logs = await api.loadLoginLogs();
-    const ops = await api.getOperadores();
-    const scheduleData = await api.loadScheduleConfig();
+            // Carregar dados frescos
+            const logs = await api.loadLoginLogs();
+            const ops = await api.getOperadores();
+            const scheduleData = await api.loadScheduleConfig();
 
-    // Estado local para a matriz (copiado do banco)
-    let milestones = scheduleData.milestones || [];
-    let totalPrazo = 15;
-    const configPrazo = scheduleData.config.find(c => c.chave === 'prazo_maximo_entrega');
-    if (configPrazo) totalPrazo = parseInt(configPrazo.valor);
+            // Estado local para a matriz (copiado do banco)
+            let milestones = scheduleData.milestones || [];
+            let totalPrazo = 15;
+            const configPrazo = scheduleData.config.find(c => c.chave === 'prazo_maximo_entrega');
+            if (configPrazo) totalPrazo = parseInt(configPrazo.valor);
 
-    // Configuração de tolerância (carregada do config, padrão 1 dia)
-    let tolerancia = 1;
-    const configTol = scheduleData.config.find(c => c.chave === 'tolerancia_etapa_dias');
-    if (configTol) tolerancia = parseInt(configTol.valor);
+            // Configuração de tolerância (carregada do config, padrão 1 dia)
+            let tolerancia = 1;
+            const configTol = scheduleData.config.find(c => c.chave === 'tolerancia_etapa_dias');
+            if (configTol) tolerancia = parseInt(configTol.valor);
 
-    // Função interna para renderizar a matriz isoladamente
-    function matrixHTML() {
-        const columns = 20; // Dias 1 a 20
-        let html = `
+            // Função interna para renderizar a matriz isoladamente
+            function matrixHTML() {
+                const columns = 20; // Dias 1 a 20
+                let html = `
         <div class="prazos-matrix-container">
             <div style="margin-bottom: 20px; display:flex; align-items:center; gap:15px; flex-wrap:wrap; background:var(--surface-2); padding:15px; border-radius:6px; border:1px solid var(--border)">
                 <span style="font-weight:800; color:var(--text-1)">PRAZO MÁXIMO DE ENTREGA:</span>
@@ -1869,54 +1922,54 @@ async function renderAdmin() {
                 </thead>
                 <tbody>
                     ${ETAPAS.filter(e => e !== 'Pendencia').map(etapa => {
-            const m = milestones.find(ms => ms.etapa === etapa) || { etapa, dia_inicio: 1, duracao: 1 };
-            const color = ETAPA_COLORS[etapa] || 'var(--amber)';
+                    const m = milestones.find(ms => ms.etapa === etapa) || { etapa, dia_inicio: 1, duracao: 1 };
+                    const color = ETAPA_COLORS[etapa] || 'var(--amber)';
 
-            const startDay = m.dia_inicio || 1;
-            const duration = m.duracao || 1;
-            const endDay = startDay + duration - 1;
-            const tolBefore = Math.max(1, startDay - tolerancia);
-            const tolAfter = endDay + tolerancia;
+                    const startDay = m.dia_inicio || 1;
+                    const duration = m.duracao || 1;
+                    const endDay = startDay + duration - 1;
+                    const tolBefore = Math.max(1, startDay - tolerancia);
+                    const tolAfter = endDay + tolerancia;
 
-            return `
+                    return `
                         <tr>
                             <td class="prazos-stage-label">
                                 ${ETAPA_ICONS[etapa] || ''} ${ETAPA_LABELS[etapa]}
                             </td>
                             ${Array.from({ length: columns }, (_, i) => {
-                const day = i + 1;
-                const isOver = day > totalPrazo;
-                const isPlanned = day >= startDay && day <= endDay;
-                const isTolBef = !isPlanned && day >= tolBefore && day < startDay;
-                const isTolAft = !isPlanned && day > endDay && day <= tolAfter;
-                const isLimit = day === totalPrazo;
+                        const day = i + 1;
+                        const isOver = day > totalPrazo;
+                        const isPlanned = day >= startDay && day <= endDay;
+                        const isTolBef = !isPlanned && day >= tolBefore && day < startDay;
+                        const isTolAft = !isPlanned && day > endDay && day <= tolAfter;
+                        const isLimit = day === totalPrazo;
 
-                let cls = '';
-                let cellStyle = `--stage-color: ${color};`;
+                        let cls = '';
+                        let cellStyle = `--stage-color: ${color};`;
 
-                if (isOver && !isLimit) {
-                    cls = 'over-limit';
-                } else if (isPlanned) {
-                    cls = 'active-range';
-                    if (day === startDay) cls += ' active-start';
-                    if (day === endDay) cls += ' active-end';
-                } else if (isTolBef || isTolAft) {
-                    cls = 'tol-zone';
-                    cellStyle += tolerancia > 0 ? '' : 'opacity:0;';
-                }
-                if (isLimit) cls += ' limit-line';
+                        if (isOver && !isLimit) {
+                            cls = 'over-limit';
+                        } else if (isPlanned) {
+                            cls = 'active-range';
+                            if (day === startDay) cls += ' active-start';
+                            if (day === endDay) cls += ' active-end';
+                        } else if (isTolBef || isTolAft) {
+                            cls = 'tol-zone';
+                            cellStyle += tolerancia > 0 ? '' : 'opacity:0;';
+                        }
+                        if (isLimit) cls += ' limit-line';
 
-                return `<td class="prazos-cell ${cls}" style="${cellStyle}"
+                        return `<td class="prazos-cell ${cls}" style="${cellStyle}"
                            data-etapa="${etapa}" data-day="${day}"
                            title="${ETAPA_LABELS[etapa]}: Dia ${day}${isPlanned ? ' ✅ Planejado' : isTolBef || isTolAft ? ' 🟡 Tolerância' : ''}">
                         </td>`;
-            }).join('')}
+                    }).join('')}
                             <td class="prazos-duration-column">
                                 <input type="number" class="prazos-duration-input" 
                                        data-etapa="${etapa}" value="${duration}" min="1" max="20">
                             </td>
                         </tr>`;
-        }).join('')}
+                }).join('')}
                 </tbody>
             </table>
             
@@ -1927,11 +1980,11 @@ async function renderAdmin() {
                 </button>
             </div>
         </div>`;
-        return html;
-    }
+                return html;
+            }
 
-    // UI Principal
-    view.innerHTML = `
+            // UI Principal
+            view.innerHTML = `
     <div class="report-toolbar">
       <span class="report-label" style="font-size:16px; font-weight:700; color:var(--text-1)">Painel de Administração</span>
       <span style="font-size:10px; color:var(--text-3); margin-left:10px" data-tooltip="Auditoria e Controle de Acessos.">Segurança do Sistema 🛡️</span>
@@ -2147,279 +2200,279 @@ async function renderAdmin() {
     </div>
     `;
 
-    // ── Bind Interactive Events ──
-    function bindPrazosEvents() {
-        const container = $('prazos-matrix-view');
+            // ── Bind Interactive Events ──
+            function bindPrazosEvents() {
+                const container = $('prazos-matrix-view');
 
-        // 1. Matrix Clicks (Dia de Início)
-        container.querySelectorAll('.prazos-cell').forEach(cell => {
-            cell.addEventListener('click', () => {
-                const etapa = cell.dataset.etapa;
-                const day = parseInt(cell.dataset.day);
+                // 1. Matrix Clicks (Dia de Início)
+                container.querySelectorAll('.prazos-cell').forEach(cell => {
+                    cell.addEventListener('click', () => {
+                        const etapa = cell.dataset.etapa;
+                        const day = parseInt(cell.dataset.day);
 
-                let m = milestones.find(ms => ms.etapa === etapa);
-                if (m) {
-                    m.dia_inicio = day;
-                } else {
-                    milestones.push({ etapa, dia_inicio: day, duracao: 1 });
+                        let m = milestones.find(ms => ms.etapa === etapa);
+                        if (m) {
+                            m.dia_inicio = day;
+                        } else {
+                            milestones.push({ etapa, dia_inicio: day, duracao: 1 });
+                        }
+
+                        container.innerHTML = matrixHTML();
+                        bindPrazosEvents();
+                    });
+                });
+
+                // 2. Duration Inputs
+                container.querySelectorAll('.prazos-duration-input').forEach(input => {
+                    input.addEventListener('change', () => {
+                        const etapa = input.dataset.etapa;
+                        const val = parseInt(input.value) || 1;
+
+                        let m = milestones.find(ms => ms.etapa === etapa);
+                        if (m) {
+                            m.duracao = val;
+                        } else {
+                            milestones.push({ etapa, dia_inicio: 1, duracao: val });
+                        }
+
+                        container.innerHTML = matrixHTML();
+                        bindPrazosEvents();
+                    });
+                });
+
+                // 3. Input total days
+                const totalInput = $('prazos-total-days');
+                if (totalInput) {
+                    totalInput.addEventListener('change', () => {
+                        totalPrazo = parseInt(totalInput.value);
+                        container.innerHTML = matrixHTML();
+                        bindPrazosEvents();
+                    });
                 }
 
-                container.innerHTML = matrixHTML();
-                bindPrazosEvents();
-            });
-        });
-
-        // 2. Duration Inputs
-        container.querySelectorAll('.prazos-duration-input').forEach(input => {
-            input.addEventListener('change', () => {
-                const etapa = input.dataset.etapa;
-                const val = parseInt(input.value) || 1;
-
-                let m = milestones.find(ms => ms.etapa === etapa);
-                if (m) {
-                    m.duracao = val;
-                } else {
-                    milestones.push({ etapa, dia_inicio: 1, duracao: val });
+                // 3b. Input de tolerância
+                const tolInput = $('prazos-tolerancia');
+                if (tolInput) {
+                    tolInput.addEventListener('change', () => {
+                        tolerancia = Math.max(0, parseInt(tolInput.value) || 0);
+                        container.innerHTML = matrixHTML();
+                        bindPrazosEvents();
+                    });
                 }
 
-                container.innerHTML = matrixHTML();
-                bindPrazosEvents();
-            });
-        });
-
-        // 3. Input total days
-        const totalInput = $('prazos-total-days');
-        if (totalInput) {
-            totalInput.addEventListener('change', () => {
-                totalPrazo = parseInt(totalInput.value);
-                container.innerHTML = matrixHTML();
-                bindPrazosEvents();
-            });
-        }
-
-        // 3b. Input de tolerância
-        const tolInput = $('prazos-tolerancia');
-        if (tolInput) {
-            tolInput.addEventListener('change', () => {
-                tolerancia = Math.max(0, parseInt(tolInput.value) || 0);
-                container.innerHTML = matrixHTML();
-                bindPrazosEvents();
-            });
-        }
-
-        // 4. Botão Salvar
-        const saveBtn = $('btn-save-prazos');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', async () => {
-                saveBtn.innerHTML = '⌛ Gravando...';
-                saveBtn.disabled = true;
-                await api.saveScheduleConfig(milestones, totalPrazo);
-                // Persiste a tolerância como config extra
-                try {
-                    await apiFetch('admin_config?chave=eq.tolerancia_etapa_dias', 'PATCH', { valor: String(tolerancia) });
-                } catch (e) {
-                    // Pode não existir ainda — ignora silenciosamente
+                // 4. Botão Salvar
+                const saveBtn = $('btn-save-prazos');
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', async () => {
+                        saveBtn.innerHTML = '⌛ Gravando...';
+                        saveBtn.disabled = true;
+                        await api.saveScheduleConfig(milestones, totalPrazo);
+                        // Persiste a tolerância como config extra
+                        try {
+                            await apiFetch('admin_config?chave=eq.tolerancia_etapa_dias', 'PATCH', { valor: String(tolerancia) });
+                        } catch (e) {
+                            // Pode não existir ainda — ignora silenciosamente
+                        }
+                        saveBtn.innerHTML = '✅ GESTÃO SALVA!';
+                        setTimeout(() => {
+                            saveBtn.innerHTML = '💾 SALVAR GESTÃO DE PRAZOS';
+                            saveBtn.disabled = false;
+                        }, 2000);
+                    });
                 }
-                saveBtn.innerHTML = '✅ GESTÃO SALVA!';
-                setTimeout(() => {
-                    saveBtn.innerHTML = '💾 SALVAR GESTÃO DE PRAZOS';
-                    saveBtn.disabled = false;
-                }, 2000);
-            });
-        }
-    }
+            }
 
-    bindPrazosEvents();
+            bindPrazosEvents();
 
-    // ── Bind Operator Events ──
-    const modalOp = $('op-modal');
-    const formOp = $('op-form');
+            // ── Bind Operator Events ──
+            const modalOp = $('op-modal');
+            const formOp = $('op-form');
 
-    $('btn-new-op').onclick = () => {
-        formOp.reset();
-        $('op-id').value = '';
-        $('op-modal-title').textContent = 'NOVO OPERADOR';
-        modalOp.style.display = 'flex';
-        setTimeout(() => modalOp.classList.add('open'), 10);
-    };
-
-    view.querySelectorAll('.btn-edit-op').forEach(btn => {
-        btn.onclick = () => {
-            const id = btn.dataset.id;
-            const o = ops.find(x => x.id === id);
-            if (o) {
-                $('op-id').value = o.id;
-                $('op-nome').value = o.nome;
-                $('op-usuario').value = o.usuario;
-                $('op-senha').value = o.senha;
-                $('op-perfil').value = o.perfil;
-                $('op-setor').value = o.setor || 'Fábrica';
-                $('op-modal-title').textContent = 'EDITAR OPERADOR';
+            $('btn-new-op').onclick = () => {
+                formOp.reset();
+                $('op-id').value = '';
+                $('op-modal-title').textContent = 'NOVO OPERADOR';
                 modalOp.style.display = 'flex';
                 setTimeout(() => modalOp.classList.add('open'), 10);
-            }
-        };
-    });
+            };
 
-    view.querySelectorAll('.btn-delete-op').forEach(btn => {
-        btn.onclick = async () => {
-            if (confirm(`Deseja realmente excluir (desativar) o acesso de ${btn.dataset.nome}?`)) {
-                await api.deleteOperador(btn.dataset.id);
-                renderAdmin(); // Recarrega tela
-            }
-        };
-    });
+            view.querySelectorAll('.btn-edit-op').forEach(btn => {
+                btn.onclick = () => {
+                    const id = btn.dataset.id;
+                    const o = ops.find(x => x.id === id);
+                    if (o) {
+                        $('op-id').value = o.id;
+                        $('op-nome').value = o.nome;
+                        $('op-usuario').value = o.usuario;
+                        $('op-senha').value = o.senha;
+                        $('op-perfil').value = o.perfil;
+                        $('op-setor').value = o.setor || 'Fábrica';
+                        $('op-modal-title').textContent = 'EDITAR OPERADOR';
+                        modalOp.style.display = 'flex';
+                        setTimeout(() => modalOp.classList.add('open'), 10);
+                    }
+                };
+            });
 
-    formOp.onsubmit = async (e) => {
-        e.preventDefault();
-        const saveBtn = $('btn-save-op');
-        saveBtn.disabled = true;
-        saveBtn.textContent = '⌛ Gravando...';
+            view.querySelectorAll('.btn-delete-op').forEach(btn => {
+                btn.onclick = async () => {
+                    if (confirm(`Deseja realmente excluir (desativar) o acesso de ${btn.dataset.nome}?`)) {
+                        await api.deleteOperador(btn.dataset.id);
+                        renderAdmin(); // Recarrega tela
+                    }
+                };
+            });
 
-        const opData = {
-            id: $('op-id').value || undefined,
-            nome: $('op-nome').value,
-            usuario: $('op-usuario').value,
-            senha: $('op-senha').value,
-            perfil: $('op-perfil').value,
-            setor: $('op-setor').value
-        };
+            formOp.onsubmit = async (e) => {
+                e.preventDefault();
+                const saveBtn = $('btn-save-op');
+                saveBtn.disabled = true;
+                saveBtn.textContent = '⌛ Gravando...';
 
-        try {
-            await api.upsertOperador(opData);
-            modalOp.classList.remove('open');
-            setTimeout(() => {
-                modalOp.style.display = 'none';
-                renderAdmin(); // Recarrega tudo
-            }, 300);
-        } catch (err) {
-            alert("Erro ao gravar operador: " + err.message);
-        } finally {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'GRAVAR ACESSO';
-        }
-    };
+                const opData = {
+                    id: $('op-id').value || undefined,
+                    nome: $('op-nome').value,
+                    usuario: $('op-usuario').value,
+                    senha: $('op-senha').value,
+                    perfil: $('op-perfil').value,
+                    setor: $('op-setor').value
+                };
 
-    // ── Bind Etapa Events ──
-    const modalEtapa = $('etapa-modal');
-    const formEtapa = $('etapa-form');
+                try {
+                    await api.upsertOperador(opData);
+                    modalOp.classList.remove('open');
+                    setTimeout(() => {
+                        modalOp.style.display = 'none';
+                        renderAdmin(); // Recarrega tudo
+                    }, 300);
+                } catch (err) {
+                    alert("Erro ao gravar operador: " + err.message);
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'GRAVAR ACESSO';
+                }
+            };
 
-    $('btn-new-etapa').onclick = () => {
-        formEtapa.reset();
-        $('etapa-slug').value = '';
-        $('etapa-slug').disabled = false;
-        $('etapa-modal-title').textContent = 'NOVA ETAPA';
-        modalEtapa.style.display = 'flex';
-        setTimeout(() => modalEtapa.classList.add('open'), 10);
-    };
+            // ── Bind Etapa Events ──
+            const modalEtapa = $('etapa-modal');
+            const formEtapa = $('etapa-form');
 
-    view.querySelectorAll('.btn-edit-etapa').forEach(btn => {
-        btn.onclick = () => {
-            const slug = btn.dataset.slug;
-            const m = milestones.find(x => x.etapa === slug);
-            if (m) {
-                $('etapa-slug').value = m.etapa;
-                $('etapa-slug').disabled = true;
-                $('etapa-label').value = m.label;
-                $('etapa-cor').value = m.cor;
-                $('etapa-icone').value = m.icone || '';
-                $('etapa-modal-title').textContent = 'EDITAR ETAPA';
+            $('btn-new-etapa').onclick = () => {
+                formEtapa.reset();
+                $('etapa-slug').value = '';
+                $('etapa-slug').disabled = false;
+                $('etapa-modal-title').textContent = 'NOVA ETAPA';
                 modalEtapa.style.display = 'flex';
                 setTimeout(() => modalEtapa.classList.add('open'), 10);
-            }
-        };
-    });
+            };
 
-    view.querySelectorAll('.btn-up-etapa').forEach(btn => {
-        btn.onclick = async () => {
-            const slug = btn.dataset.slug;
-            const idx = milestones.findIndex(x => x.etapa === slug);
-            if (idx > 0) {
-                const tempPos = milestones[idx].posicao;
-                milestones[idx].posicao = milestones[idx - 1].posicao;
-                milestones[idx - 1].posicao = tempPos;
-                await api.saveScheduleConfig(milestones, totalPrazo);
-                renderAdmin();
-            }
-        };
-    });
+            view.querySelectorAll('.btn-edit-etapa').forEach(btn => {
+                btn.onclick = () => {
+                    const slug = btn.dataset.slug;
+                    const m = milestones.find(x => x.etapa === slug);
+                    if (m) {
+                        $('etapa-slug').value = m.etapa;
+                        $('etapa-slug').disabled = true;
+                        $('etapa-label').value = m.label;
+                        $('etapa-cor').value = m.cor;
+                        $('etapa-icone').value = m.icone || '';
+                        $('etapa-modal-title').textContent = 'EDITAR ETAPA';
+                        modalEtapa.style.display = 'flex';
+                        setTimeout(() => modalEtapa.classList.add('open'), 10);
+                    }
+                };
+            });
 
-    view.querySelectorAll('.btn-down-etapa').forEach(btn => {
-        btn.onclick = async () => {
-            const slug = btn.dataset.slug;
-            const idx = milestones.findIndex(x => x.etapa === slug);
-            if (idx < milestones.length - 1) {
-                const tempPos = milestones[idx].posicao;
-                milestones[idx].posicao = milestones[idx + 1].posicao;
-                milestones[idx + 1].posicao = tempPos;
-                await api.saveScheduleConfig(milestones, totalPrazo);
-                renderAdmin();
-            }
-        };
-    });
+            view.querySelectorAll('.btn-up-etapa').forEach(btn => {
+                btn.onclick = async () => {
+                    const slug = btn.dataset.slug;
+                    const idx = milestones.findIndex(x => x.etapa === slug);
+                    if (idx > 0) {
+                        const tempPos = milestones[idx].posicao;
+                        milestones[idx].posicao = milestones[idx - 1].posicao;
+                        milestones[idx - 1].posicao = tempPos;
+                        await api.saveScheduleConfig(milestones, totalPrazo);
+                        renderAdmin();
+                    }
+                };
+            });
 
-    view.querySelectorAll('.btn-delete-etapa').forEach(btn => {
-        btn.onclick = async () => {
-            if (confirm(`Excluir etapa "${btn.dataset.slug}"? Isso removerá a coluna do Kanban.`)) {
-                await api.deleteEtapa(btn.dataset.slug);
-                renderAdmin();
-            }
-        };
-    });
+            view.querySelectorAll('.btn-down-etapa').forEach(btn => {
+                btn.onclick = async () => {
+                    const slug = btn.dataset.slug;
+                    const idx = milestones.findIndex(x => x.etapa === slug);
+                    if (idx < milestones.length - 1) {
+                        const tempPos = milestones[idx].posicao;
+                        milestones[idx].posicao = milestones[idx + 1].posicao;
+                        milestones[idx + 1].posicao = tempPos;
+                        await api.saveScheduleConfig(milestones, totalPrazo);
+                        renderAdmin();
+                    }
+                };
+            });
 
-    formEtapa.onsubmit = async (e) => {
-        e.preventDefault();
-        const saveBtn = $('btn-save-etapa');
-        saveBtn.disabled = true;
-        saveBtn.textContent = '⌛ Gravando...';
+            view.querySelectorAll('.btn-delete-etapa').forEach(btn => {
+                btn.onclick = async () => {
+                    if (confirm(`Excluir etapa "${btn.dataset.slug}"? Isso removerá a coluna do Kanban.`)) {
+                        await api.deleteEtapa(btn.dataset.slug);
+                        renderAdmin();
+                    }
+                };
+            });
 
-        const data = {
-            etapa: $('etapa-slug').value,
-            label: $('etapa-label').value,
-            cor: $('etapa-cor').value,
-            icone: $('etapa-icone').value,
-            posicao: milestones.length + 1
-        };
+            formEtapa.onsubmit = async (e) => {
+                e.preventDefault();
+                const saveBtn = $('btn-save-etapa');
+                saveBtn.disabled = true;
+                saveBtn.textContent = '⌛ Gravando...';
 
-        const existing = milestones.find(m => m.etapa === data.etapa);
-        if (existing) data.posicao = existing.posicao;
+                const data = {
+                    etapa: $('etapa-slug').value,
+                    label: $('etapa-label').value,
+                    cor: $('etapa-cor').value,
+                    icone: $('etapa-icone').value,
+                    posicao: milestones.length + 1
+                };
 
-        try {
-            await api.upsertEtapa(data);
-            modalEtapa.classList.remove('open');
-            setTimeout(() => {
-                modalEtapa.style.display = 'none';
-                renderAdmin();
-            }, 300);
-        } catch (err) {
-            alert("Erro ao gravar etapa: " + err.message);
-        } finally {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'GRAVAR ETAPA';
+                const existing = milestones.find(m => m.etapa === data.etapa);
+                if (existing) data.posicao = existing.posicao;
+
+                try {
+                    await api.upsertEtapa(data);
+                    modalEtapa.classList.remove('open');
+                    setTimeout(() => {
+                        modalEtapa.style.display = 'none';
+                        renderAdmin();
+                    }, 300);
+                } catch (err) {
+                    alert("Erro ao gravar etapa: " + err.message);
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'GRAVAR ETAPA';
+                }
+            };
         }
-    };
-}
 
-// ── Stage Detail View ─────────────────────────────────────
-function showStageDetail(etapa) {
-    const modal = $('stage-detail-modal');
-    const title = $('stage-detail-title');
-    const body = $('stage-detail-body');
-    if (!modal || !body) return;
+        // ── Stage Detail View ─────────────────────────────────────
+        function showStageDetail(etapa) {
+            const modal = $('stage-detail-modal');
+            const title = $('stage-detail-title');
+            const body = $('stage-detail-body');
+            if (!modal || !body) return;
 
-    const label = ETAPA_LABELS[etapa] || etapa;
-    const items = PEDIDOS.filter(p => p.etapa === etapa);
+            const label = ETAPA_LABELS[etapa] || etapa;
+            const items = PEDIDOS.filter(p => p.etapa === etapa);
 
-    title.textContent = `Lista de Pedidos - ${label.toUpperCase()} (${items.length})`;
-    modal.style.display = 'flex';
-    modal.classList.add('open');
+            title.textContent = `Lista de Pedidos - ${label.toUpperCase()} (${items.length})`;
+            modal.style.display = 'flex';
+            modal.classList.add('open');
 
-    if (items.length === 0) {
-        body.innerHTML = '<tr><td colspan="6" style="padding:40px; text-align:center; color:var(--text-3)">Nenhum pedido nesta etapa.</td></tr>';
-        return;
-    }
+            if (items.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" style="padding:40px; text-align:center; color:var(--text-3)">Nenhum pedido nesta etapa.</td></tr>';
+                return;
+            }
 
-    body.innerHTML = items.map(p => `
+            body.innerHTML = items.map(p => `
         <tr style="border-bottom: 1px solid var(--border); font-size:13px">
             <td style="padding:12px; font-weight:700">
                 <div style="color:var(--amber)">${p.numero}</div>
@@ -2446,11 +2499,11 @@ function showStageDetail(etapa) {
             </td>
         </tr>
     `).join('');
-}
+        }
 
-function closeStageDetailAndOpenDrawer(id) {
-    const modal = $('stage-detail-modal');
-    modal.style.display = 'none';
-    modal.classList.remove('open');
-    openDrawer(id);
-}
+        function closeStageDetailAndOpenDrawer(id) {
+            const modal = $('stage-detail-modal');
+            modal.style.display = 'none';
+            modal.classList.remove('open');
+            openDrawer(id);
+        }
