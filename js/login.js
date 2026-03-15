@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function redirectAfterLogin() {
         // Redirecionar para onde o usuário estava tentando ir, ou para o Admin de Pedidos por padrão
         const urlParams = new URLSearchParams(window.location.search);
-        const redirectUrl = urlParams.get('redirect') || 'IndexAdministrarPedidoSimulador.html';
+        const redirectUrl = urlParams.get('redirect') || 'HNT-OPS/app/index.html';
         window.location.href = redirectUrl;
     }
 
