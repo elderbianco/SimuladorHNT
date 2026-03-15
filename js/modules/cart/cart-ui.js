@@ -94,7 +94,8 @@ window.CartUI = {
                  
                  <div style="flex:1; margin-left: 15px;">
                     <div style="color:#fff; font-weight:bold;">${this.getProductName(item, order)}</div>
-                    <div style="font-size:0.8rem; color:#888;">ID: ${order.order_id} • ${new Date(order.created_at).toLocaleDateString()}</div>
+                    <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${item.specs?.orderNumber || '---'}</span></div>
+                    <div style="font-size:0.7rem; color:#666;">REF: ${order.order_id} • ${new Date(order.created_at).toLocaleDateString()}</div>
                  </div>
 
                  <div style="text-align:right; margin-right: 25px;">
