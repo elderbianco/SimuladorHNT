@@ -15,7 +15,7 @@ const SupabaseAdapter = {
 
         try {
             let blob = fileData;
-            
+
             // CONVERSÃO ROBUSTA: Se for string, verificar se é Base64
             if (typeof fileData === 'string') {
                 if (fileData.startsWith('data:')) {
@@ -197,6 +197,86 @@ const SupabaseAdapter = {
             return true;
         } catch (err) {
             console.error('❌ Erro ao excluir pedidos em massa no Supabase:', err);
+            return false;
+        }
+    },
+
+    /**
+     * Aprova um pedido para a produção (Integração HNT-OPS)
+     * Realiza a ponte entre o Simulador e o chão de fábrica.
+     */
+    async aprovarPedidoParaProducao(orderData) {
+        if (!window.supabaseClient) {
+            console.error('❌ Supabase Client não inicializado');
+            return false;
+        }
+
+        try {
+            const orderId = orderData.order_id || orderData.ID_PEDIDO;
+            const docComprador = orderData.item?.client_info?.document || orderData.cliente_cpf || orderData.document;
+
+            console.log(`🚀 Iniciando aprovação de pedido ${orderId} para HNT-OPS...`);
+
+            // 1. Buscar o ID interno do cliente cadastrado (Foreign Key)
+            let clienteInternalId = null;
+            if (docComprador) {
+                const { data: client, error: clientErr } = await window.supabaseClient
+                    .from('clientes_cadastrados')
+                    .select('id')
+                    .eq('cpf_cnpj_comprador', docComprador.replace(/\D/g, ''))
+                    .maybeSingle();
+
+                if (!clientErr && client) {
+                    clienteInternalId = client.id;
+                    console.log('✅ Cliente identificado no banco:', clienteInternalId);
+                }
+            }
+
+            // 2. Atualizar status na tabela original de pedidos
+            const { error: updateErr } = await window.supabaseClient
+                .from('pedidos')
+                .update({
+                    STATUS_PEDIDO: 'Aprovado',
+                    json_tec: orderData.item || orderData.json_tec
+                })
+                .eq('ID_PEDIDO', orderId);
+
+            if (updateErr) throw updateErr;
+
+            // 3. Inserir na fila de produção (producao_pedidos)
+            // Se o pedido já existir lá (vindo de uma retentativa), o Supabase pode recusar se houver UK, 
+            // mas o migration_fase1.sql permite múltiplos se o numero_pedido não colidir.
+
+            const prazo = new Date();
+            prazo.setDate(prazo.getDate() + 15); // Padrão 15 dias
+
+            const prodRow = {
+                pedido_origem_id: orderId,
+                cliente_id: clienteInternalId,
+                sku: orderData.product_type || orderData.TIPO_PRODUTO || 'SKU-INDEFINIDO',
+                quantidade: parseInt(orderData.quantity || orderData.QUANTIDADE || 1),
+                tamanho: orderData.grade || orderData.TAMANHO || 'Personalizado',
+                link_pdf: orderData.pdfUrl || orderData.pdf_url || '',
+                prazo_entrega: prazo.toISOString().split('T')[0], // Apenas a data YYYY-MM-DD
+                etapa_atual: 'Preparacao',
+                urgente: false
+            };
+
+            const { data: prodResult, error: prodErr } = await window.supabaseClient
+                .from('producao_pedidos')
+                .insert([prodRow])
+                .select();
+
+            if (prodErr) {
+                console.error('❌ Erro detalhado ao inserir na produção:', prodErr);
+                throw prodErr;
+            }
+
+            console.log('✅ Pedido inserido com sucesso na fila de produção HNT-OPS!', prodResult);
+            return true;
+
+        } catch (err) {
+            console.error('❌ Erro na integração Simulador -> HNT-OPS:', err);
             return false;
         }
     }
