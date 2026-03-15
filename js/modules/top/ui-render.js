@@ -164,7 +164,7 @@ function renderControls() {
     const scrollPos = container.scrollTop; container.innerHTML = '';
 
     if (!state.simulationId && typeof generateNextSequenceNumber === 'function') state.simulationId = `HNT-TP-${generateNextSequenceNumber()}`;
-    if ((!state.orderNumber || state.orderNumber === state.simulationId) && typeof generateNextOrderNumber === 'function') state.orderNumber = `HNT-PD-${generateNextOrderNumber()}`;
+    if ((!state.orderNumber || state.orderNumber === state.simulationId) && typeof generateNextOrderNumber === 'function') state.orderNumber = generateNextOrderNumber();
 
     const headerRow = document.createElement('div');
     headerRow.style.display = 'flex'; headerRow.style.justifyContent = 'space-between'; headerRow.style.alignItems = 'center'; headerRow.style.marginBottom = '20px'; headerRow.style.paddingBottom = '10px'; headerRow.style.borderBottom = '1px solid #333';

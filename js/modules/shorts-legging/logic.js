@@ -23,14 +23,18 @@ function generateFormattedFilename(zoneId, originalName, source = 'EXT') {
         state.simulationId = `HNT-${productSigla}-${generateNextSequenceNumber()}`;
     }
     if (!state.orderNumber) {
-        state.orderNumber = `HNT-PD-${generateNextOrderNumber()}`;
+        state.orderNumber = generateNextOrderNumber();
     }
 
-    // 3. Composite ID
+    // 3. Composite ID (HNT-2026-XXXX-SL-XXXXXX)
     let cleanSimId = state.simulationId.replace(/^HNT-/, '');
     let cleanOrderId = state.orderNumber;
+
+    // Garantir prefixo HNT
     if (!cleanOrderId.startsWith('HNT-')) cleanOrderId = `HNT-${cleanOrderId}`;
-    if (!cleanOrderId.includes('PD') && /HNT-\d+/.test(cleanOrderId)) cleanOrderId = cleanOrderId.replace('HNT-', 'HNT-PD-');
+
+    // Remover PD redundante se existir
+    cleanOrderId = cleanOrderId.replace('HNT-PD-', 'HNT-');
 
     let compositeId = `${cleanOrderId}-${cleanSimId}`;
 
