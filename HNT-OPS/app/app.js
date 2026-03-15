@@ -20,6 +20,8 @@ let currentView = 'lista';
 let currentFilter = 'todos';
 let selectedId = null;
 let drawerTab = 'detalhes';
+let isEditing = false;
+let currentOperador = JSON.parse(localStorage.getItem('hnt_operator')) || null;
 
 // ── DOM ───────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -292,7 +294,7 @@ function bindKanbanEvents() {
 function openDrawer(id) {
     selectedId = id;
     drawerTab = 'detalhes';
-    const p = PEDIDOS.find(x => x.id == id);
+    const p = PEDIDOS.find(x => x.id.toString() == id.toString());
     if (!p) return;
     document.querySelectorAll('.drawer-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'detalhes'));
     $('chat-input-row').style.display = 'none';
@@ -1583,7 +1585,7 @@ function renderReportFinanceiro() {
 }
 
 // ── Operator Selector Logic ──────────────────────────────
-let currentOperador = JSON.parse(localStorage.getItem('hnt_operator')) || null;
+// currentOperador moved to top
 
 function selectOp(nome, btn) {
     const op = OPERADORES.find(o => o.nome === nome);
