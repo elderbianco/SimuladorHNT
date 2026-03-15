@@ -547,11 +547,6 @@ window.CartUI = {
         return html;
     },
 
-        if (!html) html = '<p style="color:#666; font-style:italic; padding:20px;">Nenhuma personalização de imagem ou texto encontrada para este item.</p>';
-
-        return html;
-    },
-
     getProductName: function (item, order) {
         if (item.model_name && item.model_name !== 'Produto Personalizado' && item.model_name !== 'custom') {
             return item.model_name;
