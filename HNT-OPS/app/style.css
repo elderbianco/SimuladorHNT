@@ -457,14 +457,14 @@ input {
 }
 
 .nav-item {
-  width: 44px;
-  height: 44px;
+  width: 100%;
+  padding: 12px 0;
   border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 6px;
   color: var(--sidebar-txt);
   transition: color var(--transition), background var(--transition);
   cursor: pointer;
@@ -524,11 +524,12 @@ input {
 }
 
 .nav-item span {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   white-space: nowrap;
+  opacity: 0.8;
 }
 
 .nav-divider {
@@ -909,6 +910,17 @@ input {
   color: var(--text-1);
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 140px 140px 85px 70px 1fr 140px 180px 100px 100px 40px;
+  gap: 0;
+  padding: 0 16px;
+  height: 42px;
+  align-items: center;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
 }
 
 .table-header span {
