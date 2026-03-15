@@ -330,8 +330,22 @@ function renderDrawer(p) {
     </button>
   `;
 
-    // drawer-admin-actions logic removed from here and moved to renderDrawerTab
+    // drawer-admin-actions logic moved to renderDrawerFooter
     renderDrawerTab(p);
+    renderDrawerFooter(p);
+}
+
+function renderDrawerFooter(p) {
+    const footer = $('drawer-footer');
+    if (!footer) return;
+
+    footer.innerHTML = `
+        <div class="drawer-admin-actions">
+            <button class="btn btn-ghost" onclick="toggleEdicao()" style="width:100%">${isEditing ? '❌ Cancelar' : '📝 Editar'}</button>
+            <button class="btn btn-ghost" style="color:var(--orange); width:100%" onclick="cancelarPedidoUI()">🚫 Cancelar</button>
+            <button class="btn btn-ghost" style="color:var(--red); width:100%; grid-column: span 2;" onclick="excluirPedidoUI()">🗑️ Excluir Permanente</button>
+        </div>
+    `;
 }
 
 function renderDrawerTab(p) {
@@ -416,8 +430,8 @@ function renderDrawerTab(p) {
               <div class="detail-item"><div class="detail-item-label">Tamanho</div><div class="detail-item-value">${p.tamanho}</div></div>
               <div class="detail-item"><div class="detail-item-label">Quantidade</div><div class="detail-item-value">${p.quantidade} un.</div></div>
               <div class="detail-item"><div class="detail-item-label">Etapa Atual</div><div class="detail-item-value"><span class="etapa-badge etapa-${p.etapa}"><span class="etapa-icon">${iconAtual}</span>${labelAtual}</span></div></div>
-              <div class="detail-item"><div class="detail-item-label">SLA Etapa</div><div class="detail-item-value"><span class="alerta-tag alerta-${p.alerta}">${alertaIcon(p.alerta)} ${p.diasSlaEtapa <= 0 ? 'Vencido' : p.diasSlaEtapa + 'd.u.'}</span></div></div>
-              <div class="detail-item"><div class="detail-item-label">SLA Total</div><div class="detail-item-value">${p.diasSlaTotal <= 0 ? '<span style="color:var(--red);font-weight:700">Atrasado</span>' : p.diasSlaTotal + 'd.u.'}</div></div>
+              <div class="detail-item"><div class="detail-item-label">Prazo Etapa</div><div class="detail-item-value"><span class="alerta-tag alerta-${p.alerta}">${alertaIcon(p.alerta)} ${p.diasSlaEtapa <= 0 ? 'Vencido' : p.diasSlaEtapa + 'd.u.'}</span></div></div>
+              <div class="detail-item"><div class="detail-item-label">Prazo Total (Entrega)</div><div class="detail-item-value">${p.diasSlaTotal <= 0 ? '<span style="color:var(--red);font-weight:700">Atrasado</span>' : p.diasSlaTotal + 'd.u.'}</div></div>
               
               ${colorsHtml || `
                 <div class="detail-item"><div class="detail-item-label">Cor Centro</div><div class="detail-item-value">${p.corCentro}</div></div>
@@ -471,16 +485,6 @@ function renderDrawerTab(p) {
           </div>
         `;
         }
-
-
-
-        // Administrative Actions - Always visible for quick access as per client feedback
-        contentHtml += `
-        <div class="drawer-admin-actions" style="margin-top:20px; border-top:1px dashed var(--border); padding-top:15px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <button class="btn btn-ghost" onclick="toggleEdicao()" style="width:100%">${isEditing ? '❌ Cancelar Edição' : '📝 Editar Dados'}</button>
-            <button class="btn btn-ghost" style="color:var(--orange); width:100%" onclick="cancelarPedidoUI()">🚫 Cancelar</button>
-            <button class="btn btn-ghost" style="color:var(--red); width:100%; grid-column: span 2;" onclick="excluirPedidoUI()">🗑️ Excluir Permanente</button>
-        </div>`;
     } else if (drawerTab === 'cliente') {
         contentHtml = `
       <div class="detail-section" style="margin-top:0">
