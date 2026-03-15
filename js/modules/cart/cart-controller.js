@@ -70,6 +70,7 @@ function loadDashboard() {
 
     // --- GROUPING LOGIC ---
     let profile = null;
+    const groups = {};
     try {
         const pStr = localStorage.getItem('hnt_customer_profile');
         if (pStr) profile = JSON.parse(pStr);
@@ -82,7 +83,8 @@ function loadDashboard() {
 
     history.forEach((order, index) => {
         let data = order;
-        // ... normalization logic remains same ...
+
+        // --- NORMALIZAÇÃO DE CAMPOS (Supabase → UI) ---
         if (data.pdf_url && !data.pdfUrl) data.pdfUrl = data.pdf_url;
         if (data.criado_em && !data.created_at) data.created_at = data.criado_em;
         if (data.ID_PEDIDO && !data.order_id) data.order_id = data.ID_PEDIDO;
@@ -92,9 +94,48 @@ function loadDashboard() {
         if (!data.client_info.name && profile?.name) data.client_info.name = profile.name;
         if (!data.client_info.phone && (profile?.whatsapp || profile?.phone)) data.client_info.phone = profile.whatsapp || profile.phone;
 
-        // ... reconstruction logic remains same ...
+        if (data.DADOS_TECNICOS_JSON === undefined && data.json_tec) {
+            data.DADOS_TECNICOS_JSON = typeof data.json_tec === 'string' ? data.json_tec : JSON.stringify(data.json_tec);
+        }
+
+        // CRITICAL FIX: If item is missing but we have technical data, reconstruct the item
         if (!data.item && data.DADOS_TECNICOS_JSON) {
-            // ... (rest of reconstruction) ...
+            try {
+                const originalPdfUrl = data.pdfUrl || data.pdf_url;
+                const technicalData = (typeof data.DADOS_TECNICOS_JSON === 'string') ? JSON.parse(data.DADOS_TECNICOS_JSON) : data.DADOS_TECNICOS_JSON;
+
+                const initialMap = { 'SH': 'shorts', 'TP': 'top', 'LG': 'legging', 'ML': 'moletom', 'SL': 'shorts_legging', 'CL': 'calca_legging' };
+                const detectedType = technicalData.productInitial ? (initialMap[technicalData.productInitial] || "shorts") : (technicalData.simulator_type || "shorts");
+
+                data.item = {
+                    simulator_type: detectedType,
+                    model_name: technicalData.model_name || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "Simulação") : "Simulação"),
+                    qty_total: technicalData.qty_total || data.QUANTIDADE || data.quantity || 1,
+                    pricing: {
+                        total_price: data.PRECO_FINAL || data.total_price || (technicalData.pricing ? technicalData.pricing.total_price : 0),
+                        unit_price: data.PRECO_UNITARIO || (technicalData.pricing ? technicalData.pricing.unit_price : 0)
+                    },
+                    specs: {
+                        parts: technicalData.parts || {},
+                        sizes: technicalData.sizes || {},
+                        uploads: technicalData.uploads || {},
+                        texts: technicalData.texts || {},
+                        observations: technicalData.observations || ""
+                    },
+                    pdf_path: originalPdfUrl || ""
+                };
+                if (!data.order_id) data.order_id = technicalData.simulationId || technicalData.orderNumber || `PEDIDO_${index}`;
+                if (!data.created_at) data.created_at = new Date().toISOString();
+                if (originalPdfUrl) data.pdfUrl = originalPdfUrl;
+            } catch (e) { console.error('Error parsing DADOS_TECNICOS_JSON:', e); return; }
+        }
+
+        // --- PDF LINK RESILIENCE ---
+        if (!data.pdfUrl && (!data.item || !data.item.pdf_path) && data.order_id) {
+            const fileName = `Pedido_${data.order_id}.pdf`.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const predictedUrl = `assets/BancoDados/PedidosPDF/${fileName}`;
+            if (data.item) data.item.pdf_path = predictedUrl;
+            data.pdfUrl = predictedUrl;
         }
 
         // Legacy conversion if needed
