@@ -213,7 +213,18 @@ const SupabaseAdapter = {
 
         try {
             const orderId = orderData.order_id || orderData.ID_PEDIDO;
-            const docComprador = orderData.item?.client_info?.document || orderData.cliente_cpf || orderData.document;
+            const item = orderData.item || {};
+            const specs = item.specs || {};
+            const parts = specs.parts || {};
+
+            // Extract profile for fallback or ID lookup
+            let profile = null;
+            try {
+                const pStr = localStorage.getItem('hnt_customer_profile');
+                if (pStr) profile = JSON.parse(pStr);
+            } catch (e) { }
+
+            const docComprador = item.client_info?.document || orderData.cliente_cpf || orderData.document || profile?.document;
 
             console.log(`🚀 Iniciando aprovação de pedido ${orderId} para HNT-OPS...`);
 
@@ -228,38 +239,53 @@ const SupabaseAdapter = {
 
                 if (!clientErr && client) {
                     clienteInternalId = client.id;
-                    console.log('✅ Cliente identificado no banco:', clienteInternalId);
                 }
             }
 
             // 2. Atualizar status na tabela original de pedidos
-            const { error: updateErr } = await window.supabaseClient
+            await window.supabaseClient
                 .from('pedidos')
                 .update({
                     STATUS_PEDIDO: 'Aprovado',
-                    json_tec: orderData.item || orderData.json_tec
+                    json_tec: item
                 })
                 .eq('ID_PEDIDO', orderId);
 
-            if (updateErr) throw updateErr;
-
-            // 3. Inserir na fila de produção (producao_pedidos)
-            // Se o pedido já existir lá (vindo de uma retentativa), o Supabase pode recusar se houver UK, 
-            // mas o migration_fase1.sql permite múltiplos se o numero_pedido não colidir.
-
+            // 3. Preparar Linha de Produção (HNT-OPS)
             const prazo = new Date();
-            prazo.setDate(prazo.getDate() + 15); // Padrão 15 dias
+            prazo.setDate(prazo.getDate() + 15);
+
+            // Helper to clean color object to string
+            const getColorLabel = (val) => {
+                if (!val) return null;
+                return (typeof val === 'object') ? (val.value || val.name || null) : val;
+            };
+
+            // Size Summary
+            const sizeStr = specs.sizes ? Object.entries(specs.sizes)
+                .filter(([s, q]) => q > 0)
+                .map(([s, q]) => `${q}x ${s}`)
+                .join(', ') : 'Grade Única';
 
             const prodRow = {
                 pedido_origem_id: orderId,
                 cliente_id: clienteInternalId,
-                sku: orderData.product_type || orderData.TIPO_PRODUTO || 'SKU-INDEFINIDO',
-                quantidade: parseInt(orderData.quantity || orderData.QUANTIDADE || 1),
-                tamanho: orderData.grade || orderData.TAMANHO || 'Personalizado',
-                link_pdf: orderData.pdfUrl || orderData.pdf_url || '',
-                prazo_entrega: prazo.toISOString().split('T')[0], // Apenas a data YYYY-MM-DD
+                sku: item.simulator_type || orderData.TIPO_PRODUTO || 'SKU-INDEFINIDO',
+                quantidade: parseInt(item.qty_total || orderData.QUANTIDADE || 1),
+                tamanho: sizeStr,
+                link_pdf: orderData.pdfUrl || orderData.pdf_url || item.pdf_path || '',
+
+                // Technical Colors Mapping
+                cor_centro: getColorLabel(parts.Centro || parts.Base || parts.cor_centro),
+                cor_laterais: getColorLabel(parts.Laterais || parts.cor_laterais),
+                cor_filete: getColorLabel(parts.Filete || parts.Filetes || parts.cor_filete),
+
+                // Technique Mapping (Fallback to Bordado)
+                tecnica: (parts.Tecnica || parts.tecnica || 'Bordado').includes('DTF') ? 'DTF' : 'Bordado',
+
+                prazo_entrega: prazo.toISOString().split('T')[0],
                 etapa_atual: 'Preparacao',
-                urgente: false
+                urgente: !!(orderData.urgente || false)
             };
 
             const { data: prodResult, error: prodErr } = await window.supabaseClient
@@ -267,12 +293,9 @@ const SupabaseAdapter = {
                 .insert([prodRow])
                 .select();
 
-            if (prodErr) {
-                console.error('❌ Erro detalhado ao inserir na produção:', prodErr);
-                throw prodErr;
-            }
+            if (prodErr) throw prodErr;
 
-            console.log('✅ Pedido inserido com sucesso na fila de produção HNT-OPS!', prodResult);
+            console.log('✅ Pedido inserido no HNT-OPS com mapeamento completo:', prodResult);
             return true;
 
         } catch (err) {
