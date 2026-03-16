@@ -237,8 +237,8 @@ function renderControls() {
         <span style="color:#aaa; font-size:0.8rem;">PEDIDO:</span>
         <input type="text" id="order-input-top" 
                value="${state.orderNumber || ''}" 
-               placeholder="000000"
-               style="background:#111; border:1px solid #444; color:#fff; font-family:'Bebas Neue', sans-serif; font-size:1rem; letter-spacing:1px; padding:4px 8px; width:140px; text-align:center; border-radius:4px; outline:none;">
+               placeholder="000000" readonly
+               style="background:#0a0a0a; border:1px solid #444; color:#fff; font-family:'Bebas Neue', sans-serif; font-size:1rem; letter-spacing:1px; padding:4px 8px; width:140px; text-align:center; border-radius:4px; outline:none; cursor:default;">
     `;
 
     const simIdDiv = document.createElement('div');
@@ -364,12 +364,10 @@ function renderControls() {
                 saveState();
             };
 
-            orderInputTop.onchange = (e) => {
-                let val = e.target.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
-                state.orderNumber = val;
-                e.target.value = val;
-                saveState();
-            };
+            orderInputTop.readOnly = true;
+            orderInputTop.style.background = '#0a0a0a';
+            orderInputTop.style.cursor = 'default';
+            orderInputTop.onchange = null;
 
             phoneInput.oninput = (e) => {
                 let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
