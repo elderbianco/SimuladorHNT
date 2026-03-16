@@ -128,9 +128,15 @@ function loadState() {
         }
     }
 
-    // OVERRIDE WITH GLOBAL ORDER IF EXISTS
-    if (globalOrder) {
-        state.orderNumber = globalOrder;
+    // INITIALIZE ORDER NUMBER IF MISSING
+    if (!state.orderNumber) {
+        if (typeof generateNextOrderNumber === 'function') {
+            state.orderNumber = generateNextOrderNumber();
+        } else {
+            state.orderNumber = globalOrder || '';
+        }
+        state.simulationId = getFormattedId();
+        saveState();
     }
 
     // Refresh simulationId after loading components and potentially overriding order
