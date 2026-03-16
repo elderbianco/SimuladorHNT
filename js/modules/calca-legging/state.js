@@ -225,10 +225,15 @@ function loadState() {
         }
     }
 
-    // OVERRIDE WITH GLOBAL ORDER
-    if (globalOrder) {
-        state.orderNumber = globalOrder;
+    // INITIALIZE ORDER NUMBER IF MISSING
+    if (!state.orderNumber) {
+        if (typeof generateNextOrderNumber === 'function') {
+            state.orderNumber = generateNextOrderNumber();
+        } else {
+            state.orderNumber = globalOrder || '';
+        }
         state.simulationId = getFormattedId();
+        saveState();
     }
 }
 
