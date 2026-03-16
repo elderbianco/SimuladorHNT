@@ -111,6 +111,10 @@ const COLOR_LIMIT_MAP = {
 
 // Helper function to get the full formatted ID
 function getFormattedId() {
+    if (typeof SKUGenerator !== 'undefined') {
+        return SKUGenerator.generateSKU(state);
+    }
+    // Fallback
     const orderPart = state.orderNumber || 'HNT';
     return `${orderPart}-${state.productInitial}-${state.simNumber}`;
 }

@@ -39,7 +39,8 @@ function getFormattedId() {
         return SKUGenerator.generateSKU(state);
     }
     // Fallback se o gerador falhar
-    return `${state.productInitial}-${state.simNumber}`;
+    const orderPart = state.orderNumber || 'HNT';
+    return `${orderPart}-${state.productInitial}-${state.simNumber}`;
 }
 state.simulationId = getFormattedId();
 
