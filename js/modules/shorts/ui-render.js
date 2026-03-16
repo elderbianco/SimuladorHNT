@@ -237,7 +237,7 @@ function renderControls() {
         <span style="color:#aaa; font-size:0.8rem;">PEDIDO:</span>
         <input type="text" id="order-input-top" 
                value="${state.orderNumber || ''}" 
-               placeholder="Digitar..."
+               placeholder="000000"
                style="background:#111; border:1px solid #444; color:#fff; font-family:'Bebas Neue', sans-serif; font-size:1rem; letter-spacing:1px; padding:4px 8px; width:140px; text-align:center; border-radius:4px; outline:none;">
     `;
 
@@ -366,7 +366,6 @@ function renderControls() {
 
             orderInputTop.onchange = (e) => {
                 let val = e.target.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
-                if (/^\d+$/.test(val)) val = `HNT-${val}`;
                 state.orderNumber = val;
                 e.target.value = val;
                 saveState();

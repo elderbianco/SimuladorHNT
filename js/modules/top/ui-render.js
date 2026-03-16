@@ -168,7 +168,7 @@ function renderControls() {
 
     const headerRow = document.createElement('div');
     headerRow.style.display = 'flex'; headerRow.style.justifyContent = 'space-between'; headerRow.style.alignItems = 'center'; headerRow.style.marginBottom = '20px'; headerRow.style.paddingBottom = '10px'; headerRow.style.borderBottom = '1px solid #333';
-    headerRow.innerHTML = `<div style="display:flex; align-items:center; gap:5px;"><span style="color:#aaa; font-size:0.8rem;">PEDIDO:</span><input type="text" id="order-input-top" value="${state.orderNumber || ''}" placeholder="Digitar..." style="background:#111; border:1px solid #444; color:#fff; font-family:'Bebas Neue', sans-serif; font-size:0.9rem; padding:4px 8px; width:100px; text-align:center; border-radius:4px; outline:none;"></div><div style="color:#888; font-size:0.75rem;">ID: ${state.simulationId}</div>`;
+    headerRow.innerHTML = `<div style="display:flex; align-items:center; gap:5px;"><span style="color:#aaa; font-size:0.8rem;">PEDIDO:</span><input type="text" id="order-input-top" value="${state.orderNumber || ''}" placeholder="000000" style="background:#111; border:1px solid #444; color:#fff; font-family:'Bebas Neue', sans-serif; font-size:0.9rem; padding:4px 8px; width:100px; text-align:center; border-radius:4px; outline:none;"></div><div style="color:#888; font-size:0.75rem;">ID: ${state.simulationId}</div>`;
     container.appendChild(headerRow);
 
     const actionBtns = document.createElement('div'); actionBtns.style.display = 'flex'; actionBtns.style.gap = '10px'; actionBtns.style.margin = '10px 0 20px 0';
