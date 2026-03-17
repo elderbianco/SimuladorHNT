@@ -247,7 +247,7 @@ const RegistrationController = {
 
         if (!fields['privacy-policy']) errors.push('Aceite a Política de Privacidade.');
         if (!fields['email']) errors.push('O e-mail é obrigatório.');
-        if (!fields['document']) errors.push('CPF ou CNPJ inválido.');
+        if (!fields['document']) errors.push('CPF ou CNPJ inválido. Certifique-se de digitar um documento real para fins de faturamento.');
         if (!fields['full-name']) errors.push('O nome completo é obrigatório.');
         if (!fields['zipcode']) errors.push('O CEP deve conter 8 dígitos.');
         if (!fields['number']) errors.push('O número do endereço é obrigatório.');

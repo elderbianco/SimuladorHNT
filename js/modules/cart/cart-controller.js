@@ -56,50 +56,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         console.warn('⚠️ SupabaseAdapter não encontrado.');
     }
-}
 
     // Auto-init dashboard
     try {
-    await loadDashboard();
-} catch (e) {
-    console.error('❌ Erro fatal ao carregar dashboard:', e);
-}
-
-// 2. Atualizar UI se o cliente estiver logado/cadastrado - OPERAÇÃO INDEPENDENTE
-try {
-    const profileStr = localStorage.getItem('hnt_customer_profile');
-    if (profileStr) {
-        const profile = JSON.parse(profileStr);
-        console.log('👤 Perfil detectado:', profile.name);
-
-        const linkCadastro = document.getElementById('link-cadastro');
-        if (linkCadastro) {
-            linkCadastro.innerHTML = `👤 Olá, ${profile.name.split(' ')[0]} (Ver Cadastro)`;
-            linkCadastro.title = "Cadastro Vinculado. ID: " + (profile.clientId || '...');
-        }
-
-        // Auto-fill global info inputs if empty
-        const globalNameInp = document.getElementById('global-client-name');
-        const globalPhoneInp = document.getElementById('global-client-phone');
-
-        if (globalNameInp) {
-            globalNameInp.value = profile.name || '';
-            globalNameInp.placeholder = "Sincronizado";
-        }
-        if (globalPhoneInp) {
-            globalPhoneInp.value = profile.whatsapp || profile.phone || '';
-            globalPhoneInp.placeholder = "Sincronizado";
-        }
+        await loadDashboard();
+    } catch (e) {
+        console.error('❌ Erro fatal ao carregar dashboard:', e);
     }
-} catch (e) {
-    console.warn('⚠️ Falha ao processar perfil no cart-controller:', e);
-}
 
-const btnClear = document.getElementById('btn-clear-all');
-if (btnClear) btnClear.onclick = clearAll;
+    // 2. Atualizar UI se o cliente estiver logado/cadastrado - OPERAÇÃO INDEPENDENTE
+    try {
+        const profileStr = localStorage.getItem('hnt_customer_profile');
+        if (profileStr) {
+            const profile = JSON.parse(profileStr);
+            console.log('👤 Perfil detectado:', profile.name);
 
-const btnExport = document.getElementById('btn-export-all');
-if (btnExport) btnExport.onclick = exportExcel;
+            const linkCadastro = document.getElementById('link-cadastro');
+            if (linkCadastro) {
+                linkCadastro.innerHTML = `👤 Olá, ${profile.name.split(' ')[0]} (Ver Cadastro)`;
+                linkCadastro.title = "Cadastro Vinculado. ID: " + (profile.clientId || '...');
+            }
+
+            // Auto-fill global info inputs if empty
+            const globalNameInp = document.getElementById('global-client-name');
+            const globalPhoneInp = document.getElementById('global-client-phone');
+
+            if (globalNameInp) {
+                globalNameInp.value = profile.name || '';
+                globalNameInp.placeholder = "Sincronizado";
+            }
+            if (globalPhoneInp) {
+                globalPhoneInp.value = profile.whatsapp || profile.phone || '';
+                globalPhoneInp.placeholder = "Sincronizado";
+            }
+        }
+    } catch (e) {
+        console.warn('⚠️ Falha ao processar perfil no cart-controller:', e);
+    }
+
+    const btnClear = document.getElementById('btn-clear-all');
+    if (btnClear) btnClear.onclick = clearAll;
+
+    const btnExport = document.getElementById('btn-export-all');
+    if (btnExport) btnExport.onclick = exportExcel;
 });
 
 function loadDashboard() {
