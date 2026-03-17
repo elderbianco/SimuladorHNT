@@ -2856,3 +2856,21 @@ async function confirmNovoPedidoManual() {
         alert("Erro ao criar pedido: " + e.message);
     }
 }
+
+// Utilitário para expandir/recolher cards de itens
+window.toggleItemCard = function(index) {
+    const card = document.getElementById('item-card-' + index);
+    if (!card) return;
+    
+    const isExpanded = card.classList.contains('expanded');
+    
+    // Opcional: fechar outros cards ao abrir um novo (acordeão)
+    // document.querySelectorAll('.item-card').forEach(c => c.classList.remove('expanded'));
+    
+    if (isExpanded) {
+        card.classList.remove('expanded');
+    } else {
+        card.classList.add('expanded');
+    }
+};
+
