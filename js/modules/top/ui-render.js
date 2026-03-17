@@ -180,7 +180,7 @@ function renderControls() {
         state.simulationId = `${orderPrefix}-TP-${newSeq}`;
         let pdfUrl = (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) ? await PDFGenerator.generateAndSaveForCart() : null;
         if (pdfUrl) state.pdfUrl = pdfUrl;
-        if (typeof saveOrderToHistory === 'function' && (await saveOrderToHistory())) { if (confirm('✅ Adicionado ao carrinho!')) window.location.href = '../IndexPedidoSimulador.html'; }
+        if (typeof saveOrderToHistory === 'function' && (await saveOrderToHistory())) { if (confirm('✅ Adicionado ao carrinho!')) window.location.href = 'IndexPedidoSimulador.html'; }
     };
     const btnClear = document.createElement('button'); btnClear.className = 'btn-secondary btn-clear'; btnClear.innerText = 'LIMPAR DADOS'; btnClear.style.flex = '1'; btnClear.onclick = () => clearState();
     actionBtns.appendChild(btnCart); actionBtns.appendChild(btnClear); container.appendChild(actionBtns);
