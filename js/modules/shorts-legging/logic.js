@@ -399,24 +399,30 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
             newRow.ID_PEDIDO = state._editingOrderId;
         }
 
-        localStorage.setItem('hnt_all_orders_db', JSON.stringify(history));
-        console.log('✅ Salvo localmente com sucesso!');
-
-        // --- SUPABASE SYNC (ASYNC/NON-BLOCKING) ---
-        if (typeof SupabaseAdapter !== 'undefined') {
-            console.log('🚀 Iniciando sincronização em segundo plano com Supabase (Shorts Legging)...');
-            SupabaseAdapter.savePedido(newRow, state)
-                .then(() => console.log('✅ Sincronizado com Supabase.'))
-                .catch(err => console.error('⚠️ Falha na sincronização Supabase (Item salvo localmente):', err));
-        }
-
-        // 4. Banco de Dados Linear (Excel)
-        if (typeof DatabaseManager !== 'undefined') {
-            DatabaseManager.addOrder(newRow);
-        }
-
-        return true;
+        history[state._editingIndex] = newRow;
+        delete state._editingIndex;
+        delete state._editingOrderId;
+    } else {
+        history.push(newRow);
     }
+
+    localStorage.setItem('hnt_all_orders_db', JSON.stringify(history));
+    console.log('✅ Salvo localmente com sucesso!');
+
+    // --- SUPABASE SYNC (ASYNC/NON-BLOCKING) ---
+    if (typeof SupabaseAdapter !== 'undefined') {
+        process.nextTick = process.nextTick || ((fn) => setTimeout(fn, 0)); // Fallback polyfill if needed in some envs
+        console.log('🚀 Iniciando sincronização em segundo plano com Supabase (Shorts Legging)...');
+        SupabaseAdapter.savePedido(newRow, state)
+            .then(() => console.log('✅ Sincronizado com Supabase.'))
+            .catch(err => console.error('⚠️ Falha na sincronização Supabase (Item salvo localmente):', err));
+    }
+
+    if (typeof DatabaseManager !== 'undefined') {
+        DatabaseManager.addOrder(newRow);
+    }
+
+    return true;
 
     /**
      * Adiciona uma imagem a uma zona específica
