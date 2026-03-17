@@ -4,6 +4,8 @@
  * Part of the "Cart Refactoring Phase 3"
  */
 
+const config = window.config || {};
+
 window.CartUI = {
 
     /**
