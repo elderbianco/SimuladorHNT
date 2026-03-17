@@ -19,7 +19,7 @@ const CHAT_MSGS = {};
 let currentView = 'lista';
 let currentFilter = 'todos';
 let selectedId = null;
-let drawerTab = 'detalhes';
+let drawerTab = 'detalhes'; // 'detalhes', 'itens', 'cliente', 'historico', 'chat'
 let isEditing = false;
 let currentOperador = JSON.parse(localStorage.getItem('hnt_operator')) || null;
 
@@ -299,8 +299,13 @@ function openDrawer(id) {
     drawerTab = 'detalhes';
     const p = PEDIDOS.find(x => x.id.toString() == id.toString());
     if (!p) return;
-    document.querySelectorAll('.drawer-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'detalhes'));
-    $('chat-input-row').style.display = 'none';
+    // NOVO: Detectar se há múltiplos itens e sugerir aba de itens
+    const dt = p.dadosTecnicos || {};
+    const items = dt.items || (dt.item ? [dt.item] : []);
+    if (items.length > 1) {
+        drawerTab = 'itens';
+    }
+
     renderDrawer(p);
     $('drawer-overlay').classList.add('open');
     $('drawer').classList.add('open');
@@ -316,7 +321,19 @@ function closeDrawer() {
 
 function renderDrawer(p) {
     $('drawer-num').textContent = p.numero;
-    $('drawer-sku').textContent = `${p.sku} · ${p.tecnica} · ${p.tamanho} · ${p.quantidade} un.`;
+    const dt = p.dadosTecnicos || {};
+    const items = dt.items || (dt.item ? [dt.item] : []);
+    $('drawer-sku').textContent = items.length > 1
+        ? `${items.length} Itens no Pedido`
+        : `${p.sku} · ${p.tecnica} · ${p.tamanho} · ${p.quantidade} un.`;
+
+    // Atualizar abas (esconder 'Itens' se for só um, ou destacar)
+    document.querySelectorAll('.drawer-tab').forEach(t => {
+        if (t.dataset.tab === 'itens') {
+            t.style.display = items.length > 1 ? 'block' : 'none';
+        }
+        t.classList.toggle('active', t.dataset.tab === drawerTab);
+    });
 
     // Stage mover com ícones
     const sb = $('stage-buttons');
@@ -351,19 +368,15 @@ function renderDrawerFooter(p) {
 function renderDrawerTab(p) {
     const body = $('drawer-body');
     let contentHtml = '';
+    const dt = p.dadosTecnicos || {};
+    const items = dt.items || (dt.item ? [dt.item] : []);
 
     if (drawerTab === 'detalhes') {
         const iconAtual = ETAPA_ICONS[p.etapa] || '📋';
         const labelAtual = ETAPA_LABELS[p.etapa] || p.etapa;
 
-        // --- Processamento de Dados Técnicos Detalhados ---
-        const dt = p.dadosTecnicos || {};
-        const parts = dt.parts || {};
-        const texts = dt.texts || {};
-        const renders = p.renders || {};
-
         if (isEditing) {
-            // MODO EDIÇÃO
+            // MODO EDIÇÃO (Simplificado para o pedido como um todo)
             contentHtml = `
                 <div class="detail-section" style="margin-top:0">
                     <div class="detail-section-title">📝 Editar Informações do Pedido</div>
@@ -374,17 +387,17 @@ function renderDrawerTab(p) {
                                 <input type="text" id="edit-numero" class="modal-input" value="${p.numero}" style="margin:5px 0">
                             </div>
                             <div class="detail-item">
-                                <label class="detail-item-label">SKU / Modelo</label>
+                                <label class="detail-item-label">SKU Principal</label>
                                 <input type="text" id="edit-sku" class="modal-input" value="${p.sku}" style="margin:5px 0">
                             </div>
                         </div>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                             <div class="detail-item">
-                                <label class="detail-item-label">Quantidade</label>
+                                <label class="detail-item-label">Quantidade Total</label>
                                 <input type="number" id="edit-qtd" class="modal-input" value="${p.quantidade}" style="margin:5px 0">
                             </div>
                             <div class="detail-item">
-                                <label class="detail-item-label">Tamanho</label>
+                                <label class="detail-item-label">Tamanho Ref.</label>
                                 <input type="text" id="edit-tam" class="modal-input" value="${p.tamanho}" style="margin:5px 0">
                             </div>
                         </div>
@@ -400,91 +413,49 @@ function renderDrawerTab(p) {
                 </div>
             `;
         } else {
-            // MODO VISUALIZAÇÃO (Original Refatorado)
-            let colorsHtml = '';
-            Object.entries(parts).forEach(([part, data]) => {
-                const colorName = (typeof data === 'object') ? (data.value || data.name || '--') : data;
-                if (colorName && colorName !== '--') {
-                    colorsHtml += `<div class="detail-item"><div class="detail-item-label">Cor ${part}</div><div class="detail-item-value">${colorName}</div></div>`;
-                }
-            });
-
-            let textsHtml = '';
-            Object.entries(texts).forEach(([key, data]) => {
-                if (data.active && data.content) {
-                    textsHtml += `
-                <div class="personalization-item">
-                    <div class="pers-label">✍️ Texto ${key}</div>
-                    <div class="pers-content">"${data.content}"</div>
-                    <div class="pers-meta">${data.fontFamily || 'Padrão'} · ${data.color || 'Preto'}</div>
-                </div>`;
-                }
-            });
-
+            // MODO VISUALIZAÇÃO - Resumo do Pedido e Primeiro Item
+            const mainItem = items[0] || {};
             contentHtml = `
-          <div class="detail-section" style="margin-top:0">
-            <div class="detail-section-title">📦 Produto</div>
-            <div class="detail-grid">
-              <div class="detail-item"><div class="detail-item-label">SKU</div><div class="detail-item-value">${p.sku}</div></div>
-              <div class="detail-item"><div class="detail-item-label">Técnica</div><div class="detail-item-value">${p.tecnica}</div></div>
-              <div class="detail-item"><div class="detail-item-label">Tamanho</div><div class="detail-item-value">${p.tamanho}</div></div>
-              <div class="detail-item"><div class="detail-item-label">Quantidade</div><div class="detail-item-value">${p.quantidade} un.</div></div>
-              <div class="detail-item"><div class="detail-item-label">Etapa Atual</div><div class="detail-item-value"><span class="etapa-badge etapa-${p.etapa}"><span class="etapa-icon">${iconAtual}</span>${labelAtual}</span></div></div>
-              <div class="detail-item"><div class="detail-item-label">Prazo Etapa</div><div class="detail-item-value"><span class="alerta-tag alerta-${p.alerta}">${alertaIcon(p.alerta)} ${p.diasSlaEtapa <= 0 ? 'Vencido' : p.diasSlaEtapa + 'd.u.'}</span></div></div>
-              <div class="detail-item"><div class="detail-item-label">Prazo Total (Entrega)</div><div class="detail-item-value">${p.diasSlaTotal <= 0 ? '<span style="color:var(--red);font-weight:700">Atrasado</span>' : p.diasSlaTotal + 'd.u.'}</div></div>
-              
-              ${colorsHtml || `
-                <div class="detail-item"><div class="detail-item-label">Cor Centro</div><div class="detail-item-value">${p.corCentro}</div></div>
-                <div class="detail-item"><div class="detail-item-label">Cor Laterais</div><div class="detail-item-value">${p.corLaterais}</div></div>
-                <div class="detail-item full"><div class="detail-item-label">Cor Filete</div><div class="detail-item-value">${p.corFilete}</div></div>
-              `}
-              
-              <div class="detail-item full"><div class="detail-item-label">Prazo Final</div><div class="detail-item-value">${p.prazo}</div></div>
-              ${p.observacoes ? `<div class="detail-item full"><div class="detail-item-label">Observações</div><div class="detail-item-value">${p.observacoes}</div></div>` : ''}
-            </div>
-          </div>
+                <div class="detail-section" style="margin-top:0">
+                    <div class="detail-section-title">📦 Resumo do Pedido</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-item-label">Número</div><div class="detail-item-value">${p.numero}</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Itens</div><div class="detail-item-value">${items.length} item(ns)</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Etapa Atual</div><div class="detail-item-value"><span class="etapa-badge etapa-${p.etapa}"><span class="etapa-icon">${iconAtual}</span>${labelAtual}</span></div></div>
+                        <div class="detail-item"><div class="detail-item-label">Prazo Final</div><div class="detail-item-value">${p.prazo}</div></div>
+                        <div class="detail-item full"><div class="detail-item-label">Observações Gerais</div><div class="detail-item-value">${p.observacoes || 'Nenhuma'}</div></div>
+                    </div>
+                </div>
+            `;
 
-          ${textsHtml ? `
-          <div class="detail-section">
-            <div class="detail-section-title">🧵 Detalhes de Personalização</div>
-            <div class="personalization-grid">
-                ${textsHtml}
-            </div>
-          </div>` : ''}
-
-          <div class="detail-section">
-            <div class="detail-section-title">🎨 Artes e Arquivos</div>
-            <div class="art-grid">
-              <div class="art-thumb" style="cursor:pointer" onclick="${renders.frente ? `window.open('${renders.frente}','_blank')` : 'return false'}">
-                ${renders.frente ? `<img src="${renders.frente}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
-                <span>Frente</span>
-              </div>
-              <div class="art-thumb" style="cursor:pointer" onclick="${renders.costas ? `window.open('${renders.costas}','_blank')` : 'return false'}">
-                ${renders.costas ? `<img src="${renders.costas}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
-                <span>Costas</span>
-              </div>
-              <div class="art-thumb" style="cursor:pointer" onclick="${renders.lateral ? `window.open('${renders.lateral}','_blank')` : 'return false'}">
-                ${renders.lateral ? `<img src="${renders.lateral}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
-                <span>Lateral</span>
-              </div>
-            </div>
-            <div class="file-links" style="margin-top:10px">
-              ${p.pdf ? `<a class="file-link" href="${p.pdf}" target="_blank">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                <span class="file-link-name">PDF de Simulação</span><span class="file-link-type">PDF</span>
-              </a>` : ''}
-              ${p.emb ? `<a class="file-link" href="${p.emb}" target="_blank">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-                <span class="file-link-name">🧵 Matriz de Bordado</span><span class="file-link-type">.EMB</span>
-              </a>` : ''}
-              <a class="file-link" href="#" onclick="alert('Funcionalidade em desenvolvimento: Integração com Drive');return false">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
-                <span class="file-link-name">🎨 Pasta de Imagens</span><span class="file-link-type">PASTA</span>
-              </a>
-            </div>
-          </div>
-        `;
+            if (items.length === 1) {
+                contentHtml += renderItemSpecs(mainItem, p.pdf, p.emb, p.alerta, p.diasSlaEtapa, p.diasSlaTotal);
+            } else {
+                contentHtml += `
+                    <div style="padding:40px 20px; text-align:center; background:rgba(212,175,55,0.05); border-radius:12px; border:1px dashed var(--gold); margin-top:20px;">
+                        <div style="font-size:2rem; margin-bottom:15px;">🛒</div>
+                        <h3 style="color:var(--gold); margin-bottom:10px;">Pedido com Múltiplos Itens</h3>
+                        <p style="color:var(--text-3); font-size:0.9rem; max-width:400px; margin:0 auto 20px;">Este pedido contém ${items.length} variações/itens diferentes. Use a aba "Itens" para ver os detalhes técnicos de cada um.</p>
+                        <button class="btn btn-primary" onclick="switchDrawerTab('itens')">Ver Lista de Itens</button>
+                    </div>
+                `;
+            }
         }
+    } else if (drawerTab === 'itens') {
+        contentHtml = `<div class="detail-section" style="margin-top:0"><div class="detail-section-title">🛒 Lista de Itens do Pedido</div></div>`;
+        items.forEach((item, index) => {
+            contentHtml += `
+                <div class="multi-item-card" style="background:var(--surface-2); border-radius:12px; border:1px solid var(--border); margin-bottom:30px; overflow:hidden;">
+                    <div style="background:var(--gold); color:#000; padding:10px 20px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
+                        <span>ITEM #${index + 1}: ${item.productName || item.sku || 'Produto'}</span>
+                        <span style="background:rgba(0,0,0,0.1); padding:2px 8px; border-radius:4px; font-size:0.75rem;">${item.quantity || 1} un. · ${item.size || 'U'}</span>
+                    </div>
+                    <div style="padding:20px;">
+                        ${renderItemSpecs(item, item.pdf, null, p.alerta, p.diasSlaEtapa, p.diasSlaTotal, true)}
+                    </div>
+                </div>
+            `;
+        });
     } else if (drawerTab === 'cliente') {
         contentHtml = `
       <div class="detail-section" style="margin-top:0">
@@ -595,6 +566,96 @@ function renderDrawerTab(p) {
 
     if (contentHtml !== '') {
         body.innerHTML = contentHtml;
+    }
+}
+
+// NOVO: Renderização de especificações técnicas do item
+function renderItemSpecs(item, pdfUrl, embUrl, alerta, diasSla, diasSlaTotal, isSubItem = false) {
+    const parts = item.parts || {};
+    const texts = item.texts || {};
+    const renders = item.renders || {};
+
+    let colorsHtml = '';
+    Object.entries(parts).forEach(([part, data]) => {
+        const colorName = (typeof data === 'object') ? (data.value || data.name || '--') : data;
+        if (colorName && colorName !== '--') {
+            colorsHtml += `<div class="detail-item"><div class="detail-item-label">Cor ${part}</div><div class="detail-item-value">${colorName}</div></div>`;
+        }
+    });
+
+    let textsHtml = '';
+    Object.entries(texts).forEach(([key, data]) => {
+        if (data.active && data.content) {
+            textsHtml += `
+        <div class="personalization-item">
+            <div class="pers-label">✍️ Texto ${key}</div>
+            <div class="pers-content">"${data.content}"</div>
+            <div class="pers-meta">${data.fontFamily || 'Padrão'} · ${data.color || 'Preto'}</div>
+        </div>`;
+        }
+    });
+
+    return `
+        <div class="item-specs-container">
+            <div class="detail-section" style="${isSubItem ? 'border:none; background:transparent; padding:0;' : ''}">
+                <div class="detail-section-title">${isSubItem ? '🔍 Detalhes Técnicos' : '📦 Detalhes do Produto'}</div>
+                <div class="detail-grid">
+                    <div class="detail-item"><div class="detail-item-label">SKU</div><div class="detail-item-value">${item.sku || 'N/A'}</div></div>
+                    <div class="detail-item"><div class="detail-item-label">Tamanho</div><div class="detail-item-value">${item.size || 'U'}</div></div>
+                    <div class="detail-item"><div class="detail-item-label">Quantidade</div><div class="detail-item-value">${item.quantity || 1} un.</div></div>
+                    ${!isSubItem ? `<div class="detail-item"><div class="detail-item-label">Prazo Etapa</div><div class="detail-item-value"><span class="alerta-tag alerta-${alerta}">${alertaIcon(alerta)} ${diasSla <= 0 ? 'Vencido' : diasSla + 'd.u.'}</span></div></div>` : ''}
+                    
+                    ${colorsHtml}
+                    
+                    ${item.observacoes ? `<div class="detail-item full"><div class="detail-item-label">Observações</div><div class="detail-item-value">${item.observacoes}</div></div>` : ''}
+                </div>
+            </div>
+
+            ${textsHtml ? `
+            <div class="detail-section" style="${isSubItem ? 'border:none; background:transparent; padding:0; margin-top:20px;' : ''}">
+                <div class="detail-section-title">🧵 Personalização</div>
+                <div class="personalization-grid">
+                    ${textsHtml}
+                </div>
+            </div>` : ''}
+
+            <div class="detail-section" style="${isSubItem ? 'border:none; background:transparent; padding:0; margin-top:20px;' : ''}">
+                <div class="detail-section-title">🎨 Artes e Arquivos</div>
+                <div class="art-grid">
+                    <div class="art-thumb" style="cursor:pointer" onclick="${renders.frente ? `window.open('${renders.frente}','_blank')` : 'return false'}">
+                        ${renders.frente ? `<img src="${renders.frente}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
+                        <span>Frente</span>
+                    </div>
+                    <div class="art-thumb" style="cursor:pointer" onclick="${renders.costas ? `window.open('${renders.costas}','_blank')` : 'return false'}">
+                        ${renders.costas ? `<img src="${renders.costas}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
+                        <span>Costas</span>
+                    </div>
+                    <div class="art-thumb" style="cursor:pointer" onclick="${renders.lateral ? `window.open('${renders.lateral}','_blank')` : 'return false'}">
+                        ${renders.lateral ? `<img src="${renders.lateral}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
+                        <span>Lateral</span>
+                    </div>
+                </div>
+                <div class="file-links" style="margin-top:10px">
+                    ${pdfUrl ? `<a class="file-link" href="${pdfUrl}" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                        <span class="file-link-name">PDF de Simulação</span><span class="file-link-type">PDF</span>
+                    </a>` : ''}
+                    ${embUrl ? `<a class="file-link" href="${embUrl}" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                        <span class="file-link-name">🧵 Matriz de Bordado</span><span class="file-link-type">.EMB</span>
+                    </a>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Helper para trocar abas PROGRAMATICAMENTE
+function switchDrawerTab(tab) {
+    drawerTab = tab;
+    const p = PEDIDOS.find(x => x.id.toString() == selectedId.toString());
+    if (p) {
+        renderDrawer(p);
     }
 }
 
