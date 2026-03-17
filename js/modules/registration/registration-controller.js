@@ -7,6 +7,7 @@ const RegistrationController = {
         this.setupMasks();
         this.bindEvents();
         await this.checkExistingSession();
+        this.preFillFromProfile();
     },
 
     setupMasks: function () {
@@ -96,6 +97,53 @@ const RegistrationController = {
             }
         } catch (e) {
             console.warn('Supabase session check skipped or failed', e);
+        }
+    },
+
+    preFillFromProfile: function () {
+        const profileStr = localStorage.getItem('hnt_customer_profile');
+        if (!profileStr) return;
+
+        try {
+            const profile = JSON.parse(profileStr);
+            console.log('📝 Pre-enchendo formulário a partir do perfil local:', profile);
+
+            const mapping = {
+                'email': 'email',
+                'full-name': 'name',
+                'document': 'document',
+                'address': 'address',
+                'number': 'number',
+                'complement': 'complement',
+                'neighborhood': 'neighborhood',
+                'zipcode': 'zipcode',
+                'city': 'city',
+                'state': 'state',
+                'whatsapp': 'whatsapp',
+                'phone': 'phone'
+            };
+
+            Object.entries(mapping).forEach(([fieldId, profileKey]) => {
+                const el = document.getElementById(fieldId);
+                if (el && profile[profileKey] && !el.value) {
+                    el.value = profile[profileKey];
+                    if (this.masks[profileKey === 'name' ? 'document' : profileKey]) {
+                        this.masks[profileKey === 'name' ? 'document' : profileKey].updateValue();
+                    }
+                }
+            });
+
+            // Se for edit explicitamente via URL, permitir edição de tudo
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('edit') === 'true') {
+                document.querySelectorAll('.read-only-field').forEach(el => {
+                    el.classList.remove('read-only-field');
+                    el.readOnly = false;
+                });
+            }
+
+        } catch (e) {
+            console.warn('Falha ao pre-encher formulário:', e);
         }
     },
 
