@@ -300,7 +300,8 @@ const RegistrationController = {
             state: document.getElementById('state').value,
             whatsapp: document.getElementById('whatsapp').value.replace(/\D/g, ''),
             phone: document.getElementById('phone').value.replace(/\D/g, ''),
-            marketing: document.getElementById('marketing').checked
+            marketing: document.getElementById('marketing').checked,
+            updatedAt: new Date().toISOString()
         };
 
         // 1. Salvar no LocalStorage para uso imediato no carrinho
