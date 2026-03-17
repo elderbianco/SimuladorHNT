@@ -317,7 +317,7 @@ function renderControls() {
                 `;
 
                 setTimeout(() => {
-                    window.location.href = '../IndexPedidoSimulador.html';
+                    window.location.href = 'IndexPedidoSimulador.html';
                 }, 1500);
             } else {
                 loader.remove(); // Remove loader se a validação/salvamento falhar
