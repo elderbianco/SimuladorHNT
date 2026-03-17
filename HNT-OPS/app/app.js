@@ -442,20 +442,38 @@ function renderDrawerTab(p) {
             }
         }
     } else if (drawerTab === 'itens') {
-        contentHtml = `<div class="detail-section" style="margin-top:0"><div class="detail-section-title">🛒 Lista de Itens do Pedido</div></div>`;
-        items.forEach((item, index) => {
-            contentHtml += `
-                <div class="multi-item-card" style="background:var(--surface-2); border-radius:12px; border:1px solid var(--border); margin-bottom:30px; overflow:hidden;">
-                    <div style="background:var(--gold); color:#000; padding:10px 20px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
-                        <span>ITEM #${index + 1}: ${item.productName || item.sku || 'Produto'}</span>
-                        <span style="background:rgba(0,0,0,0.1); padding:2px 8px; border-radius:4px; font-size:0.75rem;">${item.quantity || 1} un. · ${item.size || 'U'}</span>
-                    </div>
-                    <div style="padding:20px;">
-                        ${renderItemSpecs(item, item.pdf, null, p.alerta, p.diasSlaEtapa, p.diasSlaTotal, true)}
-                    </div>
+        const dt = p.dadosTecnicos || {};
+        const items = dt.items || (dt.item ? [dt.item] : []);
+        contentHtml = `
+            <div class="detail-section" style="margin-top:0">
+                <div class="detail-section-title">🛒 Lista de Itens do Pedido (${items.length})</div>
+                <div style="display:flex; flex-direction:column; gap:15px; margin-top:15px;">
+                    ${items.map((item, index) => `
+                        <div class="item-card" id="item-card-${index}" style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+                            <div class="item-card-header" onclick="toggleItemCard(${index})" style="padding:15px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; background:rgba(0,0,0,0.02);">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div style="width:32px; height:32px; background:var(--gold); color:#000; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">${index + 1}</div>
+                                    <div>
+                                        <div style="font-weight:700; font-size:1rem; color:var(--text-1)">${item.productName || item.sku || 'Produto'}</div>
+                                        <div style="font-size:0.8rem; color:var(--text-3)">${item.quantity || 1} un. · Tam: ${item.size || 'U'}</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <button class="row-action-btn" style="width:auto; padding:0 10px; font-size:0.75rem;">Ver Detalhes</button>
+                                    <svg class="toggle-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:16px; height:16px; color:var(--text-3)">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="item-card-body" style="padding:0 20px 20px 20px;">
+                                <div style="height:20px;"></div>
+                                ${renderItemSpecs(item, item.pdf, null, p.alerta, p.diasSlaEtapa, p.diasSlaTotal, true)}
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
-            `;
-        });
+            </div>
+        `;
     } else if (drawerTab === 'cliente') {
         contentHtml = `
       <div class="detail-section" style="margin-top:0">
