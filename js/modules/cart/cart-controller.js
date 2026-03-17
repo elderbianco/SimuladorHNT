@@ -8,45 +8,53 @@ const STORAGE_KEY = 'hnt_all_orders_db';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Sincronizar com Supabase antes de carregar (MESCLANDO em vez de sobrescrever)
+    // --- SYNC COM SERVER (Opcional & Non-blocking) ---
     if (typeof SupabaseAdapter !== 'undefined') {
-        try {
-            console.log('🔄 Sincronizando com Supabase...');
-            const serverPedidos = await SupabaseAdapter.getPedidos();
-            const localRaw = localStorage.getItem(STORAGE_KEY);
-            let localPedidos = localRaw ? JSON.parse(localRaw) : [];
+        console.log('🔄 Sincronizando com Supabase em segundo plano...');
 
-            if (serverPedidos && serverPedidos.length > 0) {
-                // Mesclar: Usar serverPedidos como base, mas manter itens locais que não estão no servidor
-                const merged = [...serverPedidos];
-                let addedLocally = 0;
+        const runBackgroundSync = async () => {
+            try {
+                // Timeout para não travar o dashboard se o Supabase demorar
+                const serverPedidos = await Promise.race([
+                    SupabaseAdapter.getPedidos(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout Supabase')), 5000))
+                ]);
 
-                localPedidos.forEach(localItem => {
-                    const localId = localItem.order_id || localItem.ID_PEDIDO || localItem.ID_SIMULACAO;
-                    if (!localId) return; // Ignorar itens sem ID
+                const localRaw = localStorage.getItem(STORAGE_KEY);
+                let localPedidos = localRaw ? JSON.parse(localRaw) : [];
 
-                    const exists = serverPedidos.some(s => {
-                        const sId = String(s.order_id || s.ID_PEDIDO || s.ID_SIMULACAO || '');
-                        const lId = String(localId);
-                        // Match exato ou match por prefixo (ex: 100008-SH-HASH vs 100008)
-                        return sId === lId || (lId.split('-')[0] === sId && sId.length >= 4);
+                if (serverPedidos && serverPedidos.length > 0) {
+                    const merged = [...serverPedidos];
+                    let addedLocally = 0;
+
+                    localPedidos.forEach(localItem => {
+                        const localId = localItem.order_id || localItem.ID_PEDIDO || localItem.ID_SIMULACAO;
+                        if (!localId) return;
+
+                        const exists = serverPedidos.some(s => {
+                            const sId = String(s.order_id || s.ID_PEDIDO || s.ID_SIMULACAO || '');
+                            const lId = String(localId);
+                            return sId === lId || (lId.split('-')[0] === sId && sId.length >= 4);
+                        });
+
+                        if (!exists) {
+                            merged.push(localItem);
+                            addedLocally++;
+                        }
                     });
 
-                    if (!exists) {
-                        merged.push(localItem);
-                        addedLocally++;
-                    }
-                });
-
-                console.log(`✅ Sincronização concluída. Total: ${merged.length} (${serverPedidos.length} servidor, ${addedLocally} locais pendentes)`);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-            } else {
-                console.log('ℹ️ Supabase não retornou pedidos ou retornou lista vazia. Mantendo dados locais.');
+                    console.log(`✅ Sincronização background concluída. Total: ${merged.length}`);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+                    loadDashboard(); // Recarrega para mostrar novidades se houver
+                }
+            } catch (e) {
+                console.warn('⚠️ Sincronização background falhou ou demorou demais:', e.message);
             }
-        } catch (e) {
-            console.error('❌ Erro na sincronização inicial:', e);
-        }
+        };
+
+        runBackgroundSync();
     } else {
-        console.warn('⚠️ SupabaseAdapter não encontrado na página.');
+        console.warn('⚠️ SupabaseAdapter não encontrado.');
     }
     loadDashboard();
 
