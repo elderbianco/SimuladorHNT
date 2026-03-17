@@ -25,8 +25,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!localId) return; // Ignorar itens sem ID
 
                     const exists = serverPedidos.some(s => {
-                        const sId = s.order_id || s.ID_PEDIDO || s.ID_SIMULACAO;
-                        return sId === localId;
+                        const sId = String(s.order_id || s.ID_PEDIDO || s.ID_SIMULACAO || '');
+                        const lId = String(localId);
+                        // Match exato ou match por prefixo (ex: 100008-SH-HASH vs 100008)
+                        return sId === lId || (lId.split('-')[0] === sId && sId.length >= 4);
                     });
 
                     if (!exists) {
