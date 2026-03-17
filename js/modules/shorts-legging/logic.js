@@ -16,22 +16,7 @@ function generateNextSequenceNumber() {
  * Gera o próximo número de PEDIDO - PADRÃO NUMÉRICO (ex: 010008)
  */
 function generateNextOrderNumber() {
-    // 1. Verificar configuração do Admin para número inicial
-    const orderConfig = JSON.parse(localStorage.getItem('hnt_order_config') || '{"nextNumber":1000}');
-    const startFrom = (parseInt(orderConfig.nextNumber) || 1000) - 1;
-
-    let last = parseInt(localStorage.getItem('hnt_order_seq_id') || '0');
-
-    // Se o número do admin for maior que o sequencial atual, utiliza o do admin
-    if (startFrom > last) {
-        last = startFrom;
-    }
-
-    let next = last + 1;
-    localStorage.setItem('hnt_order_seq_id', next);
-
-    // Padrão: estritamente numérico com 6 dígitos
-    return String(next).padStart(6, '0');
+    return window.OrderNumbers ? window.OrderNumbers.peekNextOrderNumber() : "000000";
 }
 
 /**
