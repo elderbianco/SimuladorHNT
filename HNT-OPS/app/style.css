@@ -44,7 +44,7 @@
   --radius-sm: 3px;
   --radius-md: 6px;
   --sidebar-w: 64px;
-  --drawer-w: 640px;
+  --drawer-w: 100vw;
   --header-h: 56px;
   --transition: 0.18s ease;
 }
@@ -1375,11 +1375,11 @@ input {
 .drawer {
   position: fixed !important;
   top: 0 !important;
-  right: -640px !important;
+  right: -100vw !important;
   /* Start off-screen */
   left: auto !important;
-  width: 640px !important;
-  max-width: 90vw;
+  width: var(--drawer-w) !important;
+  max-width: 100vw;
   height: 100vh !important;
   background: var(--surface);
   border-left: 1px solid var(--border);
