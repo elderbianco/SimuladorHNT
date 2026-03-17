@@ -400,17 +400,7 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     const newRow = DBAdapter.formatForDatabase(state, pricing, CONFIG, pdfUrl);
     newRow.order_id = finalId; // Sincroniza ID final
 
-    // --- SUPABASE SYNC ---
-    if (typeof SupabaseAdapter !== 'undefined') {
-        console.log('🚀 Sincronizando com Supabase (Legging):', {
-            id: newRow.order_id,
-            total: newRow.total_price,
-            qty: newRow.quantity
-        });
-        await SupabaseAdapter.savePedido(newRow, state);
-    }
-    // ---------------------
-
+    // --- LOCAL FIRST SAVE ---
     if (state._editingIndex !== undefined && state._editingIndex !== null) {
         console.log(`✏️ Atualizando item existente no índice: ${state._editingIndex}`);
         history[state._editingIndex] = newRow;
@@ -421,6 +411,15 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
     }
 
     localStorage.setItem('hnt_all_orders_db', JSON.stringify(history));
+    console.log('✅ Salvo localmente com sucesso!');
+
+    // --- SUPABASE SYNC (ASYNC/NON-BLOCKING) ---
+    if (typeof SupabaseAdapter !== 'undefined') {
+        console.log('🚀 Iniciando sincronização em segundo plano com Supabase (Legging)...');
+        SupabaseAdapter.savePedido(newRow, state)
+            .then(() => console.log('✅ Sincronizado com Supabase.'))
+            .catch(err => console.error('⚠️ Falha na sincronização Supabase (Item salvo localmente):', err));
+    }
 
     // 6. Banco de Dados Linear (Excel)
     if (typeof DatabaseManager !== 'undefined') {

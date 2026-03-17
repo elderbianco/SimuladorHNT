@@ -200,7 +200,7 @@ function renderControls() {
         let pdfUrl = (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) ? await PDFGenerator.generateAndSaveForCart() : null;
         if (pdfUrl) state.pdfUrl = pdfUrl;
         if (typeof saveOrderToHistory === 'function' && (await saveOrderToHistory())) {
-            if (confirm('✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) window.location.href = 'IndexPedidoSimulador.html';
+            if (confirm('✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) window.location.href = '../IndexPedidoSimulador.html';
         }
     };
     const btnClear = document.createElement('button'); btnClear.className = 'btn-secondary btn-clear'; btnClear.innerText = 'LIMPAR DADOS'; btnClear.style.flex = '1'; btnClear.onclick = () => clearState();

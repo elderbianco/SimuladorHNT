@@ -146,7 +146,7 @@ const DBAdapter = {
             order_id: state.simulationId || state.orderNumber || 'N/A',
             client_name: 'Cliente (Simulador)', // Placeholder
             client_phone: state.phone || '',
-            product_type: state.productInitial || config.product || 'Produto',
+            product_type: (state && state.productInitial) || (config && config.product) || 'Produto',
             color: state.color || 'N/A',
             grade: gradeStr,
             quantity: totalQty,
