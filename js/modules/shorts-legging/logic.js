@@ -593,6 +593,7 @@ function resetSimulatorData() {
     // 4. Gerar novos IDs para a próxima simulação
     state.simNumber = generateUUID();
     state.simulationId = getFormattedId();
+    state.orderNumber = generateNextOrderNumber();
 
     // 5. Persistir estado limpo
     saveState();

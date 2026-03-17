@@ -98,10 +98,10 @@ async function handleCheckout(items) {
             console.warn("⚠️ Supabase não disponível. Simulando apenas offline.");
         }
 
-        // 2. Limpar Carrinho (Opcional: Mas recomendado após compra)
-        // localStorage.removeItem(STORAGE_KEY);
-
         // 3. Sucesso!
+        if (typeof OrderNumbers !== 'undefined') {
+            OrderNumbers.rotateOrderNumber();
+        }
         showSuccess();
 
     } catch (e) {
