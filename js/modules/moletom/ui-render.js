@@ -322,7 +322,7 @@ function renderControls() {
         if (pdfUrl) state.pdfUrl = pdfUrl;
 
         if (typeof saveOrderToHistory === 'function') {
-            if (saveOrderToHistory()) {
+            if (await saveOrderToHistory()) {
                 if (confirm('✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) {
                     window.location.href = 'IndexPedidoSimulador.html';
                 }

@@ -372,7 +372,7 @@ onStateUpdate() {
         return;
     }
     if (typeof window.saveOrderToHistory === 'function') {
-        if (window.saveOrderToHistory()) {
+        if (await window.saveOrderToHistory()) {
             if (confirm('✅ Adicionado ao carrinho! Ir para pedidos?')) window.location.href = 'IndexPedidoSimulador.html';
         }
     }

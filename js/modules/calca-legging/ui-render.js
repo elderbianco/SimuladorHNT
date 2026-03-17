@@ -199,7 +199,7 @@ function renderControls() {
         state.simulationId = `${orderPrefix}-SL-${newSeq}`;
         let pdfUrl = (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) ? await PDFGenerator.generateAndSaveForCart() : null;
         if (pdfUrl) state.pdfUrl = pdfUrl;
-        if (typeof saveOrderToHistory === 'function' && saveOrderToHistory()) {
+        if (typeof saveOrderToHistory === 'function' && (await saveOrderToHistory())) {
             if (confirm('✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) window.location.href = 'IndexPedidoSimulador.html';
         }
     };
