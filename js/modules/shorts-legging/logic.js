@@ -399,324 +399,315 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
             newRow.ID_PEDIDO = state._editingOrderId;
         }
 
-        history[state._editingIndex] = newRow;
-
-        delete state._editingIndex;
-        delete state._editingOrderId;
-    } else {
-        history.push(newRow); // O Adapter já retorna o objeto no formato final
-    }
-
-    try {
         localStorage.setItem('hnt_all_orders_db', JSON.stringify(history));
-    } catch (e) {
-        if (e.name === 'QuotaExceededError') {
-            console.error('❌ Quota excedida mesmo após limpeza! Removendo mais registros...');
-            const minimal = history.slice(-10); // Apenas os 10 mais recentes
-            localStorage.setItem('hnt_all_orders_db', JSON.stringify(minimal));
-        } else {
-            throw e;
+        console.log('✅ Salvo localmente com sucesso!');
+
+        // --- SUPABASE SYNC (ASYNC/NON-BLOCKING) ---
+        if (typeof SupabaseAdapter !== 'undefined') {
+            console.log('🚀 Iniciando sincronização em segundo plano com Supabase (Shorts Legging)...');
+            SupabaseAdapter.savePedido(newRow, state)
+                .then(() => console.log('✅ Sincronizado com Supabase.'))
+                .catch(err => console.error('⚠️ Falha na sincronização Supabase (Item salvo localmente):', err));
         }
-    }
 
-    // 4. Banco de Dados Linear (Excel)
-    if (typeof DatabaseManager !== 'undefined') {
-        DatabaseManager.addOrder(newRow);
-    }
-
-    return true;
-}
-
-/**
- * Adiciona uma imagem a uma zona específica
- */
-function addImage(zoneId, src, filename = "Imagem Enviada", isCustom = true) {
-    if (!CONFIG.zones[zoneId]) return;
-
-    // Remove elementos anteriores da zona (Padrão 1 imagem por zona)
-    removeZoneElements(zoneId);
-
-    const wrap = document.querySelector('.simulator-wrapper');
-    if (!wrap) return;
-
-    const z = CONFIG.zones[zoneId];
-    const img = document.createElement('img');
-    img.className = 'layer draggable custom-element';
-    img.src = src;
-    img.dataset.zone = zoneId;
-    img.dataset.isCustom = isCustom;
-    img.dataset.filename = filename;
-
-    // Posicionamento Inicial
-    img.style.position = 'absolute';
-    img.style.left = z.x + '%';
-    img.style.top = z.y + '%';
-    img.style.width = z.width + '%';
-    img.style.transform = 'translate(-50%, -50%) scale(1)';
-    img.style.zIndex = '50';
-
-    wrap.appendChild(img);
-
-    if (!state.elements[zoneId]) state.elements[zoneId] = [];
-    state.elements[zoneId].push(img);
-
-    // Salvar metadados no state.uploads
-    if (!state.uploads[zoneId]) state.uploads[zoneId] = { unlocked: true };
-    state.uploads[zoneId].src = src;
-    state.uploads[zoneId].filename = filename;
-    state.uploads[zoneId].isCustom = isCustom;
-
-    if (typeof updatePrice === 'function') updatePrice();
-    if (typeof renderControls === 'function') renderControls();
-    saveState();
-}
-
-/**
- * Alias para addImage (usado por alguns scripts)
- */
-function addImageToZone(zoneId, src) {
-    addImage(zoneId, src, "Imagem do Acervo", false);
-}
-
-/**
- * Remove todos os elementos de uma zona
- */
-function removeZoneElements(zoneId) {
-    if (state.elements[zoneId]) {
-        state.elements[zoneId].forEach(el => el.remove());
-        state.elements[zoneId] = [];
-    }
-
-    if (state.uploads[zoneId]) {
-        state.uploads[zoneId].src = null;
-        state.uploads[zoneId].filename = null;
-    }
-
-    // Se houver texto associado, desabilita o limite visual se a zona ficar vazia
-    if (checkZoneEmpty(zoneId)) {
-        state.zoneLimits[zoneId] = false;
-        if (typeof updateLimits === 'function') updateLimits();
-    }
-
-    if (typeof updatePrice === 'function') updatePrice();
-    if (typeof renderControls === 'function') renderControls();
-    saveState();
-}
-
-/**
- * Verifica se uma zona está completamente vazia (Sem imagem e sem texto habilitado)
- */
-function checkZoneEmpty(zoneId) {
-    const hasImage = state.elements[zoneId] && state.elements[zoneId].length > 0;
-    const textZone = CONFIG.textZones.find(tz => tz.parentZone === zoneId);
-    const hasText = textZone && state.texts[textZone.id] && state.texts[textZone.id].enabled;
-    return !hasImage && !hasText;
-}
-
-/**
- * Handler para Upload de Imagem
- */
-function handleImageUpload(e, zoneId) {
-    const file = (e.target && e.target.files) ? e.target.files[0] : (e.files ? e.files[0] : e);
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-        const base64 = event.target.result;
-        addImage(zoneId, base64, file.name, true);
-
-        // --- SUPABASE SYNC ---
-        await uploadFileToServer(file, base64, zoneId);
-        // ---------------------
-
-        // Ativa limites visuais automaticamente ao subir imagem
-        state.zoneLimits[zoneId] = true;
-        if (typeof updateLimits === 'function') updateLimits();
-    };
-    reader.readAsDataURL(file);
-}
-
-/**
- * Envia o arquivo para o servidor via Supabase
- */
-async function uploadFileToServer(file, base64, zoneId) {
-    if (typeof SupabaseAdapter === 'undefined') return;
-
-    try {
-        const fileName = (typeof generateFormattedFilename === 'function') ? generateFormattedFilename(zoneId, file.name, 'EXT') : file.name;
-        const publicUrl = await SupabaseAdapter.uploadFile('client_uploads', fileName, base64, file.type);
-
-        if (publicUrl) {
-            console.log('✅ Upload para Supabase (Shorts Legging) concluído:', publicUrl);
-            if (zoneId && state.uploads && state.uploads[zoneId]) {
-                state.uploads[zoneId].supabaseUrl = publicUrl;
-                state.uploads[zoneId].src = publicUrl; // Sincroniza src para persistência
-            }
+        // 4. Banco de Dados Linear (Excel)
+        if (typeof DatabaseManager !== 'undefined') {
+            DatabaseManager.addOrder(newRow);
         }
-    } catch (e) {
-        console.error('❌ Erro no upload para Supabase (Shorts Legging):', e);
+
+        return true;
     }
-}
-function handleGallerySelection(src) {
-    if (state.pending) {
-        addImage(state.pending, src, "Imagem do Acervo", false);
-        state.zoneLimits[state.pending] = true;
-        if (typeof updateLimits === 'function') updateLimits();
-        state.pending = null;
+
+    /**
+     * Adiciona uma imagem a uma zona específica
+     */
+    function addImage(zoneId, src, filename = "Imagem Enviada", isCustom = true) {
+        if (!CONFIG.zones[zoneId]) return;
+
+        // Remove elementos anteriores da zona (Padrão 1 imagem por zona)
+        removeZoneElements(zoneId);
+
+        const wrap = document.querySelector('.simulator-wrapper');
+        if (!wrap) return;
+
+        const z = CONFIG.zones[zoneId];
+        const img = document.createElement('img');
+        img.className = 'layer draggable custom-element';
+        img.src = src;
+        img.dataset.zone = zoneId;
+        img.dataset.isCustom = isCustom;
+        img.dataset.filename = filename;
+
+        // Posicionamento Inicial
+        img.style.position = 'absolute';
+        img.style.left = z.x + '%';
+        img.style.top = z.y + '%';
+        img.style.width = z.width + '%';
+        img.style.transform = 'translate(-50%, -50%) scale(1)';
+        img.style.zIndex = '50';
+
+        wrap.appendChild(img);
+
+        if (!state.elements[zoneId]) state.elements[zoneId] = [];
+        state.elements[zoneId].push(img);
+
+        // Salvar metadados no state.uploads
+        if (!state.uploads[zoneId]) state.uploads[zoneId] = { unlocked: true };
+        state.uploads[zoneId].src = src;
+        state.uploads[zoneId].filename = filename;
+        state.uploads[zoneId].isCustom = isCustom;
+
+        if (typeof updatePrice === 'function') updatePrice();
+        if (typeof renderControls === 'function') renderControls();
+        saveState();
     }
-}
 
-/**
- * Reseta os dados do simulador para o estado inicial (Limpeza)
- */
-function resetSimulatorData() {
-    console.log("🧹 Resetando dados do simulador...");
+    /**
+     * Alias para addImage (usado por alguns scripts)
+     */
+    function addImageToZone(zoneId, src) {
+        addImage(zoneId, src, "Imagem do Acervo", false);
+    }
 
-    // 1. Limpar Arrays e Objetos do Estado
-    state.sizes = {};
-    state.observations = "";
-
-    // 2. Limpar Textos
-    CONFIG.textZones.forEach(z => {
-        state.texts[z.id] = {
-            enabled: false,
-            content: "",
-            fontFamily: getDefaultFont(),
-            color: "#000000",
-            scale: 1.0,
-            maxLines: 1
-        };
-    });
-
-    // 3. Limpar Uploads/Imagens
-    const zones = Object.keys(state.elements);
-    zones.forEach(zoneId => {
-        // Remover elementos DOM
+    /**
+     * Remove todos os elementos de uma zona
+     */
+    function removeZoneElements(zoneId) {
         if (state.elements[zoneId]) {
             state.elements[zoneId].forEach(el => el.remove());
             state.elements[zoneId] = [];
         }
 
-        // Limpar dados de upload
-        if (state.uploads && state.uploads[zoneId]) {
-            state.uploads[zoneId] = {
-                src: null,
-                filename: null,
-                unlocked: state.uploads[zoneId].unlocked // Mantém estado de desbloqueio
-            };
+        if (state.uploads[zoneId]) {
+            state.uploads[zoneId].src = null;
+            state.uploads[zoneId].filename = null;
         }
-    });
 
-    // 4. Gerar novos IDs para a próxima simulação
-    state.simNumber = generateUUID();
-    state.simulationId = getFormattedId();
+        // Se houver texto associado, desabilita o limite visual se a zona ficar vazia
+        if (checkZoneEmpty(zoneId)) {
+            state.zoneLimits[zoneId] = false;
+            if (typeof updateLimits === 'function') updateLimits();
+        }
 
-    // 5. Persistir estado limpo
-    saveState();
-
-    // 6. Sincronizar UI
-    if (typeof renderControls === 'function') renderControls();
-    if (typeof updateVisuals === 'function') updateVisuals();
-    if (typeof updatePrice === 'function') {
-        const pricing = calculateFullPrice();
-        updatePrice(pricing);
-    }
-    if (typeof updateCartCount === 'function') updateCartCount();
-
-    console.log("✅ Simulador resetado com sucesso.");
-}
-
-// Auto-Sync with Admin Panel
-window.addEventListener('storage', (e) => {
-    if (e.key === 'hnt_shorts_legging_config' || e.key === 'hnt_shorts_legging_part_colors') {
-        console.log('🔄 Sincronizando configurações com Admin...');
-        loadAdminConfig();
-        if (typeof renderControls === 'function') renderControls();
         if (typeof updatePrice === 'function') updatePrice();
+        if (typeof renderControls === 'function') renderControls();
+        saveState();
     }
-});
-// --- CACHE SYSTEM ---
-window.dataCache = {
-    textZonesById: new Map(),
-    uploadZonesById: new Map()
-};
 
-function initDataCache() {
-    console.log('Initializing Data Cache (Shorts-Legging)...');
-    const source = (typeof CONFIG !== 'undefined') ? CONFIG : null;
-    if (!source) return;
-
-    if (source.textZones) {
-        window.dataCache.textZonesById.clear();
-        source.textZones.forEach(z => window.dataCache.textZonesById.set(z.id, z));
+    /**
+     * Verifica se uma zona está completamente vazia (Sem imagem e sem texto habilitado)
+     */
+    function checkZoneEmpty(zoneId) {
+        const hasImage = state.elements[zoneId] && state.elements[zoneId].length > 0;
+        const textZone = CONFIG.textZones.find(tz => tz.parentZone === zoneId);
+        const hasText = textZone && state.texts[textZone.id] && state.texts[textZone.id].enabled;
+        return !hasImage && !hasText;
     }
-    // Shorts-Legging likely uses CONFIG.zones (Object) or generic structure
-    if (source.zones) {
-        window.dataCache.uploadZonesById.clear();
-        // If zones is Object, use values
-        const zonesIter = Array.isArray(source.zones) ? source.zones : Object.values(source.zones);
-        zonesIter.forEach(z => window.dataCache.uploadZonesById.set(z.id, z));
+
+    /**
+     * Handler para Upload de Imagem
+     */
+    function handleImageUpload(e, zoneId) {
+        const file = (e.target && e.target.files) ? e.target.files[0] : (e.files ? e.files[0] : e);
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64 = event.target.result;
+            addImage(zoneId, base64, file.name, true);
+
+            // --- SUPABASE SYNC ---
+            await uploadFileToServer(file, base64, zoneId);
+            // ---------------------
+
+            // Ativa limites visuais automaticamente ao subir imagem
+            state.zoneLimits[zoneId] = true;
+            if (typeof updateLimits === 'function') updateLimits();
+        };
+        reader.readAsDataURL(file);
     }
-}
 
-/**
- * RESTORATION SYSTEM
- * Checks for a restoration buffer from Admin Panel and hydrating state
- */
-window.checkForRestoration = function () {
-    console.log("♻️ Checking for restoration buffer (Shorts-Legging)...");
-    try {
-        const buffer = localStorage.getItem('hnt_restore_buffer');
-        if (!buffer) return false;
+    /**
+     * Envia o arquivo para o servidor via Supabase
+     */
+    async function uploadFileToServer(file, base64, zoneId) {
+        if (typeof SupabaseAdapter === 'undefined') return;
 
-        const data = JSON.parse(buffer);
-        console.log("♻️ Buffer found for Order:", data.orderId);
+        try {
+            const fileName = (typeof generateFormattedFilename === 'function') ? generateFormattedFilename(zoneId, file.name, 'EXT') : file.name;
+            const publicUrl = await SupabaseAdapter.uploadFile('client_uploads', fileName, base64, file.type);
 
-        Object.assign(state, data.state);
+            if (publicUrl) {
+                console.log('✅ Upload para Supabase (Shorts Legging) concluído:', publicUrl);
+                if (zoneId && state.uploads && state.uploads[zoneId]) {
+                    state.uploads[zoneId].supabaseUrl = publicUrl;
+                    state.uploads[zoneId].src = publicUrl; // Sincroniza src para persistência
+                }
+            }
+        } catch (e) {
+            console.error('❌ Erro no upload para Supabase (Shorts Legging):', e);
+        }
+    }
+    function handleGallerySelection(src) {
+        if (state.pending) {
+            addImage(state.pending, src, "Imagem do Acervo", false);
+            state.zoneLimits[state.pending] = true;
+            if (typeof updateLimits === 'function') updateLimits();
+            state.pending = null;
+        }
+    }
 
-        // Ensure all text zones are properly initialized
-        const defaultFont = getDefaultFont();
+    /**
+     * Reseta os dados do simulador para o estado inicial (Limpeza)
+     */
+    function resetSimulatorData() {
+        console.log("🧹 Resetando dados do simulador...");
+
+        // 1. Limpar Arrays e Objetos do Estado
+        state.sizes = {};
+        state.observations = "";
+
+        // 2. Limpar Textos
         CONFIG.textZones.forEach(z => {
-            if (!state.texts[z.id]) {
-                state.texts[z.id] = {
-                    enabled: false,
-                    content: "",
-                    fontFamily: defaultFont,
-                    color: "#000000",
-                    scale: 1.0,
-                    maxLines: 1
+            state.texts[z.id] = {
+                enabled: false,
+                content: "",
+                fontFamily: getDefaultFont(),
+                color: "#000000",
+                scale: 1.0,
+                maxLines: 1
+            };
+        });
+
+        // 3. Limpar Uploads/Imagens
+        const zones = Object.keys(state.elements);
+        zones.forEach(zoneId => {
+            // Remover elementos DOM
+            if (state.elements[zoneId]) {
+                state.elements[zoneId].forEach(el => el.remove());
+                state.elements[zoneId] = [];
+            }
+
+            // Limpar dados de upload
+            if (state.uploads && state.uploads[zoneId]) {
+                state.uploads[zoneId] = {
+                    src: null,
+                    filename: null,
+                    unlocked: state.uploads[zoneId].unlocked // Mantém estado de desbloqueio
                 };
-            } else {
-                // Ensure all required properties exist
-                if (state.texts[z.id].enabled === undefined) state.texts[z.id].enabled = false;
-                if (!state.texts[z.id].content) state.texts[z.id].content = "";
-                if (!state.texts[z.id].fontFamily) state.texts[z.id].fontFamily = defaultFont;
-                if (!state.texts[z.id].color) state.texts[z.id].color = "#000000";
-                if (state.texts[z.id].scale === undefined) state.texts[z.id].scale = 1.0;
-                if (state.texts[z.id].maxLines === undefined) state.texts[z.id].maxLines = 1;
             }
         });
 
-        // Clear buffer
-        localStorage.removeItem('hnt_restore_buffer');
+        // 4. Gerar novos IDs para a próxima simulação
+        state.simNumber = generateUUID();
+        state.simulationId = getFormattedId();
 
-        // Trigger UI Updates
+        // 5. Persistir estado limpo
+        saveState();
+
+        // 6. Sincronizar UI
         if (typeof renderControls === 'function') renderControls();
-        if (typeof renderFixedTexts === 'function') renderFixedTexts();
-        if (typeof updatePrice === 'function') updatePrice();
-
-        // Force re-render visuals
         if (typeof updateVisuals === 'function') updateVisuals();
+        if (typeof updatePrice === 'function') {
+            const pricing = calculateFullPrice();
+            updatePrice(pricing);
+        }
+        if (typeof updateCartCount === 'function') updateCartCount();
 
-        setTimeout(() => {
-            alert(`♻️ Pedido ${data.orderId} restaurado com sucesso!`);
-        }, 500);
-
-        return true;
-
-    } catch (e) {
-        console.error("❌ Critical Error restoring order:", e);
-        alert("Erro ao restaurar pedido. Consulte o console.");
-        return false;
+        console.log("✅ Simulador resetado com sucesso.");
     }
-};
+
+    // Auto-Sync with Admin Panel
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'hnt_shorts_legging_config' || e.key === 'hnt_shorts_legging_part_colors') {
+            console.log('🔄 Sincronizando configurações com Admin...');
+            loadAdminConfig();
+            if (typeof renderControls === 'function') renderControls();
+            if (typeof updatePrice === 'function') updatePrice();
+        }
+    });
+    // --- CACHE SYSTEM ---
+    window.dataCache = {
+        textZonesById: new Map(),
+        uploadZonesById: new Map()
+    };
+
+    function initDataCache() {
+        console.log('Initializing Data Cache (Shorts-Legging)...');
+        const source = (typeof CONFIG !== 'undefined') ? CONFIG : null;
+        if (!source) return;
+
+        if (source.textZones) {
+            window.dataCache.textZonesById.clear();
+            source.textZones.forEach(z => window.dataCache.textZonesById.set(z.id, z));
+        }
+        // Shorts-Legging likely uses CONFIG.zones (Object) or generic structure
+        if (source.zones) {
+            window.dataCache.uploadZonesById.clear();
+            // If zones is Object, use values
+            const zonesIter = Array.isArray(source.zones) ? source.zones : Object.values(source.zones);
+            zonesIter.forEach(z => window.dataCache.uploadZonesById.set(z.id, z));
+        }
+    }
+
+    /**
+     * RESTORATION SYSTEM
+     * Checks for a restoration buffer from Admin Panel and hydrating state
+     */
+    window.checkForRestoration = function () {
+        console.log("♻️ Checking for restoration buffer (Shorts-Legging)...");
+        try {
+            const buffer = localStorage.getItem('hnt_restore_buffer');
+            if (!buffer) return false;
+
+            const data = JSON.parse(buffer);
+            console.log("♻️ Buffer found for Order:", data.orderId);
+
+            Object.assign(state, data.state);
+
+            // Ensure all text zones are properly initialized
+            const defaultFont = getDefaultFont();
+            CONFIG.textZones.forEach(z => {
+                if (!state.texts[z.id]) {
+                    state.texts[z.id] = {
+                        enabled: false,
+                        content: "",
+                        fontFamily: defaultFont,
+                        color: "#000000",
+                        scale: 1.0,
+                        maxLines: 1
+                    };
+                } else {
+                    // Ensure all required properties exist
+                    if (state.texts[z.id].enabled === undefined) state.texts[z.id].enabled = false;
+                    if (!state.texts[z.id].content) state.texts[z.id].content = "";
+                    if (!state.texts[z.id].fontFamily) state.texts[z.id].fontFamily = defaultFont;
+                    if (!state.texts[z.id].color) state.texts[z.id].color = "#000000";
+                    if (state.texts[z.id].scale === undefined) state.texts[z.id].scale = 1.0;
+                    if (state.texts[z.id].maxLines === undefined) state.texts[z.id].maxLines = 1;
+                }
+            });
+
+            // Clear buffer
+            localStorage.removeItem('hnt_restore_buffer');
+
+            // Trigger UI Updates
+            if (typeof renderControls === 'function') renderControls();
+            if (typeof renderFixedTexts === 'function') renderFixedTexts();
+            if (typeof updatePrice === 'function') updatePrice();
+
+            // Force re-render visuals
+            if (typeof updateVisuals === 'function') updateVisuals();
+
+            setTimeout(() => {
+                alert(`♻️ Pedido ${data.orderId} restaurado com sucesso!`);
+            }, 500);
+
+            return true;
+
+        } catch (e) {
+            console.error("❌ Critical Error restoring order:", e);
+            alert("Erro ao restaurar pedido. Consulte o console.");
+            return false;
+        }
+    };
