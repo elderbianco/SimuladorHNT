@@ -35,14 +35,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
 
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
                 console.log(`✅ Sincronização concluída. Total: ${merged.length} (${serverPedidos.length} servidor, ${addedLocally} locais pendentes)`);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
             } else {
                 console.log('ℹ️ Supabase não retornou pedidos ou retornou lista vazia. Mantendo dados locais.');
             }
         } catch (e) {
             console.error('❌ Erro na sincronização inicial:', e);
         }
+    } else {
+        console.warn('⚠️ SupabaseAdapter não encontrado na página.');
     }
     loadDashboard();
 
@@ -76,6 +78,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 function loadDashboard() {
     const raw = localStorage.getItem(STORAGE_KEY);
     const history = raw ? JSON.parse(raw) : [];
+    console.log(`📊 loadDashboard: Iniciando com ${history.length} itens no storage.`);
+
     const container = document.getElementById('orders-list');
 
     // Stats
@@ -226,8 +230,28 @@ function loadDashboard() {
         }
 
         // Legacy conversion if needed
-        if (!data.item && Array.isArray(order)) data = convertLegacyData(order);
-        if (!data || !data.item) return;
+        if (!data.item && Array.isArray(order)) {
+            console.log(`📦 Item no índice ${index} parece ser legado (Array). Convertendo...`);
+            data = convertLegacyData(order);
+        }
+
+        if (!data || !data.item) {
+            console.error(`❌ Falha crítica ao processar item no índice ${index}: Estrutura inválida ou item ausente.`, data);
+
+            // Tentativa de recuperação mínima
+            if (data && (data.ID_PEDIDO || data.order_id)) {
+                console.warn(`🔍 Tentando recuperação mínima para o item ${data.ID_PEDIDO || data.order_id}`);
+                data.item = data.item || {
+                    simulator_type: 'Produto',
+                    model_name: 'Recuperado',
+                    qty_total: data.QUANTIDADE || 1,
+                    pricing: { total_price: data.PRECO_FINAL || 0 },
+                    specs: { parts: {}, sizes: {}, uploads: [], texts: [] }
+                };
+            } else {
+                return;
+            }
+        }
 
         // Add original index for updates
         data._index = index;
