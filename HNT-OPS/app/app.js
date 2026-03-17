@@ -574,12 +574,22 @@ function renderItemSpecs(item, pdfUrl, embUrl, alerta, diasSla, diasSlaTotal, is
     const parts = item.parts || {};
     const texts = item.texts || {};
     const renders = item.renders || {};
+    const extras = item.extras || {};
+    const uploads = item.uploads || {};
 
     let colorsHtml = '';
     Object.entries(parts).forEach(([part, data]) => {
         const colorName = (typeof data === 'object') ? (data.value || data.name || '--') : data;
         if (colorName && colorName !== '--') {
             colorsHtml += `<div class="detail-item"><div class="detail-item-label">Cor ${part}</div><div class="detail-item-value">${colorName}</div></div>`;
+        }
+    });
+
+    let extrasHtml = '';
+    Object.entries(extras).forEach(([key, data]) => {
+        if (data.active) {
+            const val = data.value || 'SIM';
+            extrasHtml += `<div class="detail-item"><div class="detail-item-label">➕ ${data.name || key}</div><div class="detail-item-value">${val}</div></div>`;
         }
     });
 
@@ -595,33 +605,65 @@ function renderItemSpecs(item, pdfUrl, embUrl, alerta, diasSla, diasSlaTotal, is
         }
     });
 
+    let uploadsHtml = '';
+    Object.entries(uploads).forEach(([key, data]) => {
+        if (data.src) {
+            uploadsHtml += `
+            <div class="art-thumb" style="cursor:pointer; border-radius:8px; border:1px solid var(--border-color); background:#fff;" onclick="window.open('${data.src}','_blank')">
+                <img src="${data.src}" style="width:100%;height:100%;object-fit:contain; padding:5px;">
+                <span style="font-size:10px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%; text-align:center;">${data.filename || 'Logo'}</span>
+            </div>`;
+        }
+    });
+
+    // Grade de tamanhos se disponível (JSON estruturado)
+    let gradeHtml = '';
+    if (item.sizes && Object.keys(item.sizes).length > 0) {
+        gradeHtml = `
+        <div class="detail-section" style="border:none; background:rgba(0,0,0,0.03); border-radius:8px; padding:12px; margin-top:20px;">
+            <div class="detail-section-title" style="font-size:0.75rem; margin-bottom:8px;">📊 Grade de Produção</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+                ${Object.entries(item.sizes).filter(([sz, qty]) => qty > 0).map(([sz, qty]) => `
+                    <div style="background:#fff; border:1px solid var(--border-color); padding:5px 10px; border-radius:6px; text-align:center; min-width:40px;">
+                        <div style="font-size:10px; color:var(--text-3); text-transform:uppercase">${sz}</div>
+                        <div style="font-weight:700; color:var(--text-1)">${qty}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>`;
+    }
+
     return `
         <div class="item-specs-container">
             <div class="detail-section" style="${isSubItem ? 'border:none; background:transparent; padding:0;' : ''}">
                 <div class="detail-section-title">${isSubItem ? '🔍 Detalhes Técnicos' : '📦 Detalhes do Produto'}</div>
                 <div class="detail-grid">
                     <div class="detail-item"><div class="detail-item-label">SKU</div><div class="detail-item-value">${item.sku || 'N/A'}</div></div>
-                    <div class="detail-item"><div class="detail-item-label">Tamanho</div><div class="detail-item-value">${item.size || 'U'}</div></div>
+                    <div class="detail-item"><div class="detail-item-label">Tamanho Base</div><div class="detail-item-value">${item.size || 'U'}</div></div>
                     <div class="detail-item"><div class="detail-item-label">Quantidade</div><div class="detail-item-value">${item.quantity || 1} un.</div></div>
                     ${!isSubItem ? `<div class="detail-item"><div class="detail-item-label">Prazo Etapa</div><div class="detail-item-value"><span class="alerta-tag alerta-${alerta}">${alertaIcon(alerta)} ${diasSla <= 0 ? 'Vencido' : diasSla + 'd.u.'}</span></div></div>` : ''}
                     
                     ${colorsHtml}
+                    ${extrasHtml}
                     
-                    ${item.observacoes ? `<div class="detail-item full"><div class="detail-item-label">Observações</div><div class="detail-item-value">${item.observacoes}</div></div>` : ''}
+                    ${item.observacoes ? `<div class="detail-item full" style="background:rgba(212,175,55,0.1); border:1px solid var(--gold-soft); border-radius:8px; padding:10px; margin-top:10px;"><div class="detail-item-label" style="color:#856404">📝 Observações de Produção</div><div class="detail-item-value" style="color:#856404; font-weight:500;">${item.observacoes}</div></div>` : ''}
                 </div>
             </div>
 
+            ${gradeHtml}
+
             ${textsHtml ? `
             <div class="detail-section" style="${isSubItem ? 'border:none; background:transparent; padding:0; margin-top:20px;' : ''}">
-                <div class="detail-section-title">🧵 Personalização</div>
+                <div class="detail-section-title">🧵 Personalização (Textos)</div>
                 <div class="personalization-grid">
                     ${textsHtml}
                 </div>
             </div>` : ''}
 
             <div class="detail-section" style="${isSubItem ? 'border:none; background:transparent; padding:0; margin-top:20px;' : ''}">
-                <div class="detail-section-title">🎨 Artes e Arquivos</div>
+                <div class="detail-section-title">🎨 Artes e Arquivos (Logos e Renders)</div>
                 <div class="art-grid">
+                    ${uploadsHtml}
                     <div class="art-thumb" style="cursor:pointer" onclick="${renders.frente ? `window.open('${renders.frente}','_blank')` : 'return false'}">
                         ${renders.frente ? `<img src="${renders.frente}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
                         <span>Frente</span>
