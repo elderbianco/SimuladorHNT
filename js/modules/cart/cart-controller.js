@@ -56,33 +56,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         console.warn('⚠️ SupabaseAdapter não encontrado.');
     }
-    loadDashboard();
+}
 
-    // 2. Atualizar UI se o cliente estiver logado/cadastrado
+    // Auto-init dashboard
+    try {
+    await loadDashboard();
+} catch (e) {
+    console.error('❌ Erro fatal ao carregar dashboard:', e);
+}
+
+// 2. Atualizar UI se o cliente estiver logado/cadastrado - OPERAÇÃO INDEPENDENTE
+try {
     const profileStr = localStorage.getItem('hnt_customer_profile');
     if (profileStr) {
-        try {
-            const profile = JSON.parse(profileStr);
-            const linkCadastro = document.getElementById('link-cadastro');
-            if (linkCadastro) {
-                linkCadastro.innerHTML = `👤 Olá, ${profile.name.split(' ')[0]} (Ver Cadastro)`;
-                linkCadastro.title = "Cadastro Vinculado. ID: " + (profile.clientId || '...');
-            }
+        const profile = JSON.parse(profileStr);
+        console.log('👤 Perfil detectado:', profile.name);
 
-            // Auto-fill global info inputs if empty
-            const globalNameInp = document.getElementById('global-client-name');
-            const globalPhoneInp = document.getElementById('global-client-phone');
-            if (globalNameInp && !globalNameInp.value) {
-                globalNameInp.value = profile.name;
-            }
-            if (globalPhoneInp && !globalPhoneInp.value) {
-                globalPhoneInp.value = profile.whatsapp || profile.phone || '';
-            }
-        } catch (e) { }
+        const linkCadastro = document.getElementById('link-cadastro');
+        if (linkCadastro) {
+            linkCadastro.innerHTML = `👤 Olá, ${profile.name.split(' ')[0]} (Ver Cadastro)`;
+            linkCadastro.title = "Cadastro Vinculado. ID: " + (profile.clientId || '...');
+        }
+
+        // Auto-fill global info inputs if empty
+        const globalNameInp = document.getElementById('global-client-name');
+        const globalPhoneInp = document.getElementById('global-client-phone');
+
+        if (globalNameInp) {
+            globalNameInp.value = profile.name || '';
+            globalNameInp.placeholder = "Sincronizado";
+        }
+        if (globalPhoneInp) {
+            globalPhoneInp.value = profile.whatsapp || profile.phone || '';
+            globalPhoneInp.placeholder = "Sincronizado";
+        }
     }
+} catch (e) {
+    console.warn('⚠️ Falha ao processar perfil no cart-controller:', e);
+}
 
-    document.getElementById('btn-clear-all').onclick = clearAll;
-    document.getElementById('btn-export-all').onclick = exportExcel;
+const btnClear = document.getElementById('btn-clear-all');
+if (btnClear) btnClear.onclick = clearAll;
+
+const btnExport = document.getElementById('btn-export-all');
+if (btnExport) btnExport.onclick = exportExcel;
 });
 
 function loadDashboard() {

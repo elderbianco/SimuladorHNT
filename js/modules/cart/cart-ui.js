@@ -484,6 +484,7 @@ window.CartUI = {
     },
 
     renderLogosAndTexts: function (specs) {
+        const config = specs?.config || {};
         let html = '';
 
         // Normalização: Converter objetos em arrays se necessário
