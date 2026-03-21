@@ -27,13 +27,13 @@ const PDFGenerator = {
      * Usa html2canvas + Pré-processamento Base66 para garantir rotação e escala exatas.
      */
     /**
-     * Motor de Renderização Nuclear v23 (Industrial Fidelity + 3-Column Summary)
-     * Captura o RingHNT de fundo e expande a tabela para Atributo, Especificação e Valor.
+     * Motor de Renderização Nuclear v24 (Industrial Fidelity + Financial Clarity)
+     * Captura o RingHNT de fundo e detalha todos os valores (Incluso vs Pago).
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v23 (3-Column Exp) Ativado...');
+                console.log('☢️ Motor Nuclear v24 (Financial Clarity) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
@@ -244,7 +244,7 @@ const PDFGenerator = {
 
             if (snapshot && snapshot.length > 1000) {
                 this.cachedSnapshot = snapshot;
-                console.log(`✅ Snapshot v23 gerado: ${Math.round(snapshot.length / 1024)} KB`);
+                console.log(`✅ Snapshot v24 gerado: ${Math.round(snapshot.length / 1024)} KB`);
                 this.isCaptureBroken = false;
             } else {
                 console.error('❌ Falha na geração do Snapshot v16.');
@@ -615,7 +615,7 @@ const PDFGenerator = {
     },
 
     /**
-     * Gera um PDF real em background usando jsPDF (EXPERT v23)
+     * Gera um PDF real em background usando jsPDF (EXPERT v24)
      */
     async generateBackgroundPDF(customId = null) {
         if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
@@ -708,7 +708,7 @@ const PDFGenerator = {
                 docArg.setFontSize(9);
                 docArg.setFont('helvetica', 'normal');
                 docArg.setTextColor(120, 120, 120);
-                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT v23', margin, margin + 18);
+                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT v24', margin, margin + 18);
 
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(11);
@@ -794,16 +794,16 @@ const PDFGenerator = {
             categories.forEach(cat => {
                 let catItems = [];
 
-                // Partes
+                // Partes (Sempre Incluso)
                 if (config.parts) {
                     config.parts.filter(p => p.category === cat.id).forEach(p => {
                         const colorId = state.parts?.[p.id];
                         const colorObj = config.colors?.find(c => c.id === colorId);
-                        catItems.push([clean(p.name.toUpperCase()), `COR: ${clean(colorObj ? colorObj.name : colorId)}`, '']);
+                        catItems.push([clean(p.name.toUpperCase()), `COR: ${clean(colorObj ? colorObj.name : colorId)}`, 'INCLUSO']);
                     });
                 }
 
-                // Extras
+                // Extras (Incluso vs Pago)
                 if (config.extras) {
                     config.extras.filter(e => e.category === cat.id).forEach(e => {
                         const extraState = state.extras?.[e.id];
@@ -811,27 +811,48 @@ const PDFGenerator = {
                             const colorObj = config.colors?.find(c => c.id === extraState.color);
                             const price = (state.config?.extraPrices?.[e.id] !== undefined) ? state.config.extraPrices[e.id] : e.price;
                             const detail = colorObj ? `COR: ${clean(colorObj.name)}` : 'ATIVADO';
-                            catItems.push([clean(e.name.toUpperCase()), clean(detail), `R$ ${fmt(price)}`]);
+                            const valStr = price === 0 ? 'INCLUSO' : `+ R$ ${fmt(price)}`;
+                            catItems.push([clean(e.name.toUpperCase()), clean(detail), valStr]);
                         }
                     });
                 }
 
-                // Uploads
+                // Uploads (Diferenciação Acervo vs Custom)
                 if (config.uploadZones) {
                     config.uploadZones.filter(u => u.category === cat.id).forEach(u => {
                         const up = state.uploads?.[u.id];
                         if (up?.src) {
-                            catItems.push([clean(u.name.toUpperCase()), `ARQUIVO: ${clean(up.formattedFilename || up.filename)}`, '']);
+                            let price = 0;
+                            if (!up.isCustom) {
+                                // Lógica de getZonePrice replicada
+                                if (state.config?.zonePrices?.[u.id] !== undefined) {
+                                    price = parseFloat(state.config.zonePrices[u.id]);
+                                } else if (u.id.includes('centro')) {
+                                    price = state.config?.logoCenterPrice || 0;
+                                }
+                            }
+                            const valStr = price === 0 ? 'INCLUSO' : `+ R$ ${fmt(price)}`;
+                            catItems.push([clean(u.name.toUpperCase()), `ARQUIVO: ${clean(up.formattedFilename || up.filename)}`, valStr]);
                         }
                     });
                 }
 
-                // Textos
+                // Textos (Logic Sync com Sidebar)
                 if (config.textZones) {
                     config.textZones.filter(t => t.category === cat.id).forEach(t => {
                         const txt = state.texts?.[t.id];
                         if (txt?.enabled && txt?.content) {
-                            catItems.push([`TEXTO: ${clean(t.name.toUpperCase())}`, `"${clean(txt.content)}" (Fonte: ${clean(txt.fontFamily)})`, '']);
+                            let price = 0;
+                            const isLat = (t.category && t.category.includes('Lateral')) || t.id.includes('lat');
+                            if (!isLat) {
+                                price = state.config?.textPrice || 0;
+                            } else {
+                                // Se for lateral e tiver imagem, cobra textLatPrice (9.90)
+                                const upId = t.id.replace('text_', 'logo_');
+                                if (state.uploads?.[upId]?.src) price = state.config?.textLatPrice || 0;
+                            }
+                            const valStr = price === 0 ? 'INCLUSO' : `+ R$ ${fmt(price)}`;
+                            catItems.push([`TEXTO: ${clean(t.name.toUpperCase())}`, `"${clean(txt.content)}" (Fonte: ${clean(txt.fontFamily)})`, valStr]);
                         }
                     });
                 }
@@ -914,8 +935,8 @@ const PDFGenerator = {
                 docArg.text(termLines, margin, y);
                 y += (termLines.length * 4) + 5;
 
-                const qrSize = 30; // Aumentado conforme solicitado
-                const gap = 15;
+                const qrSize = 45; // Aumentado em 50% conforme solicitado (30 -> 45)
+                const gap = 25; // Mais distanciados conforme solicitado
                 const totalQRWidth = (qrSize * 2) + gap;
                 const startX = (pageWidth - totalQRWidth) / 2;
                 const qrY = y;
