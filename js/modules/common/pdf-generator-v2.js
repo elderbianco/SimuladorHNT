@@ -159,28 +159,48 @@ const PDFGenerator = {
                 const container = document.querySelector('.simulator-wrapper');
                 if (!container) return resolve(null);
 
-                const rect = container.getBoundingClientRect();
+                // Calculate true bounding box of all visible layers for perfect centering
+                let minT = Infinity, maxB = -Infinity;
+                let minL = Infinity, maxR = -Infinity;
 
-                // Padronizando scale
-                const padding = 20;
-                let scale = Math.min((1600 - padding * 2) / rect.width, (1200 - padding * 2) / rect.height);
+                const layers = Array.from(container.querySelectorAll('img, [style*="background-image"]'));
+                layers.forEach(item => {
+                    const s = window.getComputedStyle(item);
+                    if (s.display === 'none' || s.visibility === 'hidden' || s.opacity === '0') return;
+                    const r = item.getBoundingClientRect();
+                    if (r.width === 0 || r.height === 0) return;
 
-                // Ampliando agressivamente o scale manual (Dinâmico por Produto)
-                let extraScale = 1.6;
-                const prod = this.context.state?.productInitial;
-                if (prod === 'TP' || prod === 'Top') {
-                    extraScale = 2.4;
+                    minT = Math.min(minT, r.top);
+                    maxB = Math.max(maxB, r.bottom);
+                    minL = Math.min(minL, r.left);
+                    maxR = Math.max(maxR, r.right);
+                });
+
+                const contentWidth = maxR - minL;
+                const contentHeight = maxB - minT;
+
+                if (contentWidth <= 0 || contentHeight <= 0) {
+                    // Fallback to rect if no layers detected
+                    minT = rect.top; maxB = rect.bottom;
+                    minL = rect.left; maxR = rect.right;
                 }
+
+                const padding = 60;
+                let scale = Math.min((1600 - padding * 2) / (maxR - minL), (1200 - padding * 2) / (maxB - minT));
+
+                // Ampliando scale manual (Dinâmico por Produto)
+                let extraScale = 1.35;
+                const prod = this.context.state?.productInitial || this.context.state?.productType;
+                if (prod === 'TP' || prod === 'Top') extraScale = 2.0;
+
                 scale = scale * extraScale;
-                if (rect.width * scale > 1600 * 0.95) {
-                    scale = (1600 * 0.95) / rect.width;
-                }
-                if (rect.height * scale > 1200 * 0.95) {
-                    scale = (1200 * 0.95) / rect.height;
-                }
 
-                const offsetX = (1600 - (rect.width * scale)) / 2;
-                let offsetY = ((1200 - (rect.height * scale)) / 2) + 40;
+                // Segurança de limite
+                if ((maxR - minL) * scale > 1600 * 0.92) scale = (1600 * 0.92) / (maxR - minL);
+                if ((maxB - minT) * scale > 1200 * 0.92) scale = (1200 * 0.92) / (maxB - minT);
+
+                const offsetX = (1600 - ((maxR - minL) * scale)) / 2;
+                let offsetY = (1200 - ((maxB - minT) * scale)) / 2;
 
                 if (prod === 'TP' || prod === 'Top') {
                     offsetY = ((1200 - (rect.height * scale)) / 2) + 20;
@@ -210,8 +230,8 @@ const PDFGenerator = {
                         const img = await loadImage(src);
                         if (img) {
                             ctx.save();
-                            const x = offsetX + (r.left - rect.left + r.width / 2) * scale;
-                            const y = offsetY + (r.top - rect.top + r.height / 2) * scale;
+                            const x = offsetX + (r.left - minL + r.width / 2) * scale;
+                            const y = offsetY + (r.top - minT + r.height / 2) * scale;
                             ctx.translate(x, y);
 
                             if (s.transform !== 'none') {
@@ -705,10 +725,6 @@ const PDFGenerator = {
                 docArg.setFontSize(24);
                 docArg.setTextColor(30, 30, 30);
                 docArg.text('HANUTHAI', margin, margin + 12);
-                docArg.setFontSize(9);
-                docArg.setFont('helvetica', 'normal');
-                docArg.setTextColor(120, 120, 120);
-                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT v25', margin, margin + 18);
 
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(11);
@@ -957,7 +973,7 @@ const PDFGenerator = {
                 y += (termLines.length * 4) + 5;
 
                 const qrSize = 45; // Aumentado em 50% conforme solicitado (30 -> 45)
-                const gap = 25; // Mais distanciados conforme solicitado
+                const gap = 50; // Mais distanciados conforme solicitado (Aumentado de 25 -> 50)
                 const totalQRWidth = (qrSize * 2) + gap;
                 const startX = (pageWidth - totalQRWidth) / 2;
                 const qrY = y;
