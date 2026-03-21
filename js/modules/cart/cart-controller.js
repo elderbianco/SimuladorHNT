@@ -313,9 +313,15 @@ function updateStats(items, pieces, value) {
     // Floating Bar Sync
     const checkoutContainer = document.getElementById('checkout-container');
     const finalTotalEl = document.getElementById('final-checkout-total');
-    if (checkoutContainer) {
-        checkoutContainer.style.display = items > 0 ? 'block' : 'none';
+    const btnTopCheckout = document.getElementById('btn-top-checkout');
+
+    if (items > 0) {
+        if (checkoutContainer) checkoutContainer.style.display = 'block';
+        if (btnTopCheckout) btnTopCheckout.style.display = 'flex';
         if (finalTotalEl) finalTotalEl.innerText = value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    } else {
+        if (checkoutContainer) checkoutContainer.style.display = 'none';
+        if (btnTopCheckout) btnTopCheckout.style.display = 'none';
     }
 }
 
