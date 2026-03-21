@@ -744,6 +744,11 @@
                     style="font-size: 0.9rem; padding: 8px 15px; border-radius: 8px; border: 1px solid #444; color: #888; display: flex; align-items: center; gap: 5px;">
                     🗑️ Limpar Carrinho
                 </button>
+                <button id="btn-top-checkout" class="btn-checkout"
+                    style="font-size: 0.9rem; padding: 8px 15px; border-radius: 8px; border: none; background: var(--gold); color: #000; font-weight: bold; cursor: pointer; display: none; align-items: center; gap: 5px;"
+                    onclick="window.location.href='indexCadastro.html?flow=checkout'">
+                    ✅ Confirmar Pedido
+                </button>
             </div>
         </div>
 
@@ -772,15 +777,22 @@
             </div>
         </div>
 
-        <!-- Floating Checkout Bar -->
-        <div id="checkout-container" style="display:none;">
-            <div class="checkout-bar">
-                <div class="checkout-total">
-                    <span>Total do Pedido</span>
-                    <span id="final-checkout-total">R$ 0,00</span>
+        <!-- Static Checkout Bar (Replaced Fixed) -->
+        <div id="checkout-container"
+            style="display:none; margin-top: 40px; margin-bottom: 40px; background: #111; border: 1px dashed var(--gold); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="color:#aaa; font-size: 0.9rem; text-transform: uppercase;">Total Acumulado do
+                        Pedido</span>
+                    <span id="final-checkout-total"
+                        style="color:var(--gold); font-size: 2.2rem; font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px;">R$
+                        0,00</span>
                 </div>
-                <button class="btn-checkout" onclick="window.location.href='indexCadastro.html?flow=checkout'">
-                    Preencher Dados do Cliente ➔
+                <button class="btn-checkout"
+                    style="padding: 15px 30px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; cursor: pointer; transition: 0.3s;"
+                    onclick="window.location.href='indexCadastro.html?flow=checkout'">
+                    CONFIRMAR PEDIDO ➔
                 </button>
             </div>
         </div>
