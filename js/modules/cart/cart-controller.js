@@ -200,7 +200,8 @@ function loadDashboard() {
                             uploads: uploadsArr,
                             texts: textsArr,
                             orderNumber: technicalData.orderNumber || "",
-                            observations: data.observations || data.observacoes || technicalData.observations || ""
+                            observations: data.observations || data.observacoes || technicalData.observations || "",
+                            extras: technicalData.extras || {}
                         },
                         pdf_path: finalPdf
                     };

@@ -158,7 +158,7 @@ window.CartUI = {
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'sizes-${uid}')">📏 Tamanhos ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'specs-${uid}')">🎨 Lógos/Textos ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'price-${uid}')">💰 Valores ▼</button>
-                    ${hasObs ? `<button class="tab-btn" style="color:#ffa500; font-weight:bold;" onclick="CartUI.switchTab(this, 'obs-${uid}')">📝 Observações ▼</button>` : ''}
+                    <button class="tab-btn" style="color:#ffa500; font-weight:bold;" onclick="CartUI.switchTab(this, 'obs-${uid}')">📝 Observações ▼</button>
                 </div>
 
                 <div id="prod-${uid}" class="tab-content active">
@@ -220,12 +220,10 @@ window.CartUI = {
                     </div>
                 </div>
 
-                ${hasObs ? `
                 <div id="obs-${uid}" class="tab-content">
                     <h3 style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; margin-bottom: 20px;">📝 Observações do Cliente</h3>
-                    <div style="background: #1a1a1a; padding: 20px; border: 1px dashed var(--gold); border-radius: 8px; font-size: 1rem; color: #ddd; line-height: 1.6; white-space: pre-wrap;">${obs}</div>
+                    <div style="background: #1a1a1a; padding: 20px; border: 1px dashed var(--gold); border-radius: 8px; font-size: 1rem; color: #ddd; line-height: 1.6; white-space: pre-wrap;">${obs || "Nenhuma observação informada."}</div>
                 </div>
-                ` : ''}
             </div>
         </div>
         `;
@@ -272,13 +270,19 @@ window.CartUI = {
         const sizeEntries = Object.entries(sizes).filter(([s, q]) => q > 0);
         const sizeList = sizeEntries.map(([size, qty]) => '<strong>' + qty + 'x</strong> ' + size).join(', ');
 
+        const baseP = config.basePrice || pricing.breakdown?.base || pricing.unit_price;
+        // Se o baseP for igual ao unit_price e tivermos logos/extras, então o unit_price já incluiu tudo.
+        // Tentar deduzir o base real se for shorts (149.90) ou calça (159.90) como fallback extremo
+        const isActuallyTotal = (baseP === pricing.unit_price && (uploadEntries.length > 0 || Object.keys(extras).length > 0));
+        const finalBaseP = isActuallyTotal ? (item.simulator_type === 'shorts' ? 149.90 : 139.90) : baseP;
+
         html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">1. CONFIGURAÇÃO DE BASE</td></tr>';
         html += '<tr>';
         html += '<td style="border-bottom:1px solid #333; padding:8px 4px;"><strong>Grade</strong></td>';
         html += '<td style="border-bottom:1px solid #333; padding:8px 4px;">' + sizeList + '</td>';
         html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px;">';
-        html += '<div style="font-size:0.8em; color:#888;">R$ ' + fmt(config.basePrice || pricing.breakdown?.base || pricing.unit_price) + ' /un</div>';
-        html += '<strong>R$ ' + fmt((config.basePrice || pricing.breakdown?.base || pricing.unit_price) * item.qty_total) + '</strong>';
+        html += '<div style="font-size:0.8em; color:#888;">R$ ' + fmt(finalBaseP) + ' /un</div>';
+        html += '<strong>R$ ' + fmt(finalBaseP * item.qty_total) + '</strong>';
         html += '</td></tr>';
 
         // 2. DETALHES DO PRODUTO (Cores/Partes)
