@@ -587,10 +587,11 @@ window.CartUI = {
             const p = parts[key];
             const colorValue = (typeof p === 'object' && p !== null) ? (p.value || 'N/A') : (p || 'N/A');
             const colorHex = (typeof p === 'object' && p !== null) ? (p.hex || '#333') : '#333';
+            const partLabel = resolveZoneLabel(key);
 
             return `
             <div class="info-grp">
-                <div class="info-label">${key}</div>
+                <div class="info-label">${partLabel}</div>
                 <div class="info-val">
                     <span style="display:inline-block; width:12px; height:12px; background:${colorHex}; border-radius:50%; margin-right:5px;"></span>
                     ${colorValue}
