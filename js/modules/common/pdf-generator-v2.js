@@ -33,7 +33,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v31 (Customer Context) Ativado...');
+                console.log('☢️ Motor Nuclear v32 (Premium Fidelity) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
@@ -117,7 +117,11 @@ const PDFGenerator = {
                 mirror.style.backgroundColor = '#111111';
                 document.body.appendChild(mirror);
 
-                // --- 4. APLICAR ESTILOS DE PROPORÇÃO NO MIRROR (v30) ---
+                // --- 4. APLICAR ESTILOS DE PROPORÇÃO NO MIRROR (v32) ---
+                const isLeggingActive = this.context.state?.extras?.calca_legging?.enabled;
+                const snapshotScale = isLeggingActive ? 1.4 : 1.8;
+                const snapshotY = isLeggingActive ? '6%' : '0%'; // Compensação para centralizar o conjunto Shorts+Legging
+
                 const subElements = ['.simulator-area', '.simulator-viewport', '.zoom-container', '.simulator-wrapper'];
                 subElements.forEach(selector => {
                     const el = mirror.matches(selector) ? mirror : mirror.querySelector(selector);
@@ -125,12 +129,15 @@ const PDFGenerator = {
                         if (selector === '.simulator-area') {
                             el.style.setProperty('width', '1600px', 'important');
                             el.style.setProperty('height', '1200px', 'important');
+                        } else if (selector === '.simulator-wrapper') {
+                            // Aplica Zoom e Centralização de v32
+                            el.style.setProperty('transform', `scale(${snapshotScale}) translateY(${snapshotY})`, 'important');
+                            el.style.setProperty('transform-origin', 'center center', 'important');
                         } else {
                             el.style.setProperty('width', '1200px', 'important');
                             el.style.setProperty('height', '1200px', 'important');
                         }
                         el.style.setProperty('overflow', 'visible', 'important');
-                        el.style.setProperty('transform', 'none', 'important');
                         el.style.setProperty('display', 'flex', 'important');
                         el.style.setProperty('align-items', 'center', 'important');
                         el.style.setProperty('justify-content', 'center', 'important');
@@ -138,11 +145,6 @@ const PDFGenerator = {
                         el.style.setProperty('max-height', 'none', 'important');
                     }
                 });
-
-                const mirrorWrapper = mirror.querySelector('.simulator-wrapper');
-                if (mirrorWrapper) {
-                    mirrorWrapper.classList.remove('calca-legging-active');
-                }
 
                 // --- 5. CAPTURA COM "SETTLE TIME" PARA GARANTIR RENDERIZAÇÃO NO CLONE ---
                 let finalDataUrl = null;
@@ -152,7 +154,7 @@ const PDFGenerator = {
 
                 if (typeof domtoimage !== 'undefined') {
                     try {
-                        console.log('📸 Capturando via dom-to-image v31 (Silent Mirror)...');
+                        console.log('📸 Capturando via dom-to-image v32 (Silent Mirror)...');
                         finalDataUrl = await domtoimage.toJpeg(mirror, {
                             quality: 0.95,
                             bgcolor: '#111111'
@@ -164,7 +166,7 @@ const PDFGenerator = {
 
                 if (!finalDataUrl && typeof html2canvas !== 'undefined') {
                     try {
-                        console.log('📸 Fallback para html2canvas v31...');
+                        console.log('📸 Fallback para html2canvas v32...');
                         const canvas = await html2canvas(mirror, {
                             scale: 1,
                             useCORS: true,
@@ -184,12 +186,12 @@ const PDFGenerator = {
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
 
                 if (finalDataUrl) {
-                    console.log(`✅ Snapshot v31 gerado: ${Math.round(finalDataUrl.length / 1024)} KB`);
+                    console.log(`✅ Snapshot v32 gerado: ${Math.round(finalDataUrl.length / 1024)} KB`);
                     this.context.snapshotURL = finalDataUrl;
                     this.cachedSnapshot = finalDataUrl;
                     if (this.captureCallback) this.captureCallback(finalDataUrl);
                 } else {
-                    console.error('❌ Falha crítica: Nenhuma imagem capturada no Mirror v31');
+                    console.error('❌ Falha crítica: Nenhuma imagem capturada no Mirror v32');
                 }
 
                 resolve(finalDataUrl);
