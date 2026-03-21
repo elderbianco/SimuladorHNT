@@ -32,189 +32,66 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v16 (Focus on Items) Ativado...');
+                console.log('☢️ Motor Nuclear v17 (Fidelity Viewport Capture) Ativado...');
 
-                const originalArea = document.querySelector('.simulator-area');
-                const targetWrapper = document.querySelector('.simulator-wrapper');
+                // Capturamos a área exata que o usuário visualiza (com zoom e posições originais)
+                const viewport = document.querySelector('.simulator-viewport') || document.querySelector('.simulator-area') || document.querySelector('.simulator-wrapper');
 
-                if (!originalArea || !targetWrapper) {
+                if (!viewport) {
                     console.error('❌ Simulador não encontrado!');
                     return resolve(null);
                 }
 
-                // --- 1. CRIANDO O CLONE FANTASMA APENAS DO WRAPPER (Customização) ---
-                console.log('🔄 Sincronizando Design para Captura Transparente...');
+                // Ocultar temporariamente guias, contornos e menus do seletor
+                const tempHidden = [];
+                const hideSelector = '.drag-handle, .resize-handle, .ui-resizable-handle, .ui-selected, .custom-element.selected';
+                document.querySelectorAll(hideSelector).forEach(el => {
+                    const origOutline = el.style.outline;
+                    const origBox = el.style.boxShadow;
+                    const origBorder = el.style.border;
+                    const origDisplay = el.style.display;
+                    tempHidden.push({ el, origOutline, origBox, origBorder, origDisplay });
 
-                const ghostWrapper = targetWrapper.cloneNode(true);
-                ghostWrapper.id = 'simulator-ghost-v16';
-
-                const wrapperRect = targetWrapper.getBoundingClientRect();
-
-                Object.assign(ghostWrapper.style, {
-                    position: 'absolute',
-                    left: '-20000px', // Oculto da tela
-                    top: '0px',
-                    width: `${Math.floor(wrapperRect.width)}px`,
-                    height: `${Math.floor(wrapperRect.height)}px`,
-                    maxWidth: 'none',
-                    maxHeight: 'none',
-                    overflow: 'visible',
-                    zIndex: '-999',
-                    transform: 'none', // Remove any zoom scale for capture
-                    margin: '0',
-                    padding: '0'
-                });
-
-                document.body.appendChild(ghostWrapper);
-
-                // CSS Nuke no clone (Ocultar UI elements)
-                const elementsToHide = ghostWrapper.querySelectorAll('.drag-handle, .resize-handle, .delete-btn, .ui-resizable-handle, .limit-layer, .selection-border');
-                elementsToHide.forEach(el => el.remove());
-
-                const targetBorders = ghostWrapper.querySelectorAll('.ui-selected, .ui-wrapper, .custom-element');
-                targetBorders.forEach(el => {
                     el.style.setProperty('outline', 'none', 'important');
                     el.style.setProperty('box-shadow', 'none', 'important');
                     el.style.setProperty('border', 'none', 'important');
-                });
-
-                // Imunização Base64
-                const toBase64 = (url) => new Promise((res) => {
-                    if (!url || url.startsWith('data:')) return res(url);
-                    const img = new Image();
-                    img.crossOrigin = 'Anonymous';
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.naturalWidth || img.width;
-                        canvas.height = img.naturalHeight || img.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        res(canvas.toDataURL('image/png'));
-                    };
-                    img.onerror = () => res(url);
-                    img.src = url;
-                });
-
-                const ghostImgs = Array.from(ghostWrapper.querySelectorAll('img'));
-                for (const img of ghostImgs) {
-                    if (img.src && !img.src.startsWith('data:')) {
-                        img.src = await toBase64(img.src);
+                    if (el.classList.contains('drag-handle') || el.classList.contains('resize-handle')) {
+                        el.style.setProperty('display', 'none', 'important');
                     }
-                }
-
-                const ghostWithBg = Array.from(ghostWrapper.querySelectorAll('*')).filter(el => {
-                    const bg = window.getComputedStyle(el).backgroundImage;
-                    return bg && bg !== 'none' && bg.includes('url(');
                 });
 
-                for (const el of ghostWithBg) {
-                    const bgUrl = window.getComputedStyle(el).backgroundImage.slice(4, -1).replace(/"/g, "");
-                    if (!bgUrl.startsWith('data:')) {
-                        const b64 = await toBase64(bgUrl);
-                        el.style.backgroundImage = `url("${b64}")`;
-                    }
-                }
-
-                // --- 2. CAPTURA DOS SHORTS (Transparente) ---
-                let shortsDataUrl = null;
-                if (typeof html2canvas !== 'undefined') {
-                    const canvasResult = await html2canvas(ghostWrapper, {
-                        scale: 3, // Resolução Elevada
-                        useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: null, // Transparente!
-                        logging: false,
-                        width: Math.floor(wrapperRect.width),
-                        height: Math.floor(wrapperRect.height)
+                if (typeof domtoimage !== 'undefined') {
+                    // dom-to-image-more respeita perfeitamente as proporções, scale do CSS, e o overflow oculto!
+                    const dataUrl = await domtoimage.toJpeg(viewport, {
+                        quality: 0.95,
+                        bgcolor: '#111111', // Fundo escuro fixo
+                        style: {
+                            margin: '0',
+                            padding: '0'
+                        }
                     });
-                    shortsDataUrl = canvasResult.toDataURL('image/png');
+
+                    // Restaurar UI
+                    tempHidden.forEach(item => {
+                        item.el.style.outline = item.origOutline;
+                        item.el.style.boxShadow = item.origBox;
+                        item.el.style.border = item.origBorder;
+                        item.el.style.display = item.origDisplay;
+                    });
+
+                    console.log('✅ Print FIDELITY VIEWPORT v17 CONCLUÍDO.');
+                    return resolve(dataUrl);
+
+                } else {
+                    console.warn("⚠️ domtoimage não carregado. Retornando ao Fallback legado.");
+                    tempHidden.forEach(item => { /*..*/ });
+                    const snapshot = await this.drawLegacyManualSnapshot();
+                    return resolve(snapshot);
                 }
-                document.body.removeChild(ghostWrapper);
-
-                if (!shortsDataUrl) {
-                    throw new Error("html2canvas falhou ao capturar os items");
-                }
-
-                // --- 3. MISTURAR COM O BACKGROUND NA POSIÇÃO CORRETA E TAMANHO MAXIMIZADO ---
-                const finalCanvas = document.createElement('canvas');
-                const ctx = finalCanvas.getContext('2d');
-                finalCanvas.width = 1600; // Tamanho grande e padronizado
-                finalCanvas.height = 1200;
-
-                // A. Carregar Fundo Escuro Base
-                ctx.fillStyle = '#111111';
-                ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
-                // B. Carregar Imagem RingHNT
-                const loadImage = (src) => new Promise((res) => {
-                    if (!src) return res(null);
-                    const img = new Image();
-                    img.crossOrigin = "anonymous";
-                    img.onload = () => res(img);
-                    img.onerror = () => res(null);
-                    img.src = src;
-                });
-
-                // Possíveis caminhos da imagem Ring
-                const ringImg = await loadImage('Icons/RingHNT.jpeg') || await loadImage('assets/Icons/RingHNT.jpeg') || await loadImage('../Icons/RingHNT.jpeg') || await loadImage('assets/Galeria/RingHNT.jpeg');
-                if (ringImg) {
-                    // Preencher o fundo
-                    ctx.drawImage(ringImg, 0, 0, finalCanvas.width, finalCanvas.height);
-                }
-
-                // C. Carregar Shorts Transparente e Desenhar Centralizado/Ampliado!
-                const shortsImg = await loadImage(shortsDataUrl);
-                if (shortsImg) {
-                    // Calcular proporção para que ocupe quase toda a tela do canvas 1600x1200
-                    const marginY = 20;
-                    const marginX = 20;
-                    const targetW = finalCanvas.width - (marginX * 2);
-                    const targetH = finalCanvas.height - (marginY * 2);
-
-                    let scale = Math.min(targetW / shortsImg.width, targetH / shortsImg.height); // Manter proporção
-
-                    // Aumentar agressivamente a escala (Dinâmico por Produto)
-                    let extraScale = 1.6; // Padrão
-                    const prod = this.context.state?.productInitial;
-                    if (prod === 'TP' || prod === 'Top') {
-                        extraScale = 2.4; // Mega Zoom para o Top
-                    }
-                    scale = scale * extraScale;
-
-                    // Limitar a largura do canvas
-                    if (shortsImg.width * scale > finalCanvas.width * 0.95) {
-                        scale = (finalCanvas.width * 0.95) / shortsImg.width;
-                    }
-
-                    // Limitar a altura do canvas
-                    if (shortsImg.height * scale > finalCanvas.height * 0.95) {
-                        scale = (finalCanvas.height * 0.95) / shortsImg.height;
-                    }
-
-                    const drawW = shortsImg.width * scale;
-                    const drawH = shortsImg.height * scale;
-
-                    const drawX = (finalCanvas.width - drawW) / 2;
-                    let drawY = ((finalCanvas.height - drawH) / 2) + 40;
-
-                    // Ajuste fino para o Top centralizar melhor no centro do ring
-                    if (prod === 'TP' || prod === 'Top') {
-                        drawY = ((finalCanvas.height - drawH) / 2) + 20;
-                    }
-
-                    ctx.drawImage(shortsImg, drawX, drawY, drawW, drawH);
-                }
-
-                const finalSnapshot = finalCanvas.toDataURL('image/jpeg', 0.95);
-                console.log('✅ Print ISOLATED CLONE v16 CONCLUÍDO.');
-                resolve(finalSnapshot);
 
             } catch (e) {
-                console.error('❌ Erro Crítico Clone Engine v16:', e);
-                const ghost = document.getElementById('simulator-ghost-v16');
-                if (ghost) document.body.removeChild(ghost);
-
-                // Fallback legado
+                console.error('❌ Erro Crítico Fidelity Engine v17:', e);
+                // Fallback legado absoluto
                 const snapshot = await this.drawLegacyManualSnapshot();
                 resolve(snapshot);
             }
