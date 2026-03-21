@@ -64,22 +64,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('❌ Erro fatal ao carregar dashboard:', e);
     }
 
-    // 2. Atualizar UI se o cliente estiver logado/cadastrado - OPERAÇÃO INDEPENDENTE
-    try {
-        const profileStr = localStorage.getItem('hnt_customer_profile');
-        if (profileStr) {
-            const profile = JSON.parse(profileStr);
-            console.log('👤 Perfil detectado:', profile.name);
-
-            const linkCadastro = document.getElementById('link-cadastro');
-            if (linkCadastro) {
-                linkCadastro.innerHTML = `👤 Olá, ${profile.name.split(' ')[0]} (Ver Cadastro)`;
-                linkCadastro.title = "Cadastro Vinculado. ID: " + (profile.clientId || '...');
-            }
-        }
-    } catch (e) {
-        console.warn('⚠️ Falha ao processar perfil no cart-controller:', e);
-    }
+    // 2. Atualizar UI se o cliente estiver logado/cadastrado
+    updateAuthHeader();
 
     const btnClear = document.getElementById('btn-clear-all');
     if (btnClear) btnClear.onclick = clearAll;
@@ -371,13 +357,47 @@ async function deleteGroup(indices) {
     }
     // ---------------------
 
-    // Remove indices in descending order to avoid shift issues
+    // Deletar da lista local
     const sortedIndices = indices.sort((a, b) => b - a);
     sortedIndices.forEach(idx => history.splice(idx, 1));
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
     loadDashboard();
 }
+
+function updateAuthHeader() {
+    const authContainer = document.getElementById('auth-header-state');
+    if (!authContainer) return;
+
+    try {
+        const profileStr = localStorage.getItem('hnt_customer_profile');
+        if (profileStr) {
+            const profile = JSON.parse(profileStr);
+            const firstName = profile.name ? profile.name.split(' ')[0] : 'Cliente';
+
+            authContainer.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="color: #ccc;">Olá, <strong style="color: var(--gold);"> ${firstName}</strong></span>
+                    <a href="indexCadastro.html" title="Editar Perfil" style="color: #888; text-decoration: none; font-size: 1.1rem; transition: 0.3s;">⚙️</a>
+                    <a href="#" onclick="logoutUser(event)" title="Sair" style="color: #ff4444; border: 1px solid #ff4444; padding: 4px 10px; border-radius: 12px; text-decoration: none; font-size: 0.8rem; transition: 0.3s;">Sair</a>
+                </div>
+            `;
+        }
+    } catch (e) {
+        console.warn('Erro ao carregar auth header', e);
+    }
+}
+
+window.logoutUser = function (e) {
+    if (e) e.preventDefault();
+    if (!confirm('Deseja sair e limpar seus dados de sessão?')) return;
+    localStorage.removeItem('hnt_customer_profile');
+    localStorage.removeItem('hnt_client_id');
+    if (typeof supabase !== 'undefined' && supabase.auth) {
+        supabase.auth.signOut();
+    }
+    location.reload();
+};
 
 function updateClientData(index, field, value) {
     const history = JSON.parse(localStorage.getItem(STORAGE_KEY));

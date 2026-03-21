@@ -80,6 +80,14 @@ window.CartUI = {
         const pricing = item.pricing || { unit_price: 0, total_price: 0, breakdown: {} };
         const client = order.client_info || {};
 
+        let state = null;
+        if (order && order.DADOS_TECNICOS_JSON) {
+            try {
+                state = JSON.parse(order.DADOS_TECNICOS_JSON);
+            } catch (e) { console.warn("Failed to parse DADOS_TECNICOS", e); }
+        }
+        if (!state) state = item.specs || {};
+
         return `
         <div class="sub-item-rich" style="background: #151515; border: 1px solid #222; border-radius: 12px; margin-bottom: 20px; overflow: hidden; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
             <!-- Sub Header -->
@@ -137,21 +145,21 @@ window.CartUI = {
 
                 <div id="prod-${uid}" class="tab-content active">
                     <div class="grid-info">
-                        ${this.renderPartsList(item.specs?.parts || {})}
+                        ${this.renderPartsList(state.parts || {})}
                     </div>
                     <div style="margin-top:20px;">
-                        ${this.renderExtrasOnly(item.specs?.extras || {})}
+                        ${this.renderExtrasOnly(state.extras || {})}
                     </div>
                 </div>
 
                 <div id="sizes-${uid}" class="tab-content">
                     <div class="size-grid">
-                        ${this.renderSizes(item.specs?.sizes || {})}
+                        ${this.renderSizes(state.sizes || {})}
                     </div>
                 </div>
 
                 <div id="specs-${uid}" class="tab-content">
-                    ${this.renderLogosAndTexts(item.specs || {})}
+                    ${this.renderLogosAndTexts(state || {})}
                 </div>
 
                 <div id="price-${uid}" class="tab-content">
@@ -350,7 +358,7 @@ window.CartUI = {
 
         // 5. EXTRAS
         const extras = state.extras || {};
-        const extraEntries = Object.entries(extras).filter(([key, data]) => data && data.enabled);
+        const extraEntries = Object.entries(extras).filter(([key, data]) => data && (data.enabled || data.active));
 
         if (extraEntries.length > 0) {
             extraEntries.forEach(([key, data]) => {
@@ -439,11 +447,14 @@ window.CartUI = {
 
     renderExtrasOnly: function (extras) {
         if (!extras || Object.keys(extras).length === 0) return '';
-        return '<h4>Extras / Acabamentos</h4>' + Object.keys(extras).map(key => {
-            const e = extras[key];
-            const val = (typeof e === 'object' && e !== null) ? (e.value || 'N/A') : (e || 'N/A');
-            return `<span style="background:#333; padding:4px 8px; border-radius:4px; margin-right:10px; font-size:0.9rem;">${key}: <strong>${val}</strong></span>`;
-        }).join('');
+        const validExtras = Object.entries(extras).filter(([key, e]) => e && (e.enabled || e.active));
+        if (validExtras.length === 0) return '';
+
+        return '<h4 style="margin:0 0 10px 0; color:#888;">Extras / Acabamentos</h4><div style="display:flex; flex-wrap:wrap; gap:8px;">' + validExtras.map(([key, e]) => {
+            const val = (typeof e === 'object' && e !== null) ? (e.value || 'SIM') : (e || 'SIM');
+            const cleanKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            return `<span style="background:#222; padding:6px 10px; border-radius:6px; font-size:0.85rem; border-left:3px solid var(--gold); color:#eee;">${cleanKey}: <strong style="color:#fff;">${val}</strong></span>`;
+        }).join('') + '</div>';
     },
 
     renderSizes: function (sizes) {
