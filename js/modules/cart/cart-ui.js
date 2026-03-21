@@ -147,6 +147,11 @@ window.CartUI = {
                     <div class="grid-info">
                         ${this.renderPartsList(state.parts || {})}
                     </div>
+                    ${(state.observations || state.observacoes) ? `
+                        <div style="margin-top:15px; padding:10px; background:#111; border-left:3px solid var(--gold); font-size:0.85rem; color:#888;">
+                            <strong>📝 Obs:</strong> "${state.observations || state.observacoes}"
+                        </div>
+                    ` : ''}
                     <div style="margin-top:20px;">
                         ${this.renderExtrasOnly(state.extras || {})}
                     </div>
