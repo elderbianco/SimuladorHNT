@@ -30,13 +30,13 @@ const PDFGenerator = {
      * Motor de Renderização Nuclear v16 (Hyper-Fidelity Centralizado)
      */
     /**
-    * Motor de Renderização Nuclear v21 (Industrial Fidelity + Summary Parity)
+    * Motor de Renderização Nuclear v22 (Industrial Fidelity + Summary Parity)
     * Captura o RingHNT de fundo e sincroniza 100% com o resumo da sidebar.
     */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v21 (Summary Parity) Ativado...');
+                console.log('☢️ Motor Nuclear v22 (Summary Parity) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
