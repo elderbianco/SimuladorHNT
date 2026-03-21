@@ -900,6 +900,8 @@ input:checked+.slider:before {
     padding: 5px;
     cursor: pointer;
     text-align: center;
+    background: #fff;
+    /* Ensure white bg */
 }
 
 .gallery-item:hover {
@@ -917,6 +919,8 @@ input:checked+.slider:before {
     display: block;
     font-size: 0.75rem;
     margin-top: 5px;
+    color: #333 !important;
+    /* Force dark text on white bg */
 }
 
 /* Responsive */
