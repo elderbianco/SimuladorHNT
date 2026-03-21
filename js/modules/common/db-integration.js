@@ -186,6 +186,12 @@ const DBAdapter = {
             const txt = state.texts[t.id];
             if (txt && txt.enabled && txt.content) {
                 const colorName = productData.colors.find(c => c.hex === txt.color)?.name || txt.color;
+                let textPrice = 0;
+                const zid = t.id.toLowerCase();
+                if (zid.includes('lat')) textPrice = state.config?.textLatPrice || 0;
+                else if (zid.includes('leg') || zid.includes('perna')) textPrice = state.config?.textLegPrice || state.config?.textPrice || 0;
+                else textPrice = state.config?.textPrice || 0;
+
                 record.item.specs.texts.push({
                     zone_label: t.name,
                     zone_id: t.id,
@@ -193,6 +199,7 @@ const DBAdapter = {
                     font_family: txt.fontFamily,
                     color_name: colorName,
                     color_hex: txt.color,
+                    unit_price: textPrice,
                     unlocked: txt.unlocked || false,
                     scale: txt.scale || 1.0,
                     x: txt.x || t.cssLeft,
@@ -208,12 +215,21 @@ const DBAdapter = {
             productData.uploadZones.forEach(u => {
                 const up = state.uploads[u.id];
                 if (up && (up.src || up.filename)) {
+                    let logoPrice = 0;
+                    const zid = u.id.toLowerCase();
+                    const zp = state.config?.zonePrices || {};
+                    if (zp[u.id] !== undefined) logoPrice = zp[u.id];
+                    else if (zid.includes('lat')) logoPrice = state.config?.logoLatPrice || 0;
+                    else if (zid.includes('leg') || zid.includes('perna')) logoPrice = state.config?.legZoneAddonPrice || state.config?.logoLegPrice || 0;
+                    else if (zid.includes('center') || zid.includes('centro')) logoPrice = state.config?.logoCenterPrice || 0;
+
                     record.item.specs.uploads.push({
                         zone_label: u.name,
                         zone_id: u.id,
                         file_name: up.filename || "Imagem",
-                        file_url: up.src, // Base64
-                        is_custom: up.isCustom,
+                        file_url: up.supabaseUrl || up.src || "",
+                        is_custom: up.isCustom || false,
+                        unit_price: logoPrice,
                         unlocked: up.unlocked || false,
                         scale: up.scale || 1.0,
                         rotation: up.rotation || 0,
