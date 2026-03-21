@@ -56,7 +56,7 @@ window.CartUI = {
             <div class="card-details expanded" style="display:block; padding:0; background: transparent;">
                  <!-- ITEMS LIST -->
                  <div class="sub-items-container" style="background: #080808; padding: 20px;">
-                    ${group.items.map(item => this.renderSubItemV1Style(item)).join('')}
+                    ${group.items.map((item, idx) => this.renderSubItemV1Style(item, idx + 1, group.items.length)).join('')}
                  </div>
             </div>
         `;
@@ -100,7 +100,10 @@ window.CartUI = {
                  </div>
                  
                  <div style="flex:1; margin-left: 15px;">
-                    <div style="color:#fff; font-weight:bold;">${this.getProductName(item, order)}</div>
+                    <div style="color:#fff; font-weight:bold;">
+                        <span style="color:var(--gold); font-size: 0.85rem; padding: 2px 6px; border: 1px solid #333; border-radius: 4px; margin-right: 8px;">${currentItem}/${totalItems}</span>
+                        ${this.getProductName(item, order)}
+                    </div>
                     <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${item.specs?.orderNumber || '---'}</span></div>
                     <div style="font-size:0.7rem; color:#666;">REF: ${order.order_id} • ${new Date(order.created_at).toLocaleDateString()}</div>
                  </div>
