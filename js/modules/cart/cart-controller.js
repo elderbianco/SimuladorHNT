@@ -23,30 +23,65 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const localRaw = localStorage.getItem(STORAGE_KEY);
                 let localPedidos = localRaw ? JSON.parse(localRaw) : [];
 
-                if (serverPedidos && serverPedidos.length > 0) {
-                    const merged = [...serverPedidos];
-                    let addedLocally = 0;
-
-                    localPedidos.forEach(localItem => {
-                        const localId = localItem.order_id || localItem.ID_PEDIDO || localItem.ID_SIMULACAO;
-                        if (!localId) return;
-
-                        const exists = serverPedidos.some(s => {
-                            const sId = String(s.order_id || s.ID_PEDIDO || s.ID_SIMULACAO || '');
-                            const lId = String(localId);
-                            return sId === lId || (lId.split('-')[0] === sId && sId.length >= 4);
-                        });
-
-                        if (!exists) {
-                            merged.push(localItem);
-                            addedLocally++;
-                        }
-                    });
-
-                    console.log(`✅ Sincronização background concluída. Total: ${merged.length}`);
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-                    loadDashboard(); // Recarrega para mostrar novidades se houver
+                // Se não houver pedidos no servidor, ou se a chamada falhou, não sobrescrever.
+                // Apenas adiciona os locais se não houver nada no servidor.
+                if (!serverPedidos || serverPedidos.length === 0) {
+                    if (localPedidos.length > 0) {
+                        console.log('✅ Supabase vazio ou inacessível. Carregando apenas itens locais.');
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(localPedidos));
+                        loadDashboard();
+                    }
+                    return; // Não há nada para mesclar se o servidor não retornou dados
                 }
+
+                // Usar um Map para facilitar a busca e garantir unicidade por ID do servidor
+                const mergedMap = new Map();
+                serverPedidos.forEach(s => {
+                    const sId = String(s.order_id || s.ID_PEDIDO || s.ID_SIMULACAO || '');
+                    if (sId) mergedMap.set(sId, s);
+                });
+
+                let addedLocally = 0;
+                let updatedLocally = 0;
+
+                localPedidos.forEach(localItem => {
+                    const localId = String(localItem.order_id || localItem.ID_PEDIDO || localItem.ID_SIMULACAO || '');
+                    if (!localId) return;
+
+                    const serverItem = mergedMap.get(localId);
+
+                    if (localItem.status === 'saved_locally') {
+                        // Itens salvos localmente têm prioridade e são adicionados/mantidos
+                        if (!serverItem) {
+                            mergedMap.set(localId, localItem);
+                            addedLocally++;
+                        } else {
+                            // Se existe no servidor, mas o local é 'saved_locally', o local prevalece
+                            // Isso é para o caso de um item salvo localmente ter sido enviado e ter um ID de servidor,
+                            // mas ainda não foi sincronizado de volta com o status correto.
+                            // Ou se o item local foi modificado após a última sincronização.
+                            // Para simplificar, se o local é 'saved_locally', ele é mantido.
+                            mergedMap.set(localId, localItem);
+                            updatedLocally++;
+                        }
+                    } else if (!serverItem) {
+                        // Se o item local não está no servidor e não é 'saved_locally',
+                        // significa que é um item antigo local que nunca foi para o servidor,
+                        // ou um item do servidor que foi deletado lá.
+                        // Por segurança, adicionamos se não houver conflito.
+                        mergedMap.set(localId, localItem);
+                        addedLocally++;
+                    }
+                    // Se o item local existe no servidor e não é 'saved_locally',
+                    // a versão do servidor já está no mergedMap e prevalece.
+                });
+
+                const merged = Array.from(mergedMap.values());
+
+                console.log(`✅ Sincronização background concluída. Total: ${merged.length} (Adicionados localmente: ${addedLocally}, Atualizados localmente: ${updatedLocally})`);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+                loadDashboard(); // Recarrega para mostrar novidades se houver
+
             } catch (e) {
                 console.warn('⚠️ Sincronização background falhou ou demorou demais:', e.message);
             }
