@@ -1,23 +1,16 @@
 /**
- * Módulo de Galeria - Shorts (Restaurado)
- * Lógica original para exibir e selecionar ícones do acervo
+ * Módulo de Galeria e Acervo
+ * Funções: openGallery, closeGallery, renderGalleryView, selectGalleryItem
  */
 
-let currentPendingZone = null;
-
+// ------------------- GALLERY -------------------
 function openGallery(zoneId) {
-    currentPendingZone = zoneId;
+    state.pendingUploadZone = zoneId;
+    currentGalleryCategory = null; // Reset category when opening
     const modal = document.getElementById('gallery-modal');
     if (modal) {
         modal.style.display = 'flex';
-        renderGallery();
-
-        const searchInput = document.getElementById('gallery-search');
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.oninput = (e) => renderGallery(e.target.value);
-            setTimeout(() => searchInput.focus(), 100);
-        }
+        if (typeof renderGalleryView === 'function') renderGalleryView();
     }
 }
 
@@ -25,72 +18,126 @@ function closeGallery() {
     const modal = document.getElementById('gallery-modal');
     if (modal) modal.style.display = 'none';
 }
+window.closeGallery = closeGallery;
 
-function renderGallery(searchTerm = '') {
-    const grid = document.getElementById('gallery-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
+function renderGalleryView(searchTerm = "") {
+    const g = document.getElementById('gallery-grid');
+    if (!g) return;
+    g.innerHTML = '';
 
-    const term = searchTerm.toLowerCase();
+    const galleryData = (typeof SHARED_GALLERY !== 'undefined') ? SHARED_GALLERY : [];
 
-    // Agrupar por categorias (Padrão original)
-    const categories = [...new Set(SHARED_GALLERY.map(item => item.category))];
+    // SEARCH FILTER
+    if (searchTerm && searchTerm.trim().length > 0) {
+        const term = searchTerm.toLowerCase();
+        const results = galleryData.filter(i => i.name.toLowerCase().includes(term));
 
-    categories.forEach(cat => {
-        const filtered = SHARED_GALLERY.filter(item =>
-            item.category === cat &&
-            (item.name.toLowerCase().includes(term) || cat.toLowerCase().includes(term))
-        );
-
-        if (filtered.length > 0) {
-            const section = document.createElement('div');
-            section.className = 'gallery-category-section';
-            section.style.width = '100%';
-            section.style.marginBottom = '20px';
-            section.innerHTML = `<h4 style="color:var(--gold-primary); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px; width:100%;">${cat}</h4>`;
-
-            const itemsContainer = document.createElement('div');
-            itemsContainer.style.display = 'grid';
-            itemsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(80px, 1fr))';
-            itemsContainer.style.gap = '10px';
-
-            filtered.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'gallery-item';
-                div.style.cursor = 'pointer';
-                div.style.textAlign = 'center';
-                div.style.padding = '5px';
-                div.style.border = '1px solid #333';
-                div.style.borderRadius = '4px';
-                div.style.background = '#111';
-                div.onmouseover = () => div.style.borderColor = 'var(--gold-primary)';
-                div.onmouseout = () => div.style.borderColor = '#333';
-                div.onclick = () => selectGalleryImage(item);
-
-                div.innerHTML = `
-                    <img src="${item.src}" style="width:100%; height:60px; object-fit:contain; margin-bottom:5px;">
-                    <div style="font-size:0.7rem; color:#aaa; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</div>
-                `;
-                itemsContainer.appendChild(div);
-            });
-
-            section.appendChild(itemsContainer);
-            grid.appendChild(section);
+        if (results.length === 0) {
+            g.innerHTML = `<div style="text-align:center; padding:20px; color:#666; width:100%;">Nenhuma imagem encontrada para "${searchTerm}"</div>`;
+            return;
         }
-    });
-}
 
-function selectGalleryImage(item) {
-    if (!currentPendingZone) return;
+        results.forEach(i => {
+            const d = document.createElement('div');
+            d.className = 'gallery-item';
 
-    console.log(`[Gallery] Selecionado: ${item.name} para zona ${currentPendingZone}`);
+            const img = document.createElement('img');
+            img.src = i.src;
 
-    // Chamar a função de inserção do Shorts (que já padronizamos para addImageToZone)
-    if (typeof addImageToZone === 'function') {
-        addImageToZone(currentPendingZone, item.src, item.name);
-    } else {
-        console.error("Função addImageToZone não encontrada no Shorts.");
+            d.appendChild(img);
+            const span = document.createElement('span');
+            span.innerText = i.name;
+            d.appendChild(span);
+
+            d.onclick = () => selectGalleryItem(i);
+            g.appendChild(d);
+        });
+        return;
     }
 
-    closeGallery();
+    // CATEGORY/FOLDER VIEW
+    if (!currentGalleryCategory) {
+        const categories = [...new Set(galleryData.map(i => i.category || 'Gerais'))];
+        const categoryIcons = {
+            "Logos Hanuthai": "assets/Shorts/UiIcons/thumb_logos_hanuthai.png",
+            "Animais": "assets/Shorts/UiIcons/thumb_animais.png",
+            "Bandeiras": "assets/Shorts/UiIcons/thumb_bandeiras.png",
+            "Personagens": "assets/Shorts/UiIcons/thumb_personagens.png",
+            "Gerais": "assets/Shorts/UiIcons/thumb_gerais.png"
+        };
+
+        categories.forEach(cat => {
+            const d = document.createElement('div');
+            d.className = 'gallery-folder';
+            const iconSrc = categoryIcons[cat] || "assets/Shorts/UiIcons/thumb_gerais.png";
+
+            const img = document.createElement('img');
+            img.src = iconSrc;
+            img.className = 'folder-image-icon';
+            img.alt = cat;
+
+            const label = document.createElement('div');
+            label.className = 'folder-label';
+            label.innerText = cat;
+
+            d.appendChild(img);
+            d.appendChild(label);
+            d.onclick = () => { currentGalleryCategory = cat; renderGalleryView(); };
+            g.appendChild(d);
+        });
+    } else {
+        // BACK BUTTON
+        const backBtn = document.createElement('button');
+        backBtn.className = 'gallery-back-btn';
+        backBtn.innerText = '↩ Voltar para Pastas';
+        backBtn.onclick = () => { currentGalleryCategory = null; renderGalleryView(); };
+        const backContainer = document.createElement('div');
+        backContainer.style.gridColumn = "1 / -1";
+        backContainer.appendChild(backBtn);
+        g.appendChild(backContainer);
+
+        // ITEMS IN CATEGORY
+        const items = galleryData.filter(i => (i.category || 'Gerais') === currentGalleryCategory);
+        items.forEach(i => {
+            const d = document.createElement('div');
+            d.className = 'gallery-item';
+
+            const img = document.createElement('img');
+            img.src = i.src;
+
+            const span = document.createElement('span');
+            span.innerText = i.name;
+
+            d.appendChild(img);
+            d.appendChild(span);
+            d.onclick = () => selectGalleryItem(i);
+            g.appendChild(d);
+        });
+    }
+}
+
+function selectGalleryItem(item) {
+    if (!state.pendingUploadZone) return;
+
+    // Generate Production Filename (ACERVO source)
+    // Ensure function exists via logic.js check, or fallback
+    let finalName = '';
+    if (typeof generateFormattedFilename === 'function') {
+        finalName = generateFormattedFilename(state.pendingUploadZone, item.name, 'ACERVO');
+    }
+
+    if (!state.uploads[state.pendingUploadZone]) {
+        state.uploads[state.pendingUploadZone] = {};
+    }
+
+    state.uploads[state.pendingUploadZone].src = item.src;
+    state.uploads[state.pendingUploadZone].filename = `[Galeria] ${item.name}`;
+    state.uploads[state.pendingUploadZone].formattedFilename = finalName;
+    state.uploads[state.pendingUploadZone].isCustom = false;
+
+    // Auto-enable limit for ANY zone
+    if (typeof toggleLimit === 'function') toggleLimit(state.pendingUploadZone, true);
+
+    if (typeof scheduleRender === 'function') scheduleRender(true);
+    window.closeGallery();
 }
