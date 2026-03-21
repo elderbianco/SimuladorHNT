@@ -105,19 +105,33 @@ const PDFGenerator = {
                     });
                 });
 
+                // Neutralizar transformações de UI que deslocam o componente (ex: Legging ativa)
+                const wrapper = document.querySelector('.simulator-wrapper');
+                let oldTransform = '';
+                let hadLeggingClass = false;
+                if (wrapper) {
+                    oldTransform = wrapper.style.transform;
+                    hadLeggingClass = wrapper.classList.contains('calca-legging-active');
+                    wrapper.style.transform = 'none';
+                    wrapper.classList.remove('calca-legging-active');
+                }
+
                 let finalDataUrl = null;
 
                 if (typeof domtoimage !== 'undefined') {
                     try {
                         console.log('📸 Capturando via dom-to-image v20...');
+                        // Forçamos um container maior para evitar cortes
                         finalDataUrl = await domtoimage.toJpeg(viewport, {
                             quality: 0.95,
                             bgcolor: '#111111',
                             style: {
                                 margin: '0',
                                 padding: '0',
-                                height: viewport.scrollHeight + 'px',
-                                width: viewport.scrollWidth + 'px'
+                                transform: 'none',
+                                left: '0',
+                                top: '0',
+                                position: 'relative'
                             }
                         });
                     } catch (err) {
@@ -134,6 +148,10 @@ const PDFGenerator = {
 
                 // Restaurar
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
+                if (wrapper) {
+                    wrapper.style.transform = oldTransform;
+                    if (hadLeggingClass) wrapper.classList.add('calca-legging-active');
+                }
 
                 if (finalDataUrl) {
                     console.log('✅ Snap v20 Concluído.');
