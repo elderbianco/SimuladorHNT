@@ -157,7 +157,10 @@ const DBAdapter = {
             pdfUrl: pdfUrl, // Adicionado link do PDF
             DATA_CRIACAO: now.toISOString(),
             DATA_ATUALIZACAO: now.toISOString(),
-            DADOS_TECNICOS_JSON: JSON.stringify(state) // Backup completo do estado
+            DADOS_TECNICOS_JSON: JSON.stringify({
+                ...state,
+                config: config // Salva os preços e definições vigentes no momento do pedido
+            }) 
         };
     }
 };

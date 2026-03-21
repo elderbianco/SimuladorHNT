@@ -870,10 +870,17 @@ const PDFGenerator = {
 
             // C. Configurações Extras
             Object.entries(this.context.state.extras || {}).forEach(([key, val]) => {
-                if (val.enabled) {
-                    tableData.push(['EXTRA: ' + key.toUpperCase(), 'ATIVADO']);
+                if (val.enabled || val.active) {
+                    const extraName = key.replace(/_/g, ' ').toUpperCase();
+                    tableData.push(['EXTRA: ' + extraName, 'ATIVADO']);
                 }
             });
+
+            // D. Observações
+            const obs = this.context.state.observations || this.context.state.observacoes || "";
+            if (obs && obs.trim().length > 0) {
+                tableData.push(['OBSERVACOES', clean(obs)]);
+            }
 
             // Gerar Tabela Automática
             doc.autoTable({
