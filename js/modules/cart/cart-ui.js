@@ -153,8 +153,8 @@ window.CartUI = {
                         ${this.renderPartsList(state.parts || {})}
                     </div>
                     ${(state.observations || state.observacoes) ? `
-                        <div style="margin-top:15px; padding:10px; background:#111; border-left:3px solid var(--gold); font-size:0.85rem; color:#888;">
-                            <strong>📝 Obs:</strong> "${state.observations || state.observacoes}"
+                        <div style="margin:15px 0; padding:12px; background:rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px; font-size:0.9rem; color:#ccc;">
+                            <strong style="color:var(--gold);">📝 Obs:</strong> "${state.observations || state.observacoes}"
                         </div>
                     ` : ''}
                     <div style="margin-top:20px;">
