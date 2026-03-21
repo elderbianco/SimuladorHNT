@@ -250,7 +250,7 @@ const DBAdapter = {
                         const src = imgTag ? imgTag.src : '';
 
                         record.item.specs.uploads.push({
-                            zone_label: zoneId,
+                            zone_label: (typeof window !== 'undefined' && typeof window.resolveZoneLabel === 'function') ? window.resolveZoneLabel(zoneId) : (typeof resolveZoneLabel === 'function' ? resolveZoneLabel(zoneId) : zoneId),
                             zone_id: zoneId,
                             file_name: el.dataset.filename || `Item_${idx + 1}`,
                             file_url: src,
