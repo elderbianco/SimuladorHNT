@@ -431,68 +431,7 @@ function renderFinalForm() {
     return finalInputs;
 }
 
-// Global Helpers (Legacy support)
-function openGallery(zoneId) {
-    state.pendingUploadZone = zoneId;
-    if (typeof currentGalleryCategory !== 'undefined') currentGalleryCategory = null;
-    const modal = document.getElementById('gallery-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        renderGallery();
-    }
-}
-window.closeGallery = function () { // Explicit global
-    const modal = document.getElementById('gallery-modal');
-    if (modal) modal.style.display = 'none';
-}
-
-function renderGallery(searchTerm = "") {
-    const g = document.getElementById('gallery-grid');
-    if (!g) return;
-    g.innerHTML = '';
-    const galleryData = (typeof SHARED_GALLERY !== 'undefined') ? SHARED_GALLERY : [];
-
-    if (searchTerm && searchTerm.trim().length > 0) {
-        const term = searchTerm.toLowerCase();
-        const results = galleryData.filter(i => i.name.toLowerCase().includes(term));
-        if (results.length === 0) {
-            g.innerHTML = `<div style="text-align:center; padding:20px; color:#666; width:100%;">Nenhuma imagem encontrada.</div>`;
-            return;
-        }
-        results.forEach(i => appendGalleryItem(g, i));
-        return;
-    }
-
-    if (!currentGalleryCategory) {
-        // Categories
-        const categories = [...new Set(galleryData.map(i => i.category || 'Gerais'))];
-        const categoryIcons = {
-            "Logos Hanuthai": "assets/Shorts/UiIcons/thumb_logos_hanuthai.png",
-            "Animais": "assets/Shorts/UiIcons/thumb_animais.png",
-            "Bandeiras": "assets/Shorts/UiIcons/thumb_bandeiras.png",
-            "Personagens": "assets/Shorts/UiIcons/thumb_personagens.png",
-            "Gerais": "assets/Shorts/UiIcons/thumb_gerais.png"
-        };
-        categories.forEach(cat => {
-            const d = document.createElement('div');
-            d.className = 'gallery-folder';
-            const iconSrc = categoryIcons[cat] || "assets/Shorts/UiIcons/thumb_gerais.png";
-            d.innerHTML = `<img src="${iconSrc}" class="folder-image-icon"><div class="folder-label">${cat}</div>`;
-            d.onclick = () => { currentGalleryCategory = cat; renderGallery(); };
-            g.appendChild(d);
-        });
-    } else {
-        // Back Btn
-        const b = document.createElement('button');
-        b.className = 'gallery-back-btn';
-        b.innerText = '↩ Voltar';
-        b.onclick = () => { currentGalleryCategory = null; renderGallery(); };
-        g.appendChild(b);
-
-        const items = galleryData.filter(i => (i.category || 'Gerais') === currentGalleryCategory);
-        items.forEach(i => appendGalleryItem(g, i));
-    }
-}
+// SharedGallery.js handles openGallery and renderGallery globally
 
 function appendGalleryItem(container, i) {
     const d = document.createElement('div');

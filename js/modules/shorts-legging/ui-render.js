@@ -438,39 +438,7 @@ function renderControls() {
     container.scrollTop = scrollPos;
 }
 
-function openGallery(zoneId) {
-    state.pending = zoneId;
-    if (typeof currentGalleryCategory !== 'undefined') currentGalleryCategory = null;
-    const modal = document.getElementById('gallery-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        renderGallery();
-    }
-}
-window.closeGallery = function () {
-    const modal = document.getElementById('gallery-modal');
-    if (modal) modal.style.display = 'none';
-};
-
-function renderGallery(searchTerm = "") {
-    const g = document.getElementById('gallery-grid');
-    if (!g) return;
-    g.innerHTML = '';
-
-    const galleryData = (typeof SHARED_GALLERY !== 'undefined') ? SHARED_GALLERY : [];
-
-    if (searchTerm && searchTerm.trim().length > 0) {
-        const term = searchTerm.toLowerCase();
-        const results = galleryData.filter(i => i.name.toLowerCase().includes(term));
-        if (results.length === 0) {
-            g.innerHTML = `<div style="text-align:center; padding:20px; color:#666; width:100%;">Nenhuma imagem encontrada.</div>`;
-            return;
-        }
-        results.forEach(i => appendGalleryItem(g, i));
-        return;
-    }
-    galleryData.forEach(i => appendGalleryItem(g, i));
-}
+// SharedGallery.js handles openGallery and renderGallery globally
 
 function appendGalleryItem(container, i) {
     const d = document.createElement('div');
