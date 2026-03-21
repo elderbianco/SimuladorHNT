@@ -227,7 +227,6 @@ window.CartUI = {
 
         // Se não conseguiu obter o state, usar item.specs como fallback
         if (!state) {
-            console.warn('DADOS_TECNICOS_JSON não disponível, usando item.specs');
             state = {
                 parts: item.specs?.parts || {},
                 extras: item.specs?.extras || {},
@@ -244,6 +243,8 @@ window.CartUI = {
             image: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>'
         };
 
+        const fmt = (v) => (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
         let html = '';
 
         // 1. CONFIGURAÇÃO DE BASE
@@ -256,14 +257,14 @@ window.CartUI = {
         html += '<td style="border-bottom:1px solid #333; padding:8px 4px;"><strong>Grade</strong></td>';
         html += '<td style="border-bottom:1px solid #333; padding:8px 4px;">' + sizeList + '</td>';
         html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px;">';
-        html += '<div style="font-size:0.8em; color:#888;">R$ ' + ((pricing.breakdown?.base || pricing.unit_price || 0)).toFixed(2).replace('.', ',') + ' /un</div>';
-        html += '<strong>R$ ' + ((pricing.breakdown?.base || pricing.unit_price || 0) * item.qty_total).toFixed(2).replace('.', ',') + '</strong>';
+        html += '<div style="font-size:0.8em; color:#888;">R$ ' + fmt(config.basePrice || pricing.breakdown?.base || pricing.unit_price) + ' /un</div>';
+        html += '<strong>R$ ' + fmt((config.basePrice || pricing.breakdown?.base || pricing.unit_price) * item.qty_total) + '</strong>';
         html += '</td></tr>';
 
         // 2. DETALHES DO PRODUTO (Cores/Partes)
         const parts = state.parts || {};
         if (Object.keys(parts).length > 0) {
-            html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">DETALHES DO PRODUTO</td></tr>';
+            html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">2. DETALHES DO PRODUTO</td></tr>';
 
             Object.entries(parts).forEach(([partId, colorId]) => {
                 const partName = partId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -276,44 +277,45 @@ window.CartUI = {
                 html += '<strong>' + partName + '</strong><br>';
                 html += '<span style="font-size:0.85em; color:#bbb;">' + colorName + '</span>';
                 html += '</td>';
-                html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; color:#777;">Incluso</td>';
+                html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; color:#28a745;">Incluso</td>';
                 html += '</tr>';
             });
         }
 
         // 3. LOGOS/IMAGENS
-        const rawUploads = state.uploads || {};
+        const rawUploads = state.uploads || item.specs?.uploads || {};
         const uploadEntries = Array.isArray(rawUploads)
             ? rawUploads.map(u => [u.zone_id || 'pos', u])
             : Object.entries(rawUploads).filter(([zoneId, data]) => data && (data.src || data.filename || data.file_name));
 
         if (uploadEntries.length > 0) {
+            html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">3. LOGOTIPOS & ARTES</td></tr>';
             uploadEntries.forEach(([zoneId, data]) => {
                 const zoneName = data.zone_label || zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 const fileName = data.file_name || data.filename || data.file_url || data.src || 'Imagem';
                 let logoPrice = 0;
 
                 if (!data.isCustom && !data.is_custom) {
-                    const normalizedZoneId = (zoneId || '').toLowerCase().trim();
-                    const zonePrices = config.zonePrices || {};
+                    const zid = (zoneId || '').toLowerCase().trim();
+                    const zlb = (zoneName || '').toLowerCase().trim();
+                    const zp = config.zonePrices || {};
 
-                    // Procura na config.zonePrices (case-insensitive)
-                    let foundPrice = undefined;
-                    Object.keys(zonePrices).forEach(k => {
-                        if (k.toLowerCase().trim() === normalizedZoneId) {
-                            foundPrice = zonePrices[k];
-                        }
+                    // 1. Direct match with ID or Label
+                    let found = undefined;
+                    Object.keys(zp).forEach(k => {
+                        const lk = k.toLowerCase().trim();
+                        if (lk === zid || lk === zlb) found = zp[k];
                     });
 
-                    if (foundPrice !== undefined) {
-                        logoPrice = foundPrice;
+                    if (found !== undefined) {
+                        logoPrice = found;
                     } else {
-                        // Fallbacks baseados em palavras-chave no ID da zona
-                        if (normalizedZoneId.includes('lat')) {
+                        // 2. Keyword fallback (aligned with simulator logic)
+                        if (zid.includes('lat') || zlb.includes('lateral')) {
                             logoPrice = config.logoLatPrice || 0;
-                        } else if (normalizedZoneId.includes('leg') || normalizedZoneId.includes('perna')) {
+                        } else if (zid.includes('leg') || zid.includes('perna') || zlb.includes('perna')) {
                             logoPrice = config.legZoneAddonPrice || config.logoLegPrice || 0;
-                        } else if (normalizedZoneId.includes('center') || normalizedZoneId.includes('centro')) {
+                        } else if (zid.includes('center') || zid.includes('centro') || zlb.includes('centro')) {
                             logoPrice = config.logoCenterPrice || 0;
                         }
                     }
@@ -323,43 +325,46 @@ window.CartUI = {
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; vertical-align:top;">' + icons.image + '</td>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; word-break:break-word;">';
                 html += '<strong>Logo - ' + zoneName + '</strong><br>';
-                html += '<div style="font-size:0.85em; color:#bbb; line-height:1.3;">';
                 html += fileName;
                 if (data.isCustom || data.is_custom) html += ' <span style="color:#FFA500; font-size:0.8em;">(Arquivo Próprio)</span>';
-                html += '</div></td>';
+                html += '</td>';
 
                 if (logoPrice > 0) {
                     html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px;">';
-                    html += '<div style="font-size:0.8em; color:#888;">R$ ' + logoPrice.toFixed(2).replace('.', ',') + ' /un</div>';
-                    html += '<strong style="color:#28a745;">R$ ' + (logoPrice * item.qty_total).toFixed(2).replace('.', ',') + '</strong>';
+                    html += '<div style="font-size:0.8em; color:#888;">R$ ' + fmt(logoPrice) + ' /un</div>';
+                    html += '<strong style="color:#ffa500;">+ R$ ' + fmt(logoPrice * item.qty_total) + '</strong>';
                     html += '</td>';
                 } else {
-                    const note = (data.isCustom || data.is_custom) ? 'Taxa Matriz (se aplicável)' : 'Incluído no Unitário';
-                    const style = (data.isCustom || data.is_custom) ? 'color:#FFA500;' : 'color:#28a745;';
-                    html += `<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; ${style}">${note}</td>`;
+                    const note = (data.isCustom || data.is_custom) ? 'Taxa Matriz (se aplicável)' : 'Incluso';
+                    const colorStyle = (data.isCustom || data.is_custom) ? 'color:#FFA500;' : 'color:#28a745;';
+                    html += `<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; ${colorStyle}">${note}</td>`;
                 }
                 html += '</tr>';
             });
         }
 
         // 4. TEXTOS
-        const rawTexts = state.texts || {};
+        const rawTexts = state.texts || item.specs?.texts || {};
         const textEntries = Array.isArray(rawTexts)
             ? rawTexts.map(t => [t.zone_id || 'pos', t])
             : Object.entries(rawTexts).filter(([zoneId, data]) => data && data.enabled && data.content);
 
         if (textEntries.length > 0) {
+            html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">4. TEXTOS PERSONALIZADOS</td></tr>';
             textEntries.forEach(([zoneId, data]) => {
                 const zoneName = data.zone_label || zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 let textPrice = config.textPrice || 0;
 
-                const normalizedZoneId = zoneId.toLowerCase();
-                if (normalizedZoneId.includes('lat')) {
+                const zid = (zoneId || '').toLowerCase();
+                const zlb = zoneName.toLowerCase();
+
+                if (zid.includes('lat') || zlb.includes('lateral')) {
+                    // Verifier if there's an image in the same zone to match HNT rule
                     const uId = zoneId.replace('text_', 'logo_');
-                    const hasImg = rawUploads[uId] && (rawUploads[uId].src || rawUploads[uId].filename);
-                    if (hasImg) textPrice = config.textLatPrice || 9.90;
-                    else textPrice = 0;
-                } else if (normalizedZoneId.includes('leg') || normalizedZoneId.includes('perna')) {
+                    const hasImg = uploadEntries.some(e => e[0] === uId || e[1].zone_label === data.zone_label);
+                    if (hasImg) textPrice = config.textLatPrice || 0;
+                    else textPrice = 0; // Usually free if no logo, or handles elsewhere
+                } else if (zid.includes('leg') || zid.includes('perna') || zlb.includes('perna')) {
                     textPrice = config.textLegPrice || config.textPrice || 0;
                 }
 
@@ -367,50 +372,66 @@ window.CartUI = {
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; vertical-align:top;">' + icons.text + '</td>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; word-break:break-word;">';
                 html += '<strong>Texto - ' + zoneName + '</strong><br>';
-                html += '<div style="font-size:0.85em; color:#bbb; line-height:1.3;">';
                 html += '"' + data.content + '" (' + (data.fontFamily || data.font_family || 'Padrão') + ')';
-                html += '</div></td>';
+                html += '</td>';
 
                 if (textPrice > 0) {
                     html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px;">';
-                    html += '<div style="font-size:0.8em; color:#888;">R$ ' + textPrice.toFixed(2).replace('.', ',') + ' /un</div>';
-                    html += '<strong style="color:#28a745;">R$ ' + (textPrice * item.qty_total).toFixed(2).replace('.', ',') + '</strong>';
+                    html += '<div style="font-size:0.8em; color:#888;">R$ ' + fmt(textPrice) + ' /un</div>';
+                    html += '<strong style="color:#ffa500;">+ R$ ' + fmt(textPrice * item.qty_total) + '</strong>';
                     html += '</td>';
                 } else {
-                    html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; color:#28a745;">Incluído no Unitário</td>';
+                    html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; color:#28a745;">Incluso</td>';
                 }
                 html += '</tr>';
             });
         }
 
         // 5. EXTRAS
-        const extras = state.extras || {};
+        const extras = state.extras || item.specs?.extras || {};
         const extraEntries = Object.entries(extras).filter(([key, data]) => data && (data.enabled || data.active));
 
         if (extraEntries.length > 0) {
+            html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">5. EXTRAS / ACABAMENTOS</td></tr>';
             extraEntries.forEach(([key, data]) => {
                 const extraName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 let colorName = '';
-                if (data.color) {
-                    const rawColor = (typeof data.color === 'object' && data.color !== null) ? (data.color.value || 'N/A') : data.color;
-                    colorName = rawColor.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                if (data.color || data.value) {
+                    const rawColor = data.value || (typeof data.color === 'object' ? data.color?.value : data.color);
+                    colorName = (rawColor || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 }
-                const extraPrice = data.price || config[key + 'Price'] || 0;
+
+                // Logic for Extra Price (match pricing.js)
+                let extraPrice = data.price || 0;
+                if (extraPrice === 0) {
+                    // Try to find in config
+                    const eId = data.id || key.toLowerCase().replace(/\s+/g, '_');
+                    extraPrice = (config.extraPrices && config.extraPrices[eId] !== undefined)
+                        ? config.extraPrices[eId]
+                        : (config[eId + 'Price'] || 0);
+
+                    // Hardcoded fallback for HNT standard extras seen in screenshots
+                    if (extraPrice === 0) {
+                        const lowKey = key.toLowerCase();
+                        if (lowKey.includes('legging')) extraPrice = 38.90;
+                        if (lowKey.includes('cordao') || lowKey.includes('laco')) extraPrice = 14.90;
+                    }
+                }
 
                 html += '<tr>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; vertical-align:top;">' + icons.part + '</td>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; word-break:break-word;">';
                 html += '<strong>+ ' + extraName + '</strong><br>';
-                html += '<div style="font-size:0.85em; color:#bbb;">' + (colorName || 'Aplicado ao modelo') + '</div>';
+                html += '<span style="font-size:0.85em; color:#bbb;">' + (colorName || 'Selecionado') + '</span>';
                 html += '</td>';
 
                 if (extraPrice > 0) {
                     html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px;">';
-                    html += '<div style="font-size:0.8em; color:#888;">R$ ' + extraPrice.toFixed(2).replace('.', ',') + ' /un</div>';
-                    html += '<strong style="color:#28a745;">R$ ' + (extraPrice * item.qty_total).toFixed(2).replace('.', ',') + '</strong>';
+                    html += '<div style="font-size:0.8em; color:#888;">R$ ' + fmt(extraPrice) + ' /un</div>';
+                    html += '<strong style="color:#ffa500;">+ R$ ' + fmt(extraPrice * item.qty_total) + '</strong>';
                     html += '</td>';
                 } else {
-                    html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; color:#28a745;">Incluído no Unitário</td>';
+                    html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; color:#28a745;">Incluso</td>';
                 }
                 html += '</tr>';
             });
@@ -419,28 +440,30 @@ window.CartUI = {
         // 6. DETALHAMENTO FINANCEIRO
         html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">DETALHAMENTO FINANCEIRO</td></tr>';
 
-        const subTotalVal = (pricing.breakdown?.base || pricing.unit_price || 0) * item.qty_total;
+        const unitBaseTotal = pricing.unit_price || (pricing.total_price / item.qty_total);
+        const subTotalVal = unitBaseTotal * item.qty_total;
+
         html += '<tr style="background: #1a1a1a;">';
         html += '<td colspan="2" style="padding: 12px 15px; border-bottom: 1px solid #333;">';
         html += '<strong>Valor Base do Pedido (' + item.qty_total + ' peças)</strong><br>';
-        html += '<div style="font-size:0.8em; color:#888;">Média Unitária: R$ ' + ((pricing.breakdown?.base || pricing.unit_price || 0)).toFixed(2).replace('.', ',') + '</div>';
+        html += '<div style="font-size:0.8em; color:#888;">Média Unitária: R$ ' + fmt(unitBaseTotal) + '</div>';
         html += '</td>';
-        html += '<td class="text-right" style="padding: 12px 15px; border-bottom: 1px solid #333;">R$ ' + subTotalVal.toFixed(2).replace('.', ',') + '</td>';
+        html += '<td class="text-right" style="padding: 12px 15px; border-bottom: 1px solid #333;">R$ ' + fmt(subTotalVal) + '</td>';
         html += '</tr>';
 
         if (pricing.breakdown?.dev_fees && pricing.breakdown.dev_fees > 0) {
             html += '<tr style="background:rgba(255, 165, 0, 0.1);">';
             html += '<td style="padding: 12px 15px; border-bottom: 1px solid #333;"><strong>Taxa de Matriz</strong></td>';
-            html += '<td style="padding: 12px 15px; border-bottom: 1px solid #333;">Refere-se a criação de nova(s) matriz(es).<div style="color:#FFA500; font-size:0.85em; margin-top:2px;">⚠️ Cobrado uma única vez por pedido por arte única.</div></td>';
-            html += '<td class="text-right" style="padding: 12px 15px; border-bottom: 1px solid #333; color:#FFA500;">+ R$ ' + (pricing.breakdown.dev_fees).toFixed(2).replace('.', ',') + '</td>';
+            html += '<td style="padding: 12px 15px; border-bottom: 1px solid #333;">Criação de matriz(es) para bordado.<div style="color:#FFA500; font-size:0.85em; margin-top:2px;">⚠️ Cobrado uma única vez.</div></td>';
+            html += '<td class="text-right" style="padding: 12px 15px; border-bottom: 1px solid #333; color:#FFA500;">+ R$ ' + fmt(pricing.breakdown.dev_fees) + '</td>';
             html += '</tr>';
         }
 
         if (pricing.breakdown?.discounts && pricing.breakdown.discounts > 0) {
             html += '<tr style="background:rgba(40, 167, 69, 0.1);">';
             html += '<td style="padding: 12px 15px; border-bottom: 1px solid #333;"><strong>Desconto Atacado</strong></td>';
-            html += '<td style="padding: 12px 15px; border-bottom: 1px solid #333;">Aplicado desconto por volume de peças.</td>';
-            html += '<td class="text-right" style="padding: 12px 15px; border-bottom: 1px solid #333; color:#28a745;">- R$ ' + (pricing.breakdown.discounts).toFixed(2).replace('.', ',') + '</td>';
+            html += '<td style="padding: 12px 15px; border-bottom: 1px solid #333;">Desconto por volume aplicado.</td>';
+            html += '<td class="text-right" style="padding: 12px 15px; border-bottom: 1px solid #333; color:#28a745;">- R$ ' + fmt(pricing.breakdown.discounts) + '</td>';
             html += '</tr>';
         }
 
