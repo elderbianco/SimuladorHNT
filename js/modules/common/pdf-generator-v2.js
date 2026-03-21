@@ -30,13 +30,13 @@ const PDFGenerator = {
      * Motor de Renderização Nuclear v16 (Hyper-Fidelity Centralizado)
      */
     /**
-     * Motor de Renderização Nuclear v20 (Industrial Fidelity + Deep Scan)
-     * Captura o RingHNT de fundo e todos os elementos draggables.
-     */
+    * Motor de Renderização Nuclear v21 (Industrial Fidelity + Summary Parity)
+    * Captura o RingHNT de fundo e sincroniza 100% com o resumo da sidebar.
+    */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v20 (Deep Scan) Ativado...');
+                console.log('☢️ Motor Nuclear v21 (Summary Parity) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
@@ -247,7 +247,7 @@ const PDFGenerator = {
 
             if (snapshot && snapshot.length > 1000) {
                 this.cachedSnapshot = snapshot;
-                console.log(`✅ Snapshot v16 gerado: ${Math.round(snapshot.length / 1024)} KB`);
+                console.log(`✅ Snapshot v21 gerado: ${Math.round(snapshot.length / 1024)} KB`);
                 this.isCaptureBroken = false;
             } else {
                 console.error('❌ Falha na geração do Snapshot v16.');
@@ -618,7 +618,7 @@ const PDFGenerator = {
     },
 
     /**
-     * Gera um PDF real em background usando jsPDF (EXPERT v15)
+     * Gera um PDF real em background usando jsPDF (EXPERT v21)
      */
     async generateBackgroundPDF(customId = null) {
         if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
@@ -668,8 +668,6 @@ const PDFGenerator = {
         const id = customId || sku;
 
         try {
-            // Se chamado pelo openPreview, o snapshot já foi atualizado!
-            // Se chamado do background (carrinho), força a atualização
             if (!this.cachedSnapshot) {
                 this.updateModalButton('loading');
                 console.log('🔄 Sincronizando canvas para Background PDF...');
@@ -682,19 +680,17 @@ const PDFGenerator = {
             const pageHeight = doc.internal.pageSize.getHeight();
             const margin = 20;
 
-            // --- TEMPLATE INSTITUCIONAL (HNT Expert v15) ---
+            // --- TEMPLATE INSTITUCIONAL (HNT Expert v21) ---
             const drawExpertTemplate = (docArg) => {
                 const width = docArg.internal.pageSize.getWidth();
                 const height = docArg.internal.pageSize.getHeight();
 
-                // 1. Degradê de Fundo Premium
                 for (let i = 0; i < height; i++) {
                     const grey = 248 - Math.floor((i / height) * 8);
                     docArg.setFillColor(grey, grey, grey);
                     docArg.rect(0, i, width, 1, 'F');
                 }
 
-                // 2. Marca D'água HNT
                 const logoImg = document.querySelector('.header-logo-img') || document.querySelector('img[src*="logo"]');
                 if (logoImg) {
                     try {
@@ -708,7 +704,6 @@ const PDFGenerator = {
                     } catch (e) { }
                 }
 
-                // 3. Cabeçalho HNT
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(24);
                 docArg.setTextColor(30, 30, 30);
@@ -716,9 +711,8 @@ const PDFGenerator = {
                 docArg.setFontSize(9);
                 docArg.setFont('helvetica', 'normal');
                 docArg.setTextColor(120, 120, 120);
-                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT MODE', margin, margin + 18);
+                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT v21', margin, margin + 18);
 
-                // 4. Metadados do Pedido
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(11);
                 docArg.setTextColor(0, 0, 0);
@@ -733,15 +727,11 @@ const PDFGenerator = {
 
             let currentY = drawExpertTemplate(doc);
 
-            // 2. IMAGEM (MAIOR ÁREA POSSÍVEL, SEM EXTRAPOLAR A PÁGINA)
             if (this.cachedSnapshot && this.cachedSnapshot.length > 500) {
                 try {
                     const imgProps = doc.getImageProperties(this.cachedSnapshot);
                     const maxW = pageWidth - (margin * 2);
-
-                    // O cabeçalho ocupa ~45mm e a imagem precisa deixar espaço para o título "RESUMO..." 
-                    // e evitar quebrar a marcação (QR codes, etc.). Altura máxima segura é ~65%
-                    const maxH = pageHeight * 0.65;
+                    const maxH = pageHeight * 0.55; // Reduzido para dar mais espaço à tabela detalhada
 
                     let imgW = maxW;
                     let imgH = (imgProps.height * imgW) / imgProps.width;
@@ -751,178 +741,202 @@ const PDFGenerator = {
                         imgW = (imgProps.width * imgH) / imgProps.height;
                     }
 
-                    // Centralizar a imagem horizontalmente
                     doc.addImage(this.cachedSnapshot, 'JPEG', (pageWidth - imgW) / 2, currentY, imgW, imgH);
                     currentY += imgH + 10;
-
                 } catch (e) {
-                    console.warn("Falha ao adicionar imagem ao PDF:", e);
                     currentY += 10;
                 }
-            } else {
-                console.warn("Snapshot ausente ou inválido no momento da geração.");
-                currentY += 10;
             }
 
-            // --- PROTEÇÃO CONTRA ESTOURO DE PÁGINA ---
-            // Se a imagem for muito alta, forçamos a tabela para começar numa margem segura
             if (currentY > pageHeight - 40) {
                 doc.addPage();
                 currentY = margin;
             }
 
-            // 3. RESUMO HORIZONTAL OTIMIZADO
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(212, 175, 55);
-            doc.text('RESUMO TÉCNICO DO ORÇAMENTO', margin, currentY);
+            doc.text('RESUMO TÉCNICO DETALHADO', margin, currentY);
             currentY += 8;
 
-            // Função de Limpeza Ultra Sônica (v15.10): Remove emojis e normaliza texto para jsPDF
             const clean = (s) => {
                 if (!s) return '';
-                return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x00-\x7F]/g, "");
+                return s.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x00-\x7F]/g, "");
             };
 
-            // 4. RENDERIZAÇÃO DA TABELA (RESUMO TÉCNICO)
+            const fmt = (v) => (typeof v === 'number') ? v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : v;
+
             let tableData = [];
+            const state = this.context.state || {};
+            const config = this.context.productData || {};
+            const pricing = this.context.pricing || {};
 
-            // Helper para nomes de zonas
-            const zoneName = (id) => clean(id.replace(/_/g, ' ').toUpperCase());
+            // Helper para preços de zona
+            const getPrice = (id, type) => {
+                if (typeof window.getZonePrice === 'function') return window.getZonePrice({ id: id, category: '' });
+                return 0;
+            };
 
-            // A. Cores
-            Object.entries(this.context.state.parts || {}).forEach(([p, val]) => {
-                tableData.push(['COR: ' + clean(p.toUpperCase()), clean(val.value || val)]);
-            });
+            // 1. CONFIGURAÇÃO DE BASE (Grade)
+            tableData.push([{ content: '1. CONFIGURACAO DE BASE', colSpan: 2, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
 
-            // B. Elementos Customizados (Logos/Estampas - NOVO v20)
-            const elements = this.context.state.elements || {};
-            Object.entries(elements).forEach(([zoneId, items]) => {
-                if (Array.isArray(items) && items.length > 0) {
-                    items.forEach(it => {
-                        const name = it.name || it.sku || (it.category ? `${it.category} - ${it.id}` : 'LOGO/ESTAMPA');
-                        tableData.push([`ELEMENTO: ${zoneName(zoneId)}`, clean(name.toUpperCase())]);
-                    });
-                }
-            });
-
-            // C. Textos (Zonais e Draggables)
-            Object.entries(this.context.state.texts || {}).forEach(([key, val]) => {
-                if (val.enabled && val.content) {
-                    tableData.push(['TEXTO: ' + clean(key.toUpperCase()), clean(val.content)]);
-                }
-            });
-
-            // D. Configurações Extras
-            Object.entries(this.context.state.extras || {}).forEach(([key, val]) => {
-                if (val.enabled || val.active) {
-                    tableData.push(['EXTRA: ' + clean(key.replace(/_/g, ' ').toUpperCase()), 'ATIVADO']);
-                }
-            });
-
-            // E. Tamanhos/Qtde
-            const sizes = this.context.state.sizes || {};
+            const sizes = state.sizes || {};
             const totalQty = Object.values(sizes).reduce((acc, q) => acc + (parseInt(q) || 0), 0);
             const sizeString = Object.entries(sizes)
                 .filter(([_, qty]) => parseInt(qty) > 0)
-                .map(([size, qty]) => `${size}: ${qty}`)
-                .join(' | ');
-            if (sizeString) {
-                tableData.push(['TOTAL DE PECAS', totalQty.toString()]);
-                tableData.push(['GRADES/TAMANHOS', sizeString]);
+                .map(([size, qty]) => `${qty}x ${size}`)
+                .join(', ');
+
+            const baseUnitPrice = state.config?.basePrice || 0;
+            tableData.push(['GRADE DE TAMANHOS', clean(sizeString)]);
+            tableData.push(['VALOR BASE (UNIT)', `R$ ${fmt(baseUnitPrice)}`]);
+
+            // 2. DETALHAMENTO POR CATEGORIA (SIDEBAR SYNC)
+            const categories = config.categories || [{ id: 'default', name: 'DETALHES DO PRODUTO' }];
+
+            categories.forEach(cat => {
+                let catItems = [];
+
+                // Partes
+                if (config.parts) {
+                    config.parts.filter(p => p.category === cat.id).forEach(p => {
+                        const colorId = state.parts?.[p.id];
+                        const colorObj = config.colors?.find(c => c.id === colorId);
+                        catItems.push([clean(p.name.toUpperCase()), `COR: ${clean(colorObj ? colorObj.name : colorId)}`]);
+                    });
+                }
+
+                // Extras
+                if (config.extras) {
+                    config.extras.filter(e => e.category === cat.id).forEach(e => {
+                        const extraState = state.extras?.[e.id];
+                        if (extraState?.enabled || extraState?.active) {
+                            const colorObj = config.colors?.find(c => c.id === extraState.color);
+                            const price = (state.config?.extraPrices?.[e.id] !== undefined) ? state.config.extraPrices[e.id] : e.price;
+                            const detail = colorObj ? `COR: ${clean(colorObj.name)}` : 'ATIVADO';
+                            catItems.push([clean(e.name.toUpperCase()), `${detail} (+ R$ ${fmt(price)})`]);
+                        }
+                    });
+                }
+
+                // Uploads
+                if (config.uploadZones) {
+                    config.uploadZones.filter(u => u.category === cat.id).forEach(u => {
+                        const up = state.uploads?.[u.id];
+                        if (up?.src) {
+                            catItems.push([clean(u.name.toUpperCase()), `ARQUIVO: ${clean(up.formattedFilename || up.filename)}`]);
+                        }
+                    });
+                }
+
+                // Textos
+                if (config.textZones) {
+                    config.textZones.filter(t => t.category === cat.id).forEach(t => {
+                        const txt = state.texts?.[t.id];
+                        if (txt?.enabled && txt?.content) {
+                            catItems.push([`TEXTO: ${clean(t.name.toUpperCase())}`, `"${clean(txt.content)}" (Fonte: ${clean(txt.fontFamily)})`]);
+                        }
+                    });
+                }
+
+                if (catItems.length > 0) {
+                    tableData.push([{ content: clean(cat.name.toUpperCase()), colSpan: 2, styles: { fillColor: [60, 60, 60], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
+                    tableData = tableData.concat(catItems);
+                }
+            });
+
+            // 3. SEÇÃO FINANCEIRA
+            tableData.push([{ content: 'DETALHAMENTO FINANCEIRO', colSpan: 2, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
+
+            const subtotalVal = (pricing.total + (pricing.discountValue || 0) + (pricing.waiver || 0) - (pricing.devFees || 0));
+            tableData.push(['SUBTOTAL (PECAS + EXTRAS)', `R$ ${fmt(subtotalVal)}`]);
+            tableData.push(['MEDIA UNITARIA', `R$ ${fmt(subtotalVal / totalQty)}`]);
+
+            if (pricing.devFees > 0) {
+                tableData.push(['TAXAS DE MATRIZ (+)', `R$ ${fmt(pricing.devFees)}`]);
+            }
+            if (pricing.discountValue > 0) {
+                tableData.push(['DESCONTO ATACADO (-)', `R$ ${fmt(pricing.discountValue)} (${fmt(pricing.discountPercent)}%)`]);
+            }
+            if (pricing.waiver > 0) {
+                tableData.push(['ISENCAO/BONUS (-)', `R$ ${fmt(pricing.waiver)}`]);
             }
 
-            // F. Observações
-            const obs = this.context.state.observations || this.context.state.observacoes || "";
-            if (obs && obs.trim().length > 0) {
-                tableData.push(['OBSERVACOES', clean(obs).substring(0, 1000)]);
+            const obs = state.observations || state.observacoes || "";
+            if (obs.trim().length > 0) {
+                tableData.push([{ content: 'OBSERVACOES:', colSpan: 2, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }]);
+                tableData.push([{ content: clean(obs), colSpan: 2 }]);
             }
 
-            // G. Breakdown Financeiro
-            if (this.context.pricing && this.context.pricing.breakdown) {
-                tableData.push([{ content: 'RESUMO FINANCEIRO', colSpan: 2, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }]);
-                Object.entries(this.context.pricing.breakdown).forEach(([label, value]) => {
-                    // Incluir totais e extras
-                    if (value > 0) {
-                        const cleanLabel = clean(label.replace(/_/g, ' ').toUpperCase());
-                        tableData.push([`VALOR: ${cleanLabel}`, `R$ ${value.toFixed(2)}`]);
-                    }
-                });
-            }
-
-            // Renderizar Tabela com Auto-Page
             doc.autoTable({
                 startY: currentY,
-                head: [['ATRIBUTO', 'ESPECIFICAÇÃO']],
+                head: [['ATRIBUTO', 'ESPECIFICACAO']],
                 body: tableData,
                 theme: 'grid',
-                styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-                headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255] },
-                margin: { left: margin, right: margin, bottom: 45 } // Reserva espaço para footer
+                styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak' },
+                headStyles: { fillColor: [20, 20, 20], textColor: [255, 255, 255] },
+                margin: { left: margin, right: margin, bottom: 45 }
             });
 
             currentY = doc.lastAutoTable.finalY + 10;
 
-            // --- FOOTER DINÂMICO (TOTAL + QR + TERMS) ---
             const drawFooter = async (docArg, yPos) => {
                 let y = yPos;
+                if (y > pageHeight - 65) { docArg.addPage(); y = margin; }
 
-                // Se o espaço for insuficiente, vai para nova página
-                if (y > pageHeight - 60) {
-                    docArg.addPage();
-                    y = margin;
-                }
-
-                // Linha de Identificação
                 docArg.setDrawColor(200);
                 docArg.line(margin, y, pageWidth - margin, y);
                 y += 8;
 
                 const totalDisplay = document.getElementById('price-display');
-                const totalText = clean(totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '') : 'R$ 0,00');
+                const totalText = clean(totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '') : `R$ ${fmt(pricing.total)}`);
 
-                docArg.setFontSize(16);
+                docArg.setFontSize(14);
                 docArg.setFont('helvetica', 'bold');
                 docArg.setTextColor(0, 0, 0);
-                docArg.text('INVESTIMENTO ESTIMADO:', margin, y);
+                docArg.text('INVESTIMENTO TOTAL:', margin, y);
                 docArg.text(totalText, pageWidth - margin, y, { align: 'right' });
+                y += 7;
+
+                // PREVISÃO ESTIMADA
+                const production = state.config?.production || { minDays: 15, maxDays: 25 };
+                const today = new Date();
+                const formatDate = (d) => d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getFullYear();
+
+                docArg.setFontSize(8);
+                docArg.setFont('helvetica', 'bold');
+                docArg.setTextColor(100, 100, 100);
+                docArg.text(`PREVISAO ESTIMADA: ${production.minDays}-${production.maxDays} DIAS UTEIS APOS APROVACAO.`, margin, y);
                 y += 8;
 
-                // Termos
-                const terms = "AVISO IMPORTANTE: Este documento e uma SIMULACAO DIGITAL. O resultado fisico pode apresentar variacoes sutis de cores e proporcoes devido ao processo produtivo. Ao prosseguir, voce confirma direitos sobre as artes enviadas e concorda com os termos de fabricacao.";
-                docArg.setFontSize(7);
+                const terms = "AVISO: Este documento e uma SIMULACAO DIGITAL. Cores e proporcoes podem variar sutilmente no produto fisico. Voce confirma direitos sobre as artes enviadas e concorda com os termos de fabricacao.";
+                docArg.setFontSize(6.5);
                 docArg.setFont('helvetica', 'italic');
-                docArg.setTextColor(140, 140, 140);
+                docArg.setTextColor(150, 150, 150);
                 const termLines = docArg.splitTextToSize(terms, pageWidth - (margin * 2));
                 docArg.text(termLines, margin, y);
                 y += (termLines.length * 4) + 5;
 
-                // QR CODES LADO A LADO NO FINAL DO FLOW
-                const qrSize = 25;
+                const qrSize = 22;
                 const qrY = y;
-
                 try {
                     const qPedido = await generateQR(`PEDIDO:${orderNum}`);
                     if (qPedido) {
                         docArg.addImage(qPedido, 'PNG', margin, qrY, qrSize, qrSize);
-                        docArg.setFontSize(6); docArg.setFont('helvetica', 'bold');
-                        docArg.text(`PEDIDO: ${orderNum}`, margin + 2, qrY + qrSize + 4);
+                        docArg.setFontSize(5); docArg.setFont('helvetica', 'bold');
+                        docArg.text(`PEDIDO: ${orderNum}`, margin, qrY + qrSize + 3);
                     }
-
                     const qSku = await generateQR(`SKU:${sku}`);
                     if (qSku) {
                         docArg.addImage(qSku, 'PNG', margin + qrSize + 10, qrY, qrSize, qrSize);
-                        docArg.setFontSize(6); docArg.setFont('helvetica', 'bold');
-                        docArg.text(`SKU: ${sku}`, margin + qrSize + 12, qrY + qrSize + 4);
+                        docArg.setFontSize(5); docArg.setFont('helvetica', 'bold');
+                        docArg.text(`SKU: ${sku}`, margin + qrSize + 10, qrY + qrSize + 3);
                     }
-                } catch (e) {
-                    console.warn("QR Footer Error", e);
-                }
+                } catch (e) { }
             };
 
             await drawFooter(doc, currentY);
 
-            // SALVAR
             const pdfBase64 = doc.output('datauristring').split(',').pop();
             const fileName = `Pedido_${id}`;
             this.updateModalButton('saving');
