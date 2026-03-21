@@ -293,9 +293,10 @@ window.CartUI = {
             uploadEntries.forEach(([zoneId, data]) => {
                 const zoneName = data.zone_label || zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 const fileName = data.file_name || data.filename || data.file_url || data.src || 'Imagem';
-                let logoPrice = 0;
+                // Prioritize saved unit_price from specs
+                let logoPrice = data.unit_price || 0;
 
-                if (!data.isCustom && !data.is_custom) {
+                if (logoPrice === 0 && !data.isCustom && !data.is_custom) {
                     const zid = (zoneId || '').toLowerCase().trim();
                     const zlb = (zoneName || '').toLowerCase().trim();
                     const zp = config.zonePrices || {};
@@ -316,7 +317,8 @@ window.CartUI = {
                         } else if (zid.includes('leg') || zid.includes('perna') || zlb.includes('perna')) {
                             logoPrice = config.legZoneAddonPrice || config.logoLegPrice || 0;
                         } else if (zid.includes('center') || zid.includes('centro') || zlb.includes('centro')) {
-                            logoPrice = config.logoCenterPrice || 0;
+                            // Hardcoded fallback for HNT standard (29.90) if config is missing
+                            logoPrice = config.logoCenterPrice !== undefined ? config.logoCenterPrice : 29.90;
                         }
                     }
                 }
@@ -353,19 +355,24 @@ window.CartUI = {
             html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">4. TEXTOS PERSONALIZADOS</td></tr>';
             textEntries.forEach(([zoneId, data]) => {
                 const zoneName = data.zone_label || zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                let textPrice = config.textPrice || 0;
+                // Prioritize saved unit_price
+                let textPrice = data.unit_price || 0;
 
-                const zid = (zoneId || '').toLowerCase();
-                const zlb = zoneName.toLowerCase();
+                if (textPrice === 0) {
+                    const zid = (zoneId || '').toLowerCase();
+                    const zlb = zoneName.toLowerCase();
 
-                if (zid.includes('lat') || zlb.includes('lateral')) {
-                    // Verifier if there's an image in the same zone to match HNT rule
-                    const uId = zoneId.replace('text_', 'logo_');
-                    const hasImg = uploadEntries.some(e => e[0] === uId || e[1].zone_label === data.zone_label);
-                    if (hasImg) textPrice = config.textLatPrice || 0;
-                    else textPrice = 0; // Usually free if no logo, or handles elsewhere
-                } else if (zid.includes('leg') || zid.includes('perna') || zlb.includes('perna')) {
-                    textPrice = config.textLegPrice || config.textPrice || 0;
+                    if (zid.includes('lat') || zlb.includes('lateral')) {
+                        // Verifier if there's an image in the same zone to match HNT rule
+                        const uId = zoneId.replace('text_', 'logo_');
+                        const hasImg = uploadEntries.some(e => e[0] === uId || e[1].zone_label === data.zone_label);
+                        if (hasImg) textPrice = config.textLatPrice || 0;
+                        else textPrice = 0; // Usually free if no logo, or handles elsewhere
+                    } else if (zid.includes('leg') || zid.includes('perna') || zlb.includes('perna')) {
+                        textPrice = config.textLegPrice || config.textPrice || 0;
+                    } else {
+                        textPrice = config.textPrice || 19.90;
+                    }
                 }
 
                 html += '<tr>';
