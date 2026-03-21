@@ -27,13 +27,13 @@ const PDFGenerator = {
      * Usa html2canvas + Pré-processamento Base66 para garantir rotação e escala exatas.
      */
     /**
-     * Motor de Renderização Nuclear v25 (Industrial Fidelity + Customer Context)
+     * Motor de Renderização Nuclear v26 (Industrial Fidelity + Customer Context)
      * Captura o RingHNT de fundo e inclui contato/observações no resumo.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v25 (Customer Context) Ativado...');
+                console.log('☢️ Motor Nuclear v26 (Customer Context) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
