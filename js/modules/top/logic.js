@@ -530,3 +530,100 @@ function resetSimulatorData() {
 
     console.log("✅ Simulador Top resetado com sucesso.");
 }
+
+/**
+ * Adiciona uma imagem a uma zona específica
+ */
+function addImage(zoneId, src, filename = "Imagem Enviada", isCustom = true) {
+    const zone = CONFIG.zones[zoneId];
+    if (!zone) return;
+
+    // Remove elementos anteriores da zona
+    removeZoneElements(zoneId);
+
+    const formattedName = (typeof generateFormattedFilename === 'function')
+        ? generateFormattedFilename(zoneId, filename, isCustom ? 'EXT' : 'ACERVO')
+        : filename;
+
+    createImageElement(zoneId, src, isCustom, filename, formattedName);
+}
+
+/**
+ * Cria o elemento DOM da imagem e registra no estado
+ */
+function createImageElement(zoneId, src, isCustom, filename = '', formattedFilename = '') {
+    const wrapper = document.querySelector('.simulator-wrapper');
+    const zone = CONFIG.zones[zoneId];
+    if (!wrapper || !zone) return;
+
+    const div = document.createElement('div');
+    div.className = 'custom-element draggable';
+    div.style.position = 'absolute';
+    div.style.left = zone.x + '%';
+    div.style.top = zone.y + '%';
+    div.style.width = zone.width + '%';
+    div.style.transform = 'translate(-50%, -50%) scale(1)';
+    div.style.zIndex = '1500';
+    div.dataset.type = 'image';
+    div.dataset.zone = zoneId;
+    div.dataset.isCustom = isCustom;
+    div.dataset.filename = filename || (isCustom ? 'upload_usuario' : 'imagem_acervo');
+    if (formattedFilename) div.dataset.formattedFilename = formattedFilename;
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.width = '100%';
+    img.style.display = 'block';
+
+    div.appendChild(img);
+    wrapper.appendChild(div);
+
+    if (!state.elements[zoneId]) state.elements[zoneId] = [];
+    state.elements[zoneId].push(div);
+
+    // Ativa limites visuais automaticamente
+    state.zoneLimits[zoneId] = true;
+    if (typeof updateLimits === 'function') updateLimits();
+
+    if (typeof updatePrice === 'function') updatePrice();
+    if (typeof renderControls === 'function') renderControls();
+    saveState();
+}
+
+/**
+ * Remove todos os elementos de uma zona
+ */
+function removeZoneElements(zoneId) {
+    if (state.elements[zoneId]) {
+        state.elements[zoneId].forEach(el => el.remove());
+        state.elements[zoneId] = [];
+    }
+
+    if (checkZoneEmpty(zoneId)) {
+        state.zoneLimits[zoneId] = false;
+        if (typeof updateLimits === 'function') updateLimits();
+    }
+
+    if (typeof updatePrice === 'function') updatePrice();
+    if (typeof renderControls === 'function') renderControls();
+    saveState();
+}
+
+/**
+ * Verifica se uma zona está vazia
+ */
+function checkZoneEmpty(zoneId) {
+    const hasImage = state.elements[zoneId] && state.elements[zoneId].length > 0;
+    const textZone = CONFIG.textZones.find(tz => tz.parentZone === zoneId);
+    const hasText = textZone && state.texts[textZone.id] && state.texts[textZone.id].enabled;
+    return !hasImage && !hasText;
+}
+
+/**
+ * Bridge for Gallery: Adds an image from a URL/Base64 string to a zone
+ * @param {string} zoneId - The target upload zone ID
+ * @param {string} src - The image source (URL or Base64)
+ */
+function addImageToZone(zoneId, src) {
+    addImage(zoneId, src, "Imagem do Acervo", false);
+}
