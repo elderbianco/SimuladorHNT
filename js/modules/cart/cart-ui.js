@@ -297,9 +297,14 @@ window.CartUI = {
                     if (config.zonePrices && config.zonePrices[zoneId] !== undefined) {
                         logoPrice = config.zonePrices[zoneId];
                     } else {
-                        if (zoneId.includes('lat')) logoPrice = config.logoLatPrice || 0;
-                        else if (zoneId.includes('leg') || zoneId.includes('perna')) logoPrice = config.legZoneAddonPrice || config.logoLegPrice || 0;
-                        else if (zoneId.includes('center') || zoneId.includes('centro')) logoPrice = config.logoCenterPrice || 0;
+                        const lowerZone = (zoneId || '').toLowerCase();
+                        if (lowerZone.includes('lat')) {
+                            logoPrice = config.logoLatPrice || 0;
+                        } else if (lowerZone.includes('leg') || lowerZone.includes('perna')) {
+                            logoPrice = config.legZoneAddonPrice || config.logoLegPrice || 0;
+                        } else if (lowerZone.includes('center') || lowerZone.includes('centro')) {
+                            logoPrice = config.logoCenterPrice || 0;
+                        }
                     }
                 }
 
