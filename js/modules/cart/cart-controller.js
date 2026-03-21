@@ -243,6 +243,19 @@ function loadDashboard() {
                         simulator_type: detectedType,
                         model_name: technicalData.model_name || technicalData.product_type || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "Simulação") : "Simulação"),
                         qty_total: finalQty,
+                        specs: {
+                            orderNumber: technicalData.orderNumber || data.NUMERO_PEDIDO || data.order_number || '---',
+                            parts: partsArr,
+                            uploads: uploadsArr,
+                            texts: textsArr,
+                            sizes: technicalData.sizes || {},
+                            observations: data.observations || data.observacoes || technicalData.observations || technicalData.observacoes || ""
+                        },
+                        logistics: {
+                            orderDate: data.created_at || technicalData.created_at || new Date().toISOString(),
+                            deliveryDate: technicalData.deliveryDate || "", // To be calculated if missing
+                            phone: data.client_phone || technicalData.phone || profile?.phone || ""
+                        },
                         pricing: {
                             total_price: finalPrice,
                             unit_price: data.PRECO_UNITARIO || data.unit_price || (technicalData.pricing ? technicalData.pricing.unit_price : (finalPrice / finalQty)),
