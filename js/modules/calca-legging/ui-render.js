@@ -252,24 +252,5 @@ function renderFinalForm() {
     return div;
 }
 
-function openGallery(zoneId) {
-    state.pending = zoneId;
-    const modal = document.getElementById('gallery-modal');
-    if (modal) { modal.style.display = 'flex'; renderGallery(); }
-}
-window.closeGallery = function () {
-    const modal = document.getElementById('gallery-modal');
-    if (modal) modal.style.display = 'none';
-}
-
-function renderGallery(searchTerm = "") {
-    const g = document.getElementById('gallery-grid'); if (!g) return; g.innerHTML = '';
-    const galleryData = (typeof SHARED_GALLERY !== 'undefined') ? SHARED_GALLERY : [];
-    galleryData.forEach(i => {
-        const d = document.createElement('div'); d.className = 'gallery-item';
-        d.innerHTML = `<img src="${i.src}"><span>${i.name}</span>`;
-        d.onclick = () => { addImageToZone(state.pending, i.src); window.closeGallery(); };
-        g.appendChild(d);
-    });
-}
+// SharedGallery.js handles openGallery and renderGallery globally
 function addImageToZone(z, s) { if (typeof createImageElement === 'function') createImageElement(z, s, false); }
