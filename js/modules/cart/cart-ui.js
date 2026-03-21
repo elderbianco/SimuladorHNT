@@ -218,6 +218,7 @@ window.CartUI = {
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'sizes-${uid}')">📏 Tamanhos ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'specs-${uid}')">🎨 Lógos/Textos ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'price-${uid}')">💰 Valores ▼</button>
+                    <button class="tab-btn" style="color:#00b4d8; font-weight:bold;" onclick="CartUI.switchTab(this, 'ship-${uid}')">📅 Logística ▼</button>
                     <button class="tab-btn" style="color:#ffa500; font-weight:bold;" onclick="CartUI.switchTab(this, 'obs-${uid}')">📝 Observações ▼</button>
                 </div>
 
@@ -277,6 +278,26 @@ window.CartUI = {
                     <div style="background: #222; border-left: 3px solid #00b4d8; padding: 15px; border-radius: 4px; font-size: 0.9rem; color: #aaa; line-height:1.5;">
                         <strong>📅 Previsão de Produção:</strong><br>
                         Estimativa de 15 a 25 dias úteis a partir da aprovação final.
+                    </div>
+                </div>
+
+                <div id="ship-${uid}" class="tab-content">
+                    <h3 style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; margin-bottom: 20px;">📅 Logística & Prazos</h3>
+                    <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px;">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                            <div style="background:#222; padding:15px; border-radius:8px; border-left:3px solid var(--gold);">
+                                <div style="font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:5px;">Data do Pedido</div>
+                                <div style="font-size:1.2rem; color:#fff; font-weight:bold;">${new Date(order.logistics?.orderDate || order.created_at).toLocaleDateString()}</div>
+                            </div>
+                            <div style="background:#222; padding:15px; border-radius:8px; border-left:3px solid #00b4d8;">
+                                <div style="font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:5px;">Previsão de Entrega</div>
+                                <div style="font-size:1.2rem; color:#fff; font-weight:bold;">${order.logistics?.deliveryDate || '15 a 25 dias úteis'}</div>
+                            </div>
+                            <div style="background:#222; padding:15px; border-radius:8px; border-left:3px solid #28a745;">
+                                <div style="font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:5px;">Contato Cadastrado</div>
+                                <div style="font-size:1.2rem; color:#fff; font-weight:bold;">${order.logistics?.phone || 'Não informado'}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
