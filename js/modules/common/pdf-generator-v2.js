@@ -119,10 +119,10 @@ const PDFGenerator = {
                 mirror.style.backgroundColor = '#111111';
                 document.body.appendChild(mirror);
 
-                // --- 4. APLICAR ESTILOS DE PROPORÇÃO NO MIRROR (v36) ---
+                // --- 4. APLICAR ESTILOS DE PROPORÇÃO NO MIRROR (v38) ---
                 const isLeggingActive = this.context.state?.extras?.calca_legging?.enabled;
-                const snapshotScale = isLeggingActive ? 1.5 : 1.9;
-                const snapshotY = isLeggingActive ? '6%' : '3%'; // Calibragem Nuclear v36 para enquadramento balanceado
+                const snapshotScale = isLeggingActive ? 1.3 : 1.6;
+                const snapshotY = isLeggingActive ? '8%' : '5%'; // Calibragem Nuclear v38 para enquadramento técnico perfeito
 
                 const subElements = ['.simulator-area', '.simulator-viewport', '.zoom-container', '.simulator-wrapper'];
                 subElements.forEach(selector => {
@@ -132,7 +132,7 @@ const PDFGenerator = {
                             el.style.setProperty('width', '1600px', 'important');
                             el.style.setProperty('height', '1200px', 'important');
                         } else if (selector === '.simulator-wrapper') {
-                            // Aplica Zoom e Centralização de v36
+                            // Aplica Zoom e Centralização de v38
                             el.style.setProperty('transform', `scale(${snapshotScale}) translateY(${snapshotY})`, 'important');
                             el.style.setProperty('transform-origin', 'center center', 'important');
                         } else {
