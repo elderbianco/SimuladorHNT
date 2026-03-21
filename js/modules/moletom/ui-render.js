@@ -431,7 +431,68 @@ function renderFinalForm() {
     return finalInputs;
 }
 
-// SharedGallery.js handles openGallery and renderGallery globally
+// Global Helpers (Legacy support)
+function openGallery(zoneId) {
+    state.pendingUploadZone = zoneId;
+    if (typeof currentGalleryCategory !== 'undefined') currentGalleryCategory = null;
+    const modal = document.getElementById('gallery-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        renderGallery();
+    }
+}
+window.closeGallery = function () { // Explicit global
+    const modal = document.getElementById('gallery-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function renderGallery(searchTerm = "") {
+    const g = document.getElementById('gallery-grid');
+    if (!g) return;
+    g.innerHTML = '';
+    const galleryData = (typeof SHARED_GALLERY !== 'undefined') ? SHARED_GALLERY : [];
+
+    if (searchTerm && searchTerm.trim().length > 0) {
+        const term = searchTerm.toLowerCase();
+        const results = galleryData.filter(i => i.name.toLowerCase().includes(term));
+        if (results.length === 0) {
+            g.innerHTML = `<div style="text-align:center; padding:20px; color:#666; width:100%;">Nenhuma imagem encontrada.</div>`;
+            return;
+        }
+        results.forEach(i => appendGalleryItem(g, i));
+        return;
+    }
+
+    if (!currentGalleryCategory) {
+        // Categories
+        const categories = [...new Set(galleryData.map(i => i.category || 'Gerais'))];
+        const categoryIcons = {
+            "Logos Hanuthai": "assets/Shorts/UiIcons/thumb_logos_hanuthai.png",
+            "Animais": "assets/Shorts/UiIcons/thumb_animais.png",
+            "Bandeiras": "assets/Shorts/UiIcons/thumb_bandeiras.png",
+            "Personagens": "assets/Shorts/UiIcons/thumb_personagens.png",
+            "Gerais": "assets/Shorts/UiIcons/thumb_gerais.png"
+        };
+        categories.forEach(cat => {
+            const d = document.createElement('div');
+            d.className = 'gallery-folder';
+            const iconSrc = categoryIcons[cat] || "assets/Shorts/UiIcons/thumb_gerais.png";
+            d.innerHTML = `<img src="${iconSrc}" class="folder-image-icon"><div class="folder-label">${cat}</div>`;
+            d.onclick = () => { currentGalleryCategory = cat; renderGallery(); };
+            g.appendChild(d);
+        });
+    } else {
+        // Back Btn
+        const b = document.createElement('button');
+        b.className = 'gallery-back-btn';
+        b.innerText = '↩ Voltar';
+        b.onclick = () => { currentGalleryCategory = null; renderGallery(); };
+        g.appendChild(b);
+
+        const items = galleryData.filter(i => (i.category || 'Gerais') === currentGalleryCategory);
+        items.forEach(i => appendGalleryItem(g, i));
+    }
+}
 
 function appendGalleryItem(container, i) {
     const d = document.createElement('div');
@@ -498,20 +559,6 @@ function createImageElement(z, s, isCustom, filename = '', formattedFilename = '
 
     updatePrice(); renderControls(); saveState();
 }
-
-/**
- * Bridge for Gallery: Adds an image from a URL/Base64 string to a zone
- * @param {string} zoneId - The target upload zone ID
- * @param {string} src - The image source (URL or Base64)
- */
-function addImageToZone(zoneId, src) {
-    if (!zoneId || !src) return;
-    const formattedName = (typeof generateFormattedFilename === 'function')
-        ? generateFormattedFilename(zoneId, "Imagem do Acervo", 'ACERVO')
-        : "Imagem do Acervo";
-
-    createImageElement(zoneId, src, false, "Imagem do Acervo", formattedName);
-}
 function removeZoneElements(z) {
     if (state.elements[z]) { state.elements[z].forEach(e => e.remove()); state.elements[z] = []; }
     if (checkZoneEmpty(z)) state.zoneLimits[z] = false; updateLimits(); updatePrice(); renderControls(); saveState();
@@ -521,82 +568,4 @@ function checkZoneEmpty(z) {
     const rT = CONFIG.textZones.find(t => t.parentZone === z);
     const hT = rT && state.texts[rT.id].enabled;
     return !hI && !hT;
-}
-
-/**
- * Funções de Galeria (Restaurado)
- */
-let currentGalleryZone = null;
-
-function openGallery(zoneId) {
-    currentGalleryZone = zoneId;
-    const modal = document.getElementById('gallery-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        renderGallery();
-
-        const searchInput = document.getElementById('gallery-search');
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.oninput = (e) => renderGallery(e.target.value);
-            setTimeout(() => searchInput.focus(), 100);
-        }
-    }
-}
-
-function closeGallery() {
-    const modal = document.getElementById('gallery-modal');
-    if (modal) modal.style.display = 'none';
-}
-
-function renderGallery(searchTerm = '') {
-    const grid = document.getElementById('gallery-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-
-    const term = searchTerm.toLowerCase();
-    const categories = [...new Set(SHARED_GALLERY.map(item => item.category))];
-
-    categories.forEach(cat => {
-        const filtered = SHARED_GALLERY.filter(item =>
-            item.category === cat &&
-            (item.name.toLowerCase().includes(term) || cat.toLowerCase().includes(term))
-        );
-
-        if (filtered.length > 0) {
-            const section = document.createElement('div');
-            section.style.width = '100%';
-            section.style.marginBottom = '15px';
-            section.innerHTML = `<h4 style="color:var(--gold-primary); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">${cat}</h4>`;
-
-            const itemsContainer = document.createElement('div');
-            itemsContainer.style.display = 'grid';
-            itemsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(80px, 1fr))';
-            itemsContainer.style.gap = '8px';
-
-            filtered.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'gallery-item';
-                div.style.cursor = 'pointer';
-                div.style.textAlign = 'center';
-                div.style.padding = '5px';
-                div.style.border = '1px solid #333';
-                div.style.background = '#111';
-                div.onclick = () => {
-                    if (typeof addImageToZone === 'function') {
-                        addImageToZone(currentGalleryZone, item.src);
-                    }
-                    closeGallery();
-                };
-
-                div.innerHTML = `
-                    <img src="${item.src}" style="width:100%; height:60px; object-fit:contain;">
-                    <div style="font-size:0.6rem; color:#aaa; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name}</div>
-                `;
-                itemsContainer.appendChild(div);
-            });
-            section.appendChild(itemsContainer);
-            grid.appendChild(section);
-        }
-    });
 }
