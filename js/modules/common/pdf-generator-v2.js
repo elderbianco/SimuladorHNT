@@ -680,6 +680,10 @@ const PDFGenerator = {
                 loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js', 'jspdf'),
                 loadScript('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js', 'QRCode')
             ]);
+
+            // AutoTable MUST be loaded after jsPDF
+            await loadScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js', 'jsPDFAutoTableStub');
+
             return true;
         } catch (e) {
             console.error('Erro ao carregar libs de PDF/QR:', e);
