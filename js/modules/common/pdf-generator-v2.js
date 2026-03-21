@@ -113,7 +113,12 @@ const PDFGenerator = {
                         finalDataUrl = await domtoimage.toJpeg(viewport, {
                             quality: 0.95,
                             bgcolor: '#111111',
-                            style: { margin: '0', padding: '0' }
+                            style: {
+                                margin: '0',
+                                padding: '0',
+                                height: viewport.scrollHeight + 'px',
+                                width: viewport.scrollWidth + 'px'
+                            }
                         });
                     } catch (err) {
                         console.warn('⚠️ domtoimage falhou:', err);
@@ -159,6 +164,8 @@ const PDFGenerator = {
                 const container = document.querySelector('.simulator-wrapper');
                 if (!container) return resolve(null);
 
+                const rect = container.getBoundingClientRect();
+
                 // Calculate true bounding box of all visible layers for perfect centering
                 let minT = Infinity, maxB = -Infinity;
                 let minL = Infinity, maxR = -Infinity;
@@ -202,8 +209,13 @@ const PDFGenerator = {
                 const offsetX = (1600 - ((maxR - minL) * scale)) / 2;
                 let offsetY = (1200 - ((maxB - minT) * scale)) / 2;
 
+                // Ajustes finos por produto para compensar centro de massa visual
                 if (prod === 'TP' || prod === 'Top') {
-                    offsetY = ((1200 - (rect.height * scale)) / 2) + 20;
+                    offsetY -= 20;
+                } else if (prod === 'FS' || prod === 'SH') {
+                    // Se legging ativa, o centro visual deve considerar o conjunto todo
+                    // A lógica de maxB/minT já cobre isso, mas podemos dar uma margem superior
+                    offsetY += 10;
                 }
 
                 const loadImage = (src) => new Promise((res) => {
