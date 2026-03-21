@@ -127,11 +127,7 @@ const PDFGenerator = {
                             bgcolor: '#111111',
                             style: {
                                 margin: '0',
-                                padding: '0',
-                                transform: 'none',
-                                left: '0',
-                                top: '0',
-                                position: 'relative'
+                                padding: '0'
                             }
                         });
                     } catch (err) {
