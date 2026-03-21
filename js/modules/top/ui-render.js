@@ -147,7 +147,7 @@ function renderCustomizationSection() {
                     onToggle: (zoneId, enabled) => { tState.enabled = enabled; if (enabled) state.zoneLimits[z.id] = true; else if (checkZoneEmpty(z.id)) state.zoneLimits[z.id] = false; updateLimits(); updatePrice(); renderControls(); saveState(); },
                     onTextChange: (zoneId, content) => { tState.content = content; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); },
                     onLinesChange: (zoneId, maxLines) => { tState.maxLines = maxLines; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); },
-                    onFontChange: (zoneId, fontFamily) => { tState.fontFamily = fontFamily; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); },
+                    onFontChange: (zoneId, fontFamily) => { tState.fontFamily = fontFamily; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); if (typeof updatePrice === 'function') updatePrice(); if (typeof renderControls === 'function') renderControls(); saveState(); },
                     onColorChange: (zoneId, color) => { tState.color = color; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); },
                     onScaleChange: (zoneId, scale) => { tState.scale = scale; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); }
                 }
