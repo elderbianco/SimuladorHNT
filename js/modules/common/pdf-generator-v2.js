@@ -30,22 +30,23 @@ const PDFGenerator = {
      * Motor de Renderização Nuclear v16 (Hyper-Fidelity Centralizado)
      */
     /**
-     * Motor de Renderização Nuclear v19 (Industrial Fidelity + Multi-Page)
-     * Garante o RingHNT de fundo e evita qualquer sobreposição.
+     * Motor de Renderização Nuclear v20 (Industrial Fidelity + Deep Scan)
+     * Captura o RingHNT de fundo e todos os elementos draggables.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v19 (Industrial Fidelity) Ativado...');
+                console.log('☢️ Motor Nuclear v20 (Deep Scan) Ativado...');
 
-                const viewport = document.querySelector('.simulator-viewport') || document.querySelector('.simulator-area') || document.querySelector('.simulator-wrapper');
+                // O RingHNT fica na .simulator-area, não na .simulator-viewport
+                const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
 
                 if (!viewport) {
                     console.error('❌ Simulador não encontrado!');
                     return resolve(null);
                 }
 
-                // --- 1. IMUNIZAÇÃO AGRESSIVA DE ASSETS (Base64) ---
+                // --- 1. IMUNIZAÇÃO DE ASSETS (Base64) ---
                 const toBase64 = (url) => new Promise((res) => {
                     if (!url || url.startsWith('data:')) return res(url);
                     const img = new Image();
@@ -59,11 +60,28 @@ const PDFGenerator = {
                         res(canvas.toDataURL('image/png'));
                     };
                     img.onerror = () => res(url);
-                    img.src = url;
+                    // Resolver caminhos relativos para absoluto se necessário
+                    if (url.startsWith('../')) {
+                        const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                        img.src = base + '/' + url.replace('../', '');
+                    } else {
+                        img.src = url;
+                    }
                 });
 
-                // Imunizar todas as imagens e fundos no viewport
+                // Imunizar todas as imagens e fundos recursivamente
                 const assets = Array.from(viewport.querySelectorAll('img, [style*="background-image"]'));
+
+                // Também checar o próprio background do viewport
+                const viewportStyle = window.getComputedStyle(viewport);
+                if (viewportStyle.backgroundImage && viewportStyle.backgroundImage.includes('url(')) {
+                    const url = viewportStyle.backgroundImage.match(/url\(["']?([^"']+)["']?\)/)?.[1];
+                    if (url && !url.startsWith('data:')) {
+                        const b64 = await toBase64(url);
+                        viewport.style.backgroundImage = `url("${b64}")`;
+                    }
+                }
+
                 for (const asset of assets) {
                     if (asset.tagName === 'IMG' && asset.src && !asset.src.startsWith('data:')) {
                         asset.src = await toBase64(asset.src);
@@ -81,7 +99,7 @@ const PDFGenerator = {
                 }
 
                 // --- 2. PREPARAÇÃO DO VIEWPORT PARA CAPTURA ---
-                const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected', '.control-layer'];
+                const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected', '.control-layer', '.zoom-controls'];
                 const tempHidden = [];
                 hideElements.forEach(selector => {
                     document.querySelectorAll(selector).forEach(el => {
@@ -94,20 +112,17 @@ const PDFGenerator = {
 
                 if (typeof domtoimage !== 'undefined') {
                     try {
-                        console.log('📸 Gerando snapshot via dom-to-image-more (v19)...');
+                        console.log('📸 Capturando via dom-to-image v20...');
                         finalDataUrl = await domtoimage.toJpeg(viewport, {
                             quality: 0.95,
                             bgcolor: '#111111',
-                            style: {
-                                margin: '0', padding: '0', transform: 'none'
-                            }
+                            style: { margin: '0', padding: '0' }
                         });
                     } catch (err) {
                         console.warn('⚠️ domtoimage falhou:', err);
                     }
                 }
 
-                // Fallback html2canvas
                 if (!finalDataUrl && typeof html2canvas !== 'undefined') {
                     const canvas = await html2canvas(viewport, {
                         scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#111111'
@@ -119,14 +134,12 @@ const PDFGenerator = {
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
 
                 if (finalDataUrl) {
-                    console.log('✅ Snapshot v19 Concluído.');
+                    console.log('✅ Snap v20 Concluído.');
                     return resolve(finalDataUrl);
                 }
-
-                throw new Error("Motores de captura falharam");
-
+                throw new Error("Falha no motor v20");
             } catch (e) {
-                console.error('❌ Erro no motor Nuclear v19:', e);
+                console.error('❌ Erro v20:', e);
                 const snapshot = await this.drawLegacyManualSnapshot();
                 resolve(snapshot);
             }
@@ -774,27 +787,40 @@ const PDFGenerator = {
             // 4. RENDERIZAÇÃO DA TABELA (RESUMO TÉCNICO)
             let tableData = [];
 
+            // Helper para nomes de zonas
+            const zoneName = (id) => clean(id.replace(/_/g, ' ').toUpperCase());
+
             // A. Cores
             Object.entries(this.context.state.parts || {}).forEach(([p, val]) => {
-                tableData.push(['COR: ' + p.toUpperCase(), clean(val.value || val)]);
+                tableData.push(['COR: ' + clean(p.toUpperCase()), clean(val.value || val)]);
             });
 
-            // B. Textos
+            // B. Elementos Customizados (Logos/Estampas - NOVO v20)
+            const elements = this.context.state.elements || {};
+            Object.entries(elements).forEach(([zoneId, items]) => {
+                if (Array.isArray(items) && items.length > 0) {
+                    items.forEach(it => {
+                        const name = it.name || it.sku || (it.category ? `${it.category} - ${it.id}` : 'LOGO/ESTAMPA');
+                        tableData.push([`ELEMENTO: ${zoneName(zoneId)}`, clean(name.toUpperCase())]);
+                    });
+                }
+            });
+
+            // C. Textos (Zonais e Draggables)
             Object.entries(this.context.state.texts || {}).forEach(([key, val]) => {
                 if (val.enabled && val.content) {
-                    tableData.push(['TEXTO: ' + key.toUpperCase(), clean(val.content)]);
+                    tableData.push(['TEXTO: ' + clean(key.toUpperCase()), clean(val.content)]);
                 }
             });
 
-            // C. Configurações Extras
+            // D. Configurações Extras
             Object.entries(this.context.state.extras || {}).forEach(([key, val]) => {
                 if (val.enabled || val.active) {
-                    const extraName = key.replace(/_/g, ' ').toUpperCase();
-                    tableData.push(['EXTRA: ' + extraName, 'ATIVADO']);
+                    tableData.push(['EXTRA: ' + clean(key.replace(/_/g, ' ').toUpperCase()), 'ATIVADO']);
                 }
             });
 
-            // D. Tamanhos/Qtde
+            // E. Tamanhos/Qtde
             const sizes = this.context.state.sizes || {};
             const totalQty = Object.values(sizes).reduce((acc, q) => acc + (parseInt(q) || 0), 0);
             const sizeString = Object.entries(sizes)
@@ -806,24 +832,22 @@ const PDFGenerator = {
                 tableData.push(['GRADES/TAMANHOS', sizeString]);
             }
 
-            // E. Observações
+            // F. Observações
             const obs = this.context.state.observations || this.context.state.observacoes || "";
             if (obs && obs.trim().length > 0) {
                 tableData.push(['OBSERVACOES', clean(obs).substring(0, 1000)]);
             }
 
-            // F. Breakdown Financeiro (Crucial)
+            // G. Breakdown Financeiro
             if (this.context.pricing && this.context.pricing.breakdown) {
                 tableData.push([{ content: 'RESUMO FINANCEIRO', colSpan: 2, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }]);
                 Object.entries(this.context.pricing.breakdown).forEach(([label, value]) => {
-                    if (value > 0 && !['total_price', 'unit_price'].includes(label)) {
+                    // Incluir totais e extras
+                    if (value > 0) {
                         const cleanLabel = clean(label.replace(/_/g, ' ').toUpperCase());
-                        tableData.push([`INVESTIMENTO: ${cleanLabel}`, `R$ ${value.toFixed(2)}`]);
+                        tableData.push([`VALOR: ${cleanLabel}`, `R$ ${value.toFixed(2)}`]);
                     }
                 });
-                if (this.context.pricing.unit_price) {
-                    tableData.push(['PRECO UNITARIO', `R$ ${this.context.pricing.unit_price.toFixed(2)}`]);
-                }
             }
 
             // Renderizar Tabela com Auto-Page
