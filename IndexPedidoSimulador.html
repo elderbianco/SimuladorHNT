@@ -723,12 +723,28 @@
     </div>
 
     <header class="premium-header"
-        style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 15px 0; border-bottom: 2px solid var(--border); background: #000; position: sticky; top: 0; z-index: 1000;">
-        <img src="assets/Galeria/HanuthaiLogo/logohnttexte.png" alt="Hanuthai Logo" style="height: 40px; width: auto;">
-        <div class="header-title"
-            style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 2px;">
-            GESTÃO DE PEDIDOS</div>
-        <a href="index.html" style="text-decoration:none; font-size:1.5rem; position: absolute; left: 30px;">🏠</a>
+        style="display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; border-bottom: 2px solid var(--border); background: #000; position: sticky; top: 0; z-index: 1000;">
+
+        <div style="display: flex; align-items: center; gap: 20px; flex: 1;">
+            <a href="index.html" style="text-decoration:none; font-size:1.5rem;" title="Início">🏠</a>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; flex: 1;">
+            <img src="assets/Galeria/HanuthaiLogo/logohnttexte.png" alt="Hanuthai Logo"
+                style="height: 40px; width: auto;">
+            <div class="header-title"
+                style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 2px;">
+                CARRINHO</div>
+        </div>
+
+        <div id="auth-header-state"
+            style="display: flex; gap: 15px; align-items: center; justify-content: flex-end; flex: 1; font-size: 0.95rem;">
+            <a href="Login.html"
+                style="color: #fff; text-decoration: none; transition: 0.3s; font-family: 'Outfit', sans-serif;">Entrar</a>
+            <a href="indexCadastro.html"
+                style="color: #000; background: var(--gold); text-decoration: none; border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; transition: 0.3s; font-family: 'Outfit', sans-serif;">Cadastrar-se</a>
+        </div>
+
     </header>
 
     <div class="dashboard-container">
