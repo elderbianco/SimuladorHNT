@@ -27,12 +27,12 @@ window.CartUI = {
         // Header for the Group
         div.innerHTML = `
             <div class="card-header master-header" style="background: #111; padding: 25px; cursor: default; border-bottom: 1px solid #222;">
-                <div style="font-size:1.8rem; cursor:pointer; opacity: 0.8;" onclick="CartUI.toggleCard(this.parentElement)">📦</div>
+                <div style="font-size:1.8rem; cursor:pointer;" onclick="CartUI.toggleCard(this.parentElement)">🛒</div>
                 
-                <div style="flex: 2; cursor:pointer;" onclick="CartUI.toggleCard(this.parentElement)">
-                    <div style="font-size: 1.4rem; font-weight: bold; color:${isGeneric ? '#888' : 'var(--gold)'}">${group.clientName}</div>
-                    <div class="item-subtitle" style="font-size: 1rem; margin-top:5px;">
-                        ${group.items.length} Itens • <span style="color:#aaa;">${group.phone || 'Sem Telefone'}</span>
+                <div style="flex: 2; cursor:pointer; margin-left: 15px;" onclick="CartUI.toggleCard(this.parentElement)">
+                    <div style="font-size: 1.4rem; font-weight: bold; color:var(--gold)">Itens da Simulação</div>
+                    <div class="item-subtitle" style="font-size: 1rem; margin-top:5px; color:#aaa;">
+                        ${group.items.length} Produto(s)
                     </div>
                 </div>
     
@@ -42,22 +42,19 @@ window.CartUI = {
                 </div>
     
                 <div style="text-align:right">
-                    <div style="font-size:0.8rem; color:#888;">Valor Total do Pedido</div>
+                    <div style="font-size:0.8rem; color:#888;">Subtotal</div>
                     <div style="color:var(--gold); font-size:1.5rem; font-weight:bold;">${group.totalVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
                 </div>
     
                 <div style="text-align:right; margin-left: 20px; display:flex; gap:12px; align-items:center;">
-                    <button class="btn-delete-group" onclick="deleteGroup([${group.items.map(i => i._index).join(',')}])">
-                        🗑️ <span class="btn-text-mobile">Excluir Pedido</span>
-                    </button>
                     <div class="toggle-btn-modern" onclick="CartUI.toggleCard(this.parentElement.parentElement)" title="Expandir/Recolher">
                         <span class="toggle-icon" style="font-size: 0.8rem; transition: transform 0.3s;">▼</span>
                     </div>
                 </div>
             </div>
     
-            <div class="card-details" style="display:block; padding:0; background: transparent;">
-                 <!-- ITEMS LIST (V1 Style Sub-cards) -->
+            <div class="card-details expanded" style="display:block; padding:0; background: transparent;">
+                 <!-- ITEMS LIST -->
                  <div class="sub-items-container" style="background: #080808; padding: 20px;">
                     ${group.items.map(item => this.renderSubItemV1Style(item)).join('')}
                  </div>
@@ -134,9 +131,8 @@ window.CartUI = {
                 <div class="tabs-nav">
                     <button class="tab-btn active" onclick="CartUI.switchTab(this, 'prod-${uid}')">🏠 Produto & Cores ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'sizes-${uid}')">📏 Tamanhos ▼</button>
-                    <button class="tab-btn" onclick="CartUI.switchTab(this, 'specs-${uid}')">🎨 Detalhes (Logos) ▼</button>
+                    <button class="tab-btn" onclick="CartUI.switchTab(this, 'specs-${uid}')">🎨 Lógos/Textos ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'price-${uid}')">💰 Valores ▼</button>
-                    <button class="tab-btn" onclick="CartUI.switchTab(this, 'client-${uid}')">👤 Cliente ▼</button>
                 </div>
 
                 <div id="prod-${uid}" class="tab-content active">
@@ -186,31 +182,10 @@ window.CartUI = {
                         </table>
                     </div>
 
-                    <!-- PRODUCTION TIME (Mirroring Summary) -->
+                    <!-- PRODUCTION TIME -->
                     <div style="background: #222; border-left: 3px solid #00b4d8; padding: 15px; border-radius: 4px; font-size: 0.9rem; color: #aaa; line-height:1.5;">
                         <strong>📅 Previsão de Produção:</strong><br>
-                        Estimativa de 15 a 25 dias úteis a partir da aprovação final.<br>
-                        <span style="color:#666;">O valor unitário médio para este pedido é de <strong>${(item.pricing && item.pricing.unit_price ? item.pricing.unit_price : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>.</span>
-                    </div>
-                </div>
-
-                <div id="client-${uid}" class="tab-content">
-                    <div class="grid-info">
-                        <div class="info-grp">
-                            <div class="info-label">Nome do Cliente</div>
-                            <input type="text" class="input-dark" value="${client.name || ''}" placeholder="Nome..." onchange="updateClientData(${index}, 'name', this.value)">
-                        </div>
-                        <div class="info-grp">
-                            <div class="info-label">Telefone</div>
-                            <input type="text" class="input-dark" value="${client.phone || ''}" placeholder="(00) 00000-0000" onchange="updateClientData(${index}, 'phone', this.value)">
-                        </div>
-                        <div class="info-grp">
-                            <div class="info-label">E-mail</div>
-                            <input type="text" class="input-dark" value="${client.email || ''}" placeholder="email@exemplo.com" onchange="updateClientData(${index}, 'email', this.value)">
-                        </div>
-                    </div>
-                    <div style="margin-top:20px; border-top:1px solid #333; padding-top:15px; text-align:right;">
-                        <button class="btn-modern btn-pdf" style="background:#c0392b; border:none;" onclick="deleteOrder(${index})">🗑️ Excluir Item Definitivamente</button>
+                        Estimativa de 15 a 25 dias úteis a partir da aprovação final.
                     </div>
                 </div>
             </div>
