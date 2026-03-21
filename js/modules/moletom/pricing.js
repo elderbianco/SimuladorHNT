@@ -304,9 +304,30 @@ function updateReport(total, qty, discPct, discVal, waiver, devFees) {
         html += `<tr style="background:rgba(40,167,69,0.1);"><td><strong>Bônus de Matriz</strong></td><td>Isenção por volume.</td><td class="text-right" style="color:#28a745;">- R$ ${fmtMoney(waiver)}</td></tr>`;
     }
 
-    // Prazo
+    // Logística & Contato
     const { minDate, maxDate } = calculateBusinessDates(new Date(), state.config.production?.minDays || 15, state.config.production?.maxDays || 25, state.config.production?.holidays || []);
-    html += `<tr><td colspan="3" style="padding:15px 0; color:#aaa; font-size:0.9em; border-top:1px solid #444;"><strong>📅 Previsão Estimada:</strong> ${minDate} a ${maxDate}</td></tr>`;
+
+    const clientProfile = JSON.parse(localStorage.getItem('hnt_customer_profile') || '{}');
+    const contactPhone = clientProfile.phone || state.phone || 'Não cadastrado';
+
+    html += `<tr style="background:#2C2C2C; color:#fff; font-weight:bold;"><td colspan="3">LOGÍSTICA & CONTATO</td></tr>`;
+    html += `
+        <tr>
+            <td colspan="2"><strong>Contato / Telefone</strong></td>
+            <td class="text-right" style="color:#28a745;">${contactPhone}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Data do Pedido</strong></td>
+            <td class="text-right">${new Date().toLocaleDateString()}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Previsão Estimada</strong></td>
+            <td class="text-right" style="color:#00b4d8;">
+                ${minDate} a ${maxDate}<br>
+                <span style="font-size:0.8em; color:#888;">(${state.config.production?.minDays || 15}-${state.config.production?.maxDays || 25} dias úteis)</span>
+            </td>
+        </tr>
+    `;
     html += `<tr style="background:#00b4d8; color:#000; font-weight:800; text-transform:uppercase;"><td colspan="3" style="padding:15px;"><div style="display:flex; justify-content:space-between;"><span>TOTAL FINAL</span><span>R$ ${fmtMoney(total)}</span></div></td></tr>`;
 
     b.innerHTML = html;
