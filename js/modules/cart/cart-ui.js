@@ -294,15 +294,26 @@ window.CartUI = {
                 let logoPrice = 0;
 
                 if (!data.isCustom && !data.is_custom) {
-                    if (config.zonePrices && config.zonePrices[zoneId] !== undefined) {
-                        logoPrice = config.zonePrices[zoneId];
+                    const normalizedZoneId = (zoneId || '').toLowerCase().trim();
+                    const zonePrices = config.zonePrices || {};
+
+                    // Procura na config.zonePrices (case-insensitive)
+                    let foundPrice = undefined;
+                    Object.keys(zonePrices).forEach(k => {
+                        if (k.toLowerCase().trim() === normalizedZoneId) {
+                            foundPrice = zonePrices[k];
+                        }
+                    });
+
+                    if (foundPrice !== undefined) {
+                        logoPrice = foundPrice;
                     } else {
-                        const lowerZone = (zoneId || '').toLowerCase();
-                        if (lowerZone.includes('lat')) {
+                        // Fallbacks baseados em palavras-chave no ID da zona
+                        if (normalizedZoneId.includes('lat')) {
                             logoPrice = config.logoLatPrice || 0;
-                        } else if (lowerZone.includes('leg') || lowerZone.includes('perna')) {
+                        } else if (normalizedZoneId.includes('leg') || normalizedZoneId.includes('perna')) {
                             logoPrice = config.legZoneAddonPrice || config.logoLegPrice || 0;
-                        } else if (lowerZone.includes('center') || lowerZone.includes('centro')) {
+                        } else if (normalizedZoneId.includes('center') || normalizedZoneId.includes('centro')) {
                             logoPrice = config.logoCenterPrice || 0;
                         }
                     }
@@ -342,12 +353,13 @@ window.CartUI = {
                 const zoneName = data.zone_label || zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 let textPrice = config.textPrice || 0;
 
-                if (zoneId.includes('lat')) {
+                const normalizedZoneId = zoneId.toLowerCase();
+                if (normalizedZoneId.includes('lat')) {
                     const uId = zoneId.replace('text_', 'logo_');
                     const hasImg = rawUploads[uId] && (rawUploads[uId].src || rawUploads[uId].filename);
                     if (hasImg) textPrice = config.textLatPrice || 9.90;
                     else textPrice = 0;
-                } else if (zoneId.includes('leg') || zoneId.includes('perna')) {
+                } else if (normalizedZoneId.includes('leg') || normalizedZoneId.includes('perna')) {
                     textPrice = config.textLegPrice || config.textPrice || 0;
                 }
 
@@ -545,8 +557,8 @@ window.CartUI = {
         // 3. Observations
         const obs = specs.observations || specs.observacoes || "";
         if (obs && obs.trim().length > 0) {
-            html += '<h4 style="color:#fff; border-bottom:1px solid #444; padding-bottom:5px; margin-top:25px;">📝 OBSERVAÇÕES</h4>';
-            html += `<div style="background:#222; padding:15px; border-radius:6px; border-left:3px solid #ccc; color:#ddd; margin-top:10px; font-style:italic; line-height:1.5;">
+            html += '<h4 style="color:var(--gold); border-bottom:1px solid #444; padding-bottom:5px; margin-top:25px;">📝 OBSERVAÇÕES DO CLIENTE</h4>';
+            html += `<div style="margin:15px 0; padding:15px; background:rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px; font-size:0.95rem; color:#ddd; font-style:italic; line-height:1.5;">
                         "${obs.replace(/\n/g, '<br>')}"
                      </div>`;
         }
