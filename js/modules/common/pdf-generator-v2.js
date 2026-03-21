@@ -774,8 +774,8 @@ const PDFGenerator = {
                 return 0;
             };
 
-            // 1. CONFIGURAÇÃO DE BASE (Grade + Contato)
-            tableData.push([{ content: '1. CONFIGURACAO DE BASE & CONTATO', colSpan: 3, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
+            // 1. CONFIGURAÇÃO DE BASE (Grade + Contato + Datas)
+            tableData.push([{ content: '1. CONFIGURACAO DE BASE, CONTATO & PRAZOS', colSpan: 3, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
 
             // Tenta recuperar telefone do perfil ou state
             let phone = 'Nao Registrado';
@@ -785,6 +785,18 @@ const PDFGenerator = {
             } catch (e) { }
 
             tableData.push(['CONTATO / TELEFONE', clean(phone), '']);
+
+            // DATAS (PEDIDO E ENTREGA)
+            const production = state.config?.production || { minDays: 15, maxDays: 25 };
+            const today = new Date();
+            const formatDate = (d) => d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getFullYear();
+
+            // Cálculo simples de previsão (adicionamos os dias úteis como dias corridos * 1.4 aprox ou apenas dias diretos se preferir)
+            // Aqui usaremos os dias diretos + margem para segurança factory
+            const deliveryDate = new Date(today.getTime() + (production.maxDays * 24 * 60 * 60 * 1000));
+
+            tableData.push(['DATA DO PEDIDO', formatDate(today), '']);
+            tableData.push(['PREVISAO DE ENTREGA', formatDate(deliveryDate), '']);
 
             const sizes = state.sizes || {};
             const totalQty = Object.values(sizes).reduce((acc, q) => acc + (parseInt(q) || 0), 0);
