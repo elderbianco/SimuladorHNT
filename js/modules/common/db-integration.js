@@ -120,7 +120,8 @@ const DBAdapter = {
                         base: state.config?.basePrice || (totalQty > 0 ? (pricing.total / totalQty) : 0),
                         discounts: pricing.discountValue || 0,
                         dev_fees: pricing.devFees || (pricing.devFeesCount ? (state.config?.devFee || 0) : 0),
-                        addons: 0 // Para extras futuros
+                        addons: pricing.addons || 0,
+                        details: pricing.details || [] // New: store detailed items if available
                     }
                 },
 
@@ -168,8 +169,12 @@ const DBAdapter = {
                 if (ext && ext.enabled) {
                     const colorObj = productData.colors.find(c => c.id === ext.color);
                     record.item.specs.extras[e.name] = {
+                        id: e.id,
                         active: true,
-                        value: colorObj ? colorObj.name : ext.color
+                        value: colorObj ? colorObj.name : ext.color,
+                        price: (state.config.extraPrices && state.config.extraPrices[e.id] !== undefined)
+                            ? state.config.extraPrices[e.id]
+                            : e.price
                     };
                 }
             });
