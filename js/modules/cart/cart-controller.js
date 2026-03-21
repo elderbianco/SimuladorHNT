@@ -34,10 +34,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return; // Não há nada para mesclar se o servidor não retornou dados
                 }
 
-                // Usar um Map para facilitar a busca e garantir unicidade por ID do servidor
+                // Função para obter um ID verdadeiramente único para cada item, mesmo no mesmo pedido
+                const getUniqueId = (item) => {
+                    // Tenta achar o simulationId que tem a sequencia (-01, -02)
+                    let techData = item.DADOS_TECNICOS_JSON || item.json_tec;
+                    if (typeof techData === 'string') {
+                        try { techData = JSON.parse(techData); } catch (e) { }
+                    }
+                    if (techData && techData.simulationId) {
+                        return String(techData.simulationId);
+                    }
+                    // Fallbacks seguros se simulationId não for achado
+                    return String(item.ID_SIMULACAO || item.order_id || item.ID_PEDIDO || Date.now());
+                };
+
+                // Usar um Map para facilitar a busca e garantir unicidade real (por item, não pedido pai)
                 const mergedMap = new Map();
                 serverPedidos.forEach(s => {
-                    const sId = String(s.order_id || s.ID_PEDIDO || s.ID_SIMULACAO || '');
+                    const sId = getUniqueId(s);
                     if (sId) mergedMap.set(sId, s);
                 });
 
@@ -45,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let updatedLocally = 0;
 
                 localPedidos.forEach(localItem => {
-                    const localId = String(localItem.order_id || localItem.ID_PEDIDO || localItem.ID_SIMULACAO || '');
+                    const localId = getUniqueId(localItem);
                     if (!localId) return;
 
                     const serverItem = mergedMap.get(localId);
