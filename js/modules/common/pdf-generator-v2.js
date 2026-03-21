@@ -169,20 +169,9 @@ const PDFGenerator = {
                 mirror.remove();
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
 
-                if (finalDataUrl) {
-                    this.context.snapshotURL = finalDataUrl;
-                    if (this.captureCallback) this.captureCallback(finalDataUrl);
-                }
-
                 resolve(finalDataUrl);
-
-                if (finalDataUrl) {
-                    console.log('✅ Snap v20 Concluído.');
-                    return resolve(finalDataUrl);
-                }
-                throw new Error("Falha no motor v20");
-            } catch (e) {
-                console.error('❌ Erro v20:', e);
+            } catch (err) {
+                console.error('❌ Erro no Snapshot Silent v30:', err);
                 const snapshot = await this.drawLegacyManualSnapshot();
                 resolve(snapshot);
             }
