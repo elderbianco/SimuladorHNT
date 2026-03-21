@@ -273,7 +273,9 @@ window.CartUI = {
         const baseP = config.basePrice || pricing.breakdown?.base || pricing.unit_price;
         // Se o baseP for igual ao unit_price e tivermos logos/extras, então o unit_price já incluiu tudo.
         // Tentar deduzir o base real se for shorts (149.90) ou calça (159.90) como fallback extremo
-        const isActuallyTotal = (baseP === pricing.unit_price && (uploadEntries.length > 0 || Object.keys(extras).length > 0));
+        const hasUploads = state.uploads && (Array.isArray(state.uploads) ? state.uploads.length > 0 : Object.keys(state.uploads).length > 0);
+        const hasExtras = state.extras && Object.keys(state.extras).length > 0;
+        const isActuallyTotal = (baseP === pricing.unit_price && (hasUploads || hasExtras));
         const finalBaseP = isActuallyTotal ? (item.simulator_type === 'shorts' ? 149.90 : 139.90) : baseP;
 
         html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">1. CONFIGURAÇÃO DE BASE</td></tr>';
