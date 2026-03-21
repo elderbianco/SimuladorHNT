@@ -29,12 +29,16 @@ const PDFGenerator = {
     /**
      * Motor de Renderização Nuclear v16 (Hyper-Fidelity Centralizado)
      */
+    /**
+     * Motor de Renderização Nuclear v18 (Fidelity Viewport + Canvas Mix)
+     * Busca a imagem EXATA que o usuário vê na tela (mantendo zoom/pan).
+     */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v17 (Fidelity Viewport Capture) Ativado...');
+                console.log('☢️ Motor Nuclear v18 (Fidelity Capture) Ativado...');
 
-                // Capturamos a área exata que o usuário visualiza (com zoom e posições originais)
+                // Área do viewport que contém o produto e o fundo (Ring)
                 const viewport = document.querySelector('.simulator-viewport') || document.querySelector('.simulator-area') || document.querySelector('.simulator-wrapper');
 
                 if (!viewport) {
@@ -42,56 +46,66 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // Ocultar temporariamente guias, contornos e menus do seletor
+                // --- 1. PREPARAÇÃO DO VIEWPORT PARA CAPTURA ---
+                const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected'];
                 const tempHidden = [];
-                const hideSelector = '.drag-handle, .resize-handle, .ui-resizable-handle, .ui-selected, .custom-element.selected';
-                document.querySelectorAll(hideSelector).forEach(el => {
-                    const origOutline = el.style.outline;
-                    const origBox = el.style.boxShadow;
-                    const origBorder = el.style.border;
-                    const origDisplay = el.style.display;
-                    tempHidden.push({ el, origOutline, origBox, origBorder, origDisplay });
-
-                    el.style.setProperty('outline', 'none', 'important');
-                    el.style.setProperty('box-shadow', 'none', 'important');
-                    el.style.setProperty('border', 'none', 'important');
-                    if (el.classList.contains('drag-handle') || el.classList.contains('resize-handle')) {
+                hideElements.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(el => {
+                        tempHidden.push({ el, display: el.style.display });
                         el.style.setProperty('display', 'none', 'important');
-                    }
+                    });
                 });
 
+                let finalDataUrl = null;
+
+                // Tenta domtoimage (v18 - Preferred)
                 if (typeof domtoimage !== 'undefined') {
-                    // dom-to-image-more respeita perfeitamente as proporções, scale do CSS, e o overflow oculto!
-                    const dataUrl = await domtoimage.toJpeg(viewport, {
-                        quality: 0.95,
-                        bgcolor: '#111111', // Fundo escuro fixo
-                        style: {
-                            margin: '0',
-                            padding: '0'
-                        }
-                    });
-
-                    // Restaurar UI
-                    tempHidden.forEach(item => {
-                        item.el.style.outline = item.origOutline;
-                        item.el.style.boxShadow = item.origBox;
-                        item.el.style.border = item.origBorder;
-                        item.el.style.display = item.origDisplay;
-                    });
-
-                    console.log('✅ Print FIDELITY VIEWPORT v17 CONCLUÍDO.');
-                    return resolve(dataUrl);
-
-                } else {
-                    console.warn("⚠️ domtoimage não carregado. Retornando ao Fallback legado.");
-                    tempHidden.forEach(item => { /*..*/ });
-                    const snapshot = await this.drawLegacyManualSnapshot();
-                    return resolve(snapshot);
+                    try {
+                        console.log('📸 Gerando snapshot via dom-to-image-more...');
+                        finalDataUrl = await domtoimage.toJpeg(viewport, {
+                            quality: 0.95,
+                            bgcolor: '#111111',
+                            style: {
+                                // Garante que a captura respeite o estado visual atual (zoom/pan)
+                                margin: '0',
+                                padding: '0',
+                                width: viewport.scrollWidth + 'px',
+                                height: viewport.scrollHeight + 'px'
+                            }
+                        });
+                    } catch (err) {
+                        console.warn('⚠️ domtoimage falhou:', err);
+                    }
                 }
 
+                // Fallback para html2canvas se domtoimage falhar ou não existir
+                if (!finalDataUrl && typeof html2canvas !== 'undefined') {
+                    console.log('📸 Falha ou ausência de domtoimage. Usando html2canvas fallback...');
+                    const canvas = await html2canvas(viewport, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#111111',
+                        logging: false
+                    });
+                    finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                }
+
+                // Restaurar elementos ocultos
+                tempHidden.forEach(item => {
+                    item.el.style.display = item.display;
+                });
+
+                if (finalDataUrl) {
+                    console.log(`✅ Snapshot v18 capturado (${Math.round(finalDataUrl.length / 1024)} KB)`);
+                    return resolve(finalDataUrl);
+                }
+
+                throw new Error("Motores de captura falharam");
+
             } catch (e) {
-                console.error('❌ Erro Crítico Fidelity Engine v17:', e);
-                // Fallback legado absoluto
+                console.error('❌ Erro no motor Nuclear v18:', e);
+                // Retorna o legado em último caso
                 const snapshot = await this.drawLegacyManualSnapshot();
                 resolve(snapshot);
             }
@@ -498,7 +512,7 @@ const PDFGenerator = {
     },
 
     /**
-     * Geração de PDF (v12) e Backup Automático Local
+     * Gera PDF (v12) e Backup Automático Local
      */
     async generate(title) {
         // Função legado para imprimir direto (caso chamado manualmente)
@@ -759,10 +773,31 @@ const PDFGenerator = {
                 }
             });
 
-            // D. Observações
+            // D. Tamanhos/Qtde
+            const sizes = this.context.state.sizes || {};
+            const sizeString = Object.entries(sizes)
+                .filter(([_, qty]) => parseInt(qty) > 0)
+                .map(([size, qty]) => `${size}: ${qty}`)
+                .join(' | ');
+            if (sizeString) {
+                tableData.push(['GRADES/TAMANHOS', sizeString]);
+            }
+
+            // E. Observações
             const obs = this.context.state.observations || this.context.state.observacoes || "";
             if (obs && obs.trim().length > 0) {
-                tableData.push(['OBSERVACOES', clean(obs)]);
+                tableData.push(['OBSERVACOES', clean(obs).substring(0, 500)]);
+            }
+
+            // F. Breakdown de Preços (Fidelidade Financeira)
+            if (this.context.pricing && this.context.pricing.breakdown) {
+                tableData.push(['---', '---']);
+                Object.entries(this.context.pricing.breakdown).forEach(([label, value]) => {
+                    if (value > 0 && label !== 'total_price' && label !== 'unit_price') {
+                        const cleanLabel = clean(label.replace(/_/g, ' ').toUpperCase());
+                        tableData.push([`VALOR: ${cleanLabel}`, `R$ ${value.toFixed(2)}`]);
+                    }
+                });
             }
 
             // Gerar Tabela Automática
@@ -794,7 +829,7 @@ const PDFGenerator = {
             doc.text('INVESTIMENTO ESTIMADO:', margin, currentY);
             doc.text(totalText, pageWidth - margin, currentY, { align: 'right' });
             // 5. TERMOS E CONDIÇÕES - Removido Emojis (v15.10)
-            currentY += 5;
+            currentY += 10;
             const terms = "AVISO IMPORTANTE: Este documento e uma SIMULACAO DIGITAL. O resultado fisico pode apresentar variacoes sutis de cores e proporcoes devido ao processo produtivo e configuracao de tela. O bordado sera validado por analise tecnica. Ao prosseguir, voce concorda com os termos e confirma direitos sobre as artes enviadas.";
 
             doc.setFontSize(7);
@@ -806,97 +841,89 @@ const PDFGenerator = {
             const termLines = doc.splitTextToSize(terms, safeWidth);
 
             doc.text(termLines, margin, currentY);
-            currentY += (termLines.length * 3.5);
+            currentY += (termLines.length * 4);
 
+            // 5. QR CODES (PEDIDO E PRODUTO)
             try {
-                // Posicionamento Centralizado e Espaçado
-                const qrSize = (pageWidth - (margin * 4)) * 0.45;
-                const qrGap = 20;
-                const qrX1 = (pageWidth - (qrSize * 2 + qrGap)) / 2;
-                const qrX2 = qrX1 + qrSize + qrGap;
-                const qrYStart = currentY + 12;
+                const qrY = pageHeight - margin - 35;
+                const qrSize = 30;
 
-                // QR 1: Apenas Pedido
-                const q1 = await generateQR(id);
+                // QR 1: Pedido (Esquerda)
+                const q1 = await generateQR(`PEDIDO:${orderNum}|ID:${id}`);
                 if (q1) {
-                    doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(50, 50, 50);
-                    doc.text('CÓDIGO DO PEDIDO', qrX1 + (qrSize / 2), qrYStart - 4, { align: 'center' });
-                    doc.addImage(q1, 'PNG', qrX1, qrYStart, qrSize, qrSize);
-                    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-                    doc.text(`${id}`, qrX1 + (qrSize / 2), qrYStart + qrSize + 5, { align: 'center' });
-                    // QR 1: Número do Pedido
-                    const qrPedido = await generateQR(orderNum);
-                    if (qrPedido && qrPedido.length > 100) {
-                        doc.addImage(qrPedido, 'PNG', pageWidth - margin - 65, pageHeight - margin - 35, 30, 30);
-                        doc.setFontSize(7);
-                        doc.setTextColor(150, 150, 150);
-                        doc.text(`QR PEDIDO`, pageWidth - margin - 50, pageHeight - margin - 3, { align: 'center' });
-                    }
-
-                    // QR 2: Produto/SKU
-                    const qrProduto = await generateQR(sku);
-                    if (qrProduto && qrProduto.length > 100) {
-                        doc.addImage(qrProduto, 'PNG', pageWidth - margin - 30, pageHeight - margin - 35, 30, 30);
-                        doc.setFontSize(7);
-                        doc.setTextColor(150, 150, 150);
-                        doc.text(`QR SKU`, pageWidth - margin - 15, pageHeight - margin - 3, { align: 'center' });
-                    }
-
-                } catch (e) {
-                    console.warn("QR Error", e);
+                    doc.addImage(q1, 'PNG', margin, qrY, qrSize, qrSize);
+                    doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(100, 100, 100);
+                    doc.text('QR PEDIDO', margin + (qrSize / 2), qrY + qrSize + 4, { align: 'center' });
+                    doc.setFontSize(6);
+                    doc.text(orderNum, margin + (qrSize / 2), qrY + qrSize + 7, { align: 'center' });
                 }
 
-                // SALVAR
-                const pdfBase64 = doc.output('datauristring').split(',').pop();
-                const fileName = `Pedido_${id}`;
-                this.updateModalButton('saving');
-
-                if (typeof SupabaseAdapter !== 'undefined') {
-                    const url = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
-                    if (url) {
-                        this.savedPdfUrl = url;
-                        this.updateModalButton('ready', url);
-                        return url;
-                    }
+                // QR 2: SKU/Produto (Direita)
+                const q2 = await generateQR(`SKU:${sku}`);
+                if (q2) {
+                    doc.addImage(q2, 'PNG', pageWidth - margin - qrSize, qrY, qrSize, qrSize);
+                    doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(100, 100, 100);
+                    doc.text('QR PRODUTO', pageWidth - margin - (qrSize / 2), qrY + qrSize + 4, { align: 'center' });
+                    doc.setFontSize(6);
+                    doc.text(sku, pageWidth - margin - (qrSize / 2), qrY + qrSize + 7, { align: 'center' });
                 }
-
-                doc.save(`${fileName}.pdf`);
-                this.updateModalButton('ready', '#');
-
-            } catch (err) {
-                console.error('PDF Error:', err);
-                this.updateModalButton('error');
+            } catch (e) {
+                console.warn("QR Error", e);
             }
-        },
+
+            // SALVAR
+            const pdfBase64 = doc.output('datauristring').split(',').pop();
+            const fileName = `Pedido_${id}`;
+            this.updateModalButton('saving');
+
+            if (typeof SupabaseAdapter !== 'undefined') {
+                const url = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
+                if (url) {
+                    this.savedPdfUrl = url;
+                    this.updateModalButton('ready', url);
+                    return url;
+                }
+            }
+
+            doc.save(`${fileName}.pdf`);
+            this.updateModalButton('ready', '#');
+
+        } catch (err) {
+            console.error('PDF Error:', err);
+            this.updateModalButton('error');
+        }
+    },
 
     /**
      * Gera e salva PDF em segundo plano (para carrinho)
      */
     async generateAndSaveForCart(customId = null) {
-            return this.generateBackgroundPDF(customId); // Reutiliza motor expert unificado
-        }
-    };
-
-    // Hook automático para atualizar snapshot quando o simulador mudar
-    if(typeof window !== 'undefined') {
-        window.PDFGenerator = PDFGenerator;
-
-// Captura inicial após 3 segundos (Apenas se estiver no Simulador)
-setTimeout(() => {
-    if (PDFGenerator.updateSnapshot && document.querySelector('.simulator-area')) {
-        PDFGenerator.updateSnapshot();
+        return this.generateBackgroundPDF(customId); // Reutiliza motor expert unificado
     }
-}, 3000);
+};
 
-// Recapturar quando houver mudanças visuais (conectar com scheduleRender se disponível)
-if (typeof scheduleRender !== 'undefined') {
-    const originalScheduleRender = scheduleRender;
-    window.scheduleRender = function (...args) {
-        originalScheduleRender(...args);
-        // Agendar atualização do snapshot (debounced)
-        if (PDFGenerator.updateSnapshot) {
-            setTimeout(() => PDFGenerator.updateSnapshot(), 500);
+// Hook automático para atualizar snapshot quando o simulador mudar
+if (typeof window !== 'undefined') {
+    window.PDFGenerator = PDFGenerator;
+
+    // Captura inicial após 3 segundos (Apenas se estiver no Simulador)
+    setTimeout(() => {
+        if (PDFGenerator.updateSnapshot && document.querySelector('.simulator-area')) {
+            PDFGenerator.updateSnapshot();
         }
-    };
-}
+    }, 3000);
+
+    // Recapturar quando houver mudanças visuais (conectar com scheduleRender se disponível)
+    if (typeof scheduleRender !== 'undefined') {
+        const originalScheduleRender = scheduleRender;
+        window.scheduleRender = function (...args) {
+            originalScheduleRender(...args);
+            // Agendar atualização do snapshot (debounced)
+            if (PDFGenerator.updateSnapshot) {
+                setTimeout(() => PDFGenerator.updateSnapshot(), 500);
+            }
+        };
+    }
 }
