@@ -30,15 +30,14 @@ const PDFGenerator = {
      * Motor de Renderização Nuclear v16 (Hyper-Fidelity Centralizado)
      */
     /**
-     * Motor de Renderização Nuclear v18 (Fidelity Viewport + Canvas Mix)
-     * Busca a imagem EXATA que o usuário vê na tela (mantendo zoom/pan).
+     * Motor de Renderização Nuclear v19 (Industrial Fidelity + Multi-Page)
+     * Garante o RingHNT de fundo e evita qualquer sobreposição.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v18 (Fidelity Capture) Ativado...');
+                console.log('☢️ Motor Nuclear v19 (Industrial Fidelity) Ativado...');
 
-                // Área do viewport que contém o produto e o fundo (Ring)
                 const viewport = document.querySelector('.simulator-viewport') || document.querySelector('.simulator-area') || document.querySelector('.simulator-wrapper');
 
                 if (!viewport) {
@@ -46,8 +45,43 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // --- 1. PREPARAÇÃO DO VIEWPORT PARA CAPTURA ---
-                const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected'];
+                // --- 1. IMUNIZAÇÃO AGRESSIVA DE ASSETS (Base64) ---
+                const toBase64 = (url) => new Promise((res) => {
+                    if (!url || url.startsWith('data:')) return res(url);
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth || img.width;
+                        canvas.height = img.naturalHeight || img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        res(canvas.toDataURL('image/png'));
+                    };
+                    img.onerror = () => res(url);
+                    img.src = url;
+                });
+
+                // Imunizar todas as imagens e fundos no viewport
+                const assets = Array.from(viewport.querySelectorAll('img, [style*="background-image"]'));
+                for (const asset of assets) {
+                    if (asset.tagName === 'IMG' && asset.src && !asset.src.startsWith('data:')) {
+                        asset.src = await toBase64(asset.src);
+                    } else {
+                        const style = window.getComputedStyle(asset);
+                        const bg = style.backgroundImage;
+                        if (bg && bg.includes('url(')) {
+                            const url = bg.match(/url\(["']?([^"']+)["']?\)/)?.[1];
+                            if (url && !url.startsWith('data:')) {
+                                const b64 = await toBase64(url);
+                                asset.style.backgroundImage = `url("${b64}")`;
+                            }
+                        }
+                    }
+                }
+
+                // --- 2. PREPARAÇÃO DO VIEWPORT PARA CAPTURA ---
+                const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected', '.control-layer'];
                 const tempHidden = [];
                 hideElements.forEach(selector => {
                     document.querySelectorAll(selector).forEach(el => {
@@ -58,19 +92,14 @@ const PDFGenerator = {
 
                 let finalDataUrl = null;
 
-                // Tenta domtoimage (v18 - Preferred)
                 if (typeof domtoimage !== 'undefined') {
                     try {
-                        console.log('📸 Gerando snapshot via dom-to-image-more...');
+                        console.log('📸 Gerando snapshot via dom-to-image-more (v19)...');
                         finalDataUrl = await domtoimage.toJpeg(viewport, {
                             quality: 0.95,
                             bgcolor: '#111111',
                             style: {
-                                // Garante que a captura respeite o estado visual atual (zoom/pan)
-                                margin: '0',
-                                padding: '0',
-                                width: viewport.scrollWidth + 'px',
-                                height: viewport.scrollHeight + 'px'
+                                margin: '0', padding: '0', transform: 'none'
                             }
                         });
                     } catch (err) {
@@ -78,34 +107,26 @@ const PDFGenerator = {
                     }
                 }
 
-                // Fallback para html2canvas se domtoimage falhar ou não existir
+                // Fallback html2canvas
                 if (!finalDataUrl && typeof html2canvas !== 'undefined') {
-                    console.log('📸 Falha ou ausência de domtoimage. Usando html2canvas fallback...');
                     const canvas = await html2canvas(viewport, {
-                        scale: 2,
-                        useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: '#111111',
-                        logging: false
+                        scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#111111'
                     });
                     finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
                 }
 
-                // Restaurar elementos ocultos
-                tempHidden.forEach(item => {
-                    item.el.style.display = item.display;
-                });
+                // Restaurar
+                tempHidden.forEach(item => { item.el.style.display = item.display; });
 
                 if (finalDataUrl) {
-                    console.log(`✅ Snapshot v18 capturado (${Math.round(finalDataUrl.length / 1024)} KB)`);
+                    console.log('✅ Snapshot v19 Concluído.');
                     return resolve(finalDataUrl);
                 }
 
                 throw new Error("Motores de captura falharam");
 
             } catch (e) {
-                console.error('❌ Erro no motor Nuclear v18:', e);
-                // Retorna o legado em último caso
+                console.error('❌ Erro no motor Nuclear v19:', e);
                 const snapshot = await this.drawLegacyManualSnapshot();
                 resolve(snapshot);
             }
@@ -775,103 +796,107 @@ const PDFGenerator = {
 
             // D. Tamanhos/Qtde
             const sizes = this.context.state.sizes || {};
+            const totalQty = Object.values(sizes).reduce((acc, q) => acc + (parseInt(q) || 0), 0);
             const sizeString = Object.entries(sizes)
                 .filter(([_, qty]) => parseInt(qty) > 0)
                 .map(([size, qty]) => `${size}: ${qty}`)
                 .join(' | ');
             if (sizeString) {
+                tableData.push(['TOTAL DE PECAS', totalQty.toString()]);
                 tableData.push(['GRADES/TAMANHOS', sizeString]);
             }
 
             // E. Observações
             const obs = this.context.state.observations || this.context.state.observacoes || "";
             if (obs && obs.trim().length > 0) {
-                tableData.push(['OBSERVACOES', clean(obs).substring(0, 500)]);
+                tableData.push(['OBSERVACOES', clean(obs).substring(0, 1000)]);
             }
 
-            // F. Breakdown de Preços (Fidelidade Financeira)
+            // F. Breakdown Financeiro (Crucial)
             if (this.context.pricing && this.context.pricing.breakdown) {
-                tableData.push(['---', '---']);
+                tableData.push([{ content: 'RESUMO FINANCEIRO', colSpan: 2, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }]);
                 Object.entries(this.context.pricing.breakdown).forEach(([label, value]) => {
-                    if (value > 0 && label !== 'total_price' && label !== 'unit_price') {
+                    if (value > 0 && !['total_price', 'unit_price'].includes(label)) {
                         const cleanLabel = clean(label.replace(/_/g, ' ').toUpperCase());
-                        tableData.push([`VALOR: ${cleanLabel}`, `R$ ${value.toFixed(2)}`]);
+                        tableData.push([`INVESTIMENTO: ${cleanLabel}`, `R$ ${value.toFixed(2)}`]);
                     }
                 });
+                if (this.context.pricing.unit_price) {
+                    tableData.push(['PRECO UNITARIO', `R$ ${this.context.pricing.unit_price.toFixed(2)}`]);
+                }
             }
 
-            // Gerar Tabela Automática
+            // Renderizar Tabela com Auto-Page
             doc.autoTable({
                 startY: currentY,
                 head: [['ATRIBUTO', 'ESPECIFICAÇÃO']],
                 body: tableData,
                 theme: 'grid',
-                styles: { fontSize: 8, cellPadding: 2 },
+                styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
                 headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255] },
-                margin: { left: margin, right: margin }
+                margin: { left: margin, right: margin, bottom: 45 } // Reserva espaço para footer
             });
 
-            currentY = doc.lastAutoTable.finalY + 12;
+            currentY = doc.lastAutoTable.finalY + 10;
 
-            // 4. TOTAL EM DESTAQUE - Linha removida na v15.9
-            /*
-            doc.setDrawColor(212, 175, 55);
-            doc.line(margin, currentY, pageWidth - margin, currentY);
-            */
-            currentY += 8;
+            // --- FOOTER DINÂMICO (TOTAL + QR + TERMS) ---
+            const drawFooter = async (docArg, yPos) => {
+                let y = yPos;
 
-            const totalDisplay = document.getElementById('price-display');
-            const totalText = clean(totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '') : 'R$ 0,00');
-
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.text('INVESTIMENTO ESTIMADO:', margin, currentY);
-            doc.text(totalText, pageWidth - margin, currentY, { align: 'right' });
-            // 5. TERMOS E CONDIÇÕES - Removido Emojis (v15.10)
-            currentY += 10;
-            const terms = "AVISO IMPORTANTE: Este documento e uma SIMULACAO DIGITAL. O resultado fisico pode apresentar variacoes sutis de cores e proporcoes devido ao processo produtivo e configuracao de tela. O bordado sera validado por analise tecnica. Ao prosseguir, voce concorda com os termos e confirma direitos sobre as artes enviadas.";
-
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'italic');
-            doc.setTextColor(140, 140, 140);
-
-            // Garantir que a largura de quebra respeite rigorosamente as margens
-            const safeWidth = pageWidth - (margin * 2);
-            const termLines = doc.splitTextToSize(terms, safeWidth);
-
-            doc.text(termLines, margin, currentY);
-            currentY += (termLines.length * 4);
-
-            // 5. QR CODES (PEDIDO E PRODUTO)
-            try {
-                const qrY = pageHeight - margin - 35;
-                const qrSize = 30;
-
-                // QR 1: Pedido (Esquerda)
-                const q1 = await generateQR(`PEDIDO:${orderNum}|ID:${id}`);
-                if (q1) {
-                    doc.addImage(q1, 'PNG', margin, qrY, qrSize, qrSize);
-                    doc.setFontSize(7); doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(100, 100, 100);
-                    doc.text('QR PEDIDO', margin + (qrSize / 2), qrY + qrSize + 4, { align: 'center' });
-                    doc.setFontSize(6);
-                    doc.text(orderNum, margin + (qrSize / 2), qrY + qrSize + 7, { align: 'center' });
+                // Se o espaço for insuficiente, vai para nova página
+                if (y > pageHeight - 60) {
+                    docArg.addPage();
+                    y = margin;
                 }
 
-                // QR 2: SKU/Produto (Direita)
-                const q2 = await generateQR(`SKU:${sku}`);
-                if (q2) {
-                    doc.addImage(q2, 'PNG', pageWidth - margin - qrSize, qrY, qrSize, qrSize);
-                    doc.setFontSize(7); doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(100, 100, 100);
-                    doc.text('QR PRODUTO', pageWidth - margin - (qrSize / 2), qrY + qrSize + 4, { align: 'center' });
-                    doc.setFontSize(6);
-                    doc.text(sku, pageWidth - margin - (qrSize / 2), qrY + qrSize + 7, { align: 'center' });
+                // Linha de Identificação
+                docArg.setDrawColor(200);
+                docArg.line(margin, y, pageWidth - margin, y);
+                y += 8;
+
+                const totalDisplay = document.getElementById('price-display');
+                const totalText = clean(totalDisplay ? totalDisplay.innerText.replace(/\n.*/g, '') : 'R$ 0,00');
+
+                docArg.setFontSize(16);
+                docArg.setFont('helvetica', 'bold');
+                docArg.setTextColor(0, 0, 0);
+                docArg.text('INVESTIMENTO ESTIMADO:', margin, y);
+                docArg.text(totalText, pageWidth - margin, y, { align: 'right' });
+                y += 8;
+
+                // Termos
+                const terms = "AVISO IMPORTANTE: Este documento e uma SIMULACAO DIGITAL. O resultado fisico pode apresentar variacoes sutis de cores e proporcoes devido ao processo produtivo. Ao prosseguir, voce confirma direitos sobre as artes enviadas e concorda com os termos de fabricacao.";
+                docArg.setFontSize(7);
+                docArg.setFont('helvetica', 'italic');
+                docArg.setTextColor(140, 140, 140);
+                const termLines = docArg.splitTextToSize(terms, pageWidth - (margin * 2));
+                docArg.text(termLines, margin, y);
+                y += (termLines.length * 4) + 5;
+
+                // QR CODES LADO A LADO NO FINAL DO FLOW
+                const qrSize = 25;
+                const qrY = y;
+
+                try {
+                    const qPedido = await generateQR(`PEDIDO:${orderNum}`);
+                    if (qPedido) {
+                        docArg.addImage(qPedido, 'PNG', margin, qrY, qrSize, qrSize);
+                        docArg.setFontSize(6); docArg.setFont('helvetica', 'bold');
+                        docArg.text(`PEDIDO: ${orderNum}`, margin + 2, qrY + qrSize + 4);
+                    }
+
+                    const qSku = await generateQR(`SKU:${sku}`);
+                    if (qSku) {
+                        docArg.addImage(qSku, 'PNG', margin + qrSize + 10, qrY, qrSize, qrSize);
+                        docArg.setFontSize(6); docArg.setFont('helvetica', 'bold');
+                        docArg.text(`SKU: ${sku}`, margin + qrSize + 12, qrY + qrSize + 4);
+                    }
+                } catch (e) {
+                    console.warn("QR Footer Error", e);
                 }
-            } catch (e) {
-                console.warn("QR Error", e);
-            }
+            };
+
+            await drawFooter(doc, currentY);
 
             // SALVAR
             const pdfBase64 = doc.output('datauristring').split(',').pop();
