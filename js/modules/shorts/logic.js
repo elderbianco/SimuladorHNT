@@ -309,6 +309,52 @@ async function handleZoneUpload(zoneId, file) {
 }
 
 /**
+ * Bridge for Gallery: Adds an image from a URL/Base64 string to a zone
+ * @param {string} zoneId - The target upload zone ID
+ * @param {string} src - The image source (URL or Base64)
+ * @param {string} filename - Optional filename
+ */
+function addImageToZone(zoneId, src, filename = "Imagem do Acervo") {
+    if (!src || !zoneId) return;
+
+    console.log(`[Shorts Logic] Adicionando imagem ao zone: ${zoneId}`);
+
+    // Configurar estado pendente para geração de nome
+    state.pendingUploadZone = zoneId;
+    const formattedName = (typeof generateFormattedFilename === 'function')
+        ? generateFormattedFilename(zoneId, filename, 'ACERVO')
+        : filename;
+
+    // Inicializar objeto de upload se não existir
+    if (!state.uploads[zoneId]) state.uploads[zoneId] = { unlocked: true };
+
+    // Atualizar metadados no state
+    state.uploads[zoneId].src = src;
+    state.uploads[zoneId].filename = filename;
+    state.uploads[zoneId].formattedFilename = formattedName;
+    state.uploads[zoneId].isCustom = false; // Imagem do acervo não é "custom" (upload do usuário)
+
+    // Resetar transforms básicos
+    state.uploads[zoneId].scale = 1.0;
+    state.uploads[zoneId].rotation = 0;
+    state.uploads[zoneId].x = '50%';
+    state.uploads[zoneId].y = '50%';
+
+    // Ativar limites visuais automaticamente
+    if (typeof toggleLimit === 'function') toggleLimit(zoneId, true);
+
+    // Agendar renderização
+    if (typeof scheduleRender === 'function') {
+        scheduleRender(true);
+    } else if (typeof updateVisuals === 'function') {
+        updateVisuals();
+    }
+
+    if (typeof renderControls === 'function') renderControls();
+    saveState();
+}
+
+/**
  * Verifica se uma zona (Upload ou Texto) está sendo usada
  */
 function checkZoneUsage(zoneId) {

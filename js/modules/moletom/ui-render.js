@@ -498,6 +498,20 @@ function createImageElement(z, s, isCustom, filename = '', formattedFilename = '
 
     updatePrice(); renderControls(); saveState();
 }
+
+/**
+ * Bridge for Gallery: Adds an image from a URL/Base64 string to a zone
+ * @param {string} zoneId - The target upload zone ID
+ * @param {string} src - The image source (URL or Base64)
+ */
+function addImageToZone(zoneId, src) {
+    if (!zoneId || !src) return;
+    const formattedName = (typeof generateFormattedFilename === 'function')
+        ? generateFormattedFilename(zoneId, "Imagem do Acervo", 'ACERVO')
+        : "Imagem do Acervo";
+
+    createImageElement(zoneId, src, false, "Imagem do Acervo", formattedName);
+}
 function removeZoneElements(z) {
     if (state.elements[z]) { state.elements[z].forEach(e => e.remove()); state.elements[z] = []; }
     if (checkZoneEmpty(z)) state.zoneLimits[z] = false; updateLimits(); updatePrice(); renderControls(); saveState();
