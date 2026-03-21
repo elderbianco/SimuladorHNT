@@ -56,7 +56,7 @@ const ZONE_LABEL_MAP = {
  * Retorna o nome legível de uma zona pelo seu ID técnico.
  * Fallback: converte underscores em espaços e capitaliza.
  */
-function resolveZoneLabel(zoneId) {
+window.resolveZoneLabel = function (zoneId) {
     if (!zoneId) return 'Zona';
     if (ZONE_LABEL_MAP[zoneId]) return ZONE_LABEL_MAP[zoneId];
     // Fallback humanizado: remove prefixo "text_" e formata
@@ -64,7 +64,7 @@ function resolveZoneLabel(zoneId) {
         .replace(/^text_/, '')
         .replace(/_/g, ' ')
         .replace(/\b\w/g, l => l.toUpperCase());
-}
+};
 
 window.CartUI = {
 
@@ -440,7 +440,7 @@ window.CartUI = {
         if (textEntries.length > 0) {
             html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">4. TEXTOS PERSONALIZADOS</td></tr>';
             textEntries.forEach(([zoneId, data]) => {
-                const zoneName = resolveZoneLabel(zoneId) || data.zone_label || zoneId;
+                const zoneName = window.resolveZoneLabel(zoneId) || data.zone_label || zoneId;
                 // Prioritize saved unit_price
                 let textPrice = data.unit_price || 0;
 
@@ -587,7 +587,7 @@ window.CartUI = {
             const p = parts[key];
             const colorValue = (typeof p === 'object' && p !== null) ? (p.value || 'N/A') : (p || 'N/A');
             const colorHex = (typeof p === 'object' && p !== null) ? (p.hex || '#333') : '#333';
-            const partLabel = resolveZoneLabel(key);
+            const partLabel = window.resolveZoneLabel(key);
 
             return `
             <div class="info-grp">
@@ -648,7 +648,7 @@ window.CartUI = {
             uploads.forEach(u => {
                 const src = u.file_url || u.src;
                 const name = u.file_name || u.filename || 'Imagem';
-                const label = resolveZoneLabel(u.zone_id || u.zone_label);
+                const label = window.resolveZoneLabel(u.zone_id || u.zone_label);
                 const isCustom = u.is_custom || u.isCustom;
 
                 html += `
@@ -671,7 +671,7 @@ window.CartUI = {
             html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:15px; margin-top:10px;">';
             texts.forEach(t => {
                 const content = t.content;
-                const label = resolveZoneLabel(t.zone_id || t.zone_label);
+                const label = window.resolveZoneLabel(t.zone_id || t.zone_label);
                 const colorHex = t.color_hex || t.color || '#fff';
                 const font = t.font_family || t.fontFamily || 'Standard';
 
