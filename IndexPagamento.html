@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento - Hanuthai</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=Bebas+Neue&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        :root {
+            --gold: #FFD700;
+            --dark-bg: #000000;
+            --card-bg: #050505;
+            --border: #333333;
+            --text-main: #FFFFFF;
+            --radius: 12px;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text-main);
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .premium-header {
+            width: 100%;
+            background: #000;
+            padding: 15px 0;
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .payment-container {
+            max-width: 600px;
+            width: 90%;
+            margin: 40px auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .payment-title {
+            color: var(--gold);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .summary-box {
+            background: #111;
+            border: 1px dashed var(--gold);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .summary-total {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 20px;
+            background: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover {
+            background: #fff;
+            transform: translateY(-5px);
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 215, 0, 0.3);
+            width: 50px;
+            height: 50px;
+            border-radius: 50px;
+            border-left-color: var(--gold);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="premium-header">
+        <div style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem;">FINALIZAR PAGAMENTO
+        </div>
+    </header>
+
+    <div class="payment-container">
+        <h2 class="payment-title">Resumo do Pedido</h2>
+        <div class="summary-box">
+            <p style="color: #aaa; margin-bottom: 10px;">Total a pagar:</p>
+            <div class="summary-total" id="payment-total">R$ 0,00</div>
+            <p style="color: #aaa; margin-top: 10px;" id="payment-items-count">0 itens selecionados</p>
+        </div>
+
+        <button class="btn-submit" id="btn-confirm-payment">💳 CONFIRMAR PAGAMENTO E ENVIAR PEDIDO</button>
+        <button class="btn-submit" id="btn-back-to-cart"
+            style="background:#222; color:#fff; margin-top:15px; font-size: 1.2rem; border: 1px solid #444;"
+            onclick="window.location.href='IndexPedidoSimulador.html'">⬅ VOLTAR AO CARRINHO</button>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <h2 style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; margin-top: 20px;">Processando Pedido...
+        </h2>
+        <p style="color: #aaa;">Enviando dados para a produção.</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/pages/payment/payment-controller.js"></script>
+</body>
+
+</html>
