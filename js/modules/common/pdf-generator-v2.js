@@ -95,7 +95,6 @@ const PDFGenerator = {
                     }
                 }
 
-                // --- 2. PREPARAÇÃO DO VIEWPORT PARA CAPTURA ---
                 const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected', '.control-layer', '.zoom-controls'];
                 const tempHidden = [];
                 hideElements.forEach(selector => {
@@ -105,14 +104,31 @@ const PDFGenerator = {
                     });
                 });
 
-                // Neutralizar transformações de UI que deslocam o componente (ex: Legging ativa)
+                // --- NOVO: EXPANSÃO DE CONTAINERS PARA EVITAR CORTES ---
+                const containersToExpand = ['.simulator-area', '.simulator-viewport', '.zoom-container', '.simulator-wrapper'];
+                const oldStyles = [];
+                containersToExpand.forEach(selector => {
+                    const el = document.querySelector(selector);
+                    if (el) {
+                        oldStyles.push({
+                            el,
+                            height: el.style.height,
+                            overflow: el.style.overflow,
+                            maxHeight: el.style.maxHeight,
+                            transform: el.style.transform,
+                            position: el.style.position
+                        });
+                        el.style.setProperty('height', 'auto', 'important');
+                        el.style.setProperty('min-height', '1200px', 'important');
+                        el.style.setProperty('overflow', 'visible', 'important');
+                        el.style.setProperty('max-height', 'none', 'important');
+                        el.style.setProperty('transform', 'none', 'important');
+                        el.style.setProperty('position', 'relative', 'important');
+                    }
+                });
+
                 const wrapper = document.querySelector('.simulator-wrapper');
-                let oldTransform = '';
-                let hadLeggingClass = false;
                 if (wrapper) {
-                    oldTransform = wrapper.style.transform;
-                    hadLeggingClass = wrapper.classList.contains('calca-legging-active');
-                    wrapper.style.transform = 'none';
                     wrapper.classList.remove('calca-legging-active');
                 }
 
@@ -128,8 +144,7 @@ const PDFGenerator = {
                             style: {
                                 margin: '0',
                                 padding: '0',
-                                overflow: 'visible',
-                                height: 'auto'
+                                overflow: 'visible'
                             }
                         });
                     } catch (err) {
@@ -146,9 +161,16 @@ const PDFGenerator = {
 
                 // Restaurar
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
-                if (wrapper) {
-                    wrapper.style.transform = oldTransform;
-                    if (hadLeggingClass) wrapper.classList.add('calca-legging-active');
+                oldStyles.forEach(s => {
+                    s.el.style.height = s.height;
+                    s.el.style.overflow = s.overflow;
+                    s.el.style.maxHeight = s.maxHeight;
+                    s.el.style.transform = s.transform;
+                    s.el.style.position = s.position;
+                    s.el.style.removeProperty('min-height');
+                });
+                if (wrapper && wrapper.getAttribute('data-had-class') === 'true') {
+                    wrapper.classList.add('calca-legging-active');
                 }
 
                 if (finalDataUrl) {
