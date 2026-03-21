@@ -690,7 +690,7 @@ const PDFGenerator = {
     /**
      * Gera um PDF real em background usando jsPDF (EXPERT v15)
      */
-    async generateBackgroundPDF() {
+    async generateBackgroundPDF(customId = null) {
         if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
             const loaded = await this.loadDependencies();
             if (!loaded) {
@@ -735,6 +735,7 @@ const PDFGenerator = {
 
         const sku = this.context.state?.simulationId || 'HNT_SKU';
         const orderNum = this.context.state?.orderNumber || 'SN';
+        const id = customId || sku;
 
         try {
             // Se chamado pelo openPreview, o snapshot já foi atualizado!
@@ -983,7 +984,7 @@ const PDFGenerator = {
      * Gera e salva PDF em segundo plano (para carrinho)
      */
     async generateAndSaveForCart(customId = null) {
-        return this.generateBackgroundPDF(); // Reutiliza motor expert unificado
+        return this.generateBackgroundPDF(customId); // Reutiliza motor expert unificado
     }
 };
 
