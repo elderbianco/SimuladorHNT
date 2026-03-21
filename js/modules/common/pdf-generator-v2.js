@@ -227,7 +227,11 @@ const PDFGenerator = {
                 const offsetX = (1600 - ((maxR - minL) * scale)) / 2;
                 let offsetY = (1200 - ((maxB - minT) * scale)) / 2;
 
-                // Ajustes finos por produto para compensar centro de massa visual
+                // Ajustes finos: se o conjunto for muito vertical (como Short+Legging),
+                // garantir que o centro visual não suba demais (compensa visualmente o peso no topo)
+                if (contentHeight > contentWidth * 1.1) {
+                    offsetY += (contentHeight * scale) * 0.04;
+                }
                 if (prod === 'TP' || prod === 'Top') {
                     offsetY -= 20;
                 } else if (prod === 'FS' || prod === 'SH') {
