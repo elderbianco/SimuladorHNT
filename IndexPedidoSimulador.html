@@ -735,57 +735,15 @@
 
         <div class="page-header" style="margin-bottom: 20px;">
             <div>
-                <h1 style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: #fff;">Simulações no
-                    Carrinho</h1>
-                <p style="color:#888; margin-top:5px;">Revise seus itens antes de finalizar a produção.</p>
+                <h1 style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: #fff;">Carrinho de Compras
+                </h1>
+                <p style="color:#888; margin-top:5px;">Revise seus itens antes de prosseguir com o pedido.</p>
             </div>
             <div style="display: flex; gap: 10px;">
-                <a href="indexCadastro.html?redirect=IndexPedidoSimulador.html" id="link-cadastro"
-                    class="btn btn-outline"
-                    style="text-decoration: none; font-size: 0.9rem; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--gold); color: var(--gold);">👤
-                    Meus Dados de Entrega</a>
-                <a href="indexCadastro.html?redirect=IndexPedidoSimulador.html&edit=true" class="btn btn-primary"
-                    style="text-decoration: none; font-size: 0.9rem; padding: 8px 15px; border-radius: 8px; display: flex; align-items: center; gap: 5px;">
-                    📝 Atualizar Cadastro
-                </a>
                 <button id="btn-clear-all" class="btn btn-outline"
-                    style="font-size: 0.9rem; padding: 8px 15px; border-radius: 8px; border: 1px solid #444; color: #888;">🗑️
-                    Esvaziar Carrinho</button>
-            </div>
-        </div>
-
-        <!-- Global Order Info Summary Card -->
-        <div class="order-global-info"
-            style="background: #111; border: 1px solid #222; border-radius: 12px; padding: 25px; margin-bottom: 30px; border-top: 2px solid var(--gold);">
-            <div style="display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 30px; align-items: flex-end;">
-                <div>
-                    <label
-                        style="display: block; font-size: 0.7rem; color: #555; margin-bottom: 8px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Referência
-                        / Protocolo</label>
-                    <input type="text" id="global-order-id" placeholder="Automático..." readonly
-                        style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: var(--gold); font-size: 1.1rem; font-weight: bold; border-radius: 6px;">
-                </div>
-                <div>
-                    <label
-                        style="display: block; font-size: 0.7rem; color: #555; margin-bottom: 8px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Nome
-                        Sincronizado</label>
-                    <input type="text" id="global-client-name" placeholder="Pendente de cadastro..." readonly
-                        style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; font-size: 1rem; border-radius: 6px;">
-                </div>
-                <div>
-                    <label
-                        style="display: block; font-size: 0.7rem; color: #555; margin-bottom: 8px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">WhatsApp
-                        de Contato</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="global-client-phone" placeholder="Pendente..." readonly
-                            style="flex: 1; padding: 12px; background: #000; border: 1px solid #333; color: #fff; font-size: 1rem; border-radius: 6px;">
-                        <a href="indexCadastro.html?redirect=IndexPedidoSimulador.html" class="btn btn-outline"
-                            title="Editar Informações"
-                            style="padding: 10px; display: flex; align-items: center; justify-content: center; border-color: var(--gold); color: var(--gold); text-decoration: none;">
-                            ✏️
-                        </a>
-                    </div>
-                </div>
+                    style="font-size: 0.9rem; padding: 8px 15px; border-radius: 8px; border: 1px solid #444; color: #888; display: flex; align-items: center; gap: 5px;">
+                    🗑️ Limpar Carrinho
+                </button>
             </div>
         </div>
 
@@ -821,8 +779,8 @@
                     <span>Total do Pedido</span>
                     <span id="final-checkout-total">R$ 0,00</span>
                 </div>
-                <button class="btn-checkout" onclick="window.goToPayment()">
-                    Confirmar Pedido ➔
+                <button class="btn-checkout" onclick="window.location.href='indexCadastro.html?flow=checkout'">
+                    Preencher Dados do Cliente ➔
                 </button>
             </div>
         </div>
