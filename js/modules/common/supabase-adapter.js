@@ -91,9 +91,16 @@ const SupabaseAdapter = {
                 unit: unitPrice
             });
 
+            let completeJson = technicalJson;
+            if (formattedData.DADOS_TECNICOS_JSON) {
+                try {
+                    completeJson = JSON.parse(formattedData.DADOS_TECNICOS_JSON);
+                } catch (e) { /* fallback */ }
+            }
+
             const row = {
                 ID_PEDIDO: formattedData.order_id,
-                ID_SIMULACAO: technicalJson.simulationId,
+                ID_SIMULACAO: technicalJson.simulationId || (completeJson ? completeJson.simulationId : ''),
                 TIPO_PRODUTO: formattedData.product_type,
                 NOME_CLIENTE: formattedData.client_name || 'Simulador',
                 TELEFONE_CLIENTE: formattedData.client_phone,
@@ -103,7 +110,7 @@ const SupabaseAdapter = {
                 PRECO_FINAL: finalPrice,
                 PRECO_UNITARIO: unitPrice, // Adicionado suporte a preço unitário
                 pdf_url: formattedData.pdfUrl,
-                json_tec: technicalJson, // Backup completo
+                json_tec: completeJson, // Backup completo com todas infos, pricing, extras, config
                 STATUS_PEDIDO: 'Simulação'
             };
 
