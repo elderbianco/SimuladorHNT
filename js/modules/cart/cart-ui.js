@@ -88,6 +88,18 @@ window.CartUI = {
         }
         if (!state) state = item.specs || {};
 
+        // Unify observations (many possible keys)
+        const obs = (
+            item.specs?.observations ||
+            state.observations ||
+            state.observacoes ||
+            order.observations ||
+            order.observacoes ||
+            ""
+        ).toString().trim();
+
+        const hasObs = obs.length > 0;
+
         return `
         <div class="sub-item-rich" style="background: #151515; border: 1px solid #222; border-radius: 12px; margin-bottom: 20px; overflow: hidden; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
             <!-- Sub Header -->
@@ -146,14 +158,14 @@ window.CartUI = {
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'sizes-${uid}')">📏 Tamanhos ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'specs-${uid}')">🎨 Lógos/Textos ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'price-${uid}')">💰 Valores ▼</button>
-                    ${(state.observations || state.observacoes) ? `<button class="tab-btn" style="color:#ffa500; font-weight:bold;" onclick="CartUI.switchTab(this, 'obs-${uid}')">📝 Observações ▼</button>` : ''}
+                    ${hasObs ? `<button class="tab-btn" style="color:#ffa500; font-weight:bold;" onclick="CartUI.switchTab(this, 'obs-${uid}')">📝 Observações ▼</button>` : ''}
                 </div>
 
                 <div id="prod-${uid}" class="tab-content active">
                     <div class="grid-info">
                         ${this.renderPartsList(state.parts || {})}
                     </div>
-                    ${(state.observations || state.observacoes) ? `
+                    ${hasObs ? `
                         <div style="margin:15px 0; padding:12px; background:rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px; font-size:0.9rem; color:#ccc;">
                             <strong style="color:var(--gold);">📝 Obs:</strong> Tem observações adicionais (Veja a aba "Observações").
                         </div>
@@ -208,10 +220,10 @@ window.CartUI = {
                     </div>
                 </div>
 
-                ${(state.observations || state.observacoes) ? `
+                ${hasObs ? `
                 <div id="obs-${uid}" class="tab-content">
                     <h3 style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; margin-bottom: 20px;">📝 Observações do Cliente</h3>
-                    <div style="background: #1a1a1a; padding: 20px; border: 1px dashed var(--gold); border-radius: 8px; font-size: 1rem; color: #ddd; line-height: 1.6; white-space: pre-wrap;">${state.observations || state.observacoes}</div>
+                    <div style="background: #1a1a1a; padding: 20px; border: 1px dashed var(--gold); border-radius: 8px; font-size: 1rem; color: #ddd; line-height: 1.6; white-space: pre-wrap;">${obs}</div>
                 </div>
                 ` : ''}
             </div>
