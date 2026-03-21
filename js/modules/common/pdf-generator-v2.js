@@ -95,6 +95,7 @@ const PDFGenerator = {
                     }
                 }
 
+                // --- 2. OCULTAR UI NO VIEWPORT ORIGINAL (Rápido, apenas handles) ---
                 const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected', '.control-layer', '.zoom-controls'];
                 const tempHidden = [];
                 hideElements.forEach(selector => {
@@ -104,27 +105,23 @@ const PDFGenerator = {
                     });
                 });
 
-                // --- NOVO: EXPANSÃO DE CONTAINERS PARA EVITAR CORTES (MODO PROPORCIONAL v29) ---
-                const containersToExpand = ['.simulator-area', '.simulator-viewport', '.zoom-container', '.simulator-wrapper'];
-                const oldStyles = [];
-                containersToExpand.forEach(selector => {
-                    const el = document.querySelector(selector);
-                    if (el) {
-                        oldStyles.push({
-                            el,
-                            height: el.style.height,
-                            width: el.style.width,
-                            overflow: el.style.overflow,
-                            maxHeight: el.style.maxHeight,
-                            transform: el.style.transform,
-                            position: el.style.position,
-                            display: el.style.display,
-                            alignItems: el.style.alignItems,
-                            justifyContent: el.style.justifyContent
-                        });
+                // --- 3. CRIAR MIRROR (CLONE) PARA CAPTURA SILENCIOSA ---
+                const mirror = viewport.cloneNode(true);
+                mirror.id = "capture-mirror-v30";
+                mirror.style.position = 'fixed';
+                mirror.style.left = '-10000px';
+                mirror.style.top = '0';
+                mirror.style.width = '1600px';
+                mirror.style.height = '1200px';
+                mirror.style.zIndex = '-1';
+                mirror.style.backgroundColor = '#111111';
+                document.body.appendChild(mirror);
 
-                        // O segredo do v29: A área total é 1600x1200 (4:3) para o fundo,
-                        // mas os containers de produto DEVEM permanecer quadrados (1200x1200) para evitar estiramento.
+                // --- 4. APLICAR ESTILOS DE PROPORÇÃO NO MIRROR (v30) ---
+                const subElements = ['.simulator-area', '.simulator-viewport', '.zoom-container', '.simulator-wrapper'];
+                subElements.forEach(selector => {
+                    const el = mirror.matches(selector) ? mirror : mirror.querySelector(selector);
+                    if (el) {
                         if (selector === '.simulator-area') {
                             el.style.setProperty('width', '1600px', 'important');
                             el.style.setProperty('height', '1200px', 'important');
@@ -132,71 +129,52 @@ const PDFGenerator = {
                             el.style.setProperty('width', '1200px', 'important');
                             el.style.setProperty('height', '1200px', 'important');
                         }
-
                         el.style.setProperty('overflow', 'visible', 'important');
-                        el.style.setProperty('max-height', 'none', 'important');
                         el.style.setProperty('transform', 'none', 'important');
-                        el.style.setProperty('position', 'relative', 'important');
                         el.style.setProperty('display', 'flex', 'important');
                         el.style.setProperty('align-items', 'center', 'important');
                         el.style.setProperty('justify-content', 'center', 'important');
+                        el.style.setProperty('position', 'relative', 'important');
+                        el.style.setProperty('max-height', 'none', 'important');
                     }
                 });
 
-                const wrapper = document.querySelector('.simulator-wrapper');
-                if (wrapper) {
-                    wrapper.setAttribute('data-had-class', wrapper.classList.contains('calca-legging-active') ? 'true' : 'false');
-                    wrapper.classList.remove('calca-legging-active');
+                const mirrorWrapper = mirror.querySelector('.simulator-wrapper');
+                if (mirrorWrapper) {
+                    mirrorWrapper.classList.remove('calca-legging-active');
                 }
 
+                // --- 5. CAPTURA ---
                 let finalDataUrl = null;
-
                 if (typeof domtoimage !== 'undefined') {
                     try {
-                        console.log('📸 Capturando via dom-to-image v20...');
-                        // FORÇAR RATIO 4:3 (1600x1200) PARA COMBINAR COM O PDF
-                        finalDataUrl = await domtoimage.toJpeg(viewport, {
+                        console.log('📸 Capturando via dom-to-image v30 (Silent Mirror)...');
+                        finalDataUrl = await domtoimage.toJpeg(mirror, {
                             quality: 0.95,
-                            bgcolor: '#111111',
-                            style: {
-                                margin: '0',
-                                padding: '0',
-                                overflow: 'visible',
-                                width: '1600px',
-                                height: '1200px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }
+                            bgcolor: '#111111'
                         });
                     } catch (err) {
-                        console.warn('⚠️ domtoimage falhou:', err);
+                        console.warn('⚠️ domtoimage falhou no mirror:', err);
                     }
                 }
 
                 if (!finalDataUrl && typeof html2canvas !== 'undefined') {
-                    const canvas = await html2canvas(viewport, {
-                        scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#111111'
+                    const canvas = await html2canvas(mirror, {
+                        scale: 1, useCORS: true, allowTaint: true, backgroundColor: '#111111'
                     });
                     finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
                 }
 
-                // Restaurar
+                // --- 6. RESTAURAR E LIMPAR ---
+                mirror.remove();
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
-                oldStyles.forEach(s => {
-                    s.el.style.height = s.height;
-                    s.el.style.width = s.width;
-                    s.el.style.overflow = s.overflow;
-                    s.el.style.maxHeight = s.maxHeight;
-                    s.el.style.transform = s.transform;
-                    s.el.style.position = s.position;
-                    s.el.style.display = s.display;
-                    s.el.style.alignItems = s.alignItems;
-                    s.el.style.justifyContent = s.justifyContent;
-                });
-                if (wrapper && wrapper.getAttribute('data-had-class') === 'true') {
-                    wrapper.classList.add('calca-legging-active');
+
+                if (finalDataUrl) {
+                    this.context.snapshotURL = finalDataUrl;
+                    if (this.captureCallback) this.captureCallback(finalDataUrl);
                 }
+
+                resolve(finalDataUrl);
 
                 if (finalDataUrl) {
                     console.log('✅ Snap v20 Concluído.');
