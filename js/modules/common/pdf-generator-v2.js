@@ -33,7 +33,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v28 (Customer Context) Ativado...');
+                console.log('☢️ Motor Nuclear v29 (Customer Context) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
@@ -104,7 +104,7 @@ const PDFGenerator = {
                     });
                 });
 
-                // --- NOVO: EXPANSÃO DE CONTAINERS PARA EVITAR CORTES ---
+                // --- NOVO: EXPANSÃO DE CONTAINERS PARA EVITAR CORTES (MODO PROPORCIONAL v29) ---
                 const containersToExpand = ['.simulator-area', '.simulator-viewport', '.zoom-container', '.simulator-wrapper'];
                 const oldStyles = [];
                 containersToExpand.forEach(selector => {
@@ -122,8 +122,17 @@ const PDFGenerator = {
                             alignItems: el.style.alignItems,
                             justifyContent: el.style.justifyContent
                         });
-                        el.style.setProperty('height', '1200px', 'important');
-                        el.style.setProperty('width', '1600px', 'important');
+
+                        // O segredo do v29: A área total é 1600x1200 (4:3) para o fundo,
+                        // mas os containers de produto DEVEM permanecer quadrados (1200x1200) para evitar estiramento.
+                        if (selector === '.simulator-area') {
+                            el.style.setProperty('width', '1600px', 'important');
+                            el.style.setProperty('height', '1200px', 'important');
+                        } else {
+                            el.style.setProperty('width', '1200px', 'important');
+                            el.style.setProperty('height', '1200px', 'important');
+                        }
+
                         el.style.setProperty('overflow', 'visible', 'important');
                         el.style.setProperty('max-height', 'none', 'important');
                         el.style.setProperty('transform', 'none', 'important');
