@@ -522,3 +522,81 @@ function checkZoneEmpty(z) {
     const hT = rT && state.texts[rT.id].enabled;
     return !hI && !hT;
 }
+
+/**
+ * Funções de Galeria (Restaurado)
+ */
+let currentGalleryZone = null;
+
+function openGallery(zoneId) {
+    currentGalleryZone = zoneId;
+    const modal = document.getElementById('gallery-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        renderGallery();
+
+        const searchInput = document.getElementById('gallery-search');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.oninput = (e) => renderGallery(e.target.value);
+            setTimeout(() => searchInput.focus(), 100);
+        }
+    }
+}
+
+function closeGallery() {
+    const modal = document.getElementById('gallery-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function renderGallery(searchTerm = '') {
+    const grid = document.getElementById('gallery-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const term = searchTerm.toLowerCase();
+    const categories = [...new Set(SHARED_GALLERY.map(item => item.category))];
+
+    categories.forEach(cat => {
+        const filtered = SHARED_GALLERY.filter(item =>
+            item.category === cat &&
+            (item.name.toLowerCase().includes(term) || cat.toLowerCase().includes(term))
+        );
+
+        if (filtered.length > 0) {
+            const section = document.createElement('div');
+            section.style.width = '100%';
+            section.style.marginBottom = '15px';
+            section.innerHTML = `<h4 style="color:var(--gold-primary); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">${cat}</h4>`;
+
+            const itemsContainer = document.createElement('div');
+            itemsContainer.style.display = 'grid';
+            itemsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(80px, 1fr))';
+            itemsContainer.style.gap = '8px';
+
+            filtered.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.style.cursor = 'pointer';
+                div.style.textAlign = 'center';
+                div.style.padding = '5px';
+                div.style.border = '1px solid #333';
+                div.style.background = '#111';
+                div.onclick = () => {
+                    if (typeof addImageToZone === 'function') {
+                        addImageToZone(currentGalleryZone, item.src);
+                    }
+                    closeGallery();
+                };
+
+                div.innerHTML = `
+                    <img src="${item.src}" style="width:100%; height:60px; object-fit:contain;">
+                    <div style="font-size:0.6rem; color:#aaa; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name}</div>
+                `;
+                itemsContainer.appendChild(div);
+            });
+            section.appendChild(itemsContainer);
+            grid.appendChild(section);
+        }
+    });
+}
