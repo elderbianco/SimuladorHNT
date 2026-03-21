@@ -113,17 +113,24 @@ const PDFGenerator = {
                         oldStyles.push({
                             el,
                             height: el.style.height,
+                            width: el.style.width,
                             overflow: el.style.overflow,
                             maxHeight: el.style.maxHeight,
                             transform: el.style.transform,
-                            position: el.style.position
+                            position: el.style.position,
+                            display: el.style.display,
+                            alignItems: el.style.alignItems,
+                            justifyContent: el.style.justifyContent
                         });
-                        el.style.setProperty('height', 'auto', 'important');
-                        el.style.setProperty('min-height', '1200px', 'important');
+                        el.style.setProperty('height', '1200px', 'important');
+                        el.style.setProperty('width', '1600px', 'important');
                         el.style.setProperty('overflow', 'visible', 'important');
                         el.style.setProperty('max-height', 'none', 'important');
                         el.style.setProperty('transform', 'none', 'important');
                         el.style.setProperty('position', 'relative', 'important');
+                        el.style.setProperty('display', 'flex', 'important');
+                        el.style.setProperty('align-items', 'center', 'important');
+                        el.style.setProperty('justify-content', 'center', 'important');
                     }
                 });
 
@@ -138,7 +145,7 @@ const PDFGenerator = {
                 if (typeof domtoimage !== 'undefined') {
                     try {
                         console.log('📸 Capturando via dom-to-image v20...');
-                        // Forçamos um container maior para evitar cortes
+                        // FORÇAR RATIO 4:3 (1600x1200) PARA COMBINAR COM O PDF
                         finalDataUrl = await domtoimage.toJpeg(viewport, {
                             quality: 0.95,
                             bgcolor: '#111111',
@@ -146,7 +153,11 @@ const PDFGenerator = {
                                 margin: '0',
                                 padding: '0',
                                 overflow: 'visible',
-                                height: '1600px'
+                                width: '1600px',
+                                height: '1200px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
                             }
                         });
                     } catch (err) {
@@ -165,11 +176,14 @@ const PDFGenerator = {
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
                 oldStyles.forEach(s => {
                     s.el.style.height = s.height;
+                    s.el.style.width = s.width;
                     s.el.style.overflow = s.overflow;
                     s.el.style.maxHeight = s.maxHeight;
                     s.el.style.transform = s.transform;
                     s.el.style.position = s.position;
-                    s.el.style.removeProperty('min-height');
+                    s.el.style.display = s.display;
+                    s.el.style.alignItems = s.alignItems;
+                    s.el.style.justifyContent = s.justifyContent;
                 });
                 if (wrapper && wrapper.getAttribute('data-had-class') === 'true') {
                     wrapper.classList.add('calca-legging-active');
