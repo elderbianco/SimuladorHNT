@@ -33,7 +33,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v35 (Gravity Balanced Fidelity) Ativado...');
+                console.log('☢️ Motor Nuclear v37 (Universal Asset Fidelity) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
@@ -43,30 +43,30 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // --- 1. IMUNIZAÇÃO DE ASSETS (Base64) ---
-                const toBase64 = (url) => new Promise((res) => {
-                    if (!url || url.startsWith('data:')) return res(url);
-                    const img = new Image();
-                    if (!window.location.protocol.startsWith('file')) {
-                        img.crossOrigin = 'Anonymous';
+                // --- 1. IMUNIZAÇÃO DE ASSETS (Base64 via Fetch - v37) ---
+                const toBase64 = async (url) => {
+                    if (!url || url.startsWith('data:')) return url;
+                    try {
+                        // Resolver caminhos relativos
+                        let finalUrl = url;
+                        if (url.startsWith('../')) {
+                            const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                            finalUrl = base + '/' + url.replace('../', '');
+                        }
+
+                        const response = await fetch(finalUrl);
+                        const blob = await response.blob();
+                        return new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.onerror = () => resolve(url);
+                            reader.readAsDataURL(blob);
+                        });
+                    } catch (e) {
+                        console.warn(`⚠️ Erro ao imunizar asset (${url}):`, e);
+                        return url;
                     }
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.naturalWidth || img.width;
-                        canvas.height = img.naturalHeight || img.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        res(canvas.toDataURL('image/png'));
-                    };
-                    img.onerror = () => res(url);
-                    // Resolver caminhos relativos para absoluto se necessário
-                    if (url.startsWith('../')) {
-                        const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-                        img.src = base + '/' + url.replace('../', '');
-                    } else {
-                        img.src = url;
-                    }
-                });
+                };
 
                 // Imunizar todas as imagens e fundos recursivamente
                 const assets = Array.from(viewport.querySelectorAll('img, [style*="background-image"]'));
@@ -188,12 +188,12 @@ const PDFGenerator = {
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
 
                 if (finalDataUrl) {
-                    console.log(`✅ Snapshot v36 gerado: ${Math.round(finalDataUrl.length / 1024)} KB`);
+                    console.log(`✅ Snapshot v37 gerado: ${Math.round(finalDataUrl.length / 1024)} KB`);
                     this.context.snapshotURL = finalDataUrl;
                     this.cachedSnapshot = finalDataUrl;
                     if (this.captureCallback) this.captureCallback(finalDataUrl);
                 } else {
-                    console.error('❌ Falha crítica: Nenhuma imagem capturada no Mirror v36');
+                    console.error('❌ Falha crítica: Nenhuma imagem capturada no Mirror v37');
                 }
 
                 resolve(finalDataUrl);
@@ -271,15 +271,26 @@ const PDFGenerator = {
                     offsetY -= 20;
                 }
 
-                const loadImage = (src) => new Promise((res) => {
-                    const img = new Image();
-                    if (!window.location.protocol.startsWith('file')) {
-                        img.crossOrigin = "anonymous";
+                const loadImage = async (src) => {
+                    try {
+                        const response = await fetch(src);
+                        const blob = await response.blob();
+                        const dataUrl = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.readAsDataURL(blob);
+                        });
+                        const img = new Image();
+                        await new Promise((resolve) => {
+                            img.onload = resolve;
+                            img.onerror = resolve;
+                            img.src = dataUrl;
+                        });
+                        return img;
+                    } catch (e) {
+                        return null;
                     }
-                    img.onload = () => res(img);
-                    img.onerror = () => res(null);
-                    img.src = src;
-                });
+                };
 
                 // Desenhar Fundo
                 const ringImg = await loadImage('Icons/RingHNT.jpeg') || await loadImage('RingHNT.jpeg');
