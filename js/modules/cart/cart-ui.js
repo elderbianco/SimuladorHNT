@@ -6,6 +6,66 @@
 
 const config = window.config || {};
 
+/**
+ * Mapeamento de IDs técnicos de zona para nomes legíveis pelo cliente.
+ * Cobre todos os simuladores: Shorts Fight, Shorts Legging, Calça Legging, Moletom, Top.
+ */
+const ZONE_LABEL_MAP = {
+    // === SHORTS FIGHT ===
+    'logo_centro': 'Frente Centro',
+    'logo_lat_dir': 'Lateral Direita',
+    'logo_lat_esq': 'Lateral Esquerda',
+    'leg_right_mid_ie': 'Perna Dir. Centro (Padrão)',
+    'leg_right_mid_ii': 'Perna Dir. Centro (Reduzido)',
+    'leg_right_bottom_ie': 'Perna Dir. Inferior (Padrão)',
+    'leg_right_bottom_ii': 'Perna Dir. Inferior (Reduzido)',
+    'leg_left_mid': 'Perna Esquerda',
+    // Textos do Shorts Fight
+    'text_centro': 'Texto – Frente Centro',
+    'text_lat_dir': 'Texto – Lateral Direita',
+    'text_lat_esq': 'Texto – Lateral Esquerda',
+    'text_leg_right_mid': 'Texto – Perna Dir. Centro',
+    'text_leg_right_bottom': 'Texto – Perna Dir. Inferior',
+    'text_leg_left_mid': 'Texto – Perna Esquerda',
+    // === SHORTS LEGGING / CALÇA LEGGING ===
+    'lateral_direita': 'Lateral Direita',
+    'lateral_esquerda': 'Lateral Esquerda',
+    'perna_direita': 'Perna Direita',
+    'perna_esquerda': 'Perna Esquerda',
+    // === MOLETOM / TOP ===
+    'frente_centro': 'Frente Centro',
+    'costas_centro': 'Costas Centro',
+    'frente_esq': 'Frente Esquerda',
+    'frente_dir': 'Frente Direita',
+    'costas_sup': 'Costas Superior',
+    'costas_inf': 'Costas Inferior',
+    'manga_dir': 'Manga Direita',
+    'manga_esq': 'Manga Esquerda',
+    'capuz': 'Capuz',
+    'bolso': 'Bolso',
+    // Textos genéricos
+    'text_frente_centro': 'Texto – Frente Centro',
+    'text_costas_centro': 'Texto – Costas Centro',
+    'text_lateral_direita': 'Texto – Lateral Direita',
+    'text_lateral_esquerda': 'Texto – Lateral Esquerda',
+    'text_perna_direita': 'Texto – Perna Direita',
+    'text_perna_esquerda': 'Texto – Perna Esquerda',
+};
+
+/**
+ * Retorna o nome legível de uma zona pelo seu ID técnico.
+ * Fallback: converte underscores em espaços e capitaliza.
+ */
+function resolveZoneLabel(zoneId) {
+    if (!zoneId) return 'Zona';
+    if (ZONE_LABEL_MAP[zoneId]) return ZONE_LABEL_MAP[zoneId];
+    // Fallback humanizado: remove prefixo "text_" e formata
+    return zoneId
+        .replace(/^text_/, '')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+}
+
 window.CartUI = {
 
     /**
@@ -317,7 +377,7 @@ window.CartUI = {
         if (uploadEntries.length > 0) {
             html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">3. LOGOTIPOS & ARTES</td></tr>';
             uploadEntries.forEach(([zoneId, data]) => {
-                const zoneName = data.zone_label || zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const zoneName = resolveZoneLabel(zoneId) || data.zone_label || zoneId;
                 const fileName = data.file_name || data.filename || data.file_url || data.src || 'Imagem';
                 // Prioritize saved unit_price from specs
                 let logoPrice = data.unit_price || 0;
@@ -380,7 +440,7 @@ window.CartUI = {
         if (textEntries.length > 0) {
             html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">4. TEXTOS PERSONALIZADOS</td></tr>';
             textEntries.forEach(([zoneId, data]) => {
-                const zoneName = data.zone_label || zoneId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const zoneName = resolveZoneLabel(zoneId) || data.zone_label || zoneId;
                 // Prioritize saved unit_price
                 let textPrice = data.unit_price || 0;
 
@@ -577,8 +637,8 @@ window.CartUI = {
         let html = '';
 
         // Normalização: Converter objetos em arrays se necessário
-        const uploads = Array.isArray(specs.uploads) ? specs.uploads : (specs.uploads ? Object.entries(specs.uploads).map(([id, u]) => ({ ...u, zone_id: id, zone_label: id })) : []);
-        const texts = Array.isArray(specs.texts) ? specs.texts : (specs.texts ? Object.entries(specs.texts).map(([id, t]) => ({ ...t, zone_id: id, zone_label: id })) : []);
+        const uploads = Array.isArray(specs.uploads) ? specs.uploads : (specs.uploads ? Object.entries(specs.uploads).map(([id, u]) => ({ ...u, zone_id: id })) : []);
+        const texts = Array.isArray(specs.texts) ? specs.texts : (specs.texts ? Object.entries(specs.texts).map(([id, t]) => ({ ...t, zone_id: id })) : []);
 
         // 1. Logos
         if (uploads.length > 0) {
@@ -587,7 +647,7 @@ window.CartUI = {
             uploads.forEach(u => {
                 const src = u.file_url || u.src;
                 const name = u.file_name || u.filename || 'Imagem';
-                const label = u.zone_label || u.zone_id;
+                const label = resolveZoneLabel(u.zone_id || u.zone_label);
                 const isCustom = u.is_custom || u.isCustom;
 
                 html += `
@@ -610,7 +670,7 @@ window.CartUI = {
             html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:15px; margin-top:10px;">';
             texts.forEach(t => {
                 const content = t.content;
-                const label = t.zone_label || t.zone_id;
+                const label = resolveZoneLabel(t.zone_id || t.zone_label);
                 const colorHex = t.color_hex || t.color || '#fff';
                 const font = t.font_family || t.fontFamily || 'Standard';
 
