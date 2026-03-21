@@ -824,72 +824,79 @@ const PDFGenerator = {
                     doc.addImage(q1, 'PNG', qrX1, qrYStart, qrSize, qrSize);
                     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
                     doc.text(`${id}`, qrX1 + (qrSize / 2), qrYStart + qrSize + 5, { align: 'center' });
+                    // QR 1: Número do Pedido
+                    const qrPedido = await generateQR(orderNum);
+                    if (qrPedido && qrPedido.length > 100) {
+                        doc.addImage(qrPedido, 'PNG', pageWidth - margin - 65, pageHeight - margin - 35, 30, 30);
+                        doc.setFontSize(7);
+                        doc.setTextColor(150, 150, 150);
+                        doc.text(`QR PEDIDO`, pageWidth - margin - 50, pageHeight - margin - 3, { align: 'center' });
+                    }
+
+                    // QR 2: Produto/SKU
+                    const qrProduto = await generateQR(sku);
+                    if (qrProduto && qrProduto.length > 100) {
+                        doc.addImage(qrProduto, 'PNG', pageWidth - margin - 30, pageHeight - margin - 35, 30, 30);
+                        doc.setFontSize(7);
+                        doc.setTextColor(150, 150, 150);
+                        doc.text(`QR SKU`, pageWidth - margin - 15, pageHeight - margin - 3, { align: 'center' });
+                    }
+
+                } catch (e) {
+                    console.warn("QR Error", e);
                 }
 
-                // QR 2: Pedido + Simulator ID
-                const q2 = await generateQR(`PEDIDO:${id}|SIM:${id}`);
-                if (q2) {
-                    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-                    doc.text('CONFERÊNCIA TÉCNICA', qrX2 + (qrSize / 2), qrYStart - 4, { align: 'center' });
-                    doc.addImage(q2, 'PNG', qrX2, qrYStart, qrSize, qrSize);
-                    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-                    doc.text(`REF: ${id}`, qrX2 + (qrSize / 2), qrYStart + qrSize + 5, { align: 'center' });
+                // SALVAR
+                const pdfBase64 = doc.output('datauristring').split(',').pop();
+                const fileName = `Pedido_${id}`;
+                this.updateModalButton('saving');
+
+                if (typeof SupabaseAdapter !== 'undefined') {
+                    const url = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
+                    if (url) {
+                        this.savedPdfUrl = url;
+                        this.updateModalButton('ready', url);
+                        return url;
+                    }
                 }
-            } catch (e) {
-                console.warn("QR Error", e);
+
+                doc.save(`${fileName}.pdf`);
+                this.updateModalButton('ready', '#');
+
+            } catch (err) {
+                console.error('PDF Error:', err);
+                this.updateModalButton('error');
             }
-
-            // SALVAR
-            const pdfBase64 = doc.output('datauristring').split(',').pop();
-            const fileName = `Pedido_${id}`;
-            this.updateModalButton('saving');
-
-            if (typeof SupabaseAdapter !== 'undefined') {
-                const url = await SupabaseAdapter.uploadFile('pedidos_pdf', `${fileName}.pdf`, pdfBase64, 'application/pdf');
-                if (url) {
-                    this.savedPdfUrl = url;
-                    this.updateModalButton('ready', url);
-                    return url;
-                }
-            }
-
-            doc.save(`${fileName}.pdf`);
-            this.updateModalButton('ready', '#');
-
-        } catch (err) {
-            console.error('PDF Error:', err);
-            this.updateModalButton('error');
-        }
-    },
+        },
 
     /**
      * Gera e salva PDF em segundo plano (para carrinho)
      */
     async generateAndSaveForCart(customId = null) {
-        return this.generateBackgroundPDF(customId); // Reutiliza motor expert unificado
-    }
-};
-
-// Hook automático para atualizar snapshot quando o simulador mudar
-if (typeof window !== 'undefined') {
-    window.PDFGenerator = PDFGenerator;
-
-    // Captura inicial após 3 segundos (Apenas se estiver no Simulador)
-    setTimeout(() => {
-        if (PDFGenerator.updateSnapshot && document.querySelector('.simulator-area')) {
-            PDFGenerator.updateSnapshot();
+            return this.generateBackgroundPDF(customId); // Reutiliza motor expert unificado
         }
-    }, 3000);
+    };
 
-    // Recapturar quando houver mudanças visuais (conectar com scheduleRender se disponível)
-    if (typeof scheduleRender !== 'undefined') {
-        const originalScheduleRender = scheduleRender;
-        window.scheduleRender = function (...args) {
-            originalScheduleRender(...args);
-            // Agendar atualização do snapshot (debounced)
-            if (PDFGenerator.updateSnapshot) {
-                setTimeout(() => PDFGenerator.updateSnapshot(), 500);
-            }
-        };
+    // Hook automático para atualizar snapshot quando o simulador mudar
+    if(typeof window !== 'undefined') {
+        window.PDFGenerator = PDFGenerator;
+
+// Captura inicial após 3 segundos (Apenas se estiver no Simulador)
+setTimeout(() => {
+    if (PDFGenerator.updateSnapshot && document.querySelector('.simulator-area')) {
+        PDFGenerator.updateSnapshot();
     }
+}, 3000);
+
+// Recapturar quando houver mudanças visuais (conectar com scheduleRender se disponível)
+if (typeof scheduleRender !== 'undefined') {
+    const originalScheduleRender = scheduleRender;
+    window.scheduleRender = function (...args) {
+        originalScheduleRender(...args);
+        // Agendar atualização do snapshot (debounced)
+        if (PDFGenerator.updateSnapshot) {
+            setTimeout(() => PDFGenerator.updateSnapshot(), 500);
+        }
+    };
+}
 }
