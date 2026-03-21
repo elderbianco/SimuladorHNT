@@ -377,7 +377,7 @@ window.CartUI = {
         if (uploadEntries.length > 0) {
             html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">3. LOGOTIPOS & ARTES</td></tr>';
             uploadEntries.forEach(([zoneId, data]) => {
-                const zoneName = resolveZoneLabel(zoneId) || data.zone_label || zoneId;
+                const zoneName = window.resolveZoneLabel(zoneId) || data.zone_label || zoneId;
                 const fileName = data.file_name || data.filename || data.file_url || data.src || 'Imagem';
                 // Prioritize saved unit_price from specs
                 let logoPrice = data.unit_price || 0;
