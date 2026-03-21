@@ -159,8 +159,9 @@ const DBAdapter = {
             DATA_ATUALIZACAO: now.toISOString(),
             DADOS_TECNICOS_JSON: JSON.stringify({
                 ...state,
-                config: config // Salva os preços e definições vigentes no momento do pedido
-            }) 
+                config: config, // Salva os preços e definições vigentes no momento do pedido
+                pricing: pricing // Preserva a matemática completa (breakdown, descontos, taxas)
+            })
         };
     }
 };

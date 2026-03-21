@@ -245,7 +245,8 @@ function loadDashboard() {
                         qty_total: finalQty,
                         pricing: {
                             total_price: finalPrice,
-                            unit_price: data.PRECO_UNITARIO || data.unit_price || (technicalData.pricing ? technicalData.pricing.unit_price : (finalPrice / finalQty))
+                            unit_price: data.PRECO_UNITARIO || data.unit_price || (technicalData.pricing ? technicalData.pricing.unit_price : (finalPrice / finalQty)),
+                            breakdown: technicalData.pricing ? (technicalData.pricing.breakdown || technicalData.pricing) : {}
                         },
                         specs: {
                             parts: partsArr,
