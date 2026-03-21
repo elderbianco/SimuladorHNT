@@ -159,7 +159,7 @@ function loadDashboard() {
                             if (u && (u.src || u.filename || u.file_url)) {
                                 uploadsArr.push({
                                     zone_id: id,
-                                    zone_label: u.zone_label || id.replace(/_/g, ' ').toUpperCase(),
+                                    zone_label: u.zone_label || (typeof resolveZoneLabel === 'function' ? resolveZoneLabel(id) : id),
                                     file_name: u.file_name || u.filename || 'Imagem',
                                     file_url: u.file_url || u.src,
                                     is_custom: u.is_custom !== undefined ? u.is_custom : (u.isCustom || false)
@@ -174,7 +174,7 @@ function loadDashboard() {
                             if (t && t.enabled && t.content) {
                                 textsArr.push({
                                     zone_id: id,
-                                    zone_label: t.zone_label || id.replace(/_/g, ' ').toUpperCase(),
+                                    zone_label: t.zone_label || (typeof resolveZoneLabel === 'function' ? resolveZoneLabel(id) : id),
                                     content: t.content,
                                     color: t.color,
                                     font_family: t.fontFamily || t.font_family
