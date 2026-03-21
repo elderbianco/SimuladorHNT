@@ -144,11 +144,15 @@ const PDFGenerator = {
                     mirrorWrapper.classList.remove('calca-legging-active');
                 }
 
-                // --- 5. CAPTURA ---
+                // --- 5. CAPTURA COM "SETTLE TIME" PARA GARANTIR RENDERIZAÇÃO NO CLONE ---
                 let finalDataUrl = null;
+
+                // Aguardar um pouco para o navegador "acordar" o mirror no layout engine
+                await new Promise(r => setTimeout(r, 200));
+
                 if (typeof domtoimage !== 'undefined') {
                     try {
-                        console.log('📸 Capturando via dom-to-image v30 (Silent Mirror)...');
+                        console.log('📸 Capturando via dom-to-image v31 (Silent Mirror)...');
                         finalDataUrl = await domtoimage.toJpeg(mirror, {
                             quality: 0.95,
                             bgcolor: '#111111'
@@ -159,15 +163,34 @@ const PDFGenerator = {
                 }
 
                 if (!finalDataUrl && typeof html2canvas !== 'undefined') {
-                    const canvas = await html2canvas(mirror, {
-                        scale: 1, useCORS: true, allowTaint: true, backgroundColor: '#111111'
-                    });
-                    finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                    try {
+                        console.log('📸 Fallback para html2canvas v31...');
+                        const canvas = await html2canvas(mirror, {
+                            scale: 1,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: '#111111',
+                            width: 1600,
+                            height: 1200
+                        });
+                        finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                    } catch (err) {
+                        console.error('⚠️ html2canvas também falhou:', err);
+                    }
                 }
 
                 // --- 6. RESTAURAR E LIMPAR ---
                 mirror.remove();
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
+
+                if (finalDataUrl) {
+                    console.log(`✅ Snapshot v31 gerado: ${Math.round(finalDataUrl.length / 1024)} KB`);
+                    this.context.snapshotURL = finalDataUrl;
+                    this.cachedSnapshot = finalDataUrl;
+                    if (this.captureCallback) this.captureCallback(finalDataUrl);
+                } else {
+                    console.error('❌ Falha crítica: Nenhuma imagem capturada no Mirror v31');
+                }
 
                 resolve(finalDataUrl);
             } catch (err) {
