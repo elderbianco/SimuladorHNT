@@ -602,9 +602,10 @@ window.CartUI = {
     },
 
     switchTab: function (btn, targetId) {
-        const card = btn.closest('.card-details');
-        card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        card.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        const itemContainer = btn.closest('.sub-item-rich') || btn.closest('.card-details');
+        if (!itemContainer) return;
+        itemContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        itemContainer.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(targetId).classList.add('active');
     },
