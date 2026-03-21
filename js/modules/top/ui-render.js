@@ -147,7 +147,7 @@ function renderCustomizationSection() {
                     onToggle: (zoneId, enabled) => { tState.enabled = enabled; if (enabled) state.zoneLimits[z.id] = true; else if (checkZoneEmpty(z.id)) state.zoneLimits[z.id] = false; updateLimits(); updatePrice(); renderControls(); saveState(); },
                     onTextChange: (zoneId, content) => { tState.content = content; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); },
                     onLinesChange: (zoneId, maxLines) => { tState.maxLines = maxLines; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); },
-                    onFontChange: (zoneId, fontFamily) => { tState.fontFamily = fontFamily; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); if (typeof updatePrice === 'function') updatePrice(); if (typeof renderControls === 'function') renderControls(); saveState(); },
+                    onFontChange: (zoneId, fontFamily) => { tState.fontFamily = fontFamily; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); },
                     onColorChange: (zoneId, color) => { tState.color = color; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); },
                     onScaleChange: (zoneId, scale) => { tState.scale = scale; if (typeof renderFixedTexts === 'function') renderFixedTexts(); saveState(); }
                 }
@@ -207,106 +207,26 @@ function renderControls() {
 function renderFinalForm() {
     const div = document.createElement('div');
     div.innerHTML = `
-        <div style="margin-top:15px; border-top: 1px solid #333; padding-top: 15px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px; color:#fff;">Observações:</label>
-            <textarea id="obs-input" style="width:100%; border:1px solid #444; background:#222; color:#fff; padding:8px; border-radius:4px;" rows="3" placeholder="Ex: Detalhes específicos de arte, posições, etc."></textarea>
-        </div>
-        <div style="margin-top:10px; background:#fff3cd; padding:10px; border-left:4px solid #ffc107; border-radius:4px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px; color:#856404;">Telefone para Contato <span style="color:red">*</span> ${(typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_telefone', 'Necessário para contato sobre ajustes técnicos e análise de produção') : ''}</label>
-            <input type="tel" id="phone-input" style="width:100%; border:1px solid #ccc; padding:10px; border-radius:4px; font-size:1rem;" placeholder="(XX) XXXXX XXXX" maxlength="15">
-        </div>
-        <div style="margin-top:15px; background:#111; border:1px solid #333; padding:12px; border-radius:4px; color:#aaa; font-size:0.8rem;">
-            <p style="margin:0 0 10px 0; line-height:1.4;">
-                <strong style="color:#D4AF37;">⚠️ AVISO IMPORTANTE:</strong> Este documento é uma <strong>SIMULAÇÃO DIGITAL</strong> para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação.
-            </p>
-            <p style="margin:0 0 12px 0; line-height:1.4;">
-                Ao prosseguir, você declara que leu e concorda com todas as informações e condições do produto disponíveis em nosso <a href="IndexFaq.html" target="_blank" style="color:#D4AF37; text-decoration:underline;">FAQ</a>, além de confirmar que possui os direitos autorais sobre as artes enviadas, assumindo total responsabilidade legal. Em caso de dúvidas, entre em contato com nossa equipe.
-            </p>
-            <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; color:#fff; font-weight:bold;">
-                <input type="checkbox" id="terms-checkbox" style="width:18px; height:18px; margin-top:2px;">
-                <span>EU LI E CONCORDO COM OS TERMOS E CONDIÇÕES ACIMA <span style="color:red">*</span></span>
-            </label>
-        </div>
+        <div style="margin-top:10px; border-top:1px solid #333; padding-top:10px;"><label style="font-weight:bold; display:block; color:#fff;">Observações:</label><textarea id="obs-input" style="width:100%; height:60px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; padding:5px;"></textarea></div>
+        <div style="margin-top:10px; background:#fff3cd; padding:10px; border-left:4px solid #ffc107; border-radius:4px;"><label style="font-weight:bold; display:block; color:#856404;">Telefone <span style="color:red">*</span></label><input type="tel" id="phone-input" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="(XX) XXXXX-XXXX"></div>
+        <div style="margin-top:15px; background:#111; border:1px solid #333; padding:12px; border-radius:4px; color:#aaa; font-size:0.8rem;"><p><strong style="color:#D4AF37;">⚠️ AVISO:</strong> Simulação digital para fins de orçamento.</p><label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; color:#fff; font-weight:bold;"><input type="checkbox" id="terms-checkbox"><span>CONCORDO COM OS TERMOS</span></label></div>
     `;
     return div;
 }
 
-// Gallery Implementation (Restaurado)
-let currentGalleryZone = null;
-
 function openGallery(zoneId) {
-    currentGalleryZone = zoneId;
+    state.pending = zoneId;
     const modal = document.getElementById('gallery-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        renderGallery();
-
-        const searchInput = document.getElementById('gallery-search');
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.oninput = (e) => renderGallery(e.target.value);
-            setTimeout(() => searchInput.focus(), 100);
-        }
-    }
+    if (modal) { modal.style.display = 'flex'; renderGallery(); }
 }
-
-function closeGallery() {
-    const modal = document.getElementById('gallery-modal');
-    if (modal) modal.style.display = 'none';
-}
-
-function renderGallery(searchTerm = '') {
-    const grid = document.getElementById('gallery-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-
-    const term = searchTerm.toLowerCase();
-    const categories = [...new Set(SHARED_GALLERY.map(item => item.category))];
-
-    categories.forEach(cat => {
-        const filtered = SHARED_GALLERY.filter(item =>
-            item.category === cat &&
-            (item.name.toLowerCase().includes(term) || cat.toLowerCase().includes(term))
-        );
-
-        if (filtered.length > 0) {
-            const section = document.createElement('div');
-            section.style.width = '100%';
-            section.style.marginBottom = '15px';
-            section.innerHTML = `<h4 style="color:var(--gold-primary); border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">${cat}</h4>`;
-
-            const itemsContainer = document.createElement('div');
-            itemsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(80px, 1fr))';
-            itemsContainer.style.display = 'grid';
-            itemsContainer.style.gap = '8px';
-
-            filtered.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'gallery-item';
-                div.style.cursor = 'pointer';
-                div.style.textAlign = 'center';
-                div.style.padding = '5px';
-                div.style.border = '1px solid #333';
-                div.style.background = '#111';
-                div.onclick = () => {
-                    addImageToZone(currentGalleryZone, item.src);
-                    closeGallery();
-                };
-
-                div.innerHTML = `
-                    <img src="${item.src}" style="width:100%; height:60px; object-fit:contain;">
-                    <div style="font-size:0.6rem; color:#aaa; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name}</div>
-                `;
-                itemsContainer.appendChild(div);
-            });
-            section.appendChild(itemsContainer);
-            grid.appendChild(section);
-        }
+window.closeGallery = function () { const modal = document.getElementById('gallery-modal'); if (modal) modal.style.display = 'none'; }
+function renderGallery(searchTerm = "") {
+    const g = document.getElementById('gallery-grid'); if (!g) return; g.innerHTML = '';
+    const galleryData = (typeof SHARED_GALLERY !== 'undefined') ? SHARED_GALLERY : [];
+    galleryData.forEach(i => {
+        const d = document.createElement('div'); d.className = 'gallery-item';
+        d.innerHTML = `<img src="${i.src}"><span>${i.name}</span>`;
+        d.onclick = () => { if (typeof createImageElement === 'function') createImageElement(state.pending, i.src, false); window.closeGallery(); };
+        g.appendChild(d);
     });
-}
-
-function addImageToZone(z, s) {
-    if (typeof createImageElement === 'function') {
-        createImageElement(z, s, false);
-    }
 }
