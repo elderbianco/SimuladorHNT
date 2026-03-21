@@ -27,16 +27,13 @@ const PDFGenerator = {
      * Usa html2canvas + Pré-processamento Base66 para garantir rotação e escala exatas.
      */
     /**
-     * Motor de Renderização Nuclear v16 (Hyper-Fidelity Centralizado)
+     * Motor de Renderização Nuclear v23 (Industrial Fidelity + 3-Column Summary)
+     * Captura o RingHNT de fundo e expande a tabela para Atributo, Especificação e Valor.
      */
-    /**
-    * Motor de Renderização Nuclear v22 (Industrial Fidelity + Summary Parity)
-    * Captura o RingHNT de fundo e sincroniza 100% com o resumo da sidebar.
-    */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v22 (Summary Parity) Ativado...');
+                console.log('☢️ Motor Nuclear v23 (3-Column Exp) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
@@ -247,7 +244,7 @@ const PDFGenerator = {
 
             if (snapshot && snapshot.length > 1000) {
                 this.cachedSnapshot = snapshot;
-                console.log(`✅ Snapshot v21 gerado: ${Math.round(snapshot.length / 1024)} KB`);
+                console.log(`✅ Snapshot v23 gerado: ${Math.round(snapshot.length / 1024)} KB`);
                 this.isCaptureBroken = false;
             } else {
                 console.error('❌ Falha na geração do Snapshot v16.');
@@ -277,7 +274,7 @@ const PDFGenerator = {
         const originalWrapper = document.querySelector('.simulator-wrapper');
         if (!originalWrapper) return '<div style="text-align:center;">[Visual Indisponível]</div>';
         const clone = originalWrapper.cloneNode(true);
-        clone.querySelectorAll('.drag-handle, .resize-handle, .ui-draggable-handle, .limit-layer').forEach(el => el.remove());
+        clone.querySelectorAll('.drag-handle, .resize-handle, .delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected', '.control-layer', '.zoom-controls').forEach(el => el.remove());
         clone.style.transform = 'scale(0.8)';
         clone.style.transformOrigin = 'top center';
         clone.style.position = 'relative';
@@ -618,7 +615,7 @@ const PDFGenerator = {
     },
 
     /**
-     * Gera um PDF real em background usando jsPDF (EXPERT v21)
+     * Gera um PDF real em background usando jsPDF (EXPERT v23)
      */
     async generateBackgroundPDF(customId = null) {
         if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
@@ -711,7 +708,7 @@ const PDFGenerator = {
                 docArg.setFontSize(9);
                 docArg.setFont('helvetica', 'normal');
                 docArg.setTextColor(120, 120, 120);
-                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT v21', margin, margin + 18);
+                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT v23', margin, margin + 18);
 
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(11);
@@ -778,7 +775,7 @@ const PDFGenerator = {
             };
 
             // 1. CONFIGURAÇÃO DE BASE (Grade)
-            tableData.push([{ content: '1. CONFIGURACAO DE BASE', colSpan: 2, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
+            tableData.push([{ content: '1. CONFIGURACAO DE BASE', colSpan: 3, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
 
             const sizes = state.sizes || {};
             const totalQty = Object.values(sizes).reduce((acc, q) => acc + (parseInt(q) || 0), 0);
@@ -788,8 +785,8 @@ const PDFGenerator = {
                 .join(', ');
 
             const baseUnitPrice = state.config?.basePrice || 0;
-            tableData.push(['GRADE DE TAMANHOS', clean(sizeString)]);
-            tableData.push(['VALOR BASE (UNIT)', `R$ ${fmt(baseUnitPrice)}`]);
+            tableData.push(['GRADE DE TAMANHOS', clean(sizeString), '']);
+            tableData.push(['VALOR BASE (UNIT)', '', `R$ ${fmt(baseUnitPrice)}`]);
 
             // 2. DETALHAMENTO POR CATEGORIA (SIDEBAR SYNC)
             const categories = config.categories || [{ id: 'default', name: 'DETALHES DO PRODUTO' }];
@@ -802,7 +799,7 @@ const PDFGenerator = {
                     config.parts.filter(p => p.category === cat.id).forEach(p => {
                         const colorId = state.parts?.[p.id];
                         const colorObj = config.colors?.find(c => c.id === colorId);
-                        catItems.push([clean(p.name.toUpperCase()), `COR: ${clean(colorObj ? colorObj.name : colorId)}`]);
+                        catItems.push([clean(p.name.toUpperCase()), `COR: ${clean(colorObj ? colorObj.name : colorId)}`, '']);
                     });
                 }
 
@@ -814,7 +811,7 @@ const PDFGenerator = {
                             const colorObj = config.colors?.find(c => c.id === extraState.color);
                             const price = (state.config?.extraPrices?.[e.id] !== undefined) ? state.config.extraPrices[e.id] : e.price;
                             const detail = colorObj ? `COR: ${clean(colorObj.name)}` : 'ATIVADO';
-                            catItems.push([clean(e.name.toUpperCase()), `${detail} (+ R$ ${fmt(price)})`]);
+                            catItems.push([clean(e.name.toUpperCase()), clean(detail), `R$ ${fmt(price)}`]);
                         }
                     });
                 }
@@ -824,7 +821,7 @@ const PDFGenerator = {
                     config.uploadZones.filter(u => u.category === cat.id).forEach(u => {
                         const up = state.uploads?.[u.id];
                         if (up?.src) {
-                            catItems.push([clean(u.name.toUpperCase()), `ARQUIVO: ${clean(up.formattedFilename || up.filename)}`]);
+                            catItems.push([clean(u.name.toUpperCase()), `ARQUIVO: ${clean(up.formattedFilename || up.filename)}`, '']);
                         }
                     });
                 }
@@ -834,43 +831,43 @@ const PDFGenerator = {
                     config.textZones.filter(t => t.category === cat.id).forEach(t => {
                         const txt = state.texts?.[t.id];
                         if (txt?.enabled && txt?.content) {
-                            catItems.push([`TEXTO: ${clean(t.name.toUpperCase())}`, `"${clean(txt.content)}" (Fonte: ${clean(txt.fontFamily)})`]);
+                            catItems.push([`TEXTO: ${clean(t.name.toUpperCase())}`, `"${clean(txt.content)}" (Fonte: ${clean(txt.fontFamily)})`, '']);
                         }
                     });
                 }
 
                 if (catItems.length > 0) {
-                    tableData.push([{ content: clean(cat.name.toUpperCase()), colSpan: 2, styles: { fillColor: [60, 60, 60], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
+                    tableData.push([{ content: clean(cat.name.toUpperCase()), colSpan: 3, styles: { fillColor: [60, 60, 60], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
                     tableData = tableData.concat(catItems);
                 }
             });
 
             // 3. SEÇÃO FINANCEIRA
-            tableData.push([{ content: 'DETALHAMENTO FINANCEIRO', colSpan: 2, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
+            tableData.push([{ content: 'DETALHAMENTO FINANCEIRO', colSpan: 3, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
 
             const subtotalVal = (pricing.total + (pricing.discountValue || 0) + (pricing.waiver || 0) - (pricing.devFees || 0));
-            tableData.push(['SUBTOTAL (PECAS + EXTRAS)', `R$ ${fmt(subtotalVal)}`]);
-            tableData.push(['MEDIA UNITARIA', `R$ ${fmt(subtotalVal / totalQty)}`]);
+            tableData.push(['SUBTOTAL (PECAS + EXTRAS)', '', `R$ ${fmt(subtotalVal)}`]);
+            tableData.push(['MEDIA UNITARIA', '', `R$ ${fmt(subtotalVal / totalQty)}`]);
 
             if (pricing.devFees > 0) {
-                tableData.push(['TAXAS DE MATRIZ (+)', `R$ ${fmt(pricing.devFees)}`]);
+                tableData.push(['TAXAS DE MATRIZ (+)', '', `R$ ${fmt(pricing.devFees)}`]);
             }
             if (pricing.discountValue > 0) {
-                tableData.push(['DESCONTO ATACADO (-)', `R$ ${fmt(pricing.discountValue)} (${fmt(pricing.discountPercent)}%)`]);
+                tableData.push(['DESCONTO ATACADO (-)', `${fmt(pricing.discountPercent)}%`, `R$ ${fmt(pricing.discountValue)}`]);
             }
             if (pricing.waiver > 0) {
-                tableData.push(['ISENCAO/BONUS (-)', `R$ ${fmt(pricing.waiver)}`]);
+                tableData.push(['ISENCAO/BONUS (-)', '', `R$ ${fmt(pricing.waiver)}`]);
             }
 
             const obs = state.observations || state.observacoes || "";
             if (obs.trim().length > 0) {
-                tableData.push([{ content: 'OBSERVACOES:', colSpan: 2, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }]);
-                tableData.push([{ content: clean(obs), colSpan: 2 }]);
+                tableData.push([{ content: 'OBSERVACOES:', colSpan: 3, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }]);
+                tableData.push([{ content: clean(obs), colSpan: 3 }]);
             }
 
             doc.autoTable({
                 startY: currentY,
-                head: [['ATRIBUTO', 'ESPECIFICACAO']],
+                head: [['ATRIBUTO', 'ESPECIFICACAO', 'VALOR']],
                 body: tableData,
                 theme: 'grid',
                 styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak' },
@@ -917,20 +914,24 @@ const PDFGenerator = {
                 docArg.text(termLines, margin, y);
                 y += (termLines.length * 4) + 5;
 
-                const qrSize = 22;
+                const qrSize = 30; // Aumentado conforme solicitado
+                const gap = 15;
+                const totalQRWidth = (qrSize * 2) + gap;
+                const startX = (pageWidth - totalQRWidth) / 2;
                 const qrY = y;
+
                 try {
                     const qPedido = await generateQR(`PEDIDO:${orderNum}`);
                     if (qPedido) {
-                        docArg.addImage(qPedido, 'PNG', margin, qrY, qrSize, qrSize);
-                        docArg.setFontSize(5); docArg.setFont('helvetica', 'bold');
-                        docArg.text(`PEDIDO: ${orderNum}`, margin, qrY + qrSize + 3);
+                        docArg.addImage(qPedido, 'PNG', startX, qrY, qrSize, qrSize);
+                        docArg.setFontSize(6); docArg.setFont('helvetica', 'bold');
+                        docArg.text(`PEDIDO: ${orderNum}`, startX + (qrSize / 2), qrY + qrSize + 4, { align: 'center' });
                     }
                     const qSku = await generateQR(`SKU:${sku}`);
                     if (qSku) {
-                        docArg.addImage(qSku, 'PNG', margin + qrSize + 10, qrY, qrSize, qrSize);
-                        docArg.setFontSize(5); docArg.setFont('helvetica', 'bold');
-                        docArg.text(`SKU: ${sku}`, margin + qrSize + 10, qrY + qrSize + 3);
+                        docArg.addImage(qSku, 'PNG', startX + qrSize + gap, qrY, qrSize, qrSize);
+                        docArg.setFontSize(6); docArg.setFont('helvetica', 'bold');
+                        docArg.text(`SKU: ${sku}`, startX + qrSize + gap + (qrSize / 2), qrY + qrSize + 4, { align: 'center' });
                     }
                 } catch (e) { }
             };
