@@ -8,6 +8,17 @@ const RegistrationController = {
         this.bindEvents();
         await this.checkExistingSession();
         this.preFillFromProfile();
+        this.checkCheckoutFlow();
+    },
+
+    checkCheckoutFlow: function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('flow') === 'checkout') {
+            const btn = document.getElementById('btn-submit');
+            if (btn) {
+                btn.innerHTML = '💳 IR PARA O PAGAMENTO ➔';
+            }
+        }
     },
 
     setupMasks: function () {
@@ -368,8 +379,12 @@ const RegistrationController = {
         }
 
         const urlParams = new URLSearchParams(window.location.search);
-        const redirect = urlParams.get('redirect') || 'IndexPedidoSimulador.html';
-        window.location.href = redirect;
+        if (urlParams.get('flow') === 'checkout') {
+            window.location.href = 'IndexPagamento.html';
+        } else {
+            const redirect = urlParams.get('redirect') || 'IndexPedidoSimulador.html';
+            window.location.href = redirect;
+        }
     }
 };
 
