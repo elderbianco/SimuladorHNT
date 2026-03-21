@@ -77,10 +77,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
 
                 const merged = Array.from(mergedMap.values());
+                const hasChanges = addedLocally > 0 || updatedLocally > 0 || merged.length !== localPedidos.length;
 
-                console.log(`✅ Sincronização background concluída. Total: ${merged.length} (Adicionados localmente: ${addedLocally}, Atualizados localmente: ${updatedLocally})`);
+                console.log(`✅ Sync concluída. Total: ${merged.length} (+${addedLocally} locais, ~${updatedLocally} atualizados, mudanças: ${hasChanges})`);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-                loadDashboard(); // Recarrega para mostrar novidades se houver
+
+                if (hasChanges) {
+                    loadDashboard(); // Só recarrega se houve mudanças reais
+                }
 
             } catch (e) {
                 console.warn('⚠️ Sincronização background falhou ou demorou demais:', e.message);
