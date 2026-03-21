@@ -127,7 +127,9 @@ const PDFGenerator = {
                             bgcolor: '#111111',
                             style: {
                                 margin: '0',
-                                padding: '0'
+                                padding: '0',
+                                overflow: 'visible',
+                                height: 'auto'
                             }
                         });
                     } catch (err) {
@@ -223,17 +225,9 @@ const PDFGenerator = {
                 const offsetX = (1600 - ((maxR - minL) * scale)) / 2;
                 let offsetY = (1200 - ((maxB - minT) * scale)) / 2;
 
-                // Ajustes finos: se o conjunto for muito vertical (como Short+Legging),
-                // garantir que o centro visual não suba demais (compensa visualmente o peso no topo)
-                if (contentHeight > contentWidth * 1.1) {
-                    offsetY += (contentHeight * scale) * 0.04;
-                }
+                // Ajuste fino para balanço visual
                 if (prod === 'TP' || prod === 'Top') {
                     offsetY -= 20;
-                } else if (prod === 'FS' || prod === 'SH') {
-                    // Se legging ativa, o centro visual deve considerar o conjunto todo
-                    // A lógica de maxB/minT já cobre isso, mas podemos dar uma margem superior
-                    offsetY += 10;
                 }
 
                 const loadImage = (src) => new Promise((res) => {
