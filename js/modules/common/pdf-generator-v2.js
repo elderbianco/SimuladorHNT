@@ -33,7 +33,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v34 (Gravity Balanced Fidelity) Ativado...');
+                console.log('☢️ Motor Nuclear v35 (Gravity Balanced Fidelity) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
@@ -47,7 +47,9 @@ const PDFGenerator = {
                 const toBase64 = (url) => new Promise((res) => {
                     if (!url || url.startsWith('data:')) return res(url);
                     const img = new Image();
-                    img.crossOrigin = 'Anonymous';
+                    if (!window.location.protocol.startsWith('file')) {
+                        img.crossOrigin = 'Anonymous';
+                    }
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         canvas.width = img.naturalWidth || img.width;
@@ -191,7 +193,7 @@ const PDFGenerator = {
                     this.cachedSnapshot = finalDataUrl;
                     if (this.captureCallback) this.captureCallback(finalDataUrl);
                 } else {
-                    console.error('❌ Falha crítica: Nenhuma imagem capturada no Mirror v34');
+                    console.error('❌ Falha crítica: Nenhuma imagem capturada no Mirror v35');
                 }
 
                 resolve(finalDataUrl);
@@ -271,7 +273,9 @@ const PDFGenerator = {
 
                 const loadImage = (src) => new Promise((res) => {
                     const img = new Image();
-                    img.crossOrigin = "anonymous";
+                    if (!window.location.protocol.startsWith('file')) {
+                        img.crossOrigin = "anonymous";
+                    }
                     img.onload = () => res(img);
                     img.onerror = () => res(null);
                     img.src = src;
