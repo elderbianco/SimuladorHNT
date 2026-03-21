@@ -23,3 +23,7 @@ O objetivo é garantir que as observações inseridas pelo cliente e os preços 
 
 * [ ] Adicionar um item com observações e verificar se aparecem nas abas.
 * [ ] Verificar se logomarcas centrais e laterais exibem os preços corretos (não agnósticos ao caso).
+
+
+## 📝 REGRA GLOBAL: Atualização de Versão
+Sempre que houver qualquer modificação no projeto, o número da versão (ex: v14.12 -> v14.13) DEVE obrigatoriamente ser atualizado globalmente no HTML e JS.

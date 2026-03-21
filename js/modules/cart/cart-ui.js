@@ -146,6 +146,7 @@ window.CartUI = {
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'sizes-${uid}')">📏 Tamanhos ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'specs-${uid}')">🎨 Lógos/Textos ▼</button>
                     <button class="tab-btn" onclick="CartUI.switchTab(this, 'price-${uid}')">💰 Valores ▼</button>
+                    ${(state.observations || state.observacoes) ? `<button class="tab-btn" style="color:#ffa500; font-weight:bold;" onclick="CartUI.switchTab(this, 'obs-${uid}')">📝 Observações ▼</button>` : ''}
                 </div>
 
                 <div id="prod-${uid}" class="tab-content active">
@@ -154,7 +155,7 @@ window.CartUI = {
                     </div>
                     ${(state.observations || state.observacoes) ? `
                         <div style="margin:15px 0; padding:12px; background:rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px; font-size:0.9rem; color:#ccc;">
-                            <strong style="color:var(--gold);">📝 Obs:</strong> "${state.observations || state.observacoes}"
+                            <strong style="color:var(--gold);">📝 Obs:</strong> Tem observações adicionais (Veja a aba "Observações").
                         </div>
                     ` : ''}
                     <div style="margin-top:20px;">
@@ -206,6 +207,13 @@ window.CartUI = {
                         Estimativa de 15 a 25 dias úteis a partir da aprovação final.
                     </div>
                 </div>
+
+                ${(state.observations || state.observacoes) ? `
+                <div id="obs-${uid}" class="tab-content">
+                    <h3 style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; margin-bottom: 20px;">📝 Observações do Cliente</h3>
+                    <div style="background: #1a1a1a; padding: 20px; border: 1px dashed var(--gold); border-radius: 8px; font-size: 1rem; color: #ddd; line-height: 1.6; white-space: pre-wrap;">${state.observations || state.observacoes}</div>
+                </div>
+                ` : ''}
             </div>
         </div>
         `;
@@ -396,20 +404,31 @@ window.CartUI = {
 
         // 5. EXTRAS
         const extras = state.extras || item.specs?.extras || {};
-        const extraEntries = Object.entries(extras).filter(([key, data]) => data && (data.enabled || data.active));
+        const extraEntries = Object.entries(extras).filter(([key, data]) => {
+            if (!data) return false;
+            // Allow objects with enabled/active flag
+            if (typeof data === 'object') return data.enabled || data.active;
+            // Allow primitive truthy values (booleans or "sim")
+            return data === true || String(data).toLowerCase() === 'sim' || String(data).toLowerCase() === 'yes';
+        });
 
         if (extraEntries.length > 0) {
             html += '<tr style="background: #2C2C2C;"><td colspan="3" style="padding: 10px 15px; font-weight: bold; color: #fff;">5. EXTRAS / ACABAMENTOS</td></tr>';
             extraEntries.forEach(([key, data]) => {
                 const extraName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 let colorName = '';
-                if (data.color || data.value) {
-                    const rawColor = data.value || (typeof data.color === 'object' ? data.color?.value : data.color);
-                    colorName = (rawColor || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                if (data && typeof data === 'object') {
+                    if (data.color || data.value) {
+                        const rawColor = data.value || (typeof data.color === 'object' ? data.color?.value : data.color);
+                        colorName = (rawColor || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    }
+                } else {
+                    colorName = 'SIM';
                 }
 
                 // Logic for Extra Price (match pricing.js)
-                let extraPrice = data.price || 0;
+                let extraPrice = (data && typeof data === 'object') ? (data.price || 0) : 0;
                 if (extraPrice === 0) {
                     // Try to find in config
                     const eId = data.id || key.toLowerCase().replace(/\s+/g, '_');
@@ -504,7 +523,13 @@ window.CartUI = {
 
     renderExtrasOnly: function (extras) {
         if (!extras || Object.keys(extras).length === 0) return '';
-        const validExtras = Object.entries(extras).filter(([key, e]) => e && (e.enabled || e.active));
+        const validExtras = Object.entries(extras).filter(([key, e]) => {
+            if (!e) return false;
+            // Support object formats {enabled: true, value: "Color"}
+            if (typeof e === 'object') return e.enabled || e.active;
+            // Support primitive formats like true or "SIM"
+            return e === true || String(e).toLowerCase() === 'sim' || String(e).toLowerCase() === 'yes';
+        });
         if (validExtras.length === 0) return '';
 
         return '<h4 style="margin:0 0 10px 0; color:#888;">Extras / Acabamentos</h4><div style="display:flex; flex-wrap:wrap; gap:8px;">' + validExtras.map(([key, e]) => {
@@ -584,14 +609,7 @@ window.CartUI = {
             html += '</div>';
         }
 
-        // 3. Observations
-        const obs = specs.observations || specs.observacoes || "";
-        if (obs && obs.trim().length > 0) {
-            html += '<h4 style="color:var(--gold); border-bottom:1px solid #444; padding-bottom:5px; margin-top:25px;">📝 OBSERVAÇÕES DO CLIENTE</h4>';
-            html += `<div style="margin:15px 0; padding:15px; background:rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px; font-size:0.95rem; color:#ddd; font-style:italic; line-height:1.5;">
-                        "${obs.replace(/\n/g, '<br>')}"
-                     </div>`;
-        }
+        // 3. Observations omitted here to avoid duplication with the dedicated tab
 
         if (!html) html = '<p style="color:#666; font-style:italic; padding:20px;">Nenhuma personalização de imagem ou texto encontrada para este item.</p>';
 
