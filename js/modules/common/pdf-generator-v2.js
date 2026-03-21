@@ -129,6 +129,7 @@ const PDFGenerator = {
 
                 const wrapper = document.querySelector('.simulator-wrapper');
                 if (wrapper) {
+                    wrapper.setAttribute('data-had-class', wrapper.classList.contains('calca-legging-active') ? 'true' : 'false');
                     wrapper.classList.remove('calca-legging-active');
                 }
 
@@ -144,7 +145,8 @@ const PDFGenerator = {
                             style: {
                                 margin: '0',
                                 padding: '0',
-                                overflow: 'visible'
+                                overflow: 'visible',
+                                height: '1600px'
                             }
                         });
                     } catch (err) {
