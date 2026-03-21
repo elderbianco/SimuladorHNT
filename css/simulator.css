@@ -795,7 +795,7 @@ input:checked+.slider:before {
     box-shadow: 0 6px 20px rgba(220, 53, 69, 0.6) !important;
 }
 
-/* 🛡️ Nuclear Sanitization para Captura de PDF (v15.7) */
+/* 🛡️ Nuclear Sanitization para Captura de PDF (v15.14 / v14.27) */
 body.pdf-capturing .drag-handle,
 body.pdf-capturing .resize-handle,
 body.pdf-capturing .ui-draggable-handle,

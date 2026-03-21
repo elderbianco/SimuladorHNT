@@ -27,7 +27,7 @@ const PDFGenerator = {
      * Usa html2canvas + Pré-processamento Base66 para garantir rotação e escala exatas.
      */
     /**
-     * Motor de Renderização Nuclear v26 (Industrial Fidelity + Customer Context)
+     * Motor de Renderização Nuclear v27 (Industrial Fidelity + Customer Context)
      * Captura o RingHNT de fundo e inclui contato/observações no resumo.
      */
     async drawManualSnapshot() {
