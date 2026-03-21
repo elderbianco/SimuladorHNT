@@ -682,7 +682,8 @@ const PDFGenerator = {
             ]);
 
             // AutoTable MUST be loaded after jsPDF
-            await loadScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js', 'jsPDFAutoTableStub');
+            await loadScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js', '__autotableLoaded');
+            window['__autotableLoaded'] = true;
 
             return true;
         } catch (e) {
