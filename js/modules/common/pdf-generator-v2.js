@@ -119,10 +119,10 @@ const PDFGenerator = {
                 mirror.style.backgroundColor = '#111111';
                 document.body.appendChild(mirror);
 
-                // --- 4. APLICAR ESTILOS DE PROPORÇÃO NO MIRROR (v35) ---
+                // --- 4. APLICAR ESTILOS DE PROPORÇÃO NO MIRROR (v36) ---
                 const isLeggingActive = this.context.state?.extras?.calca_legging?.enabled;
-                const snapshotScale = isLeggingActive ? 1.7 : 2.2;
-                const snapshotY = isLeggingActive ? '5%' : '2%'; // Calibragem Nuclear v35 para centralização perfeita
+                const snapshotScale = isLeggingActive ? 1.5 : 1.9;
+                const snapshotY = isLeggingActive ? '6%' : '3%'; // Calibragem Nuclear v36 para enquadramento balanceado
 
                 const subElements = ['.simulator-area', '.simulator-viewport', '.zoom-container', '.simulator-wrapper'];
                 subElements.forEach(selector => {
@@ -132,7 +132,7 @@ const PDFGenerator = {
                             el.style.setProperty('width', '1600px', 'important');
                             el.style.setProperty('height', '1200px', 'important');
                         } else if (selector === '.simulator-wrapper') {
-                            // Aplica Zoom e Centralização de v34
+                            // Aplica Zoom e Centralização de v36
                             el.style.setProperty('transform', `scale(${snapshotScale}) translateY(${snapshotY})`, 'important');
                             el.style.setProperty('transform-origin', 'center center', 'important');
                         } else {
@@ -156,7 +156,7 @@ const PDFGenerator = {
 
                 if (typeof domtoimage !== 'undefined') {
                     try {
-                        console.log('📸 Capturando via dom-to-image v35 (Silent Mirror)...');
+                        console.log('📸 Capturando via dom-to-image v36 (Silent Mirror)...');
                         finalDataUrl = await domtoimage.toJpeg(mirror, {
                             quality: 0.95,
                             bgcolor: '#111111'
@@ -168,7 +168,7 @@ const PDFGenerator = {
 
                 if (!finalDataUrl && typeof html2canvas !== 'undefined') {
                     try {
-                        console.log('📸 Fallback para html2canvas v35...');
+                        console.log('📸 Fallback para html2canvas v36...');
                         const canvas = await html2canvas(mirror, {
                             scale: 1,
                             useCORS: true,
@@ -188,12 +188,12 @@ const PDFGenerator = {
                 tempHidden.forEach(item => { item.el.style.display = item.display; });
 
                 if (finalDataUrl) {
-                    console.log(`✅ Snapshot v35 gerado: ${Math.round(finalDataUrl.length / 1024)} KB`);
+                    console.log(`✅ Snapshot v36 gerado: ${Math.round(finalDataUrl.length / 1024)} KB`);
                     this.context.snapshotURL = finalDataUrl;
                     this.cachedSnapshot = finalDataUrl;
                     if (this.captureCallback) this.captureCallback(finalDataUrl);
                 } else {
-                    console.error('❌ Falha crítica: Nenhuma imagem capturada no Mirror v35');
+                    console.error('❌ Falha crítica: Nenhuma imagem capturada no Mirror v36');
                 }
 
                 resolve(finalDataUrl);
