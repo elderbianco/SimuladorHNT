@@ -27,13 +27,13 @@ const PDFGenerator = {
      * Usa html2canvas + Pré-processamento Base66 para garantir rotação e escala exatas.
      */
     /**
-     * Motor de Renderização Nuclear v24 (Industrial Fidelity + Financial Clarity)
-     * Captura o RingHNT de fundo e detalha todos os valores (Incluso vs Pago).
+     * Motor de Renderização Nuclear v25 (Industrial Fidelity + Customer Context)
+     * Captura o RingHNT de fundo e inclui contato/observações no resumo.
      */
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v24 (Financial Clarity) Ativado...');
+                console.log('☢️ Motor Nuclear v25 (Customer Context) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
@@ -244,7 +244,7 @@ const PDFGenerator = {
 
             if (snapshot && snapshot.length > 1000) {
                 this.cachedSnapshot = snapshot;
-                console.log(`✅ Snapshot v24 gerado: ${Math.round(snapshot.length / 1024)} KB`);
+                console.log(`✅ Snapshot v25 gerado: ${Math.round(snapshot.length / 1024)} KB`);
                 this.isCaptureBroken = false;
             } else {
                 console.error('❌ Falha na geração do Snapshot v16.');
@@ -615,7 +615,7 @@ const PDFGenerator = {
     },
 
     /**
-     * Gera um PDF real em background usando jsPDF (EXPERT v24)
+     * Gera um PDF real em background usando jsPDF (EXPERT v25)
      */
     async generateBackgroundPDF(customId = null) {
         if (typeof window.jspdf === 'undefined' || typeof QRCode === 'undefined') {
@@ -708,7 +708,7 @@ const PDFGenerator = {
                 docArg.setFontSize(9);
                 docArg.setFont('helvetica', 'normal');
                 docArg.setTextColor(120, 120, 120);
-                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT v24', margin, margin + 18);
+                docArg.text('INDUSTRIAL & CUSTOM APPAREL - EXPERT v25', margin, margin + 18);
 
                 docArg.setFont('helvetica', 'bold');
                 docArg.setFontSize(11);
@@ -774,8 +774,17 @@ const PDFGenerator = {
                 return 0;
             };
 
-            // 1. CONFIGURAÇÃO DE BASE (Grade)
-            tableData.push([{ content: '1. CONFIGURACAO DE BASE', colSpan: 3, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
+            // 1. CONFIGURAÇÃO DE BASE (Grade + Contato)
+            tableData.push([{ content: '1. CONFIGURACAO DE BASE & CONTATO', colSpan: 3, styles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' } }]);
+
+            // Tenta recuperar telefone do perfil ou state
+            let phone = 'Nao Registrado';
+            try {
+                const profile = JSON.parse(localStorage.getItem('hnt_customer_profile') || '{}');
+                phone = profile.whatsapp || profile.phone || state.client_info?.phone || 'Nao Registrado';
+            } catch (e) { }
+
+            tableData.push(['CONTATO / TELEFONE', clean(phone), '']);
 
             const sizes = state.sizes || {};
             const totalQty = Object.values(sizes).reduce((acc, q) => acc + (parseInt(q) || 0), 0);
