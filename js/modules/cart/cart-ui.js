@@ -67,7 +67,7 @@ window.CartUI = {
     /**
      * V1-Style Complete Card for an Item
      */
-    renderSubItemV1Style: function (order) {
+    renderSubItemV1Style: function (order, currentItem = 1, totalItems = 1) {
         // Safety checks
         if (!order || !order.item) {
             console.warn('Invalid order data:', order);
