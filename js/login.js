@@ -12,9 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lógica para mostrar/esconder senha
     if (showPasswordCheckbox) {
-        showPasswordCheckbox.addEventListener('change', () => {
+        // Usar click e change para garantir captura em diferentes navegadores
+        const toggle = () => {
+            console.log('👁 Alternando visibilidade da senha:', showPasswordCheckbox.checked);
             passwordInput.type = showPasswordCheckbox.checked ? 'text' : 'password';
-        });
+        };
+        showPasswordCheckbox.addEventListener('change', toggle);
+        showPasswordCheckbox.addEventListener('click', toggle);
     }
 
     async function checkExistingSession() {
@@ -35,17 +39,44 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = redirectUrl;
     }
 
+    // Função de fallback para login de operador (tabela producao_operadores)
+    async function tryOperatorLogin(usuario, senha) {
+        console.log('🔍 Tentando login de operador para:', usuario);
+        // Usamos a chave anon do Supabase para consultar a tabela
+        const SUPABASE_URL = 'https://sflllqfytzpwgnaksvkj.supabase.co';
+        const ANON_KEY = 'sb_publishable_LaBMdoSK9HGEjLBbeKxXiA_vy2EnlxY';
+
+        try {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/producao_operadores?usuario=eq.${usuario}&senha=eq.${senha}&ativo=eq.true`, {
+                headers: {
+                    'apikey': ANON_KEY,
+                    'Authorization': `Bearer ${ANON_KEY}`
+                }
+            });
+            const data = await response.json();
+            if (data && data.length > 0) {
+                console.log('✅ Operador autenticado:', data[0].nome);
+                // Criamos uma "pseudo-sessão" no localStorage para o HNT-OPS reconhecer
+                localStorage.setItem('hnt_op_user', JSON.stringify(data[0]));
+                return true;
+            }
+        } catch (e) {
+            console.error('Operator login failed:', e);
+        }
+        return false;
+    }
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        let email = emailInput.value.trim();
+        let emailOrUser = emailInput.value.trim();
         const password = passwordInput.value;
 
         // Alias para "e"
-        if (email === 'e') {
-            email = 'e@hanuthai.com.br';
+        if (emailOrUser === 'e') {
+            emailOrUser = 'e@hanuthai.com.br';
         }
 
-        if (!email || !password) return;
+        if (!emailOrUser || !password) return;
 
         // Resetar UI
         errorMsg.style.display = 'none';
@@ -54,18 +85,28 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.style.display = 'block';
 
         try {
-            const { data, error } = await window.authApi.signIn(email, password);
+            // 1. Tentar Login via Supabase Auth (E-mail)
+            let isEmail = emailOrUser.includes('@');
+            let authResult = null;
 
-            if (error) {
-                console.error('Login error:', error.message);
-                errorMsg.style.display = 'block';
-                errorMsg.textContent = "Credenciais inválidas. Use o e-mail e senha configurados no Supabase.";
-                loginBtn.disabled = false;
-                loginBtn.innerText = "Entrar";
-                loader.style.display = 'none';
-            } else if (data.session) {
-                // Success
+            if (isEmail) {
+                authResult = await window.authApi.signIn(emailOrUser, password);
+            }
+
+            if (authResult && authResult.data && authResult.data.session) {
                 redirectAfterLogin();
+            } else {
+                // 2. Fallback: Tentar login via tabela de operadores (Username ou E-mail como username)
+                const isOp = await tryOperatorLogin(emailOrUser, password);
+                if (isOp) {
+                    redirectAfterLogin();
+                } else {
+                    errorMsg.style.display = 'block';
+                    errorMsg.textContent = "Credenciais inválidas. Verifique seu usuário/e-mail e senha.";
+                    loginBtn.disabled = false;
+                    loginBtn.innerText = "Entrar";
+                    loader.style.display = 'none';
+                }
             }
         } catch (err) {
             console.error('Auth crash:', err);
@@ -76,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loader.style.display = 'none';
         }
     });
+
 
 });
 
