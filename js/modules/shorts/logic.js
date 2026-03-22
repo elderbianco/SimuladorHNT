@@ -99,32 +99,49 @@ function loadAdminConfig() {
  * Busca a configuração do servidor (Para modo anônimo/incognito)
  */
 async function fetchConfigFromServer() {
+    if (typeof SupabaseAdapter === 'undefined') return false;
+
     try {
-        console.log("☁️ Buscando configurações do servidor...");
-        const res = await fetch('/api/admin/config');
-        if (!res.ok) throw new Error('API config error');
+        console.log("☁️ Buscando configurações do Supabase...");
 
-        const serverConfig = await res.json();
-        if (serverConfig && Object.keys(serverConfig).length > 0) {
-            console.log("☁️ Configuração recebida do servidor:", serverConfig);
+        // Timeout para não travar a carga se a rede estiver lenta
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout Supabase')), 2000));
 
-            // Salvar no localStorage para persistência local
-            localStorage.setItem('hnt_pricing_config', JSON.stringify(serverConfig));
+        const configPromise = SupabaseAdapter.getAdminConfigs([
+            'hnt_pricing_config',
+            'production_days',
+            'whatsapp_number'
+        ]);
 
-            // Recarregar configs
+        const configs = await Promise.race([configPromise, timeoutPromise]);
+
+        if (configs && Object.keys(configs).length > 0) {
+            console.log("☁️ Configurações recebidas:", configs);
+
+            if (configs.hnt_pricing_config) {
+                localStorage.setItem('hnt_pricing_config', JSON.stringify(configs.hnt_pricing_config));
+            }
+            if (configs.production_days) {
+                localStorage.setItem('hnt_production_config', JSON.stringify(configs.production_days));
+            }
+            if (configs.whatsapp_number) {
+                const currentPricing = JSON.parse(localStorage.getItem('hnt_pricing_config') || '{}');
+                currentPricing.whatsappNumber = configs.whatsapp_number;
+                localStorage.setItem('hnt_pricing_config', JSON.stringify(currentPricing));
+            }
+
             loadAdminConfig();
-
-            // Atualizar UI e Preços
             if (typeof renderControls === 'function') renderControls();
             if (typeof updatePrice === 'function') updatePrice();
 
             return true;
         }
     } catch (e) {
-        console.warn("⚠️ Falha ao buscar config do servidor (usando local):", e);
+        console.warn("⚠️ Usando cache local (falha ou timeout no servidor):", e.message);
     }
     return false;
 }
+
 
 /**
  * Inicializa valores padrão baseados no banco de dados DATA
