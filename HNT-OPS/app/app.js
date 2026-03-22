@@ -60,49 +60,58 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const realData = await api.loadDashboard();
         if (realData && realData.length > 0) {
-            PEDIDOS = realData.map(r => {
+            // Mapear cada linha do banco para um produto individual
+            const linhasMapeadas = realData.map(r => {
                 let dt = r.dados_tecnicos_full || r.dados_tecnicos;
                 if (typeof dt === 'string') { try { dt = JSON.parse(dt); } catch (e) { } }
                 dt = dt || {};
-
                 return {
                     id: r.id,
                     numero: r.numero_pedido || 'SN',
-                    sku: r.sku,
+                    sku: r.sku || 'N/A',
+                    tipoProduto: r.tipo_produto || r.sku || 'N/A',
                     tecnica: r.tecnica || 'Indefinida',
                     tamanho: r.tamanho || 'U',
                     quantidade: r.quantidade || 1,
                     etapa: r.etapa_atual,
-                    prioridade: r.prioridade,
-                    urgente: r.urgente,
+                    prioridade: r.prioridade || 3,
+                    urgente: r.urgente || false,
                     alerta: r.alerta_cor || r.alerta_prazo || 'Verde',
-
-                    // Novos campos de SLA dinâmico
                     diasRestantes: r.dias_restantes_etapa,
                     diasSlaEtapa: r.dias_restantes_etapa,
                     diasSlaTotal: r.dias_restantes_total,
                     paradoHa: r.dias_na_etapa_atual || 0,
-
-                    prazo: typeof r.prazo_entrega === 'string' ? r.prazo_entrega.split('-').reverse().join('/') : r.prazo_entrega,
+                    prazo: typeof r.prazo_entrega === 'string' ? r.prazo_entrega.split('-').reverse().join('/') : (r.prazo_entrega || '--'),
                     dataCriacao: r.criado_em ? new Date(r.criado_em).toLocaleDateString('pt-BR') : '--',
                     cliente: r.cliente_nome || 'Sem Cliente',
                     cpf: r.cliente_cpf || '--',
                     celular: r.cliente_celular || '--',
                     email: r.cliente_email || '--',
-                    pdf: r.link_pdf,
-                    emb: r.link_arquivo_bordado,
+                    pdf: r.link_pdf || null,
+                    emb: r.link_arquivo_bordado || null,
                     observacoes: r.observacoes || '',
-
-                    // Technical Details Expansion
+                    valor: r.valor_pedido || null,
+                    // Dados técnicos completos (partes, textos, extras, uploads, grade)
                     dadosTecnicos: dt,
                     renders: r.link_renders || {},
-
-                    // Legacy color support
-                    corCentro: (dt.parts?.Centro?.value || dt.parts?.Base?.value || dt.cor_centro || ''),
-                    corLaterais: (dt.parts?.Laterais?.value || dt.cor_laterais || ''),
-                    corFilete: (dt.parts?.Filete?.value || dt.parts?.Filetes?.value || dt.cor_filete || '')
                 };
             });
+
+            // Agrupar por numero_pedido: 1 pedido = N produtos (linhas do banco)
+            const grupos = {};
+            linhasMapeadas.forEach(linha => {
+                const num = linha.numero;
+                if (!grupos[num]) {
+                    grupos[num] = { ...linha, produtos: [] };
+                }
+                grupos[num].produtos.push(linha);
+                // Acumular quantidade total
+                if (grupos[num].produtos.length > 1) {
+                    grupos[num].quantidade = grupos[num].produtos.reduce((acc, p) => acc + (p.quantidade || 1), 0);
+                }
+            });
+
+            PEDIDOS = Object.values(grupos);
         }
 
     }
@@ -162,20 +171,21 @@ function renderTable(data) {
         return;
     }
     data.forEach(p => {
+        const produtos = p.produtos || [p];
+        const numProdutos = produtos.length;
         const tr = document.createElement('div');
         tr.className = 'table-row';
         tr.dataset.id = p.id;
-        const icon = ETAPA_ICONS[p.etapa] || '●';
-        const label = ETAPA_LABELS[p.etapa] || p.etapa;
+        const skuDisplay = numProdutos > 1
+            ? `<span class="sku-badge multi-sku">${numProdutos} produtos</span>`
+            : `<span class="sku-badge" data-tooltip="Clique para ver detalhes">${p.sku}</span>`;
         tr.innerHTML = `
       <div class="cell-order">
         <span class="order-num">${p.numero}</span>
       </div>
-      <div class="cell-sku">
-        <span class="sku-badge" data-tooltip="Clique para ver detalhes">${p.sku}</span>
-      </div>
+      <div class="cell-sku">${skuDisplay}</div>
       <div class="cell-date" style="font-size:11px; color:var(--text-2); font-weight:500;">${p.dataCriacao}</div>
-      <div class="cell-qty">${p.quantidade}×<br><span style="font-size:10px;color:var(--text-3)">${p.tamanho}</span></div>
+      <div class="cell-qty">${p.quantidade}×<br><span style="font-size:10px;color:var(--text-3)">${numProdutos > 1 ? numProdutos + ' itens' : p.tamanho}</span></div>
       <div class="cell-client">
         <span class="client-name">${p.cliente}</span>
         <span class="client-cpf">${p.cpf}</span>
@@ -209,15 +219,13 @@ function renderTable(data) {
         ${p.pdf ? `<button class="row-action-btn" title="Ver PDF" onclick="event.stopPropagation();openLink('${p.pdf}')">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
         </button>` : ''}
-        ${p.emb ? `<button class="row-action-btn" title="Download .emb" onclick="event.stopPropagation();showProgress()">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-        </button>` : ''}
       </div>
     `;
         tr.addEventListener('click', () => openDrawer(p.id));
         tbody.appendChild(tr);
     });
 }
+
 
 // ── Kanban ────────────────────────────────────────────────
 
@@ -296,20 +304,14 @@ function bindKanbanEvents() {
 // ── Drawer ────────────────────────────────────────────────
 function openDrawer(id) {
     selectedId = id;
-    drawerTab = 'detalhes';
     const p = PEDIDOS.find(x => x.id.toString() == id.toString());
     if (!p) return;
-    // NOVO: Detectar se há múltiplos itens e sugerir aba de itens
-    const dt = p.dadosTecnicos || {};
-    const items = dt.items || (dt.item ? [dt.item] : []);
-    if (items.length > 1) {
-        drawerTab = 'itens';
-    }
-
+    const produtos = p.produtos || [p];
+    // Abrir na aba 'itens' se houver mais de 1 produto; senão 'detalhes'
+    drawerTab = produtos.length > 1 ? 'itens' : 'detalhes';
     renderDrawer(p);
     $('drawer-overlay').classList.add('open');
     $('drawer').classList.add('open');
-    // NOVO: Resetar estado de edição ao abrir
     isEditing = false;
 }
 
@@ -320,22 +322,23 @@ function closeDrawer() {
 }
 
 function renderDrawer(p) {
+    const produtos = p.produtos || [p];
+    const numProdutos = produtos.length;
+
     $('drawer-num').textContent = p.numero;
-    const dt = p.dadosTecnicos || {};
-    const items = dt.items || (dt.item ? [dt.item] : []);
-    $('drawer-sku').textContent = items.length > 1
-        ? `${items.length} Itens no Pedido`
+    $('drawer-sku').textContent = numProdutos > 1
+        ? `${numProdutos} Produtos no Pedido · ${p.quantidade} un. total`
         : `${p.sku} · ${p.tecnica} · ${p.tamanho} · ${p.quantidade} un.`;
 
-    // Atualizar abas (esconder 'Itens' se for só um, ou destacar)
+    // Mostrar/ocultar aba Itens dependendo de multi-produto
     document.querySelectorAll('.drawer-tab').forEach(t => {
         if (t.dataset.tab === 'itens') {
-            t.style.display = items.length > 1 ? 'block' : 'none';
+            t.style.display = numProdutos > 1 ? 'block' : 'none';
         }
         t.classList.toggle('active', t.dataset.tab === drawerTab);
     });
 
-    // Stage mover com ícones
+    // Stage move buttons
     const sb = $('stage-buttons');
     sb.innerHTML = ETAPAS.filter(e => e !== 'Pendencia' && e !== 'Cancelado').map(e => `
     <button class="stage-btn ${e === p.etapa ? 'current' : ''}" onclick="moverEtapa('${p.id}','${e}')">
@@ -368,15 +371,14 @@ function renderDrawerFooter(p) {
 function renderDrawerTab(p) {
     const body = $('drawer-body');
     let contentHtml = '';
-    const dt = p.dadosTecnicos || {};
-    const items = dt.items || (dt.item ? [dt.item] : []);
+    const produtos = p.produtos || [p];
+    const numProdutos = produtos.length;
 
     if (drawerTab === 'detalhes') {
         const iconAtual = ETAPA_ICONS[p.etapa] || '📋';
         const labelAtual = ETAPA_LABELS[p.etapa] || p.etapa;
 
         if (isEditing) {
-            // MODO EDIÇÃO (Simplificado para o pedido como um todo)
             contentHtml = `
                 <div class="detail-section" style="margin-top:0">
                     <div class="detail-section-title">📝 Editar Informações do Pedido</div>
@@ -413,61 +415,57 @@ function renderDrawerTab(p) {
                 </div>
             `;
         } else {
-            // MODO VISUALIZAÇÃO - Resumo do Pedido e Primeiro Item
-            const mainItem = items[0] || {};
+            // Resumo do pedido
+            const valorFmt = p.valor ? `R$ ${parseFloat(p.valor).toFixed(2).replace('.', ',')}` : '—';
             contentHtml = `
                 <div class="detail-section" style="margin-top:0">
                     <div class="detail-section-title">📦 Resumo do Pedido</div>
                     <div class="detail-grid">
-                        <div class="detail-item"><div class="detail-item-label">Número</div><div class="detail-item-value">${p.numero}</div></div>
-                        <div class="detail-item"><div class="detail-item-label">Itens</div><div class="detail-item-value">${items.length} item(ns)</div></div>
-                        <div class="detail-item"><div class="detail-item-label">Etapa Atual</div><div class="detail-item-value"><span class="etapa-badge etapa-${p.etapa}"><span class="etapa-icon">${iconAtual}</span>${labelAtual}</span></div></div>
+                        <div class="detail-item"><div class="detail-item-label">Número</div><div class="detail-item-value prod-num">${p.numero}</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Produtos</div><div class="detail-item-value">${numProdutos} produto(s)</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Etapa Atual</div><div class="detail-item-value"><span class="etapa-badge" style="background:${ETAPA_COLORS[p.etapa]}22;color:${ETAPA_COLORS[p.etapa]};border:1px solid ${ETAPA_COLORS[p.etapa]}"><span class="etapa-icon">${iconAtual}</span>${labelAtual}</span></div></div>
                         <div class="detail-item"><div class="detail-item-label">Prazo Final</div><div class="detail-item-value">${p.prazo}</div></div>
-                        <div class="detail-item full"><div class="detail-item-label">Observações Gerais</div><div class="detail-item-value">${p.observacoes || 'Nenhuma'}</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Data Entrada</div><div class="detail-item-value">${p.dataCriacao}</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Valor Total</div><div class="detail-item-value" style="color:var(--gold);font-weight:700">${valorFmt}</div></div>
+                        ${p.observacoes ? `<div class="detail-item full obs-destaque"><div class="detail-item-label">📝 Observações</div><div class="detail-item-value">${p.observacoes}</div></div>` : ''}
                     </div>
                 </div>
             `;
-
-            if (items.length === 1) {
-                contentHtml += renderItemSpecs(mainItem, p.pdf, p.emb, p.alerta, p.diasSlaEtapa, p.diasSlaTotal);
+            if (numProdutos === 1) {
+                // Produto único: exibir ficha técnica completa na aba detalhes
+                contentHtml += renderProdutoFicha(produtos[0], false);
             } else {
                 contentHtml += `
-                    <div style="padding:40px 20px; text-align:center; background:rgba(212,175,55,0.05); border-radius:12px; border:1px dashed var(--gold); margin-top:20px;">
-                        <div style="font-size:2rem; margin-bottom:15px;">🛒</div>
-                        <h3 style="color:var(--gold); margin-bottom:10px;">Pedido com Múltiplos Itens</h3>
-                        <p style="color:var(--text-3); font-size:0.9rem; max-width:400px; margin:0 auto 20px;">Este pedido contém ${items.length} variações/itens diferentes. Use a aba "Itens" para ver os detalhes técnicos de cada um.</p>
-                        <button class="btn btn-primary" onclick="switchDrawerTab('itens')">Ver Lista de Itens</button>
+                    <div style="padding:32px 20px; text-align:center; background:rgba(212,175,55,0.05); border-radius:12px; border:1px dashed var(--gold); margin-top:20px;">
+                        <div style="font-size:2rem; margin-bottom:12px;">🛒</div>
+                        <h3 style="color:var(--gold); margin-bottom:8px;">Pedido com ${numProdutos} Produtos</h3>
+                        <p style="color:var(--text-3); font-size:0.875rem; max-width:380px; margin:0 auto 18px;">Veja a ficha técnica completa de cada produto na aba abaixo.</p>
+                        <button class="btn btn-primary" onclick="switchDrawerTab('itens')">📋 Ver Todos os Produtos</button>
                     </div>
                 `;
             }
         }
     } else if (drawerTab === 'itens') {
-        const dt = p.dadosTecnicos || {};
-        const items = dt.items || (dt.item ? [dt.item] : []);
         contentHtml = `
             <div class="detail-section" style="margin-top:0">
-                <div class="detail-section-title">🛒 Lista de Itens do Pedido (${items.length})</div>
-                <div style="display:flex; flex-direction:column; gap:15px; margin-top:15px;">
-                    ${items.map((item, index) => `
-                        <div class="item-card" id="item-card-${index}" style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
-                            <div class="item-card-header" onclick="toggleItemCard(${index})" style="padding:15px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; background:rgba(0,0,0,0.02);">
+                <div class="detail-section-title">🛒 Produtos do Pedido (${numProdutos})</div>
+                <div style="display:flex; flex-direction:column; gap:14px; margin-top:14px;">
+                    ${produtos.map((prod, index) => `
+                        <div class="item-card" id="item-card-${index}">
+                            <div class="item-card-header" onclick="toggleItemCard(${index})">
                                 <div style="display:flex; align-items:center; gap:12px;">
-                                    <div style="width:32px; height:32px; background:var(--gold); color:#000; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">${index + 1}</div>
+                                    <div class="item-card-num">${index + 1}</div>
                                     <div>
-                                        <div style="font-weight:700; font-size:1rem; color:var(--text-1)">${item.productName || item.sku || 'Produto'}</div>
-                                        <div style="font-size:0.8rem; color:var(--text-3)">${item.quantity || 1} un. · Tam: ${item.size || 'U'}</div>
+                                        <div style="font-weight:700; font-size:0.95rem; color:var(--text-1)">${prod.sku}</div>
+                                        <div style="font-size:0.78rem; color:var(--text-3)">${prod.quantidade} un. · ${prod.tamanho} · ${prod.tecnica}</div>
                                     </div>
                                 </div>
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <button class="row-action-btn" style="width:auto; padding:0 10px; font-size:0.75rem;">Ver Detalhes</button>
-                                    <svg class="toggle-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:16px; height:16px; color:var(--text-3)">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                    </svg>
-                                </div>
+                                <svg class="toggle-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:16px;height:16px;color:var(--text-3)">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                </svg>
                             </div>
-                            <div class="item-card-body" style="padding:0 20px 20px 20px;">
-                                <div style="height:20px;"></div>
-                                ${renderItemSpecs(item, item.pdf, null, p.alerta, p.diasSlaEtapa, p.diasSlaTotal, true)}
+                            <div class="item-card-body">
+                                ${renderProdutoFicha(prod, true)}
                             </div>
                         </div>
                     `).join('')}
@@ -587,7 +585,226 @@ function renderDrawerTab(p) {
     }
 }
 
-// NOVO: Renderização de especificações técnicas do item
+function toggleItemCard(index) {
+    const card = $(`item-card-${index}`);
+    if (card) {
+        card.classList.toggle('expanded');
+    }
+}
+
+
+// ── Mapa de Labels de Partes (nomes amigáveis para produção) ──────────────
+const PART_LABEL_MAP = {
+    // Genérico
+    'centro': 'Centro', 'lateral_esq': 'Lateral Esquerda', 'lateral_dir': 'Lateral Direita',
+    'filete': 'Filetes', 'logo_hnt': 'Logo HNT', 'fundo_hnt': 'Fundo HNT',
+    'base': 'Base', 'top': 'Topo', 'cós': 'Cós', 'cos': 'Cós', 'punho': 'Punho',
+    'manga_esq': 'Manga Esquerda', 'manga_dir': 'Manga Direita',
+    'bolso': 'Bolso', 'capuz': 'Capuz', 'lateral': 'Lateral',
+    // Moletom
+    'corpo': 'Corpo', 'ribana': 'Ribana',
+};
+
+// Mapa de labels de textos
+const TEXT_LABEL_MAP = {
+    'text_centro': 'Centro', 'text_lat_dir': 'Lateral Direita', 'text_lat_esq': 'Lateral Esquerda',
+    'text_leg_left_mid': 'Perna Esq. (meio)', 'text_leg_right_mid': 'Perna Dir. (meio)',
+    'text_leg_right_bottom': 'Perna Dir. (baixo)', 'text_top_frente': 'Frente',
+    'text_top_costas': 'Costas', 'text_costas': 'Costas', 'text_frente': 'Frente',
+};
+
+// Mapa de extras
+const EXTRA_LABEL_MAP = {
+    'laco': 'Laço', 'cordao': 'Cordão', 'calca_legging': 'Calça Legging (combo)',
+    'top': 'Top (combo)', 'shorts_legging': 'Shorts Legging (combo)',
+};
+
+/**
+ * renderProdutoFicha — Renderiza ficha técnica completa a partir de um produto
+ * Lê dados_tecnicos_full ou dados_tecnicos diretamente da linha do banco.
+ * @param {object} prod - Objeto produto mapeado (com dadosTecnicos, sku, tamanho, etc.)
+ * @param {boolean} isSubItem - Se verdadeiro, remove bordas externas (usado em cards de itens)
+ */
+function renderProdutoFicha(prod, isSubItem = false) {
+    const dt = prod.dadosTecnicos || {};
+    const parts = dt.parts || {};
+    const texts = dt.texts || {};
+    const extras = dt.extras || {};
+    const uploads = dt.uploads || {};
+    const renders = prod.renders || dt.renders || {};
+    const grade = dt.grade || dt.sizes || {};
+    const logoPunho = dt.logoPunho || null;
+    const simulationId = dt.simulationId || '';
+
+    // ── Cores/Partes ─────────────────────────────────────────
+    const partsEntries = Object.entries(parts);
+    let colorsHtml = '';
+    if (partsEntries.length > 0) {
+        colorsHtml = partsEntries.map(([key, val]) => {
+            const name = typeof val === 'object' ? (val.value || val.name || val) : val;
+            const label = PART_LABEL_MAP[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            return `
+                <div class="ficha-part-item">
+                    <div class="ficha-color-swatch" style="background:var(--color-${name}, #888)" title="${name}"></div>
+                    <div>
+                        <div class="ficha-part-label">${label}</div>
+                        <div class="ficha-part-value">${name}</div>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    // ── Grade de Tamanhos ────────────────────────────────────
+    let gradeHtml = '';
+    const gradeEntries = Object.entries(grade).filter(([, qty]) => qty > 0);
+    if (gradeEntries.length > 0) {
+        gradeHtml = `
+            <div class="ficha-section">
+                <div class="ficha-section-title">📊 Grade de Produção</div>
+                <div class="ficha-grade">
+                    ${gradeEntries.map(([sz, qty]) => `
+                        <div class="ficha-grade-item">
+                            <div class="ficha-grade-sz">${sz}</div>
+                            <div class="ficha-grade-qty">${qty}</div>
+                        </div>`).join('')}
+                </div>
+            </div>`;
+    } else if (prod.tamanho && prod.tamanho !== 'U') {
+        gradeHtml = `
+            <div class="ficha-section">
+                <div class="ficha-section-title">📊 Tamanho</div>
+                <div class="ficha-grade">
+                    <div class="ficha-grade-item">
+                        <div class="ficha-grade-sz">${prod.tamanho}</div>
+                        <div class="ficha-grade-qty">${prod.quantidade}</div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // ── Textos Personalizados ────────────────────────────────
+    const textsEntries = Object.entries(texts).filter(([, d]) => d.enabled && d.content);
+    let textsHtml = '';
+    if (textsEntries.length > 0) {
+        textsHtml = `
+            <div class="ficha-section">
+                <div class="ficha-section-title">✍️ Textos Personalizados</div>
+                <div class="ficha-texts">
+                    ${textsEntries.map(([key, d]) => {
+            const label = TEXT_LABEL_MAP[key] || key;
+            return `
+                        <div class="ficha-text-item">
+                            <div class="ficha-text-zone">${label}</div>
+                            <div class="ficha-text-content">"${d.content}"</div>
+                            <div class="ficha-text-meta">
+                                <span>${d.fontFamily || 'Outfit'}</span>
+                                <span class="ficha-color-dot" style="background:${d.color || '#fff'}"></span>
+                                <span>${d.color || '#fff'}</span>
+                            </div>
+                        </div>`;
+        }).join('')}
+                </div>
+            </div>`;
+    }
+
+    // ── Logos/Uploads ────────────────────────────────────────
+    const uploadsEntries = Object.entries(uploads).filter(([, d]) => d && d.src);
+    let uploadsHtml = '';
+    if (uploadsEntries.length > 0 || logoPunho) {
+        const thumbs = [
+            ...uploadsEntries.map(([key, d]) => `
+                <div class="ficha-logo-thumb" onclick="window.open('${d.src}','_blank')" title="Abrir logo">
+                    <img src="${d.src}" alt="${d.filename || key}">
+                    <span>${d.filename || key.replace(/_/g, ' ')}</span>
+                </div>`),
+            logoPunho ? `
+                <div class="ficha-logo-thumb" onclick="window.open('${logoPunho}','_blank')" title="Logo Punho">
+                    <img src="${logoPunho}" alt="Logo Punho">
+                    <span>Logo Punho</span>
+                </div>` : ''
+        ].join('');
+        uploadsHtml = `
+            <div class="ficha-section">
+                <div class="ficha-section-title">🖼️ Logos / Artes</div>
+                <div class="ficha-logos">${thumbs}</div>
+            </div>`;
+    }
+
+    // ── Extras ───────────────────────────────────────────────
+    const extrasAtivos = Object.entries(extras).filter(([, d]) => d && d.enabled);
+    let extrasHtml = '';
+    if (extrasAtivos.length > 0) {
+        extrasHtml = `
+            <div class="ficha-section">
+                <div class="ficha-section-title">✨ Extras / Acabamentos</div>
+                <div class="ficha-extras">
+                    ${extrasAtivos.map(([key, d]) => {
+            const label = EXTRA_LABEL_MAP[key] || key;
+            return `<div class="ficha-extra-item">
+                            <span class="ficha-extra-icon">✅</span>
+                            <div>
+                                <div class="ficha-extra-label">${label}</div>
+                                ${d.color ? `<div class="ficha-extra-color"><div class="ficha-color-swatch small" style="background:var(--color-${d.color}, #888)" title="${d.color}"></div><span>${d.color}</span></div>` : ''}
+                            </div>
+                        </div>`;
+        }).join('')}
+                </div>
+            </div>`;
+    }
+
+    // ── Links de Arquivos ────────────────────────────────────
+    let linksHtml = '';
+    if (prod.pdf || prod.emb || simulationId) {
+        linksHtml = `
+            <div class="ficha-section">
+                <div class="ficha-section-title">📁 Arquivos</div>
+                <div class="file-links">
+                    ${prod.pdf ? `<a class="file-link" href="${prod.pdf}" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                        <span class="file-link-name">Ficha PDF</span><span class="file-link-type">PDF</span>
+                    </a>` : ''}
+                    ${prod.emb ? `<a class="file-link" href="${prod.emb}" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                        <span class="file-link-name">Matriz Bordado</span><span class="file-link-type">.EMB</span>
+                    </a>` : ''}
+                    ${simulationId ? `<div class="file-link" style="cursor:default;opacity:0.7">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5"/></svg>
+                        <span class="file-link-name">ID Simulação</span><span class="file-link-type">${simulationId.split('-').pop()}</span>
+                    </div>` : ''}
+                </div>
+            </div>`;
+    }
+
+    // ── Observações ──────────────────────────────────────────
+    let obsHtml = '';
+    if (prod.observacoes) {
+        obsHtml = `
+            <div class="ficha-obs">
+                <div class="ficha-obs-label">📝 Observações de Produção</div>
+                <div class="ficha-obs-text">${prod.observacoes}</div>
+            </div>`;
+    }
+
+    const wrapStyle = isSubItem ? 'padding:0;' : '';
+
+    return `
+        <div class="produto-ficha" style="${wrapStyle}">
+            ${colorsHtml ? `
+            <div class="ficha-section">
+                <div class="ficha-section-title">🎨 Cores do Produto</div>
+                <div class="ficha-parts">${colorsHtml}</div>
+            </div>` : ''}
+            ${gradeHtml}
+            ${textsHtml}
+            ${uploadsHtml}
+            ${extrasHtml}
+            ${linksHtml}
+            ${obsHtml}
+        </div>
+    `;
+}
+
+// Renderização legada (mantida para compatibilidade)
 function renderItemSpecs(item, pdfUrl, embUrl, alerta, diasSla, diasSlaTotal, isSubItem = false) {
     const parts = item.parts || {};
     const texts = item.texts || {};
@@ -2858,15 +3075,15 @@ async function confirmNovoPedidoManual() {
 }
 
 // Utilitário para expandir/recolher cards de itens
-window.toggleItemCard = function(index) {
+window.toggleItemCard = function (index) {
     const card = document.getElementById('item-card-' + index);
     if (!card) return;
-    
+
     const isExpanded = card.classList.contains('expanded');
-    
+
     // Opcional: fechar outros cards ao abrir um novo (acordeão)
     // document.querySelectorAll('.item-card').forEach(c => c.classList.remove('expanded'));
-    
+
     if (isExpanded) {
         card.classList.remove('expanded');
     } else {

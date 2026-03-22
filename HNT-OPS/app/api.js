@@ -48,8 +48,8 @@ async function apiFetch(endpoint, method = 'GET', body = null) {
 const api = {
     // 1. Carregar Dashboard (Lista e Kanban)
     async loadDashboard() {
-        // Traz as colunas necessárias; a view já cuida do joins e score
-        const data = await apiFetch('dashboard_pedidos?select=*&order=score_ordenacao.desc');
+        // Traz todas as colunas incluindo dados_tecnicos_full (JSON completo do simulador)
+        const data = await apiFetch('dashboard_pedidos?select=*&order=numero_pedido.asc,criado_em.asc');
         return data;
     },
 
