@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/shorts-style.css?v=400">
     <link rel="stylesheet" href="css/shorts-gallery.css">
     <link rel="stylesheet" href="css/simulator.css?v=202603091900">
-    <script defer>
+    <script>
         // Force cache invalidation by appending timestamp to all script sources
         const CACHE_VERSION = Date.now();
         document.addEventListener('DOMContentLoaded', () => {
@@ -20,7 +20,7 @@
         });
     </script>
     <!-- Action Library (XLSX) -->
-    <script defer></script>
+    <script defer src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body class="page-shorts" style="background: #1a1a1a; margin: 0;">
@@ -232,48 +232,48 @@
     </div>
 
     <!-- Scripts -->
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <!-- <script defer></script> -->
+    <script defer src="js/modules/shorts/data.js"></script>
+    <script defer src="js/modules/common/data/fonts-database.js"></script>
+    <script defer src="js/modules/common/data/gallery-database.js"></script>
+    <script defer src="js/modules/common/utils/font-loader.js"></script>
+    <script defer src="js/modules/common/utils/info-system.js"></script>
+    <script defer src="js/modules/common/utils/help-system.js"></script>
+    <!-- <script defer src="js/modules/common/db-adapter.js"></script> -->
     <!-- Módulos do Simulador -->
-    <script defer></script>
+    <script defer src="js/modules/common/db-integration.js"></script>
     <!-- Common Modules -->
     <!-- Supabase Integration -->
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0"></script>
+    <script defer src="js/modules/auth/supabase-client.js?v=14.50"></script>
+    <script defer src="js/modules/auth/auth-widget.js?v=14.50"></script>
+    <script defer src="js/modules/common/security.js?v=14.50"></script>
+    <script defer src="js/modules/common/pricing-validator.js?v=14.50"></script>
+    <script defer src="js/modules/common/supabase-adapter.js?v=14.50"></script>
+    <script defer src="js/modules/common/rascunho-manager.js?v=14.50"></script>
 
-    <script defer></script>
+    <script defer src="js/modules/common/database-manager.js?v=14.50"></script>
     <!-- PDF Generation Libs -->
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/2.8.0/dom-to-image-more.min.js"></script>
+    <script defer src="js/modules/common/pdf-generator-v2.js?v=14.50"></script>
+    <script defer src="js/modules/shorts-legging/state.js?v=14.50"></script>
+    <script defer src="js/modules/shorts-legging/logic.js?v=14.50"></script>
+    <script defer src="js/modules/shorts-legging/pricing.js?v=14.50"></script>
+    <script defer src="js/modules/shorts-legging/visuals.js?v=14.50"></script>
+    <script defer src="js/modules/shorts-legging/interactions.js?v=14.50"></script>
     <!-- Common UI Components (Module 5) -->
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
+    <script defer src="js/modules/common/ui-components/ColorPicker.js?v=14.50"></script>
+    <script defer src="js/modules/common/ui-components/ToggleButton.js?v=14.50"></script>
+    <script defer src="js/modules/common/ui-components/SizeSelector.js?v=14.50"></script>
+    <script defer src="js/modules/common/ui-components/ImageUploader.js?v=14.50"></script>
+    <script defer src="js/modules/common/ui-components/TextEditor.js?v=14.50"></script>
+    <script defer src="js/modules/common/utils/OrderNumbers.js?v=14.50"></script>
+    <script defer src="js/modules/common/BaseSimulator.js?v=14.50"></script>
+    <script defer src="js/modules/shorts-legging/ShortsLeggingSimulator.js?v=14.50"></script>
 
-    <script defer></script>
+    <script defer src="js/modules/shorts-legging/ui-render.js?v=14.50"></script>
 
     <!-- Orchestrator -->
-    <script defer></script>
+    <script defer src="js/modules/shorts-legging/simulator.js?v=14.50"></script>
 </body>
 
 </html>

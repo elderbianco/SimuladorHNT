@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="css/admin.css">
 
     <!-- Supabase SDK e Proteção de Rota -->
-    <script defer></script>
-    <script defer></script>
-    <script defer>
+    <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script defer src="js/modules/auth/supabase-client.js"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const { session } = await window.authApi.getSession();
             if (!session) {
@@ -657,30 +657,30 @@
         </div>
     </div>
 
-    <script defer>"></script>
-    <script defer></script>
-    <script defer>
+    <script defer src="js/modules/shorts/data.js?v=<?php echo time(); ?>"></script>
+    <script defer src="js/modules/common/data/fonts-database.js"></script>
+    <script>
         // Core Libs already loaded above
     </script>
 
     <!-- ADMIN MODULES -->
-    <script defer></script>
-    <script defer></script>
+    <script defer src="js/admin/auth.js"></script>
+    <script defer src="js/admin/save.js"></script>
 
     <!-- VALIDATION MODULE (must load first) -->
-    <script defer></script>
+    <script defer src="js/admin/modules/validation.js"></script>
 
     <!-- NEW MODULES -->
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
-    <script defer></script>
+    <script defer src="js/admin/modules/global.js"></script>
+    <script defer src="js/admin/modules/shorts.js"></script>
+    <script defer src="js/admin/modules/shorts-legging.js"></script>
+    <script defer src="js/admin/modules/legging.js"></script>
+    <script defer src="js/admin/modules/moletom.js"></script>
+    <script defer src="js/admin/modules/top.js"></script>
+    <script defer src="js/admin/modules/gallery.js"></script>
 
     <!-- CORE -->
-    <script defer></script>
+    <script defer src="js/admin/main.js"></script>
 
 
 </body>
