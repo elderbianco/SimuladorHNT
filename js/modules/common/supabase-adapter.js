@@ -114,7 +114,15 @@ const SupabaseAdapter = {
                     PRECO_FINAL: finalPrice,
                     config: window.CONFIG // Assorted from global scope if available
                 });
+
+                if (!isPriceVerified) {
+                    this.logAudit('security', 'warning', `Frontend Integrity Check Failed - Order ${formattedData.order_id}`, {
+                        paid: finalPrice,
+                        model: formattedData.product_type
+                    });
+                }
             } else {
+
                 console.warn('⚠️ PricingValidator not found. Skipping client-side integrity check.');
             }
 
@@ -394,8 +402,30 @@ const SupabaseAdapter = {
         } catch (err) {
             console.error('❌ Erro na integração Simulador -> HNT-OPS:', err);
             return false;
-        }
-    }
-};
+        },
+    /**
 
-window.SupabaseAdapter = SupabaseAdapter;
+     * Registra um evento na tabela de auditoria
+     */
+    async logAudit(eventType, severity, description, metadata = {}) {
+            if (!window.supabaseClient) return;
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                const { error } = await window.supabaseClient
+                    .from('audit_logs')
+                    .insert([{
+                        event_type: eventType,
+                        severity: severity,
+                        description: description,
+                        user_id: session?.user?.id || null,
+                        metadata: metadata
+                    }]);
+                if (error) throw error;
+            } catch (e) {
+                console.error('❌ Falha ao registrar log de auditoria:', e);
+            }
+        }
+    };
+
+    window.SupabaseAdapter = SupabaseAdapter;
+
