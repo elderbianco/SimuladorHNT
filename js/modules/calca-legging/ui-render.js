@@ -191,16 +191,34 @@ function renderControls() {
 
     const actionBtns = document.createElement('div');
     actionBtns.style.display = 'flex'; actionBtns.style.gap = '10px'; actionBtns.style.margin = '10px 0 20px 0';
-    const btnCart = document.createElement('button'); btnCart.className = 'btn-primary btn-cart'; btnCart.innerText = 'ADICIONAR AO CARRINHO'; btnCart.style.flex = '1';
+
+    const isEditing = state._editingIndex !== undefined && state._editingIndex !== null;
+    const btnCart = document.createElement('button');
+    btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
+    btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
+    btnCart.style.flex = '1';
+
+    if (isEditing) {
+        btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        btnCart.style.border = 'none';
+        btnCart.style.color = '#fff';
+    }
+
     btnCart.onclick = async () => {
         if (!state.termsAccepted) { alert("⚠️ Você precisa aceitar os Termos e Condições para continuar."); const termsBox = document.getElementById('terms-checkbox'); if (termsBox) termsBox.focus(); return; }
-        const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId) ? state.orderNumber : 'HNT';
-        let newSeq = (typeof generateNextSequenceNumber === 'function') ? generateNextSequenceNumber() : String(Date.now()).slice(-6);
-        state.simulationId = `${orderPrefix}-SL-${newSeq}`;
-        let pdfUrl = (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) ? await PDFGenerator.generateAndSaveForCart() : null;
+
+        if (!isEditing) {
+            const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId) ? state.orderNumber : 'HNT';
+            let newSeq = (typeof generateNextSequenceNumber === 'function') ? generateNextSequenceNumber() : String(Date.now()).slice(-6);
+            state.simulationId = `${orderPrefix}-CL-${newSeq}`;
+        } else if (state._editingOrderId) {
+            state.simulationId = state._editingOrderId;
+        }
+
+        let pdfUrl = (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) ? await PDFGenerator.generateAndSaveForCart(state.simulationId, true) : null;
         if (pdfUrl) state.pdfUrl = pdfUrl;
         if (typeof saveOrderToHistory === 'function' && (await saveOrderToHistory())) {
-            if (confirm('✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) window.location.href = 'IndexPedidoSimulador.html';
+            if (confirm(isEditing ? '✅ Edição salva com sucesso! Retornando...' : '✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) window.location.href = 'IndexPedidoSimulador.html';
         }
     };
     const btnClear = document.createElement('button'); btnClear.className = 'btn-secondary btn-clear'; btnClear.innerText = 'LIMPAR DADOS'; btnClear.style.flex = '1'; btnClear.onclick = () => clearState();
@@ -251,7 +269,13 @@ function renderGallery(searchTerm = "") {
     galleryData.forEach(i => {
         const d = document.createElement('div'); d.className = 'gallery-item';
         d.innerHTML = `<img src="${i.src}"><span>${i.name}</span>`;
-        d.onclick = () => { addImageToZone(state.pending, i.src); window.closeGallery(); };
+        d.onclick = () => {
+            addImageToZone(state.pending, i.src);
+            state.uploads = state.uploads || {};
+            state.uploads[state.pending] = { src: i.src, filename: i.name || 'Imagem do Acervo', isCustom: false };
+            saveState();
+            window.closeGallery();
+        };
         g.appendChild(d);
     });
 }
