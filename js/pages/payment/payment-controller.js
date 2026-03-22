@@ -68,21 +68,43 @@ const PaymentController = {
                 }
             };
 
-            console.log("🚀 Enviando Payload para HNT-OPS:", payload);
+            console.log("🚀 Enviando Pedido para HNT-OPS...");
 
-            // MOCK WEBHOOK REQUEST (Replace with actual Google Script / Supabase URL)
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Simulando delay de rede de 2s
+            let successCount = 0;
+            if (typeof SupabaseAdapter !== 'undefined' && window.SupabaseAdapter) {
+                for (const order of cartItems) {
+                    const orderId = order.order_id || order.ID_PEDIDO;
+                    console.log(`⏳ Aprovando pedido: ${orderId}`);
+                    try {
+                        const success = await window.SupabaseAdapter.aprovarPedidoParaProducao(order);
+                        if (success) {
+                            successCount++;
+                        } else {
+                            console.warn(`⚠️ Aviso: Falha silenciosa ao aprovar pedido ${orderId}.`);
+                        }
+                    } catch (err) {
+                        console.error(`⚠️ Erro ao aprovar pedido ${orderId}:`, err);
+                    }
+                }
+            } else {
+                throw new Error("SupabaseAdapter não inicializado ou não importado.");
+            }
 
-            // Optional: call local supabase to update status if using SupabaseAdapter
-            if (typeof SupabaseAdapter !== 'undefined') {
-                // ... update status ...
+            // Se nenhum item foi salvo e tínhamos itens, abortamos a limpeza
+            if (successCount === 0 && cartItems.length > 0) {
+                throw new Error("Não foi possível registrar o pedido no HNT-OPS. Por favor verifique sua conexão.");
+            }
+
+            // Avançar o número do pedido (Order Number) após sucesso
+            if (typeof OrderNumbers !== 'undefined' && window.OrderNumbers) {
+                window.OrderNumbers.rotateOrderNumber();
             }
 
             // 4. Success -> Clean up everywhere
             this.clearAllSystemData();
 
             // 5. Redirect to Success
-            alert("✅ Pagamento Confirmado e Pedido enviado para a Fábrica!");
+            alert("✅ Pagamento Confirmado e Pedido(s) enviado(s) para a Fábrica com sucesso!");
             window.location.href = "IndexFightShorts.html"; // Redirecionando ao início momentaneamente
 
         } catch (e) {
