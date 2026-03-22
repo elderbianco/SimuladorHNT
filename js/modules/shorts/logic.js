@@ -452,6 +452,19 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
             .catch(err => console.error('⚠️ Falha na sincronização Supabase (Item salvo localmente):', err));
     }
 
+    // --- RASCUNHO MANAGER: Salva dados completos no Supabase (NON-BLOCKING) ---
+    if (typeof RascunhoManager !== 'undefined') {
+        const pricingFull = calculateFullPrice();
+        // Enriquece o state com o simulationId atualizado antes de salvar
+        const stateParaSalvar = { ...state, simulationId: itemFullId, orderNumber: currentOrderNum };
+        RascunhoManager.salvar(stateParaSalvar, pricingFull, CONFIG, pdfUrl)
+            .then(res => {
+                if (res.success) console.log('✅ Rascunho salvo no Supabase:', res.rascunho_id);
+                else console.warn('⚠️ Rascunho não salvo no Supabase:', res.error);
+            })
+            .catch(err => console.error('⚠️ RascunhoManager.salvar() erro:', err));
+    }
+
     // 4. Banco de Dados Linear (Excel)
     if (typeof DatabaseManager !== 'undefined') {
         DatabaseManager.addOrder(newRow);
