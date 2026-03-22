@@ -54,10 +54,17 @@ function loadAdminDashboard() {
                 items: [],
                 totalVal: 0,
                 totalQty: 0,
-                status: data.SITUACAO || 'Produção'
+                status: data.SITUACAO || 'Produção',
+                isPriceVerified: true // Default to true, will update if any item fails
             };
         }
+
+        // If any item in the group is not verified, the whole group is suspicious
+        const itemVerified = data.is_price_verified !== false;
+        if (!itemVerified) groups[key].isPriceVerified = false;
+
         groups[key].items.push(data);
+
         groups[key].totalVal += val;
         groups[key].totalQty += qty;
 

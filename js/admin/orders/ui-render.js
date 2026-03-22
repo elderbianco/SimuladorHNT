@@ -33,7 +33,11 @@ function renderGroupRow(group, container) {
 
     tr.innerHTML = `
         <td style="text-align:center;"><span class="toggle-indicator">▶</span></td>
-        <td><strong class="gold-text">${group.displayId}</strong></td>
+        <td>
+            <strong class="gold-text">${group.displayId}</strong>
+            ${!group.isPriceVerified ? `<div style="margin-top:5px;"><span class="status-badge status-late" style="font-size:0.65rem; padding:2px 5px; animation: pulse 1.5s infinite;">⚠️ SUSPEITA DE FRAUDE</span></div>` : ''}
+        </td>
+
         <td>
             <div style="font-weight:bold; color:#fff;">${group.clientName}</div>
             <div style="font-size:0.8rem; color:#888;">${group.phone}</div>
@@ -136,10 +140,12 @@ function renderProductDetail(order) {
                 <div style="font-size:1/rem; font-weight:bold; color:var(--gold);">${(price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
              </div>
 
-             <div style="text-align:right;">
+              <div style="text-align:right;">
+                ${order.is_price_verified === false ? `<span title="Preço Inconsistente com as regras do simulador" style="color:#ff4d4d; margin-right:10px; cursor:help;">🚩 AUDITORIA</span>` : ''}
                 <span style="font-size:0.8rem; color:#666;">▼</span>
-             </div>
+              </div>
         </div>
+
 
         <div id="${uid}" class="tab-content-wrapper" style="display:none;">
             <div class="tabs-nav">
