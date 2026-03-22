@@ -98,6 +98,13 @@ const SupabaseAdapter = {
                 } catch (e) { /* fallback */ }
             }
 
+            // 🔐 RLS: Get session userId for Row Level Security
+            let userId = null;
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                userId = session?.user?.id || null;
+            } catch (authErr) { console.warn('Auth check failed', authErr); }
+
             const row = {
                 ID_PEDIDO: formattedData.order_id,
                 ID_SIMULACAO: technicalJson.simulationId || (completeJson ? completeJson.simulationId : ''),
@@ -108,9 +115,10 @@ const SupabaseAdapter = {
                 TAMANHO: formattedData.grade,
                 QUANTIDADE: finalQty,
                 PRECO_FINAL: finalPrice,
-                PRECO_UNITARIO: unitPrice, // Adicionado suporte a preço unitário
+                PRECO_UNITARIO: unitPrice,
                 pdf_url: formattedData.pdfUrl,
-                json_tec: completeJson, // Backup completo com todas infos, pricing, extras, config
+                json_tec: completeJson,
+                auth_user_id: userId, // 🛡️ Linked to Supabase Auth
                 STATUS_PEDIDO: 'Simulação'
             };
 
