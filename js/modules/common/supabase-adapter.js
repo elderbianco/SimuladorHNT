@@ -452,6 +452,37 @@ const SupabaseAdapter = {
     },
 
     /**
+     * Busca múltiplas configurações da tabela admin_config em uma única chamada.
+     */
+    async getAdminConfigs(chaves) {
+        if (!window.supabaseClient) return {};
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('admin_config')
+                .select('chave, valor')
+                .in('chave', chaves);
+
+            if (error) throw error;
+
+            const configs = {};
+            data.forEach(row => {
+                try {
+                    // Tenta fazer parse se parecer JSON, senão usa valor bruto
+                    configs[row.chave] = (row.valor.startsWith('{') || row.valor.startsWith('['))
+                        ? JSON.parse(row.valor)
+                        : row.valor;
+                } catch (e) {
+                    configs[row.chave] = row.valor;
+                }
+            });
+            return configs;
+        } catch (e) {
+            console.error('❌ Falha ao buscar configs em lote:', e);
+            return {};
+        }
+    },
+
+    /**
      * Atualiza uma chave na tabela admin_config
      */
     async updateAdminConfig(chave, valor, descricao = '') {
