@@ -401,31 +401,31 @@ const SupabaseAdapter = {
 
         } catch (err) {
             console.error('❌ Erro na integração Simulador -> HNT-OPS:', err);
-            return false;
-        },
-    /**
+        }
+    },
 
+    /**
      * Registra um evento na tabela de auditoria
      */
     async logAudit(eventType, severity, description, metadata = {}) {
-            if (!window.supabaseClient) return;
-            try {
-                const { data: { session } } = await window.supabaseClient.auth.getSession();
-                const { error } = await window.supabaseClient
-                    .from('audit_logs')
-                    .insert([{
-                        event_type: eventType,
-                        severity: severity,
-                        description: description,
-                        user_id: session?.user?.id || null,
-                        metadata: metadata
-                    }]);
-                if (error) throw error;
-            } catch (e) {
-                console.error('❌ Falha ao registrar log de auditoria:', e);
-            }
+        if (!window.supabaseClient) return;
+        try {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            const { error } = await window.supabaseClient
+                .from('audit_logs')
+                .insert([{
+                    event_type: eventType,
+                    severity: severity,
+                    description: description,
+                    user_id: session?.user?.id || null,
+                    metadata: metadata
+                }]);
+            if (error) throw error;
+        } catch (e) {
+            console.error('❌ Falha ao registrar log de auditoria:', e);
         }
-    };
+    }
+};
 
-    window.SupabaseAdapter = SupabaseAdapter;
+window.SupabaseAdapter = SupabaseAdapter;
 
