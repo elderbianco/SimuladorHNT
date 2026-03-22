@@ -139,6 +139,7 @@ window.CartUI = {
         const uid = `item-${index}`;
         const pricing = item.pricing || { unit_price: 0, total_price: 0, breakdown: {} };
         const client = order.client_info || {};
+        const esc = (s) => (window.Security ? window.Security.escape(s) : s);
 
         let state = null;
         if (order && order.DADOS_TECNICOS_JSON) {
@@ -173,9 +174,9 @@ window.CartUI = {
                  
                  <div style="flex:1; margin-left: 15px; display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <div style="color:#fff; font-weight:bold;">${this.getProductName(item, order)}</div>
-                        <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${item.specs?.orderNumber || '---'}</span></div>
-                        <div style="font-size:0.7rem; color:#666;">REF: ${order.order_id} • ${new Date(order.created_at).toLocaleDateString()}</div>
+                        <div style="color:#fff; font-weight:bold;">${esc(this.getProductName(item, order))}</div>
+                        <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc(item.specs?.orderNumber || '---')}</span></div>
+                        <div style="font-size:0.7rem; color:#666;">REF: ${esc(order.order_id)} • ${new Date(order.created_at).toLocaleDateString()}</div>
                     </div>
                     <div style="color:var(--gold); font-size: 1.1rem; font-family: 'Bebas Neue', sans-serif; border: 1px solid #333; padding: 4px 10px; border-radius: 8px; margin-right: 25px; min-width: 45px; text-align: center; background: #111;">
                         ${currentItem}/${totalItems}
@@ -303,7 +304,7 @@ window.CartUI = {
 
                 <div id="obs-${uid}" class="tab-content">
                     <h3 style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; margin-bottom: 20px;">📝 Observações do Cliente</h3>
-                    <div style="background: #1a1a1a; padding: 20px; border: 1px dashed var(--gold); border-radius: 8px; font-size: 1rem; color: #ddd; line-height: 1.6; white-space: pre-wrap;">${obs || "Nenhuma observação informada."}</div>
+                    <div style="background: #1a1a1a; padding: 20px; border: 1px dashed var(--gold); border-radius: 8px; font-size: 1rem; color: #ddd; line-height: 1.6; white-space: pre-wrap;">${esc(obs) || "Nenhuma observação informada."}</div>
                 </div>
             </div>
         </div>
