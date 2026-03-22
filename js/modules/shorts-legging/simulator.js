@@ -120,20 +120,21 @@ function init() {
 
     // Auto-fetch sequence (only if NOT editing)
     if (!state.orderNumber && !state._editingIndex) {
-        fetch('/api/next-order-id')
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-                return r.json();
-            })
-            .then(d => {
-                if (d.number) {
-                    state.orderNumber = d.number.toString();
-                    state.simulationId = getFormattedId();
-                    saveState();
-                    renderControls();
-                }
-            })
-            .catch(e => console.warn('Seq API fail (expected if server is offline):', e.message));
+        // Auto-fetch sequence from Supabase
+        if (!state.orderNumber) {
+            if (typeof SupabaseAdapter !== 'undefined') {
+                SupabaseAdapter.getNextOrderNumber()
+                    .then(res => {
+                        if (res && res.number) {
+                            state.orderNumber = res.number.toString();
+                            state.simulationId = getFormattedId(); // from state.js
+                            saveState();
+                            renderControls();
+                        }
+                    })
+                    .catch(e => console.warn('Supabase Seq fail:', e));
+            }
+        }
     }
 
     // 2. Preparar Visual e Camadas
