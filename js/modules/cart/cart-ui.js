@@ -344,6 +344,7 @@ window.CartUI = {
         };
 
         const fmt = (v) => (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const esc = (s) => (window.Security ? window.Security.escape(s) : s);
 
         let html = '';
 
@@ -382,8 +383,8 @@ window.CartUI = {
                 html += '<tr>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; vertical-align:top;">' + icons.part + '</td>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; word-break:break-word;">';
-                html += '<strong>' + partName + '</strong><br>';
-                html += '<span style="font-size:0.85em; color:#bbb;">' + colorName + '</span>';
+                html += '<strong>' + esc(partName) + '</strong><br>';
+                html += '<span style="font-size:0.85em; color:#bbb;">' + esc(colorName) + '</span>';
                 html += '</td>';
                 html += '<td class="text-right" style="border-bottom:1px solid #333; padding:8px 4px; color:#28a745;">Incluso</td>';
                 html += '</tr>';
@@ -486,8 +487,8 @@ window.CartUI = {
                 html += '<tr>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; vertical-align:top;">' + icons.text + '</td>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; word-break:break-word;">';
-                html += '<strong>Texto - ' + zoneName + '</strong><br>';
-                html += '"' + data.content + '" (' + (data.fontFamily || data.font_family || 'Padrão') + ')';
+                html += '<strong>Texto - ' + esc(zoneName) + '</strong><br>';
+                html += '"' + esc(data.content) + '" (' + esc(data.fontFamily || data.font_family || 'Padrão') + ')';
                 html += '</td>';
 
                 if (textPrice > 0) {
@@ -547,8 +548,8 @@ window.CartUI = {
                 html += '<tr>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; vertical-align:top;">' + icons.part + '</td>';
                 html += '<td style="border-bottom:1px solid #333; padding:8px 4px; word-break:break-word;">';
-                html += '<strong>+ ' + extraName + '</strong><br>';
-                html += '<span style="font-size:0.85em; color:#bbb;">' + (colorName || 'Selecionado') + '</span>';
+                html += '<strong>+ ' + esc(extraName) + '</strong><br>';
+                html += '<span style="font-size:0.85em; color:#bbb;">' + esc(colorName || 'Selecionado') + '</span>';
                 html += '</td>';
 
                 if (extraPrice > 0) {
@@ -616,7 +617,7 @@ window.CartUI = {
                 <div class="info-label">${partLabel}</div>
                 <div class="info-val">
                     <span style="display:inline-block; width:12px; height:12px; background:${colorHex}; border-radius:50%; margin-right:5px;"></span>
-                    ${colorValue}
+                    ${window.Security ? window.Security.escape(colorValue) : colorValue}
                 </div>
             </div>`;
         }).join('');
@@ -636,7 +637,8 @@ window.CartUI = {
         return '<h4 style="margin:0 0 10px 0; color:#888;">Extras / Acabamentos</h4><div style="display:flex; flex-wrap:wrap; gap:8px;">' + validExtras.map(([key, e]) => {
             const val = (typeof e === 'object' && e !== null) ? (e.value || 'SIM') : (e || 'SIM');
             const cleanKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            return `<span style="background:#222; padding:6px 10px; border-radius:6px; font-size:0.85rem; border-left:3px solid var(--gold); color:#eee;">${cleanKey}: <strong style="color:#fff;">${val}</strong></span>`;
+            const esc = (s) => (window.Security ? window.Security.escape(s) : s);
+            return `<span style="background:#222; padding:6px 10px; border-radius:6px; font-size:0.85rem; border-left:3px solid var(--gold); color:#eee;">${esc(cleanKey)}: <strong style="color:#fff;">${esc(val)}</strong></span>`;
         }).join('') + '</div>';
     },
 
@@ -673,15 +675,16 @@ window.CartUI = {
                 const label = window.resolveZoneLabel(u.zone_id || u.zone_label);
                 const isCustom = u.is_custom || u.isCustom;
 
+                const esc = (s) => (window.Security ? window.Security.escape(s) : s);
                 html += `
                 <div style="background:#222; padding:12px; border-radius:6px; border-left:3px solid var(--gold);">
-                    <div style="font-weight:bold; color:#fff; margin-bottom:5px;">${label}</div>
+                    <div style="font-weight:bold; color:#fff; margin-bottom:5px;">${esc(label)}</div>
                     <div style="font-size:0.85rem; color:#888; line-height:1.4;">
-                        <strong>Arquivo:</strong> ${name}<br>
+                        <strong>Arquivo:</strong> ${esc(name)}<br>
                         <strong>Origem:</strong> ${isCustom ? 'Upload do Cliente' : 'Acervo Hanuthai'}<br>
                         <span style="color:#ffa500;">${isCustom ? '⚠️ Criação de Matriz Necessária' : '✅ Matriz já existente'}</span>
                     </div>
-                    ${src ? `<a href="${src}" download="Logo_${label}.png" class="btn btn-outline" style="font-size:0.7rem; padding:4px 8px; margin-top:10px; display:inline-block;">Baixar Arquivo</a>` : ''}
+                    ${src ? `<a href="${src}" download="Logo_${esc(label)}.png" class="btn btn-outline" style="font-size:0.7rem; padding:4px 8px; margin-top:10px; display:inline-block;">Baixar Arquivo</a>` : ''}
                 </div>`;
             });
             html += '</div>';
@@ -697,13 +700,14 @@ window.CartUI = {
                 const colorHex = t.color_hex || t.color || '#fff';
                 const font = t.font_family || t.fontFamily || 'Standard';
 
+                const esc = (s) => (window.Security ? window.Security.escape(s) : s);
                 html += `
                 <div style="background:#222; padding:12px; border-radius:6px; border-left:3px solid ${colorHex};">
-                    <div style="font-weight:bold; color:#fff; margin-bottom:5px;">${label}</div>
-                    <div style="font-size:1.1rem; margin-bottom:8px; color:var(--gold);">"${content}"</div>
+                    <div style="font-weight:bold; color:#fff; margin-bottom:5px;">${esc(label)}</div>
+                    <div style="font-size:1.1rem; margin-bottom:8px; color:var(--gold);">"${esc(content)}"</div>
                     <div style="font-size:0.85rem; color:#888;">
-                        <strong>Fonte:</strong> ${font}<br>
-                        <strong>Cor:</strong> ${t.color_name || colorHex}
+                        <strong>Fonte:</strong> ${esc(font)}<br>
+                        <strong>Cor:</strong> ${esc(t.color_name || colorHex)}
                     </div>
                 </div>`;
             });
