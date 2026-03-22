@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' https://sflllqfytzpwgnaksvkj.supabase.co https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://sflllqfytzpwgnaksvkj.supabase.co; connect-src 'self' https://sflllqfytzpwgnaksvkj.supabase.co wss://sflllqfytzpwgnaksvkj.supabase.co;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://sflllqfytzpwgnaksvkj.supabase.co; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com https://cdn.sheetjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://sflllqfytzpwgnaksvkj.supabase.co; connect-src 'self' https://sflllqfytzpwgnaksvkj.supabase.co wss://sflllqfytzpwgnaksvkj.supabase.co;">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administração de Pedidos - Hanuthai</title>
@@ -17,11 +16,11 @@
     <link rel="stylesheet" href="css/common.css">
 
     <!-- Supabase SDK e Proteção de Rota -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="js/modules/auth/supabase-client.js"></script>
-    <script src="js/modules/auth/auth-widget.js"></script>
-    <script src="js/modules/common/supabase-adapter.js?v=14.38"></script>
-    <script src="js/modules/common/pricing-validator.js?v=14.38"></script>
+    <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script defer src="js/modules/auth/supabase-client.js"></script>
+    <script defer src="js/modules/auth/auth-widget.js"></script>
+    <script defer src="js/modules/common/supabase-adapter.js?v=14.50"></script>
+    <script defer src="js/modules/common/pricing-validator.js?v=14.50"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -582,14 +581,14 @@
     </div>
 
     <!-- Modular Logic for Order Administration -->
-    <script src="js/modules/common/database-manager.js"></script>
-    <script src="js/admin/modules/financial.js"></script>
+    <script defer src="js/modules/common/database-manager.js"></script>
+    <script defer src="js/admin/modules/financial.js"></script>
 
     <!-- Order Admin Modules -->
-    <script src="js/admin/orders/state.js"></script>
-    <script src="js/admin/orders/ui-render.js?v=14.38"></script>
-    <script src="js/admin/orders/logic.js"></script>
-    <script src="js/admin/orders/main.js"></script>
+    <script defer src="js/admin/orders/state.js"></script>
+    <script defer src="js/admin/orders/ui-render.js?v=14.50"></script>
+    <script defer src="js/admin/orders/logic.js"></script>
+    <script defer src="js/admin/orders/main.js"></script>
 </body>
 
 </html>
