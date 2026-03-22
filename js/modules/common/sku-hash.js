@@ -12,7 +12,8 @@ const SKUGenerator = {
     generateSKU(state) {
         const orderPart = state.orderNumber || 'HNT';
         const initial = state.productInitial || 'XX';
-        const hash = this.calculateHash(state);
+        // Utiliza o simNumber se existir, gerado randomicamente ao iniciar a pagina
+        const hash = state.simNumber || this.calculateHash(state);
         return `${orderPart}-${initial}-${hash}`;
     },
 
