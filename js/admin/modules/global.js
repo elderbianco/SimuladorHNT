@@ -196,18 +196,31 @@ window.saveGlobalSettings = function () {
     localStorage.setItem('hnt_production_config', JSON.stringify(prodConfig));
 
     // Order Numbering
-    const orderConfig = {
-        nextNumber: parseInt(document.getElementById('global-next-order-number').value) || 1000
-    };
+    const nextNum = parseInt(document.getElementById('global-next-order-number').value) || 1000;
+    const orderConfig = { nextNumber: nextNum };
     localStorage.setItem('hnt_order_config', JSON.stringify(orderConfig));
 
-    // --- SERVER SYNC ---
+    // WhatsApp
+    const priceConfig = JSON.parse(localStorage.getItem('hnt_pricing_config') || '{}');
+    priceConfig.whatsappNumber = document.getElementById('whatsappNumber').value || '';
+    localStorage.setItem('hnt_pricing_config', JSON.stringify(priceConfig));
+
+    // --- SERVER SYNC (SUPABASE) ---
+    if (typeof SupabaseAdapter !== 'undefined') {
+        SupabaseAdapter.updateAdminConfig('proximo_id_simulacao', nextNum, 'Número inicial para ID dos simuladores');
+        SupabaseAdapter.updateAdminConfig('whatsapp_number', priceConfig.whatsappNumber, 'Número de WhatsApp para contato');
+        SupabaseAdapter.updateAdminConfig('production_days', JSON.stringify(prodConfig), 'Configuração de prazos de produção');
+    }
+
+    // --- LEGACY SERVER SYNC (Avoiding console spam if endpoint missing) ---
     const sync = (key, data) => {
         fetch(`/api/admin/config/${key}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-        }).catch(e => console.error(`❌ Failed to sync ${key}:`, e));
+        }).catch(e => {
+            // Silently ignore if not in a server environment with these routes
+        });
     };
 
     sync('hnt_active_fonts', activeFonts);
