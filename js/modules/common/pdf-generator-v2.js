@@ -33,7 +33,7 @@ const PDFGenerator = {
     async drawManualSnapshot() {
         return new Promise(async (resolve) => {
             try {
-                console.log('☢️ Motor Nuclear v37 (Universal Asset Fidelity) Ativado...');
+                console.log('☢️ Motor Nuclear v39 (Clone-First Immunization) Ativado...');
 
                 // O RingHNT fica na .simulator-area, não na .simulator-viewport
                 const viewport = document.querySelector('.simulator-area') || document.querySelector('.simulator-viewport') || document.querySelector('.simulator-wrapper');
@@ -43,17 +43,15 @@ const PDFGenerator = {
                     return resolve(null);
                 }
 
-                // --- 1. IMUNIZAÇÃO DE ASSETS (Base64 via Fetch - v37) ---
+                // --- toBase64: Fetch-based immunization (v37) ---
                 const toBase64 = async (url) => {
                     if (!url || url.startsWith('data:')) return url;
                     try {
-                        // Resolver caminhos relativos
                         let finalUrl = url;
                         if (url.startsWith('../')) {
                             const base = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
                             finalUrl = base + '/' + url.replace('../', '');
                         }
-
                         const response = await fetch(finalUrl);
                         const blob = await response.blob();
                         return new Promise((resolve) => {
@@ -68,36 +66,30 @@ const PDFGenerator = {
                     }
                 };
 
-                // Imunizar todas as imagens e fundos recursivamente
-                const assets = Array.from(viewport.querySelectorAll('img, [style*="background-image"]'));
-
-                // Também checar o próprio background do viewport
-                const viewportStyle = window.getComputedStyle(viewport);
-                if (viewportStyle.backgroundImage && viewportStyle.backgroundImage.includes('url(')) {
-                    const url = viewportStyle.backgroundImage.match(/url\(["']?([^"']+)["']?\)/)?.[1];
+                // --- 1. IMUNIZAR ORIGINAL antes do clone ---
+                // Imuniza o viewport ORIGINAL para que o cloneNode copie os src/style já convertidos
+                const viewportBg = window.getComputedStyle(viewport).backgroundImage;
+                if (viewportBg && viewportBg.includes('url(')) {
+                    const url = viewportBg.match(/url\(["']?([^"']+)["']?\)/)?.[1];
                     if (url && !url.startsWith('data:')) {
-                        const b64 = await toBase64(url);
-                        viewport.style.backgroundImage = `url("${b64}")`;
+                        viewport.style.backgroundImage = `url("${await toBase64(url)}")`;
                     }
                 }
-
-                for (const asset of assets) {
+                for (const asset of Array.from(viewport.querySelectorAll('img, [style*="background-image"]'))) {
                     if (asset.tagName === 'IMG' && asset.src && !asset.src.startsWith('data:')) {
                         asset.src = await toBase64(asset.src);
                     } else {
-                        const style = window.getComputedStyle(asset);
-                        const bg = style.backgroundImage;
+                        const bg = window.getComputedStyle(asset).backgroundImage;
                         if (bg && bg.includes('url(')) {
                             const url = bg.match(/url\(["']?([^"']+)["']?\)/)?.[1];
                             if (url && !url.startsWith('data:')) {
-                                const b64 = await toBase64(url);
-                                asset.style.backgroundImage = `url("${b64}")`;
+                                asset.style.backgroundImage = `url("${await toBase64(url)}")`;
                             }
                         }
                     }
                 }
 
-                // --- 2. OCULTAR UI NO VIEWPORT ORIGINAL (Rápido, apenas handles) ---
+                // --- 2. OCULTAR UI NO VIEWPORT ORIGINAL ---
                 const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected', '.control-layer', '.zoom-controls'];
                 const tempHidden = [];
                 hideElements.forEach(selector => {
@@ -107,9 +99,10 @@ const PDFGenerator = {
                     });
                 });
 
-                // --- 3. CRIAR MIRROR (CLONE) PARA CAPTURA SILENCIOSA ---
+                // --- 3. CLONAR DEPOIS DA IMUNIZAÇÃO (v39 Fix) ---
+                // Agora o clone já nasce com os assets em base64
                 const mirror = viewport.cloneNode(true);
-                mirror.id = "capture-mirror-v30";
+                mirror.id = "capture-mirror-v39";
                 mirror.style.position = 'fixed';
                 mirror.style.left = '-10000px';
                 mirror.style.top = '0';
@@ -119,10 +112,10 @@ const PDFGenerator = {
                 mirror.style.backgroundColor = '#111111';
                 document.body.appendChild(mirror);
 
-                // --- 4. APLICAR ESTILOS DE PROPORÇÃO NO MIRROR (v38) ---
+                // --- 4. APLICAR ZOOM DE PRECISÃO NO MIRROR (v38 Framing) ---
                 const isLeggingActive = this.context.state?.extras?.calca_legging?.enabled;
                 const snapshotScale = isLeggingActive ? 1.3 : 1.6;
-                const snapshotY = isLeggingActive ? '8%' : '5%'; // Calibragem Nuclear v38 para enquadramento técnico perfeito
+                const snapshotY = isLeggingActive ? '8%' : '5%';
 
                 const subElements = ['.simulator-area', '.simulator-viewport', '.zoom-container', '.simulator-wrapper'];
                 subElements.forEach(selector => {
@@ -132,7 +125,6 @@ const PDFGenerator = {
                             el.style.setProperty('width', '1600px', 'important');
                             el.style.setProperty('height', '1200px', 'important');
                         } else if (selector === '.simulator-wrapper') {
-                            // Aplica Zoom e Centralização de v38
                             el.style.setProperty('transform', `scale(${snapshotScale}) translateY(${snapshotY})`, 'important');
                             el.style.setProperty('transform-origin', 'center center', 'important');
                         } else {
