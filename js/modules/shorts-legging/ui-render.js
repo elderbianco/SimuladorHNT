@@ -309,10 +309,18 @@ function renderControls() {
     actionBtns.style.gap = '10px';
     actionBtns.style.margin = '10px 0 20px 0';
 
+    const isEditing = state._editingIndex !== undefined && state._editingIndex !== null;
     const btnCart = document.createElement('button');
-    btnCart.innerText = 'ADICIONAR AO CARRINHO';
-    btnCart.className = 'btn-primary btn-cart';
+    btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
+    btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
     btnCart.style.flex = '1';
+
+    if (isEditing) {
+        btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        btnCart.style.border = 'none';
+        btnCart.style.color = '#fff';
+    }
+
     btnCart.onclick = async () => {
         if (!state.termsAccepted) {
             alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
@@ -321,21 +329,26 @@ function renderControls() {
             return;
         }
 
-        let newSeq = '';
-        if (typeof generateNextSequenceNumber === 'function') {
-            newSeq = generateNextSequenceNumber();
-        } else {
-            let last = parseInt(localStorage.getItem('hnt_sequence_id') || '0');
-            let next = last + 1;
-            localStorage.setItem('hnt_sequence_id', next);
-            newSeq = String(next).padStart(6, '0');
+        // Bloquear regeneração de ID se estiver editando!
+        if (!isEditing) {
+            let newSeq = '';
+            if (typeof generateNextSequenceNumber === 'function') {
+                newSeq = generateNextSequenceNumber();
+            } else {
+                let last = parseInt(localStorage.getItem('hnt_sequence_id') || '0');
+                let next = last + 1;
+                localStorage.setItem('hnt_sequence_id', next);
+                newSeq = String(next).padStart(6, '0');
+            }
+
+            const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId)
+                ? state.orderNumber
+                : 'HNT';
+
+            state.simulationId = `${orderPrefix}-SL-${newSeq}`;
+        } else if (state._editingOrderId) {
+            state.simulationId = state._editingOrderId;
         }
-
-        const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId)
-            ? state.orderNumber
-            : 'HNT';
-
-        state.simulationId = `${orderPrefix}-SL-${newSeq}`;
 
         let pdfUrl = null;
         if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
@@ -353,7 +366,7 @@ function renderControls() {
 
         if (typeof saveOrderToHistory === 'function') {
             if (await saveOrderToHistory()) {
-                if (confirm('✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) {
+                if (confirm(isEditing ? '✅ Edição salva com sucesso! Retornando...' : '✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) {
                     window.location.href = 'IndexPedidoSimulador.html';
                 }
             }
@@ -477,7 +490,12 @@ function appendGalleryItem(container, i) {
     d.className = 'gallery-item';
     d.innerHTML = `<img src="${i.src}"><span>${i.name}</span>`;
     d.onclick = () => {
-        if (typeof addImageToZone === 'function') addImageToZone(state.pending, i.src);
+        if (typeof addImageToZone === 'function') {
+            addImageToZone(state.pending, i.src);
+            state.uploads = state.uploads || {};
+            state.uploads[state.pending] = { src: i.src, filename: i.name || 'Imagem do Acervo', isCustom: false };
+            saveState();
+        }
         window.closeGallery();
     };
     container.appendChild(d);
