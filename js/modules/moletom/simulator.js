@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function init() {
     console.log("Maestro: Iniciando Simulador Moletom...");
 
+    // 0. Background Config Fetch (Non-blocking)
+    if (typeof fetchConfigFromServer === 'function') fetchConfigFromServer();
+
     initDataCache();
     loadAdminConfig();
     loadState();

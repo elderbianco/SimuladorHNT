@@ -170,6 +170,50 @@ function loadAdminConfig() {
     updateCartCount();
 }
 
+/**
+ * Busca configurações globais e específicas do Supabase (Background)
+ */
+async function fetchConfigFromServer() {
+    if (typeof SupabaseAdapter === 'undefined') return false;
+
+    try {
+        console.log("☁️ Buscando configurações do Supabase (Top)...");
+
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout Supabase')), 2000));
+
+        const configPromise = SupabaseAdapter.getAdminConfigs([
+            'hnt_pricing_config',
+            'hnt_top_config',
+            'production_days'
+        ]);
+
+        const configs = await Promise.race([configPromise, timeoutPromise]);
+
+        if (configs && Object.keys(configs).length > 0) {
+            console.log("☁️ Configurações (Top) recebidas:", configs);
+
+            if (configs.hnt_pricing_config) {
+                localStorage.setItem('hnt_pricing_config', JSON.stringify(configs.hnt_pricing_config));
+            }
+            if (configs.hnt_top_config) {
+                localStorage.setItem('hnt_top_config', JSON.stringify(configs.hnt_top_config));
+            }
+            if (configs.production_days) {
+                localStorage.setItem('hnt_production_config', JSON.stringify(configs.production_days));
+            }
+
+            loadAdminConfig();
+            if (typeof renderControls === 'function') renderControls();
+            if (typeof updatePrice === 'function') updatePrice();
+
+            return true;
+        }
+    } catch (e) {
+        console.warn("⚠️ Usando cache local (falha ou timeout no servidor Top):", e.message);
+    }
+    return false;
+}
+
 // Auto-Sync with Admin Panel (INSTANT UPDATE)
 window.addEventListener('storage', (e) => {
     if (e.key === 'hnt_top_config' || e.key === 'hnt_top_part_colors') {

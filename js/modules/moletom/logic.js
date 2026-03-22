@@ -160,7 +160,53 @@ function loadAdminConfig() {
             state.texts[z.id] = { enabled: false, content: "", fontFamily: defaultFont, color: "#000000", scale: 1.0, maxLines: 1 };
         }
     });
+    // ... rest of config mapping ...
     updateCartCount();
+}
+
+/**
+ * Busca configurações globais e específicas do Supabase (Background)
+ */
+async function fetchConfigFromServer() {
+    if (typeof SupabaseAdapter === 'undefined') return false;
+
+    try {
+        console.log("☁️ Buscando configurações do Supabase (Moletom)...");
+
+        // Timeout para não travar a carga se a rede estiver lenta
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout Supabase')), 2000));
+
+        const configPromise = SupabaseAdapter.getAdminConfigs([
+            'hnt_pricing_config',
+            'hnt_moletom_config',
+            'production_days'
+        ]);
+
+        const configs = await Promise.race([configPromise, timeoutPromise]);
+
+        if (configs && Object.keys(configs).length > 0) {
+            console.log("☁️ Configurações (Moletom) recebidas:", configs);
+
+            if (configs.hnt_pricing_config) {
+                localStorage.setItem('hnt_pricing_config', JSON.stringify(configs.hnt_pricing_config));
+            }
+            if (configs.hnt_moletom_config) {
+                localStorage.setItem('hnt_moletom_config', JSON.stringify(configs.hnt_moletom_config));
+            }
+            if (configs.production_days) {
+                localStorage.setItem('hnt_production_config', JSON.stringify(configs.production_days));
+            }
+
+            loadAdminConfig();
+            if (typeof renderControls === 'function') renderControls();
+            if (typeof updatePrice === 'function') updatePrice();
+
+            return true;
+        }
+    } catch (e) {
+        console.warn("⚠️ Usando cache local (falha ou timeout no servidor Moletom):", e.message);
+    }
+    return false;
 }
 
 function getDefaultFont() {
