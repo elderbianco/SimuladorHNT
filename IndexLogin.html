@@ -293,14 +293,16 @@
 <body>
 
     <header
-        style="display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #000; position: relative;">
-        <div style="display: flex; align-items: center; gap: 20px;">
+        style="display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #000; position: relative; width: 100%;">
+        <div style="flex: 1; display: flex; justify-content: flex-start;">
             <a href="index.html" class="header-back" title="Início">🏠</a>
+        </div>
+        <div style="flex: 2; display: flex; justify-content: center; align-items: center; gap: 15px;">
             <img src="assets/Galeria/HanuthaiLogo/logohnttexte.png" alt="Hanuthai" class="header-logo"
                 style="height: 40px; width: auto; object-fit: contain;">
             <span class="header-title" style="margin: 0;">LOGIN</span>
         </div>
-        <div class="header-right" id="header-right">
+        <div class="header-right" id="header-right" style="flex: 1; display: flex; justify-content: flex-end;">
             <span
                 style="font-size:0.75rem; color:#444; font-weight: bold; border: 1px solid #222; padding: 2px 8px; border-radius: 4px;">v14.45</span>
         </div>
