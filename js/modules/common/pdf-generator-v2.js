@@ -114,8 +114,8 @@ const PDFGenerator = {
 
                 // --- 4. APLICAR ZOOM DE PRECISÃO NO MIRROR (v38 Framing) ---
                 const isLeggingActive = this.context.state?.extras?.calca_legging?.enabled;
-                const snapshotScale = isLeggingActive ? 1.0 : 1.1;
-                const snapshotY = isLeggingActive ? '-5%' : '-3%';
+                const snapshotScale = isLeggingActive ? 1.0 : 0.85;
+                const snapshotY = isLeggingActive ? '-5%' : '0%';
 
                 const subElements = ['.simulator-area', '.simulator-viewport', '.zoom-container', '.simulator-wrapper'];
                 subElements.forEach(selector => {
