@@ -406,6 +406,18 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
             .catch(err => console.error('⚠️ Falha na sincronização Supabase (Item salvo localmente):', err));
     }
 
+    // --- RASCUNHO MANAGER: Salva dados completos no Supabase (NON-BLOCKING) ---
+    if (typeof RascunhoManager !== 'undefined') {
+        const pricingFull = calculateFullPrice();
+        const stateParaSalvar = { ...state, simulationId: finalId, orderNumber: currentOrderNum };
+        RascunhoManager.salvar(stateParaSalvar, pricingFull, CONFIG, pdfUrl)
+            .then(res => {
+                if (res.success) console.log('✅ Rascunho (Moletom) salvo:', res.rascunho_id);
+                else console.warn('⚠️ Rascunho (Moletom) não salvo:', res.error);
+            })
+            .catch(err => console.error('⚠️ RascunhoManager.salvar() erro:', err));
+    }
+
     if (typeof DatabaseManager !== 'undefined') {
         DatabaseManager.addOrder(newRow);
     }
