@@ -381,7 +381,25 @@
         .btn-primary:hover {
             background: #b5952f;
         }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
     </style>
+
 </head>
 
 <body style="display: none;">
