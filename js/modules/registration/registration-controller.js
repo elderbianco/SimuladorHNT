@@ -100,7 +100,8 @@ const RegistrationController = {
                 // If logged in, help the user realize they are identified
                 const googleBtn = document.getElementById('btn-google-login');
                 if (googleBtn) {
-                    googleBtn.innerHTML = `✅ CONECTADO COMO: ${user.email.toUpperCase()}`;
+                    const esc = (s) => (window.Security ? window.Security.escape(s) : s);
+                    googleBtn.innerHTML = `✅ CONECTADO COMO: ${esc(user.email.toUpperCase())}`;
                     googleBtn.style.borderColor = 'var(--gold)';
                     googleBtn.style.color = 'var(--gold)';
                     googleBtn.disabled = true;
@@ -274,8 +275,9 @@ const RegistrationController = {
                     if (el) el.style.borderColor = 'var(--danger)';
                 }
             });
+            const esc = (s) => (window.Security ? window.Security.escape(s) : s);
             errorContainer.style.display = 'block';
-            errorListEl.innerHTML = errors.map(err => `<li>${err}</li>`).join('');
+            errorListEl.innerHTML = errors.map(err => `<li>${esc(err)}</li>`).join('');
 
             // Scroll to the error list container
             errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
