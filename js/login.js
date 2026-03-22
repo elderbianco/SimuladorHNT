@@ -68,15 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        let emailOrUser = emailInput.value.trim();
+        const userInput = emailInput.value.trim();
         const password = passwordInput.value;
 
-        // Alias para "e"
-        if (emailOrUser === 'e') {
-            emailOrUser = 'e@hanuthai.com.br';
-        }
-
-        if (!emailOrUser || !password) return;
+        if (!userInput || !password) return;
 
         // Resetar UI
         errorMsg.style.display = 'none';
@@ -86,18 +81,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // 1. Tentar Login via Supabase Auth (E-mail)
-            let isEmail = emailOrUser.includes('@');
+            let isEmail = userInput.includes('@');
             let authResult = null;
 
             if (isEmail) {
-                authResult = await window.authApi.signIn(emailOrUser, password);
+                authResult = await window.authApi.signIn(userInput, password);
             }
 
             if (authResult && authResult.data && authResult.data.session) {
                 redirectAfterLogin();
             } else {
-                // 2. Fallback: Tentar login via tabela de operadores (Username ou E-mail como username)
-                const isOp = await tryOperatorLogin(emailOrUser, password);
+                // 2. Fallback: Tentar login via tabela de operadores (Username exato)
+                const isOp = await tryOperatorLogin(userInput, password);
                 if (isOp) {
                     redirectAfterLogin();
                 } else {
@@ -120,4 +115,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 });
-
