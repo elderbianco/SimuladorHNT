@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function init() {
     console.log("Maestro: Iniciando Simulador Shorts Legging...");
 
+    // 0. Background Config Fetch
+    if (typeof fetchConfigFromServer === 'function') fetchConfigFromServer();
+
     // 1. Carregar Configurações e Estado
     initDataCache();
     loadAdminConfig();
