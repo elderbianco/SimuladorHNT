@@ -123,7 +123,7 @@ const SupabaseAdapter = {
 
             const { data, error } = await window.supabaseClient
                 .from('pedidos')
-                .insert([row])
+                .upsert([row], { onConflict: 'ID_PEDIDO' })
                 .select();
 
             if (error) throw error;
