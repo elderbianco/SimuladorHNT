@@ -122,9 +122,9 @@ const SupabaseAdapter = {
                     });
                 }
             } else {
-
                 console.warn('⚠️ PricingValidator not found. Skipping client-side integrity check.');
             }
+
 
 
             const row = {
@@ -401,8 +401,10 @@ const SupabaseAdapter = {
 
         } catch (err) {
             console.error('❌ Erro na integração Simulador -> HNT-OPS:', err);
+            return false;
         }
     },
+
 
     /**
      * Registra um evento na tabela de auditoria
