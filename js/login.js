@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
+    const showPasswordCheckbox = document.getElementById('show-password');
     const errorMsg = document.getElementById('loginError');
     const loginBtn = document.getElementById('loginBtn');
     const loader = document.getElementById('loginLoader');
@@ -9,15 +10,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mover pro painel se já tem sessao
     checkExistingSession();
 
+    // Lógica para mostrar/esconder senha
+    if (showPasswordCheckbox) {
+        showPasswordCheckbox.addEventListener('change', () => {
+            passwordInput.type = showPasswordCheckbox.checked ? 'text' : 'password';
+        });
+    }
+
     async function checkExistingSession() {
-        const { session } = await window.authApi.getSession();
-        if (session) {
-            redirectAfterLogin();
+        if (!window.authApi) return;
+        try {
+            const { session } = await window.authApi.getSession();
+            if (session) {
+                redirectAfterLogin();
+            }
+        } catch (e) {
+            console.error('Session check failed:', e);
         }
     }
 
     function redirectAfterLogin() {
-        // Redirecionar para onde o usuário estava tentando ir, ou para o Admin de Pedidos por padrão
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get('redirect') || 'HNT-OPS/app/index.html';
         window.location.href = redirectUrl;
@@ -38,20 +50,32 @@ document.addEventListener('DOMContentLoaded', () => {
         // Resetar UI
         errorMsg.style.display = 'none';
         loginBtn.disabled = true;
+        loginBtn.innerText = "Entrando...";
         loader.style.display = 'block';
 
-        const { data, error } = await window.authApi.signIn(email, password);
+        try {
+            const { data, error } = await window.authApi.signIn(email, password);
 
-        if (error) {
-            console.error('Login error:', error.message);
+            if (error) {
+                console.error('Login error:', error.message);
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = "Credenciais inválidas. Use o e-mail e senha configurados no Supabase.";
+                loginBtn.disabled = false;
+                loginBtn.innerText = "Entrar";
+                loader.style.display = 'none';
+            } else if (data.session) {
+                // Success
+                redirectAfterLogin();
+            }
+        } catch (err) {
+            console.error('Auth crash:', err);
             errorMsg.style.display = 'block';
-            errorMsg.textContent = "Credenciais inválidas. Use o e-mail e senha configurados no Supabase.";
+            errorMsg.textContent = "Erro crítico de autenticação. Tente novamente.";
             loginBtn.disabled = false;
+            loginBtn.innerText = "Entrar";
             loader.style.display = 'none';
-        } else if (data.session) {
-            // Success
-            redirectAfterLogin();
         }
     });
 
 });
+
