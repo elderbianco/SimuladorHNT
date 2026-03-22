@@ -406,27 +406,93 @@ const SupabaseAdapter = {
     },
 
 
+},
+
+
+    /**
+     * Obtém o próximo número de pedido disponível, considerando o banco e configs.
+     */
+    async getNextOrderNumber() {
+        if (!window.supabaseClient) return null;
+        try {
+            // 1. Buscar maior número na produção
+            const { data: lastPedido, error: err1 } = await window.supabaseClient
+                .from('producao_pedidos')
+                .select('numero_pedido')
+                .order('numero_pedido', { ascending: false })
+                .limit(1);
+
+            let maxFound = 0;
+            if (lastPedido && lastPedido.length > 0) {
+                // Remove prefixos se houver (ex: HNT-1000 -> 1000)
+                const raw = lastPedido[0].numero_pedido.toString();
+                maxFound = parseInt(raw.replace(/\D/g, '')) || 0;
+            }
+
+            // 2. Buscar número inicial na admin_config
+            const { data: configRow, error: err2 } = await window.supabaseClient
+                .from('admin_config')
+                .select('valor')
+                .eq('chave', 'proximo_id_simulacao');
+
+            let startFrom = 1000;
+            if (configRow && configRow.length > 0) {
+                startFrom = parseInt(configRow[0].valor) || 1000;
+            }
+
+            // O próximo é o maior entre os dois + 1
+            const nextNum = Math.max(maxFound, startFrom - 1) + 1;
+            console.log(`🔢 Próximo número calculado: ${nextNum} (Max Prod: ${maxFound}, Start Admin: ${startFrom})`);
+
+            return {
+                number: nextNum,
+                formatted: String(nextNum).padStart(6, '0')
+            };
+
+        } catch (e) {
+            console.error('❌ Erro ao calcular próximo número de pedido:', e);
+            return null;
+        }
+    },
+
+        /**
+         * Atualiza uma chave na tabela admin_config
+         */
+        async updateAdminConfig(chave, valor, descricao = '') {
+    if (!window.supabaseClient) return;
+    try {
+        const { error } = await window.supabaseClient
+            .from('admin_config')
+            .upsert([{ chave, valor: valor.toString(), descricao, atualizado_em: new Date() }]);
+        if (error) throw error;
+        console.log(`⚙️ Config '${chave}' atualizada para '${valor}'`);
+    } catch (e) {
+        console.error(`❌ Falha ao atualizar config ${chave}:`, e);
+    }
+},
+
+
     /**
      * Registra um evento na tabela de auditoria
      */
     async logAudit(eventType, severity, description, metadata = {}) {
-        if (!window.supabaseClient) return;
-        try {
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            const { error } = await window.supabaseClient
-                .from('audit_logs')
-                .insert([{
-                    event_type: eventType,
-                    severity: severity,
-                    description: description,
-                    user_id: session?.user?.id || null,
-                    metadata: metadata
-                }]);
-            if (error) throw error;
-        } catch (e) {
-            console.error('❌ Falha ao registrar log de auditoria:', e);
-        }
+    if (!window.supabaseClient) return;
+    try {
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        const { error } = await window.supabaseClient
+            .from('audit_logs')
+            .insert([{
+                event_type: eventType,
+                severity: severity,
+                description: description,
+                user_id: session?.user?.id || null,
+                metadata: metadata
+            }]);
+        if (error) throw error;
+    } catch (e) {
+        console.error('❌ Falha ao registrar log de auditoria:', e);
     }
+}
 };
 
 window.SupabaseAdapter = SupabaseAdapter;
