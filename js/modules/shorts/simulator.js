@@ -200,6 +200,11 @@ function setupMainEvents() {
     const btnPdf = document.getElementById('btn-pdf');
     if (btnPdf) {
         btnPdf.onclick = async () => {
+            // --- NOVO: Ocultar limites antes de gerar PDF ---
+            if (window.ShortsSimulatorInstance && window.ShortsSimulatorInstance.hideAllVisualLimits) {
+                window.ShortsSimulatorInstance.hideAllVisualLimits();
+            }
+
             if (typeof PDFGenerator !== 'undefined') {
                 PDFGenerator.showCaptureFlash();
                 await PDFGenerator.updateSnapshot(true);
@@ -209,6 +214,7 @@ function setupMainEvents() {
             }
         };
     }
+
 
     const btnCart = document.getElementById('btn-add-cart') || document.getElementById('btn-export-db');
     if (btnCart) {
@@ -232,6 +238,11 @@ function setupMainEvents() {
                 const action = async () => {
                     try {
                         console.log("🛒 Iniciando processo automatizado...");
+
+                        // --- NOVO: Ocultar limites antes do processamento ---
+                        if (window.ShortsSimulatorInstance && window.ShortsSimulatorInstance.hideAllVisualLimits) {
+                            window.ShortsSimulatorInstance.hideAllVisualLimits();
+                        }
 
                         // A. Gerar PDF em Background (se disponível)
                         let pdfUrl = null;
