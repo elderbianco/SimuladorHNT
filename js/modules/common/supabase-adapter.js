@@ -105,6 +105,20 @@ const SupabaseAdapter = {
                 userId = session?.user?.id || null;
             } catch (authErr) { console.warn('Auth check failed', authErr); }
 
+            // 🛡️ SECURITY: Price Tampering Validation
+            let isPriceVerified = true;
+            if (window.PricingValidator) {
+                isPriceVerified = window.PricingValidator.verify({
+                    model_name: formattedData.product_type,
+                    specs: technicalJson,
+                    PRECO_FINAL: finalPrice,
+                    config: window.CONFIG // Assorted from global scope if available
+                });
+            } else {
+                console.warn('⚠️ PricingValidator not found. Skipping client-side integrity check.');
+            }
+
+
             const row = {
                 ID_PEDIDO: formattedData.order_id,
                 ID_SIMULACAO: technicalJson.simulationId || (completeJson ? completeJson.simulationId : ''),
@@ -119,7 +133,9 @@ const SupabaseAdapter = {
                 pdf_url: formattedData.pdfUrl,
                 json_tec: completeJson,
                 auth_user_id: userId, // 🛡️ Linked to Supabase Auth
-                STATUS_PEDIDO: 'Simulação'
+                is_price_verified: isPriceVerified, // 🛡️ Tampering detection flag
+                STATUS_PEDIDO: isPriceVerified ? 'Simulação' : 'PENDING_AUDIT'
+
             };
 
             console.log('📤 Enviando linha para Supabase:', {
