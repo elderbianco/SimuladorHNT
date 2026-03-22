@@ -90,7 +90,8 @@ const PDFGenerator = {
                 }
 
                 // --- 2. OCULTAR UI NO VIEWPORT ORIGINAL ---
-                const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected', '.control-layer', '.zoom-controls'];
+                const hideElements = ['.drag-handle', '.resize-handle', '.delete-btn', '.ui-resizable-handle', '.selection-border', '.ui-selected', '.control-layer', '.zoom-controls', '.limit-layer'];
+
                 const tempHidden = [];
                 hideElements.forEach(selector => {
                     document.querySelectorAll(selector).forEach(el => {

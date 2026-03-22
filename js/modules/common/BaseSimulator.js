@@ -366,17 +366,45 @@ onStateUpdate() {
     this.render();
 }
 
+/**
+ * Oculta todas as guias visuais/quadros de limite (Solicitado pelo Usuário)
+ */
+hideAllVisualLimits() {
+    if (!this.state.limits && !window.state?.limits) return;
+
+    console.log('🧹 Ocultando todos os quadros de limite antes da exportação...');
+
+    // State local da classe ou global do simulador
+    const limits = this.state.limits || window.state.limits;
+
+    Object.keys(limits).forEach(zid => {
+        limits[zid] = false;
+    });
+
+    // Forçar atualização visual para esconder os elementos .limit-layer
+    if (typeof window.updateVisuals === 'function') window.updateVisuals();
+    if (typeof window.refreshActiveLimits === 'function') window.refreshActiveLimits();
+
+    // Re-renderizar controles para "desmarcar" os botões na UI
+    this.render();
+}
+
     async handleAddToCart() {
     if (!this.state.termsAccepted) {
         alert("⚠️ Aceite os Termos para continuar.");
         return;
     }
+
+    // --- NOVO: Desmarcar limites antes de adicionar ao carrinho ---
+    this.hideAllVisualLimits();
+
     if (typeof window.saveOrderToHistory === 'function') {
         if (await window.saveOrderToHistory()) {
             if (confirm('✅ Adicionado ao carrinho! Ir para pedidos?')) window.location.href = 'IndexPedidoSimulador.html';
         }
     }
 }
+
 
 setupEventListeners() { }
 }
