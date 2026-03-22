@@ -78,32 +78,47 @@ function getAutoHntLogoColor(baseColor) {
  * Busca configurações do servidor (fallback para modo anônimo)
  */
 async function fetchConfigFromServer() {
+    if (typeof SupabaseAdapter === 'undefined') return false;
+
     try {
-        console.log("☁️ Buscando configurações do servidor...");
-        const res = await fetch('/api/admin/config');
+        console.log("☁️ Buscando configurações do Supabase (Legging)...");
 
-        if (!res.ok) {
-            console.warn(`⚠️ Servidor retornou ${res.status} para /api/admin/config`);
-            return false;
-        }
+        // Timeout para não travar a carga se a rede estiver lenta
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout Supabase')), 2000));
 
-        const serverConfig = await res.json();
-        if (serverConfig && Object.keys(serverConfig).length > 0) {
-            console.log("☁️ Configuração recebida do servidor:", serverConfig);
-            localStorage.setItem('hnt_pricing_config', JSON.stringify(serverConfig));
-            loadAdminConfig(); // Reload configs
+        const configPromise = SupabaseAdapter.getAdminConfigs([
+            'hnt_pricing_config',
+            'hnt_legging_config',
+            'production_days'
+        ]);
 
-            // Update UI if functions are available
+        const configs = await Promise.race([configPromise, timeoutPromise]);
+
+        if (configs && Object.keys(configs).length > 0) {
+            console.log("☁️ Configurações recebidas:", configs);
+
+            if (configs.hnt_pricing_config) {
+                localStorage.setItem('hnt_pricing_config', JSON.stringify(configs.hnt_pricing_config));
+            }
+            if (configs.hnt_legging_config) {
+                localStorage.setItem('hnt_legging_config', JSON.stringify(configs.hnt_legging_config));
+            }
+            if (configs.production_days) {
+                localStorage.setItem('hnt_production_config', JSON.stringify(configs.production_days));
+            }
+
+            loadAdminConfig();
             if (typeof renderControls === 'function') renderControls();
             if (typeof updatePrice === 'function') updatePrice();
 
             return true;
         }
     } catch (e) {
-        console.warn("⚠️ Falha ao buscar config do servidor (usando local):", e);
+        console.warn("⚠️ Usando cache local (falha ou timeout no servidor):", e.message);
     }
     return false;
 }
+
 
 /**
  * Carrega configurações do administrador

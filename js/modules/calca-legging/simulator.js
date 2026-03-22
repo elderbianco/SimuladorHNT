@@ -19,11 +19,10 @@ async function init() {
         checkForRestoration();
     }
 
-    // ✅ Server Sync (Incognito/Cross-Device) - AGUARDAR ANTES DE RENDERIZAR
+    // ✅ Server Sync (Incognito/Cross-Device) - NÃO BLOQUEANTE para performance
     if (typeof fetchConfigFromServer === 'function') {
-        console.log("☁️ Aguardando configurações do servidor...");
-        await fetchConfigFromServer();
-        console.log("☁️ Configurações carregadas. Prosseguindo com renderização...");
+        console.log("☁️ Sincronizando configurações em segundo plano...");
+        fetchConfigFromServer(); // Sem await: o render continua com dados do localStorage
     }
 
     // Auto-fetch sequence from Supabase
