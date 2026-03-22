@@ -319,94 +319,96 @@ class BaseSimulator {
                     callbacks: {
                         onToggle: (zid, val) => {
                             tState.enabled = val;
-                            if (val \u0026\u0026 this.state.zoneLimits) this.state.zoneLimits[u.id] = true;
-                if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
-                this.onStateUpdate();
-            },
-            onTextChange: (zid, val) => {
-                tState.content = val;
-                if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
-                this.saveState();
-            },
-                onLinesChange: (zid, val) => {
-                    tState.maxLines = val;
-                    if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
-                    this.saveState();
-                },
-                    onFontChange: (zid, val) => {
-                        tState.fontFamily = val;
-                        if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
-                        this.saveState();
-                    },
+                            if (val && this.state.zoneLimits) this.state.zoneLimits[u.id] = true;
+                            if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                            this.onStateUpdate();
+                        },
+                        onTextChange: (zid, val) => {
+                            tState.content = val;
+                            if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                            this.saveState();
+                        },
+                        onLinesChange: (zid, val) => {
+                            tState.maxLines = val;
+                            if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                            this.saveState();
+                        },
+                        onFontChange: (zid, val) => {
+                            tState.fontFamily = val;
+                            if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                            this.saveState();
+                        },
                         onColorChange: (zid, val) => {
                             tState.color = val;
                             if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
                             this.saveState();
                         },
-                            onScaleChange: (zid, val) => {
-                                tState.scale = val;
-                                if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
-                                this.saveState();
-                            }
-        }
+                        onScaleChange: (zid, val) => {
+                            tState.scale = val;
+                            if (typeof window.renderFixedTexts === 'function') window.renderFixedTexts();
+                            this.saveState();
+                        }
+                    }
                 });
                 zoneDiv.appendChild(textEditor);
-}
+            }
 
-container.appendChild(zoneDiv);
+
+            container.appendChild(zoneDiv);
         });
     }
 
-getCustomSections() { return []; }
+    getCustomSections() { return []; }
 
-onStateUpdate() {
-    if (typeof window.updateVisuals === 'function') window.updateVisuals();
-    if (typeof window.updatePrice === 'function') window.updatePrice();
-    this.saveState();
-    this.render();
-}
+    onStateUpdate() {
+        if (typeof window.updateVisuals === 'function') window.updateVisuals();
+        if (typeof window.updatePrice === 'function') window.updatePrice();
+        this.saveState();
+        this.render();
+    }
 
-/**
- * Oculta todas as guias visuais/quadros de limite (Solicitado pelo Usuário)
- */
-hideAllVisualLimits() {
-    if (!this.state.limits && !window.state?.limits) return;
+    /**
+     * Oculta todas as guias visuais/quadros de limite (Solicitado pelo Usuário)
+     */
+    hideAllVisualLimits() {
+        if (!this.state.limits && !window.state?.limits) return;
 
-    console.log('🧹 Ocultando todos os quadros de limite antes da exportação...');
+        console.log('🧹 Ocultando todos os quadros de limite antes da exportação...');
 
-    // State local da classe ou global do simulador
-    const limits = this.state.limits || window.state.limits;
+        // State local da classe ou global do simulador
+        const limits = this.state.limits || window.state.limits;
 
-    Object.keys(limits).forEach(zid => {
-        limits[zid] = false;
-    });
+        Object.keys(limits).forEach(zid => {
+            limits[zid] = false;
+        });
 
-    // Forçar atualização visual para esconder os elementos .limit-layer
-    if (typeof window.updateVisuals === 'function') window.updateVisuals();
-    if (typeof window.refreshActiveLimits === 'function') window.refreshActiveLimits();
+        // Forçar atualização visual para esconder os elementos .limit-layer
+        if (typeof window.updateVisuals === 'function') window.updateVisuals();
+        if (typeof window.refreshActiveLimits === 'function') window.refreshActiveLimits();
 
-    // Re-renderizar controles para "desmarcar" os botões na UI
-    this.render();
-}
+        // Re-renderizar controles para "desmarcar" os botões na UI
+        this.render();
+    }
 
     async handleAddToCart() {
-    if (!this.state.termsAccepted) {
-        alert("⚠️ Aceite os Termos para continuar.");
-        return;
-    }
+        if (!this.state.termsAccepted && this.state.termsAccepted !== undefined) {
+            alert("⚠️ Aceite os Termos para continuar.");
+            return;
+        }
 
-    // --- NOVO: Desmarcar limites antes de adicionar ao carrinho ---
-    this.hideAllVisualLimits();
+        // --- NOVO: Desmarcar limites antes de adicionar ao carrinho ---
+        this.hideAllVisualLimits();
 
-    if (typeof window.saveOrderToHistory === 'function') {
-        if (await window.saveOrderToHistory()) {
-            if (confirm('✅ Adicionado ao carrinho! Ir para pedidos?')) window.location.href = 'IndexPedidoSimulador.html';
+        if (typeof window.saveOrderToHistory === 'function') {
+            if (await window.saveOrderToHistory()) {
+                if (confirm('✅ Adicionado ao carrinho! Ir para pedidos?')) window.location.href = 'IndexPedidoSimulador.html';
+            }
         }
     }
-}
 
 
-setupEventListeners() { }
+
+    setupEventListeners() { }
 }
 
 window.BaseSimulator = BaseSimulator;
