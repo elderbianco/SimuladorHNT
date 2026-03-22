@@ -289,8 +289,60 @@ function renderFinancialTab(order, productType) {
     });
 
     html += `</div>`;
+
+    // 🛡️ SECURITY AUDIT SECTION
+    if (typeof PricingValidator !== 'undefined') {
+        const technicalJson = order.DADOS_TECNICOS_JSON ? JSON.parse(order.DADOS_TECNICOS_JSON) : null;
+        if (technicalJson) {
+            const auditResult = PricingValidator.calculate({
+                model_name: normalizedType,
+                specs: technicalJson,
+                config: window.CONFIG || {} // Use global config if available
+            });
+
+            const paidTotal = order.PRECO_FINAL || (order.item?.pricing?.total_price) || 0;
+            const diff = Math.abs(auditResult.total - paidTotal);
+            const isSuspicious = diff > 1.00;
+
+            html += `
+                <div style="margin-top:20px; border:2px solid ${isSuspicious ? '#ff4d4d' : '#4CAF50'}; border-radius:8px; overflow:hidden;">
+                    <div style="background:${isSuspicious ? '#ff4d4d' : '#4CAF50'}; color:#fff; padding:10px 15px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+                        <span>🛡️ AUDITORIA DE INTEGRIDADE</span>
+                        <span>${isSuspicious ? '🚩 DISCREPÂNCIA DETECTADA' : '✅ VERIFICADO'}</span>
+                    </div>
+                    <div style="padding:20px; background:#111;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; margin-bottom:15px;">
+                            <div style="background:#1a1a1a; padding:15px; border-radius:6px; border-left:4px solid #888;">
+                                <div style="font-size:0.75rem; color:#888; text-transform:uppercase;">Valor Pago pelo Cliente</div>
+                                <div style="font-size:1.3rem; font-weight:bold; color:#fff;">${FinancialManager.formatCurrency(paidTotal)}</div>
+                            </div>
+                            <div style="background:#1a1a1a; padding:15px; border-radius:6px; border-left:4px solid var(--gold);">
+                                <div style="font-size:0.75rem; color:#888; text-transform:uppercase;">Valor Calculado pelo Motor</div>
+                                <div style="font-size:1.3rem; font-weight:bold; color:var(--gold);">${FinancialManager.formatCurrency(auditResult.total)}</div>
+                            </div>
+                            <div style="background:#1a1a1a; padding:15px; border-radius:6px; border-left:4px solid ${isSuspicious ? '#ff4d4d' : '#4CAF50'};">
+                                <div style="font-size:0.75rem; color:#888; text-transform:uppercase;">Diferença Técnica</div>
+                                <div style="font-size:1.3rem; font-weight:bold; color:${isSuspicious ? '#ff4d4d' : '#4CAF50'};">${FinancialManager.formatCurrency(diff)}</div>
+                            </div>
+                        </div>
+
+                        ${isSuspicious ? `
+                            <div style="background:#201010; border:1px solid #ff4d4d; padding:15px; border-radius:6px; margin-top:10px;">
+                                <p style="margin:0; color:#ff4d4d; font-size:0.9rem;">
+                                    ⚠️ <strong>Alerta:</strong> Este pedido foi submetido com um valor diferente do calculado pelas regras de negócio vigentes. 
+                                    Verifique se houve descontos manuais aplicados por consultores ou se o pedido foi manipulado via código (F12).
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
     return html;
 }
+
 
 window.toggleFinancialSection = function () {
     const section = document.getElementById('financial-analysis-section');
