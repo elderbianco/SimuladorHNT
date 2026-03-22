@@ -451,8 +451,9 @@ function renderControls() {
     container.scrollTop = scrollPos;
 }
 
+// Global Helpers (Legacy support)
 function openGallery(zoneId) {
-    state.pending = zoneId;
+    state.pendingUploadZone = zoneId;
     if (typeof currentGalleryCategory !== 'undefined') currentGalleryCategory = null;
     const modal = document.getElementById('gallery-modal');
     if (modal) {
@@ -460,16 +461,15 @@ function openGallery(zoneId) {
         renderGallery();
     }
 }
-window.closeGallery = function () {
+window.closeGallery = function () { // Explicit global
     const modal = document.getElementById('gallery-modal');
     if (modal) modal.style.display = 'none';
-};
+}
 
 function renderGallery(searchTerm = "") {
     const g = document.getElementById('gallery-grid');
     if (!g) return;
     g.innerHTML = '';
-
     const galleryData = (typeof SHARED_GALLERY !== 'undefined') ? SHARED_GALLERY : [];
 
     if (searchTerm && searchTerm.trim().length > 0) {
@@ -482,7 +482,36 @@ function renderGallery(searchTerm = "") {
         results.forEach(i => appendGalleryItem(g, i));
         return;
     }
-    galleryData.forEach(i => appendGalleryItem(g, i));
+
+    if (!window.currentGalleryCategory) {
+        // Categories
+        const categories = [...new Set(galleryData.map(i => i.category || 'Gerais'))];
+        const categoryIcons = {
+            "Logos Hanuthai": "assets/Shorts/UiIcons/thumb_logos_hanuthai.png",
+            "Animais": "assets/Shorts/UiIcons/thumb_animais.png",
+            "Bandeiras": "assets/Shorts/UiIcons/thumb_bandeiras.png",
+            "Personagens": "assets/Shorts/UiIcons/thumb_personagens.png",
+            "Gerais": "assets/Shorts/UiIcons/thumb_gerais.png"
+        };
+        categories.forEach(cat => {
+            const d = document.createElement('div');
+            d.className = 'gallery-folder';
+            const iconSrc = categoryIcons[cat] || "assets/Shorts/UiIcons/thumb_gerais.png";
+            d.innerHTML = `<img src="${iconSrc}" class="folder-image-icon"><div class="folder-label">${cat}</div>`;
+            d.onclick = () => { window.currentGalleryCategory = cat; renderGallery(); };
+            g.appendChild(d);
+        });
+    } else {
+        // Back Btn
+        const b = document.createElement('button');
+        b.className = 'gallery-back-btn';
+        b.innerText = '↩ Voltar';
+        b.onclick = () => { window.currentGalleryCategory = null; renderGallery(); };
+        g.appendChild(b);
+
+        const items = galleryData.filter(i => (i.category || 'Gerais') === window.currentGalleryCategory);
+        items.forEach(i => appendGalleryItem(g, i));
+    }
 }
 
 function appendGalleryItem(container, i) {
@@ -490,10 +519,15 @@ function appendGalleryItem(container, i) {
     d.className = 'gallery-item';
     d.innerHTML = `<img src="${i.src}"><span>${i.name}</span>`;
     d.onclick = () => {
-        if (typeof addImageToZone === 'function') {
-            addImageToZone(state.pending, i.src);
+        if (state.pendingUploadZone) {
+            state.zoneLimits[state.pendingUploadZone] = true;
+            if (typeof updateLimits === 'function') updateLimits();
+            let fmt = i.name;
+            if (typeof generateFormattedFilename === 'function') fmt = generateFormattedFilename(state.pendingUploadZone, i.name, 'ACERVO');
+            if (typeof createImageElement === 'function') createImageElement(state.pendingUploadZone, i.src, false, fmt);
+
             state.uploads = state.uploads || {};
-            state.uploads[state.pending] = { src: i.src, filename: i.name || 'Imagem do Acervo', isCustom: false };
+            state.uploads[state.pendingUploadZone] = { src: i.src, filename: i.name || 'Imagem do Acervo', isCustom: false };
             saveState();
         }
         window.closeGallery();
@@ -501,6 +535,63 @@ function appendGalleryItem(container, i) {
     container.appendChild(d);
 }
 
-function addImageToZone(zoneId, src) {
-    if (typeof createImageElement === 'function') createImageElement(zoneId, src, false);
+// Logic mock if needed
+async function uploadFileToServer(file, base64, zoneId) {
+    try {
+        const formData = {
+            image: base64,
+            filename: (typeof generateFormattedFilename === 'function') ? generateFormattedFilename(zoneId, file.name, 'EXT') : file.name,
+            folder: file.name.match(/\.(emb|dst|pes|exp)$/i) ? 'embroidery' : 'image'
+        };
+        const res = await fetch('/api/upload-image', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData)
+        });
+        const data = await res.json();
+        if (data.success) console.log('✅ Upload:', data.path);
+    } catch (e) { console.error('❌ Upload:', e); }
+}
+
+function addImage(z) { document.getElementById(`upload-${z}`).click(); }
+function handleImageUpload(e, z) {
+    const f = e.target.files[0]; if (!f) return;
+    let fmt = f.name;
+    if (typeof generateFormattedFilename === 'function') fmt = generateFormattedFilename(z, f.name, 'EXT');
+    const r = new FileReader();
+    r.onload = (ev) => {
+        const base64 = ev.target.result;
+        uploadFileToServer(f, base64, z);
+        createImageElement(z, base64, true, fmt);
+    };
+    r.readAsDataURL(f);
+}
+function createImageElement(z, s, isCustom, filename = '', formattedFilename = '') {
+    const l = document.getElementById('customization-layer'); const zc = CONFIG.zones[z];
+    const el = document.createElement('div'); el.className = 'custom-element draggable';
+    el.style.left = zc.x + '%'; el.style.top = zc.y + '%'; el.style.width = zc.width + '%';
+    el.style.transform = 'translate(-50%, -50%)'; el.style.zIndex = 1500;
+    el.dataset.type = 'image';
+    el.dataset.isCustom = isCustom;
+    el.dataset.filename = filename || 'custom_upload';
+    if (formattedFilename) el.dataset.formattedFilename = formattedFilename;
+    const img = document.createElement('img'); img.src = s; img.style.width = '100%';
+    el.appendChild(img); l.appendChild(el);
+    if (!state.elements[z]) state.elements[z] = []; state.elements[z].push(el);
+
+    // Limits
+    state.zoneLimits[z] = true;
+    if (typeof updateLimits === 'function') updateLimits();
+
+    updatePrice(); renderControls(); saveState();
+}
+function removeZoneElements(z) {
+    if (state.elements[z]) { state.elements[z].forEach(e => e.remove()); state.elements[z] = []; }
+    if (checkZoneEmpty(z)) state.zoneLimits[z] = false;
+    if (typeof updateLimits === 'function') updateLimits();
+    updatePrice(); renderControls(); saveState();
+}
+function checkZoneEmpty(z) {
+    const hI = state.elements[z] && state.elements[z].length > 0;
+    const rT = CONFIG.textZones.find(t => t.parentZone === z);
+    const hT = rT && state.texts[rT.id].enabled;
+    return !hI && !hT;
 }
