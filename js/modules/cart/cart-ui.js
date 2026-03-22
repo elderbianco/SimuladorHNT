@@ -176,7 +176,10 @@ window.CartUI = {
                     <div>
                         <div style="color:#fff; font-weight:bold;">${esc(this.getProductName(item, order))}</div>
                         <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc(item.specs?.orderNumber || '---')}</span></div>
-                        <div style="font-size:0.7rem; color:#666;">REF: ${esc(order.order_id)} • ${new Date(order.created_at).toLocaleDateString()}</div>
+                        <div style="font-size:0.7rem; color:#666; margin-top: 2px;">
+                            ID: <span style="color:#888;">${esc(state.simulationId || order.ID_SIMULACAO || '---')}</span> • 
+                            ${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '---'}
+                        </div>
                     </div>
                     <div style="color:var(--gold); font-size: 1.1rem; font-family: 'Bebas Neue', sans-serif; border: 1px solid #333; padding: 4px 10px; border-radius: 8px; margin-right: 25px; min-width: 45px; text-align: center; background: #111;">
                         ${currentItem}/${totalItems}
