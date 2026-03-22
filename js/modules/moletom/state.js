@@ -28,7 +28,7 @@ window.state = {
     productInitial: 'ML', // Moletom
     color: 'branco',
     elements: {},
-    sizes: {},
+    sizes: { "M": 1 },
     zoom: 1.0,
     dragOffset: { x: 0, y: 0 },
     draggedElement: null,

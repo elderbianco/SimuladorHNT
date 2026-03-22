@@ -126,7 +126,7 @@ window.state = {
     productInitial: 'TP', // Top
     color: 'branco',
     elements: { frente_centro: [], costas_centro: [] },
-    sizes: {},
+    sizes: { "M": 1 },
     zoom: 1.0,
     dragOffset: { x: 0, y: 0 },
     draggedElement: null,

@@ -111,7 +111,7 @@ window.state = {
         lateral_esquerda: { src: null, filename: null, isCustom: false, unlocked: true },
         perna_esquerda: { src: null, filename: null, isCustom: false, unlocked: true }
     },
-    sizes: {},
+    sizes: { "M": 1 },
     zoom: 1.0,
     dragOffset: { x: 0, y: 0 },
     draggedElement: null,
