@@ -254,10 +254,18 @@ function renderControls() {
     actionBtns.style.gap = '10px';
     actionBtns.style.marginBottom = '15px';
 
+    const isEditing = state._editingIndex !== undefined && state._editingIndex !== null;
     const btnCart = document.createElement('button');
-    btnCart.innerText = 'ADICIONAR AO CARRINHO';
-    btnCart.className = 'btn-primary btn-cart';
+    btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
+    btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
     btnCart.style.flex = '1';
+
+    if (isEditing) {
+        btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        btnCart.style.border = 'none';
+        btnCart.style.color = '#fff';
+    }
+
     btnCart.onclick = async () => {
         if (!state.termsAccepted) {
             alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
@@ -280,15 +288,20 @@ function renderControls() {
             return;
         }
 
-        const newSeq = (typeof generateNextSequenceNumber === 'function')
-            ? generateNextSequenceNumber()
-            : String(parseInt(localStorage.getItem('hnt_sequence_id') || '0') + 1).padStart(6, '0');
+        // Bloquear regeneração de ID se estiver editando!
+        if (!isEditing) {
+            const newSeq = (typeof generateNextSequenceNumber === 'function')
+                ? generateNextSequenceNumber()
+                : String(parseInt(localStorage.getItem('hnt_sequence_id') || '0') + 1).padStart(6, '0');
 
-        const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId)
-            ? state.orderNumber
-            : 'HNT';
+            const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId)
+                ? state.orderNumber
+                : 'HNT';
 
-        state.simulationId = `${orderPrefix}-SH-${newSeq}`;
+            state.simulationId = `${orderPrefix}-SH-${newSeq}`;
+        } else if (state._editingOrderId) {
+            state.simulationId = state._editingOrderId;
+        }
 
         // 1. Mostrar Notificação de Carregamento imediata
         const loader = document.createElement('div');
@@ -311,7 +324,7 @@ function renderControls() {
                 loader.innerHTML = `
                     <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);color:white;padding:30px 50px;border-radius:15px;z-index:100000;display:flex;flex-direction:column;align-items:center;gap:20px;border:2px solid #28a745;">
                         <div style="font-size:40px;">✅</div>
-                        <div style="font-weight:700;font-size:1.3rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:#28a745;">ADICIONADO AO CARRINHO</div>
+                        <div style="font-weight:700;font-size:1.3rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:#28a745;">${isEditing ? 'EDIÇÃO SALVA!' : 'ADICIONADO AO CARRINHO'}</div>
                         <div style="font-size:0.9rem;color:#ccc;">Sendo redirecionado...</div>
                     </div>
                 `;
