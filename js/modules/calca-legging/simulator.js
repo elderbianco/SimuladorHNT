@@ -26,24 +26,21 @@ async function init() {
         console.log("☁️ Configurações carregadas. Prosseguindo com renderização...");
     }
 
-    // Auto-fetch sequence
+    // Auto-fetch sequence from Supabase
     if (!state.orderNumber) {
-        fetch('/api/next-order-id')
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-                return r.json();
-            })
-            .then(d => {
-                if (d.number) {
-                    state.orderNumber = d.number.toString();
-                    state.simulationId = getFormattedId();
-                    saveState();
-                    renderControls();
-                }
-            })
-            .catch(e => console.warn('Seq API fail (expected if server is offline):', e.message));
+        if (typeof SupabaseAdapter !== 'undefined') {
+            SupabaseAdapter.getNextOrderNumber()
+                .then(res => {
+                    if (res && res.number) {
+                        state.orderNumber = res.number.toString();
+                        state.simulationId = getFormattedId(); // from state.js
+                        saveState();
+                        renderControls();
+                    }
+                })
+                .catch(e => console.warn('Supabase Seq fail:', e));
+        }
     }
-
     initLayers();
     setColor(state.color || 'branco');
 

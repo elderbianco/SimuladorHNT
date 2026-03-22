@@ -66,25 +66,20 @@ async function init() {
         console.log("☁️ Configurações carregadas. Prosseguindo com renderização...");
     }
 
-    // Auto-fetch sequence
+    // Auto-fetch sequence from Supabase
     if (!state.orderNumber) {
-        const apiUrl = '/api/next-order-id'; // Relative path for both local and Render
-        fetch(apiUrl)
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-                return r.json();
-            })
-            .then(d => {
-                if (d.number) {
-                    state.orderNumber = d.number.toString();
-                    state.simulationId = getFormattedId(); // from state.js
-                    saveState();
-                    scheduleRender(true);
-                }
-            })
-            .catch(e => {
-                console.warn('Seq API fail (expected if server is offline):', e.message);
-            });
+        if (typeof SupabaseAdapter !== 'undefined') {
+            SupabaseAdapter.getNextOrderNumber()
+                .then(res => {
+                    if (res && res.number) {
+                        state.orderNumber = res.number.toString();
+                        state.simulationId = getFormattedId(); // from state.js
+                        saveState();
+                        scheduleRender(true);
+                    }
+                })
+                .catch(e => console.warn('Supabase Seq fail:', e));
+        }
     }
 
     // 3. Preparar Visual
