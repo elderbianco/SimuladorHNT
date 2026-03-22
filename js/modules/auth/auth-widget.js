@@ -47,19 +47,25 @@ const AuthWidget = (() => {
                 gap: 8px;
                 z-index: 9999;
             }
+            /* When inside a flex header, we prefer flow over absolute */
+            #auth-widget-container.auth-in-flow {
+                position: static;
+                transform: none;
+                margin-right: 15px;
+            }
             .auth-btn {
-                font-family: 'Outfit', 'Bebas Neue', sans-serif;
-                font-size: 0.78rem;
+                font-family: 'Outfit', 'Inter', sans-serif;
+                font-size: 0.75rem;
                 font-weight: 700;
-                letter-spacing: 1px;
-                padding: 7px 14px;
-                border-radius: 8px;
+                letter-spacing: 0.5px;
+                padding: 6px 12px;
+                border-radius: 6px;
                 border: none;
                 cursor: pointer;
                 text-decoration: none;
                 display: inline-flex;
                 align-items: center;
-                gap: 6px;
+                gap: 5px;
                 transition: all 0.2s ease;
                 white-space: nowrap;
             }
@@ -79,7 +85,7 @@ const AuthWidget = (() => {
             .auth-btn-login:hover {
                 background: #ffe84d;
                 transform: translateY(-1px);
-                box-shadow: 0 4px 14px rgba(255,215,0,0.35);
+                box-shadow: 0 4px 12px rgba(255,215,0,0.3);
             }
             .auth-user-chip {
                 display: flex;
@@ -88,10 +94,10 @@ const AuthWidget = (() => {
             }
             .auth-user-name {
                 color: #FFD700;
-                font-size: 0.82rem;
+                font-size: 0.8rem;
                 font-weight: 700;
                 letter-spacing: 0.5px;
-                max-width: 130px;
+                max-width: 150px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -100,8 +106,9 @@ const AuthWidget = (() => {
                 background: transparent;
                 color: #888;
                 border: 1px solid #444;
-                font-size: 0.72rem;
-                padding: 5px 10px;
+                font-size: 0.65rem;
+                padding: 4px 8px;
+                font-weight: 600;
             }
             .auth-btn-logout:hover {
                 border-color: #ff4d4d;
@@ -213,11 +220,23 @@ const AuthWidget = (() => {
         // Ensure container exists in header
         let container = document.getElementById(WIDGET_ID);
         if (!container) {
+            const headerRight = document.querySelector('.header-right, #header-right, .header-links-container');
             const header = document.querySelector('header, .premium-header, #header');
+
             if (!header) return;
+
             container = document.createElement('div');
             container.id = WIDGET_ID;
-            header.appendChild(container);
+
+            if (headerRight) {
+                // Prepend to header-right so it sits before the cart/badge in the flex flow
+                headerRight.prepend(container);
+                container.classList.add('auth-in-flow');
+                console.log('✅ Auth Widget: injetado no fluxo flexível');
+            } else {
+                header.appendChild(container);
+                console.log('✅ Auth Widget: injetado como absoluto');
+            }
         }
 
         const sb = getSupabase();
