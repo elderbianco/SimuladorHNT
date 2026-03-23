@@ -205,7 +205,13 @@ function renderControls() {
     }
 
     btnCart.onclick = async () => {
-        if (!state.termsAccepted) { alert("⚠️ Você precisa aceitar os Termos e Condições para continuar."); const termsBox = document.getElementById('terms-checkbox'); if (termsBox) termsBox.focus(); return; }
+        const currentTerms = state.termsAccepted || (window.state && window.state.termsAccepted);
+        if (!currentTerms) {
+            alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
+            const termsBox = document.getElementById('terms-checkbox');
+            if (termsBox) termsBox.focus();
+            return;
+        }
 
         if (!isEditing) {
             const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId) ? state.orderNumber : 'HNT';
@@ -237,7 +243,15 @@ function renderControls() {
 
     if (phoneInput) { phoneInput.value = state.phone || ''; phoneInput.oninput = (e) => { let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/); e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : ''); state.phone = e.target.value; saveState(); }; }
     if (obsInput) { obsInput.value = state.observations || ''; obsInput.oninput = (e) => { state.observations = e.target.value; saveState(); }; }
-    if (termsCheckbox) { termsCheckbox.checked = !!state.termsAccepted; termsCheckbox.onclick = (e) => { state.termsAccepted = e.target.checked; saveState(); }; }
+    if (termsCheckbox) {
+        termsCheckbox.checked = !!(state.termsAccepted || (window.state && window.state.termsAccepted));
+        termsCheckbox.onclick = (e) => {
+            const val = e.target.checked;
+            state.termsAccepted = val;
+            if (window.state) window.state.termsAccepted = val;
+            saveState();
+        };
+    }
     if (orderInputTop) { orderInputTop.onchange = (e) => { let val = e.target.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, ''); state.orderNumber = val; e.target.value = val; saveState(); renderControls(); }; }
 
     container.scrollTop = scrollPos;
