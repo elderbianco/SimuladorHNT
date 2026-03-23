@@ -22,7 +22,8 @@ const DBAdapter = {
             errors.push("Telefone de contato inválido ou ausente.");
         }
 
-        if (!state.termsAccepted) {
+        const termsAccepted = state.termsAccepted || (window.state && window.state.termsAccepted);
+        if (!termsAccepted) {
             errors.push("Você precisa ler e aceitar os termos de responsabilidade e condições do FAQ para prosseguir.");
         }
 
