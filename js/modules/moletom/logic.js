@@ -521,3 +521,24 @@ function resetSimulatorData() {
 
     console.log("✅ Simulador Moletom resetado com sucesso.");
 }
+
+/**
+ * Atualiza o contador do carrinho no cabeçalho
+ */
+function updateCartCount() {
+    const count = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]').length;
+    document.querySelectorAll('.cart-badge').forEach(b => {
+        b.innerText = count;
+        b.style.display = count > 0 ? 'flex' : 'none';
+    });
+}
+
+// Auto-Sync with Admin Panel (Shared Colors/Prices)
+window.addEventListener('storage', (e) => {
+    if (e.key === 'hnt_pricing_config' || e.key === 'hnt_disabled_colors') {
+        console.log('🔄 Sincronizando configurações com Admin...');
+        if (typeof loadAdminConfig === 'function') loadAdminConfig();
+        if (typeof renderControls === 'function') renderControls();
+        if (typeof updatePrice === 'function') updatePrice();
+    }
+});
