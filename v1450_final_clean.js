@@ -63,7 +63,7 @@ const mHtml = 'IndexMoletom.html';
 if (fs.existsSync(mHtml)) {
     let html = fs.readFileSync(mHtml, 'utf8');
     if (!html.includes('db-integration.js')) {
-        html = html.replace('js/modules/common/database-manager.js', 'js/modules/common/db-integration.js?v=14.50"></script>\n    <script defer src="js/modules/common/database-manager.js');
+        html = html.replace('js/modules/common/database-manager.js', 'js/modules/common/db-integration.js?v=14.51"></script>\n    <script defer src="js/modules/common/database-manager.js');
         fs.writeFileSync(mHtml, html);
         console.log(`✅ Added db-integration to ${mHtml}`);
     }
