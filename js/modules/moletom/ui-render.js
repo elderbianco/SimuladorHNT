@@ -354,45 +354,34 @@ function renderControls() {
             saveState();
         };
     }
-    orderInputTop.onchange = (e) => {
-        let val = e.target.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
-        state.orderNumber = val;
-        e.target.value = val;
 
-        let suffix = '000000';
-        if (state.simulationId) {
-            const parts = state.simulationId.split('-');
-            if (parts.length >= 3) suffix = parts[parts.length - 1];
-        } else if (typeof generateNextSequenceNumber === 'function') {
-            suffix = generateNextSequenceNumber();
-        }
+    if (orderInputTop) {
+        orderInputTop.onchange = (e) => {
+            let val = e.target.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            state.orderNumber = val;
+            e.target.value = val;
 
-        if (!val) state.simulationId = `HNT-ML-${suffix}`;
-        else state.simulationId = `${val}-ML-${suffix}`;
+            let suffix = '000000';
+            if (state.simulationId) {
+                const parts = state.simulationId.split('-');
+                if (parts.length >= 3) suffix = parts[parts.length - 1];
+            } else if (typeof generateNextSequenceNumber === 'function') {
+                suffix = generateNextSequenceNumber();
+            }
 
-        const simIdSpan = container.querySelector('div > span[style*="font-size:0.75rem"]');
-        if (simIdSpan) simIdSpan.innerText = `ID: ${state.simulationId}`;
+            if (!val) state.simulationId = `HNT-ML-${suffix}`;
+            else state.simulationId = `${val}-ML-${suffix}`;
 
-        saveState();
-    };
-}
+            const simIdSpan = container.querySelector('div > span[style*="font-size:0.75rem"]');
+            if (simIdSpan) simIdSpan.innerText = `ID: ${state.simulationId}`;
 
-phoneInput.oninput = (e) => {
-    // Mask
-    let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
-    e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-    state.phone = e.target.value;
-    saveState();
-};
-
-obsInput.oninput = (e) => {
-    state.observations = e.target.value;
-    saveState();
-};
+            saveState();
+        };
     }
 
-container.scrollTop = scrollPos;
+    container.scrollTop = scrollPos;
 }
+
 
 function renderFinalForm() {
     const finalInputs = document.createElement('div');
