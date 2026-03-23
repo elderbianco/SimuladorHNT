@@ -211,20 +211,7 @@ function setupMainEvents() {
         };
     }
 
-    const btnCart = document.getElementById('btn-add-cart') || document.getElementById('btn-export-db');
-    if (btnCart) {
-        btnCart.onclick = async () => {
-            console.log("🛒 Botão Adicionar ao Carrinho clicado.");
-
-            // 1. Mostrar Notificação de Carregamento
-            const loader = document.createElement('div');
-            loader.innerHTML = `
-                <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:white;padding:20px 40px;border-radius:10px;z-index:100000;display:flex;flex-direction:column;align-items:center;gap:15px;box-shadow:0 10px 30px rgba(0,0,0,0.5);border:1px solid #444;">
-                    <div class="spinner-hnt" style="width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid var(--gold,#d4af37);border-radius:50%;animation:spin-hnt 1s linear infinite;"></div>
-                    <div style="font-weight:600;font-size:1.1rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">PROCESSANDO PEDIDO...</div>
-                    <div style="font-size:0.8rem;color:#aaa;">Gerando Ficha Técnica em background</div>
-                </div>
-                <style>@keyframes spin-hnt { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+    /* Carrinho gerenciado pelo ui-render.js */</style>
             `;
             document.body.appendChild(loader);
 

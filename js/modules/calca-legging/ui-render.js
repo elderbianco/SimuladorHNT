@@ -263,7 +263,7 @@ function renderFinalForm() {
             </p>
             <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; color:#fff; font-weight:bold;">
                 <input type="checkbox" id="terms-checkbox" style="width:18px; height:18px; margin-top:2px;">
-                <span>EU LI E CONCORDO COM OS TERMOS E CONDIÇÕES ACIMA <span style="color:red">*</span></span>
+                <span>EU LI E CONCORDO WITH THE TERMS ABOVE <span style="color:red">*</span></span>
             </label>
         </div>
     `;
