@@ -177,7 +177,10 @@ function renderTable(data) {
         tr.className = 'table-row';
         tr.dataset.id = p.id;
         const skuDisplay = numProdutos > 1
-            ? `<span class="sku-badge multi-sku">${numProdutos} produtos</span>`
+            ? `<div class="sku-stack">
+                 <span class="sku-badge multi-sku" title="${produtos.map(p => p.sku).join(', ')}">${numProdutos} Produtos</span>
+                 <span style="font-size:9px; color:var(--text-3); margin-top:2px; display:block;">${produtos[0].sku}...</span>
+               </div>`
             : `<span class="sku-badge" data-tooltip="Clique para ver detalhes">${p.sku}</span>`;
         tr.innerHTML = `
       <div class="cell-order">
@@ -456,16 +459,21 @@ function renderDrawerTab(p) {
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div class="item-card-num">${index + 1}</div>
                                     <div>
-                                        <div style="font-weight:700; font-size:0.95rem; color:var(--text-1)">${prod.sku}</div>
-                                        <div style="font-size:0.78rem; color:var(--text-3)">${prod.quantidade} un. · ${prod.tamanho} · ${prod.tecnica}</div>
+                                        <div style="font-weight:700; font-size:1rem; color:var(--text-1)">${prod.sku}</div>
+                                        <div style="font-size:0.85rem; color:var(--text-3)">${prod.quantidade} un. · ${prod.tamanho} · ${prod.tecnica}</div>
                                     </div>
                                 </div>
-                                <svg class="toggle-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:16px;height:16px;color:var(--text-3)">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                </svg>
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    ${prod.pdf ? `<span style="font-size:12px;color:var(--green)">📄 PDF</span>` : ''}
+                                    <svg class="toggle-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:16px;height:16px;color:var(--text-3)">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </div>
                             </div>
                             <div class="item-card-body">
-                                ${renderProdutoFicha(prod, true)}
+                                <div style="padding:16px; border-top:1px dashed var(--border)">
+                                    ${renderProdutoFicha(prod, true)}
+                                </div>
                             </div>
                         </div>
                     `).join('')}
