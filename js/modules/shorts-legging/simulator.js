@@ -6,137 +6,33 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 });
 
-/**
- * Função principal de inicialização
- */
-function init() {
+async function init() {
     console.log("Maestro: Iniciando Simulador Shorts Legging...");
 
-    // 0. Background Config Fetch
+    // 0. Carregar Configurações de Admin
+    if (typeof loadAdminConfig === 'function') loadAdminConfig();
+
+    // 1. Inicializar Estado e Cache
+    initDataCache();
+    loadState();
+    state.isLocked = false;
+
+    // A. Sync c/ Servidor (Opcional/Se disponível)
     if (typeof fetchConfigFromServer === 'function') fetchConfigFromServer();
 
-    // 1. Carregar Configurações e Estado
-    initDataCache();
-    loadAdminConfig();
-
-    // 🔴 CRITICAL: Skip loadState if in edit mode to prevent localStorage override
-    const editingIndex = localStorage.getItem('editingOrderIndex');
-    if (!editingIndex) {
-        loadState(); // Only load if NOT editing
-        state.isLocked = false;
-    } else {
-        console.log('⏭️ Pulando loadState() - Modo de edição detectado');
-    }
-
-    // Restoration Override
-    if (typeof checkForRestoration === 'function') {
-        checkForRestoration();
-    }
-
-    // 🔴 CRITICAL: CHECK EDIT MODE BEFORE ANY RENDERING
-    // editingIndex already declared above
-    if (editingIndex !== null) {
-        console.log('✏️ Detectado modo de edição - Carregando estado ANTES da renderização...');
-        console.log('📍 Editing Index:', editingIndex);
-
-        const history = JSON.parse(localStorage.getItem('hnt_all_orders_db') || '[]');
-        const orderToEdit = history[editingIndex];
-
-        console.log('📦 Total orders in history:', history.length);
-        console.log('📦 Order to edit:', orderToEdit);
-
-        if (orderToEdit && orderToEdit.DADOS_TECNICOS_JSON) {
-            try {
-                const savedState = JSON.parse(orderToEdit.DADOS_TECNICOS_JSON);
-                console.log('📄 Saved state loaded:', savedState);
-
-                // Preserve Current Configuration (Pricing)
-                const currentConfig = state.config;
-
-                // Deep Restore critical objects
-                state.sizes = savedState.sizes || {};
-                state.parts = savedState.parts || {};
-                state.extras = savedState.extras || {};
-                state.uploads = savedState.uploads || {};
-                state.texts = savedState.texts || {};
-
-                console.log('✅ Restored sizes:', state.sizes);
-                console.log('✅ Restored parts:', state.parts);
-                console.log('✅ Restored extras:', state.extras);
-                console.log('✅ Restored uploads (keys):', Object.keys(state.uploads));
-                console.log('✅ Restored texts:', state.texts);
-
-                // Copy other properties
-                Object.keys(savedState).forEach(key => {
-                    if (key !== 'config' && key !== 'sizes' && key !== 'parts' && key !== 'extras' && key !== 'uploads' && key !== 'texts') {
-                        state[key] = savedState[key];
-                        console.log(`✅ Restored ${key}:`, savedState[key]);
+    // B. Recuperar Número de Pedido do Supabase (Se não houver)
+    if (!state.orderNumber) {
+        if (typeof SupabaseAdapter !== 'undefined') {
+            SupabaseAdapter.getNextOrderNumber()
+                .then(res => {
+                    if (res && res.number) {
+                        state.orderNumber = res.number.toString();
+                        state.simulationId = getFormattedId(); // from state.js
+                        saveState();
+                        renderControls();
                     }
-                });
-
-                // Restore IDs for updating existing record
-                state._editingIndex = parseInt(editingIndex);
-                state._editingOrderId = orderToEdit.order_id || orderToEdit.ID_PEDIDO;
-
-                console.log('🔑 Editing Index set to:', state._editingIndex);
-                console.log('🔑 Editing Order ID set to:', state._editingOrderId);
-
-                // Ensure config is current
-                if (currentConfig) state.config = currentConfig;
-
-                // --- RECONSTRUTOR DE ELEMENTOS (Imagens) ---
-                if (state.uploads) {
-                    Object.keys(state.uploads).forEach(zoneId => {
-                        const up = state.uploads[zoneId];
-                        if (up && up.src) {
-                            console.log(`RE-ADD: Reconstruindo imagem para zona: ${zoneId}`);
-                            if (typeof addImage === 'function') {
-                                addImage(zoneId, up.src, up.filename || "Imagem Enviada", up.isCustom !== false);
-                            }
-                        }
-                    });
-                }
-                // -------------------------------------------
-
-                // Clear flag
-                localStorage.removeItem('editingOrderIndex');
-
-                // Trigger UI Updates (Moved here or inside init flow)
-                if (typeof renderControls === 'function') renderControls();
-                if (typeof renderFixedTexts === 'function') renderFixedTexts();
-                if (typeof updatePrice === 'function') updatePrice();
-                if (typeof updateVisuals === 'function') updateVisuals();
-
-                console.log('✅ Estado restaurado ANTES da renderização inicial');
-            } catch (e) {
-                console.error('❌ Erro crítico ao restaurar estado de edição:', e);
-                console.error('Stack trace:', e.stack);
-                alert('Erro ao carregar dados para edição. Consulte o console.');
-                localStorage.removeItem('editingOrderIndex');
-            }
-        } else {
-            console.warn('⚠️ Pedido para edição não encontrado ou sem dados técnicos.');
-            console.warn('Order data:', orderToEdit);
-            localStorage.removeItem('editingOrderIndex');
-        }
-    }
-
-    // Auto-fetch sequence (only if NOT editing)
-    if (!state.orderNumber && !state._editingIndex) {
-        // Auto-fetch sequence from Supabase
-        if (!state.orderNumber) {
-            if (typeof SupabaseAdapter !== 'undefined') {
-                SupabaseAdapter.getNextOrderNumber()
-                    .then(res => {
-                        if (res && res.number) {
-                            state.orderNumber = res.number.toString();
-                            state.simulationId = getFormattedId(); // from state.js
-                            saveState();
-                            renderControls();
-                        }
-                    })
-                    .catch(e => console.warn('Supabase Seq fail:', e));
-            }
+                })
+                .catch(e => console.warn('Supabase Seq fail:', e));
         }
     }
 
@@ -211,64 +107,7 @@ function setupMainEvents() {
         };
     }
 
-    /* Carrinho gerenciado pelo ui-render.js */</style>
-            `;
-            document.body.appendChild(loader);
-
-            try {
-                // 2. Tentar salvar e redirecionar
-                const action = async () => {
-                    try {
-                        console.log("🛒 Iniciando processo automatizado...");
-
-                        // A. Gerar PDF em Background (se disponível)
-                        let pdfUrl = null;
-                        if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
-                            console.log("📸 Gerando PDF em background...");
-                            pdfUrl = await PDFGenerator.generateAndSaveForCart();
-                        }
-
-                        // B. Salvar no Carrinho (passando a URL do PDF)
-                        console.log("🛒 Salvando no carrinho...");
-                        if (await saveOrderToHistory(false, pdfUrl)) {
-                            console.log("🛒 Salvo com sucesso. Realizando limpeza...");
-
-                            // C. Resetar o simulador (Limpar dados)
-                            if (typeof resetSimulatorData === 'function') {
-                                resetSimulatorData();
-                            }
-
-                            // D. Redirecionar
-                            setTimeout(() => {
-                                loader.remove();
-                                window.location.href = 'IndexPedidoSimulador.html';
-                            }, 500);
-                        } else {
-                            console.warn("🛒 Falha na validação ao salvar.");
-                            loader.remove();
-                        }
-                    } catch (e) {
-                        console.error("🛒 Erro no processamento do carrinho:", e);
-                        loader.remove();
-                        alert("Erro ao processar pedido. Veja o console.");
-                    }
-                };
-
-                // 3. Validação de Bordados (se houver)
-                if (typeof validateEmbBeforeAction === 'function') {
-                    console.log("🛒 Validando bordados...");
-                    validateEmbBeforeAction(action);
-                } else {
-                    await action();
-                }
-
-            } catch (e) {
-                console.error("🛒 Erro global no clique do carrinho:", e);
-                loader.remove();
-                alert("Erro inesperado ao adicionar ao carrinho: " + e.message);
-            }
-        };
-    }
+    /* Carrinho gerenciado pelo BaseSimulator.js */
 
     // Eventos de clique para fechar dropdowns customizados
     document.addEventListener('click', (e) => {
@@ -339,6 +178,5 @@ function copyToClipboard() {
 }
 
 function exportToProductionDatabase() {
-    // Lógica futura de exportação para Excel
     alert("Função de exportação para banco de dados de produção acionada.");
 }
