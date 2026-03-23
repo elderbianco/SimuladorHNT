@@ -142,9 +142,7 @@ function setupMainEvents() {
         }
     };
 
-    if (btnCart) {
-        // ... (existing btnCart logic)
-    }
+
 
     // Controles de interacao e zoom
     const zoomIn = document.getElementById('zoom-in');
