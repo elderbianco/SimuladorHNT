@@ -134,6 +134,11 @@ class BaseSimulator {
             container.appendChild(d);
         });
 
+        // 4. Final Form (Aviso/Termos/Obs) - v14.50 Fix
+        if (typeof window.renderFinalForm === 'function') {
+            container.appendChild(window.renderFinalForm());
+        }
+
         // Restore scroll
         container.scrollTop = scrollPos;
     }
@@ -256,8 +261,6 @@ class BaseSimulator {
         const uploadZones = this.provideCustomCategoryZones?.('upload') || window.DATA?.uploadZones || (window.CONFIG?.zones ? Object.values(window.CONFIG.zones) : []);
         const textZones = this.provideCustomCategoryZones?.('text') || window.DATA?.textZones || (window.CONFIG?.textZones || []);
 
-        console.log(`[BaseSimulator] Rendering customizations for ${cat.id}. Found ${uploadZones.length} upload zones and ${textZones.length} text zones.`);
-
         uploadZones.forEach(u => {
             if (u.id.endsWith('_ii')) return;
 
@@ -373,30 +376,26 @@ class BaseSimulator {
     hideAllVisualLimits() {
         if (!this.state.limits && !window.state?.limits) return;
 
-        console.log('🧹 Ocultando todos os quadros de limite antes da exportação...');
-
-        // State local da classe ou global do simulador
         const limits = this.state.limits || window.state.limits;
 
         Object.keys(limits).forEach(zid => {
             limits[zid] = false;
         });
 
-        // Forçar atualização visual para esconder os elementos .limit-layer
         if (typeof window.updateVisuals === 'function') window.updateVisuals();
         if (typeof window.refreshActiveLimits === 'function') window.refreshActiveLimits();
 
-        // Re-renderizar controles para "desmarcar" os botões na UI
         this.render();
     }
 
     async handleAddToCart() {
-        if (!this.state.termsAccepted && this.state.termsAccepted !== undefined) {
-            alert("⚠️ Aceite os Termos para continuar.");
+        if (!this.state.termsAccepted) {
+            alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
+            const termsBox = document.getElementById('terms-checkbox');
+            if (termsBox) termsBox.focus();
             return;
         }
 
-        // --- NOVO: Desmarcar limites antes de adicionar ao carrinho ---
         this.hideAllVisualLimits();
 
         if (typeof window.saveOrderToHistory === 'function') {
@@ -405,8 +404,6 @@ class BaseSimulator {
             }
         }
     }
-
-
 
     setupEventListeners() { }
 }
