@@ -6,7 +6,7 @@
 
 function renderSizesSection() {
     const section = document.createElement('div');
-    section.className = 'category-group';
+    section.className = 'category-group active';
 
     // Header with Info
     const infoS = (typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_moletom_geral') : '';
@@ -30,7 +30,7 @@ function renderSizesSection() {
 
 function renderColorSection() {
     const section = document.createElement('div');
-    section.className = 'category-group';
+    section.className = 'category-group active';
     section.innerHTML = `<div class="category-header">COR DO MOLETOM</div>`;
 
     // Use Shared Component
@@ -50,7 +50,7 @@ function renderColorSection() {
 
 function renderHNTLogoSection() {
     const section = document.createElement('div');
-    section.className = 'category-group';
+    section.className = 'category-group active';
     section.innerHTML = '<div class="category-header">LOGO HNT</div>';
 
     // Moletom uses strict 'preto'/'branco' for HNT Logo, unlike others that use IDs.
@@ -93,7 +93,7 @@ function renderHNTLogoSection() {
 
 function renderCustomizationSection() {
     const group = document.createElement('div');
-    group.className = 'category-group';
+    group.className = 'category-group active';
     group.innerHTML = '<div class="category-header">Áreas de Personalização</div>';
 
     Object.values(CONFIG.zones).forEach(z => {
