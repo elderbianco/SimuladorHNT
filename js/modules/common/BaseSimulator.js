@@ -6,10 +6,17 @@
 class BaseSimulator {
     constructor(config) {
         this.config = config || {};
-        // Immediate sync if window.state exists, otherwise {}
-        this.state = window.state || {};
         this.containerId = 'controls-container';
         this.simKey = this.config.storageKey || 'hnt_simulator_state';
+
+        // Dynamic state sync: always point to window.state if available
+        this._localState = window.state || {};
+        Object.defineProperty(this, 'state', {
+            get: function () { return window.state || this._localState; },
+            set: function (val) { this._localState = val; },
+            configurable: true,
+            enumerable: true
+        });
     }
 
     /**
@@ -19,10 +26,7 @@ class BaseSimulator {
         this.ensureStandardData();
         this.loadState();
 
-        // Auto-select first category if none active
-        if (!this.state.activeCategory && window.DATA?.categories?.length > 0) {
-            this.state.activeCategory = window.DATA.categories[0].id;
-        }
+        // No longer need to auto-select since all are visible
 
         this.setupEventListeners();
         this.render();
@@ -99,8 +103,7 @@ class BaseSimulator {
         const categories = window.DATA.categories || [];
         categories.forEach(cat => {
             const d = document.createElement('div');
-            d.className = 'category-group';
-            if (this.state.activeCategory === cat.id) d.classList.add('active');
+            d.className = 'category-group active'; // Always expanded visually
 
             // Icon logic
             let iconHtml = '';
@@ -108,30 +111,27 @@ class BaseSimulator {
                 iconHtml = window.InfoSystem.getIconHTML(`info_${cat.id.toLowerCase()}`) || '';
             }
 
-            d.innerHTML = `<div class="category-header" onclick="window.${this.constructor.name}Instance.toggleCategory('${cat.id}')">
+            // Removed toggleCategory call and icon
+            d.innerHTML = `<div class="category-header">
                 ${cat.name} ${iconHtml}
-                <span class="category-toggle-icon">${this.state.activeCategory === cat.id ? '−' : '+'}</span>
             </div>`;
 
-            if (this.state.activeCategory === cat.id) {
-                const groupContent = document.createElement('div');
-                groupContent.className = 'category-group-content';
+            const groupContent = document.createElement('div');
+            groupContent.className = 'category-group-content';
 
-                // Custom Hooks (Sizes, Product Specific) - PRIMEIRO
-                this.renderCategorySections(cat, groupContent);
+            // Custom Hooks (Sizes, Product Specific)
+            this.renderCategorySections(cat, groupContent);
 
-                // Parts (Legacy/Colors) - DEPOIS
-                this.renderCategoryParts(cat, groupContent);
+            // Parts (Legacy/Colors)
+            this.renderCategoryParts(cat, groupContent);
 
-                // Extras
-                this.renderCategoryExtras(cat, groupContent);
+            // Extras
+            this.renderCategoryExtras(cat, groupContent);
 
-                // Personalization (Images/Texts)
-                this.renderCategoryCustomizations(cat, groupContent);
+            // Personalization (Images/Texts)
+            this.renderCategoryCustomizations(cat, groupContent);
 
-                d.appendChild(groupContent);
-            }
-
+            d.appendChild(groupContent);
             container.appendChild(d);
         });
 
@@ -144,14 +144,7 @@ class BaseSimulator {
         container.scrollTop = scrollPos;
     }
 
-    toggleCategory(catId) {
-        if (this.state.activeCategory === catId) {
-            this.state.activeCategory = null;
-        } else {
-            this.state.activeCategory = catId;
-        }
-        this.render();
-    }
+    // toggleCategory removed as requested (always visible)
 
     renderHeader() {
         if (!this.state.simulationId) {
