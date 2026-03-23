@@ -297,12 +297,7 @@ function renderControls() {
 
     btnCart.onclick = async () => {
         if (window.MoletomSimulatorInstance) {
-            const success = await window.MoletomSimulatorInstance.handleAddToCart();
-            if (success) {
-                if (confirm(isEditing ? '✅ Edição salva com sucesso! Retornando...' : '✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) {
-                    window.location.href = 'IndexPedidoSimulador.html';
-                }
-            }
+            await window.MoletomSimulatorInstance.handleAddToCart();
         }
     };
 
