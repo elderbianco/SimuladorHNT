@@ -11,7 +11,7 @@ function generateUUID() {
 }
 
 // Estado Global da Simulação
-const state = {
+window.state = {
     simulationId: '', // Will be built dynamically
     simNumber: generateUUID(),
     orderNumber: '',
@@ -32,6 +32,10 @@ const state = {
     isLocked: false,
     embFiles: [] // Array de {filename, size, zones: []}
 };
+
+// Global reference using both window and globalThis for maximum reliability
+globalThis.state = window.state;
+var state = window.state;
 
 // Helper function to get the full formatted ID (SKU)
 function getFormattedId() {
