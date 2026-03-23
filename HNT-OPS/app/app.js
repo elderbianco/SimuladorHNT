@@ -100,15 +100,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Agrupar por numero_pedido: 1 pedido = N produtos (linhas do banco)
             const grupos = {};
             linhasMapeadas.forEach(linha => {
-                const num = linha.numero;
+                // Se o número contém -SL-, pegamos a parte antes dele como a raiz
+                const num = linha.numero.includes('-SL-')
+                    ? linha.numero.split('-SL-')[0]
+                    : linha.numero;
+
                 if (!grupos[num]) {
-                    grupos[num] = { ...linha, produtos: [] };
+                    grupos[num] = {
+                        ...linha,
+                        numero: num, // Define o número raiz para o grupo
+                        produtos: []
+                    };
                 }
                 grupos[num].produtos.push(linha);
+
                 // Acumular quantidade total
-                if (grupos[num].produtos.length > 1) {
-                    grupos[num].quantidade = grupos[num].produtos.reduce((acc, p) => acc + (p.quantidade || 1), 0);
-                }
+                grupos[num].quantidade = grupos[num].produtos.reduce((acc, p) => acc + (p.quantidade || 1), 0);
             });
 
             PEDIDOS = Object.values(grupos);
