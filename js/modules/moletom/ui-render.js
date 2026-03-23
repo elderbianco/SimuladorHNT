@@ -296,47 +296,9 @@ function renderControls() {
     }
 
     btnCart.onclick = async () => {
-        if (!state.termsAccepted) {
-            alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
-            const termsBox = document.getElementById('terms-checkbox');
-            if (termsBox) termsBox.focus();
-            return;
-        }
-
-        // Bloquear regeneração de ID se estiver editando!
-        if (!isEditing) {
-            let newSeq = '';
-            if (typeof generateNextSequenceNumber === 'function') {
-                newSeq = generateNextSequenceNumber();
-            } else {
-                let last = parseInt(localStorage.getItem('hnt_sequence_id') || '0');
-                let next = last + 1;
-                localStorage.setItem('hnt_sequence_id', next);
-                newSeq = String(next).padStart(6, '0');
-            }
-
-            const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId)
-                ? state.orderNumber
-                : 'HNT';
-
-            state.simulationId = `${orderPrefix}-ML-${newSeq}`;
-        } else if (state._editingOrderId) {
-            state.simulationId = state._editingOrderId;
-        }
-
-        let pdfUrl = null;
-        if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
-            try {
-                console.log('📄 Gerando PDF para carrinho...');
-                pdfUrl = await PDFGenerator.generateAndSaveForCart(state.simulationId, true);
-            } catch (err) {
-                console.error('Erro ao gerar PDF:', err);
-            }
-        }
-        if (pdfUrl) state.pdfUrl = pdfUrl;
-
-        if (typeof saveOrderToHistory === 'function') {
-            if (await saveOrderToHistory()) {
+        if (window.MoletomSimulatorInstance) {
+            const success = await window.MoletomSimulatorInstance.handleAddToCart();
+            if (success) {
                 if (confirm(isEditing ? '✅ Edição salva com sucesso! Retornando...' : '✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) {
                     window.location.href = 'IndexPedidoSimulador.html';
                 }
@@ -361,61 +323,75 @@ function renderControls() {
     container.appendChild(renderCustomizationSection());
     container.appendChild(renderFinalForm());
 
-    // === RESTORE STATE ===
+    // === SYNC FORM FIELDS ===
     const phoneInput = container.querySelector('#phone-input');
     const obsInput = container.querySelector('#obs-input');
     const termsCheckbox = container.querySelector('#terms-checkbox');
     const orderInputTop = document.getElementById('order-input-top');
 
-    if (phoneInput && obsInput && termsCheckbox) {
+    if (phoneInput) {
         phoneInput.value = state.phone || '';
-        obsInput.value = state.observations || '';
-        termsCheckbox.checked = !!state.termsAccepted;
-
-        termsCheckbox.onclick = (e) => {
-            state.termsAccepted = e.target.checked;
-            saveState();
-        };
-
-        if (orderInputTop) {
-            orderInputTop.onchange = (e) => {
-                let val = e.target.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
-                state.orderNumber = val;
-                e.target.value = val;
-
-                let suffix = '000000';
-                if (state.simulationId) {
-                    const parts = state.simulationId.split('-');
-                    if (parts.length >= 3) suffix = parts[parts.length - 1];
-                } else if (typeof generateNextSequenceNumber === 'function') {
-                    suffix = generateNextSequenceNumber();
-                }
-
-                if (!val) state.simulationId = `HNT-ML-${suffix}`;
-                else state.simulationId = `${val}-ML-${suffix}`;
-
-                const simIdSpan = container.querySelector('div > span[style*="font-size:0.75rem"]');
-                if (simIdSpan) simIdSpan.innerText = `ID: ${state.simulationId}`;
-
-                saveState();
-            };
-        }
-
         phoneInput.oninput = (e) => {
-            // Mask
             let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
             e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
             state.phone = e.target.value;
             saveState();
         };
+    }
 
+    if (obsInput) {
+        obsInput.value = state.observations || '';
         obsInput.oninput = (e) => {
             state.observations = e.target.value;
             saveState();
         };
     }
 
-    container.scrollTop = scrollPos;
+    if (termsCheckbox) {
+        termsCheckbox.checked = !!state.termsAccepted;
+        termsCheckbox.onclick = (e) => {
+            state.termsAccepted = e.target.checked;
+            saveState();
+        };
+    }
+    orderInputTop.onchange = (e) => {
+        let val = e.target.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+        state.orderNumber = val;
+        e.target.value = val;
+
+        let suffix = '000000';
+        if (state.simulationId) {
+            const parts = state.simulationId.split('-');
+            if (parts.length >= 3) suffix = parts[parts.length - 1];
+        } else if (typeof generateNextSequenceNumber === 'function') {
+            suffix = generateNextSequenceNumber();
+        }
+
+        if (!val) state.simulationId = `HNT-ML-${suffix}`;
+        else state.simulationId = `${val}-ML-${suffix}`;
+
+        const simIdSpan = container.querySelector('div > span[style*="font-size:0.75rem"]');
+        if (simIdSpan) simIdSpan.innerText = `ID: ${state.simulationId}`;
+
+        saveState();
+    };
+}
+
+phoneInput.oninput = (e) => {
+    // Mask
+    let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+    e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+    state.phone = e.target.value;
+    saveState();
+};
+
+obsInput.oninput = (e) => {
+    state.observations = e.target.value;
+    saveState();
+};
+    }
+
+container.scrollTop = scrollPos;
 }
 
 function renderFinalForm() {
