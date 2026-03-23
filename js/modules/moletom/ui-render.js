@@ -343,9 +343,11 @@ function renderControls() {
     }
 
     if (termsCheckbox) {
-        termsCheckbox.checked = !!state.termsAccepted;
+        termsCheckbox.checked = !!(state.termsAccepted || window.state.termsAccepted);
         termsCheckbox.onclick = (e) => {
-            state.termsAccepted = e.target.checked;
+            const val = e.target.checked;
+            state.termsAccepted = val;
+            if (window.state) window.state.termsAccepted = val;
             saveState();
         };
     }

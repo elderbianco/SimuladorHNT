@@ -322,7 +322,8 @@ function renderControls() {
     }
 
     btnCart.onclick = async () => {
-        if (!state.termsAccepted) {
+        const currentTerms = state.termsAccepted || (window.state && window.state.termsAccepted);
+        if (!currentTerms) {
             alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
             const termsBox = document.getElementById('terms-checkbox');
             if (termsBox) termsBox.focus();
@@ -399,10 +400,12 @@ function renderControls() {
     if (phoneInput && obsInput && termsCheckbox) {
         phoneInput.value = state.phone || '';
         obsInput.value = state.observations || '';
-        termsCheckbox.checked = !!state.termsAccepted;
+        termsCheckbox.checked = !!(state.termsAccepted || (window.state && window.state.termsAccepted));
 
         termsCheckbox.onclick = (e) => {
-            state.termsAccepted = e.target.checked;
+            const val = e.target.checked;
+            state.termsAccepted = val;
+            if (window.state) window.state.termsAccepted = val;
             saveState();
         };
 
