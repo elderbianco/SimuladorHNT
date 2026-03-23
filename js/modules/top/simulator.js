@@ -56,9 +56,9 @@ function init() {
     // Zoom Inicial
     const applyInitialZoom = () => {
         if (window.innerWidth <= 768) {
-            currentZoom = 1.30; // Aumentado para o mobile
+            currentZoom = 1.30;
         } else {
-            currentZoom = 1.45; // Reduzido levemente no desktop
+            currentZoom = 1.45;
         }
         state.zoom = currentZoom;
         panOffset = { x: 0, y: 0 };
@@ -87,7 +87,6 @@ function init() {
                     state._editingOrderId = orderToEdit.order_id || orderToEdit.ID_PEDIDO;
                     localStorage.removeItem('editingOrderIndex');
 
-                    // --- RECONSTRUTOR DE ELEMENTOS (Imagens) ---
                     if (state.uploads) {
                         Object.keys(state.uploads).forEach(zoneId => {
                             const up = state.uploads[zoneId];
@@ -99,7 +98,6 @@ function init() {
                             }
                         });
                     }
-                    // -------------------------------------------
 
                     renderControls();
                     renderFixedTexts();
@@ -142,48 +140,45 @@ function setupMainEvents() {
     }
 
     /* Carrinho gerenciado pelo BaseSimulator.js */
-}
 
-// Controles de interacao e zoom
+    // Controles de interacao e zoom
+    const zoomIn = document.getElementById('zoom-in');
+    if (zoomIn) {
+        zoomIn.onclick = () => {
+            if (state.isLocked) return;
+            if (typeof setZoom === 'function') {
+                setZoom(state.zoom + 0.1);
+            } else {
+                state.zoom += 0.1;
+                if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+            }
+        };
+    }
 
-// Controles de interacao e zoom
-const zoomIn = document.getElementById('zoom-in');
-if (zoomIn) {
-    zoomIn.onclick = () => {
-        if (state.isLocked) return;
-        if (typeof setZoom === 'function') {
-            setZoom(state.zoom + 0.1);
-        } else {
-            state.zoom += 0.1;
-            if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
-        }
-    };
-}
+    const zoomOut = document.getElementById('zoom-out');
+    if (zoomOut) {
+        zoomOut.onclick = () => {
+            if (state.isLocked) return;
+            if (typeof setZoom === 'function') {
+                setZoom(state.zoom - 0.1);
+            } else {
+                state.zoom -= 0.1;
+                if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+            }
+        };
+    }
 
-const zoomOut = document.getElementById('zoom-out');
-if (zoomOut) {
-    zoomOut.onclick = () => {
-        if (state.isLocked) return;
-        if (typeof setZoom === 'function') {
-            setZoom(state.zoom - 0.1);
-        } else {
-            state.zoom -= 0.1;
-            if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
-        }
-    };
-}
-
-const btnLock = document.getElementById('lock-interaction');
-if (btnLock) {
-    btnLock.onclick = () => {
-        state.isLocked = !state.isLocked;
-        btnLock.classList.toggle('locked', state.isLocked);
-        zoomIn?.classList.toggle('zoom-disabled', state.isLocked);
-        zoomOut?.classList.toggle('zoom-disabled', state.isLocked);
-        btnLock.innerHTML = state.isLocked ? '🔒' : '🔓';
-        if (state.isLocked && typeof isPanning !== 'undefined') isPanning = false;
-    };
-}
+    const btnLock = document.getElementById('lock-interaction');
+    if (btnLock) {
+        btnLock.onclick = () => {
+            state.isLocked = !state.isLocked;
+            btnLock.classList.toggle('locked', state.isLocked);
+            zoomIn?.classList.toggle('zoom-disabled', state.isLocked);
+            zoomOut?.classList.toggle('zoom-disabled', state.isLocked);
+            btnLock.innerHTML = state.isLocked ? '🔒' : '🔓';
+            if (state.isLocked && typeof isPanning !== 'undefined') isPanning = false;
+        };
+    }
 }
 
 function copyToClipboard() {
