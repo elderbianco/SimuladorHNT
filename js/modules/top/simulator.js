@@ -141,103 +141,49 @@ function setupMainEvents() {
         };
     }
 
-    /* Carrinho gerenciado pelo ui-render.js */</style>
-            `;
-            document.body.appendChild(loader);
+    /* Carrinho gerenciado pelo BaseSimulator.js */
+}
 
-            try {
-                // 2. Tentar salvar e redirecionar
-                const action = async () => {
-                    try {
-                        console.log("🛒 Iniciando processo automatizado...");
+// Controles de interacao e zoom
 
-                        // A. Gerar PDF em Background (se disponível)
-                        let pdfUrl = null;
-                        if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
-                            console.log("📸 Gerando PDF em background...");
-                            pdfUrl = await PDFGenerator.generateAndSaveForCart();
-                        }
+// Controles de interacao e zoom
+const zoomIn = document.getElementById('zoom-in');
+if (zoomIn) {
+    zoomIn.onclick = () => {
+        if (state.isLocked) return;
+        if (typeof setZoom === 'function') {
+            setZoom(state.zoom + 0.1);
+        } else {
+            state.zoom += 0.1;
+            if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+        }
+    };
+}
 
-                        // B. Salvar no Carrinho (passando a URL do PDF)
-                        console.log("🛒 Salvando no carrinho...");
-                        if (await saveOrderToHistory(false, pdfUrl)) {
-                            console.log("🛒 Salvo com sucesso. Realizando limpeza...");
+const zoomOut = document.getElementById('zoom-out');
+if (zoomOut) {
+    zoomOut.onclick = () => {
+        if (state.isLocked) return;
+        if (typeof setZoom === 'function') {
+            setZoom(state.zoom - 0.1);
+        } else {
+            state.zoom -= 0.1;
+            if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
+        }
+    };
+}
 
-                            // C. Resetar o simulador (Limpar dados)
-                            if (typeof resetSimulatorData === 'function') {
-                                resetSimulatorData();
-                            }
-
-                            // D. Redirecionar
-                            setTimeout(() => {
-                                loader.remove();
-                                window.location.href = 'IndexPedidoSimulador.html';
-                            }, 500);
-                        } else {
-                            console.warn("🛒 Falha na validação ao salvar.");
-                            loader.remove();
-                        }
-                    } catch (e) {
-                        console.error("🛒 Erro no processamento do carrinho:", e);
-                        loader.remove();
-                        alert("Erro ao processar pedido. Veja o console.");
-                    }
-                };
-
-                // 3. Validação de Bordados (se houver)
-                if (typeof validateEmbBeforeAction === 'function') {
-                    console.log("🛒 Validando bordados...");
-                    validateEmbBeforeAction(action);
-                } else {
-                    await action();
-                }
-
-            } catch (e) {
-                console.error("🛒 Erro global no clique do carrinho:", e);
-                loader.remove();
-                alert("Erro inesperado ao adicionar ao carrinho: " + e.message);
-            }
-        };
-    }
-
-    // Controles de interacao e zoom
-    const zoomIn = document.getElementById('zoom-in');
-    if (zoomIn) {
-        zoomIn.onclick = () => {
-            if (state.isLocked) return;
-            if (typeof setZoom === 'function') {
-                setZoom(state.zoom + 0.1);
-            } else {
-                state.zoom += 0.1;
-                if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
-            }
-        };
-    }
-
-    const zoomOut = document.getElementById('zoom-out');
-    if (zoomOut) {
-        zoomOut.onclick = () => {
-            if (state.isLocked) return;
-            if (typeof setZoom === 'function') {
-                setZoom(state.zoom - 0.1);
-            } else {
-                state.zoom -= 0.1;
-                if (typeof applyZoomAndPan === 'function') applyZoomAndPan();
-            }
-        };
-    }
-
-    const btnLock = document.getElementById('lock-interaction');
-    if (btnLock) {
-        btnLock.onclick = () => {
-            state.isLocked = !state.isLocked;
-            btnLock.classList.toggle('locked', state.isLocked);
-            zoomIn?.classList.toggle('zoom-disabled', state.isLocked);
-            zoomOut?.classList.toggle('zoom-disabled', state.isLocked);
-            btnLock.innerHTML = state.isLocked ? '🔒' : '🔓';
-            if (state.isLocked && typeof isPanning !== 'undefined') isPanning = false;
-        };
-    }
+const btnLock = document.getElementById('lock-interaction');
+if (btnLock) {
+    btnLock.onclick = () => {
+        state.isLocked = !state.isLocked;
+        btnLock.classList.toggle('locked', state.isLocked);
+        zoomIn?.classList.toggle('zoom-disabled', state.isLocked);
+        zoomOut?.classList.toggle('zoom-disabled', state.isLocked);
+        btnLock.innerHTML = state.isLocked ? '🔒' : '🔓';
+        if (state.isLocked && typeof isPanning !== 'undefined') isPanning = false;
+    };
+}
 }
 
 function copyToClipboard() {
