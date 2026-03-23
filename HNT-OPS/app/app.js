@@ -611,6 +611,8 @@ const PART_LABEL_MAP = {
     'base': 'Base', 'top': 'Topo', 'cós': 'Cós', 'cos': 'Cós', 'punho': 'Punho',
     'manga_esq': 'Manga Esquerda', 'manga_dir': 'Manga Direita',
     'bolso': 'Bolso', 'capuz': 'Capuz', 'lateral': 'Lateral',
+    'leg_left_top': 'Perna Esq. (Cima)', 'leg_left_mid': 'Perna Esq. (Meio)', 'leg_left_bottom': 'Perna Esq. (Baixo)',
+    'leg_right_top': 'Perna Dir. (Cima)', 'leg_right_mid': 'Perna Dir. (Meio)', 'leg_right_bottom': 'Perna Dir. (Baixo)',
     // Moletom
     'corpo': 'Corpo', 'ribana': 'Ribana',
 };
@@ -621,6 +623,8 @@ const TEXT_LABEL_MAP = {
     'text_leg_left_mid': 'Perna Esq. (meio)', 'text_leg_right_mid': 'Perna Dir. (meio)',
     'text_leg_right_bottom': 'Perna Dir. (baixo)', 'text_top_frente': 'Frente',
     'text_top_costas': 'Costas', 'text_costas': 'Costas', 'text_frente': 'Frente',
+    'text_left_chest': 'Peito Esq.', 'text_right_chest': 'Peito Dir.',
+    'text_upper_back': 'Costas (Superior)', 'text_lower_back': 'Costas (Inferior)',
 };
 
 // Mapa de extras
