@@ -3857,3 +3857,71 @@ input {
     max-height: 2000px;
     padding-bottom: 12px;
 }
+
+/* Tree View / Sub-itens */
+.table-row.parent {
+    background: var(--surface);
+    font-weight: 600;
+    border-left: 4px solid var(--amber);
+}
+
+.table-row.child {
+    background: var(--surface-2);
+    font-size: 0.85rem;
+    border-left: 4px solid var(--border);
+    margin-left: 20px;
+    border-top: none;
+    min-height: 40px;
+}
+
+.table-row.child:hover {
+    background: #fdfaf3;
+}
+
+.tree-line {
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: var(--border);
+    vertical-align: middle;
+    margin-right: 8px;
+    position: relative;
+}
+
+.tree-line::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -15px;
+    width: 1px;
+    height: 15px;
+    background: var(--border);
+}
+
+.simulation-id {
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--text-3);
+    background: #eee;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-left: 8px;
+}
+
+.toggle-tree {
+    cursor: pointer;
+    padding: 4px;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.table-row.collapsed + .child-group {
+    display: none;
+}
+
+.toggle-tree.open {
+    transform: rotate(90deg);
+}

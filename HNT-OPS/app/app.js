@@ -180,60 +180,92 @@ function renderTable(data) {
     data.forEach(p => {
         const produtos = p.produtos || [p];
         const numProdutos = produtos.length;
-        const tr = document.createElement('div');
-        tr.className = 'table-row';
-        tr.dataset.id = p.id;
-        const skuDisplay = numProdutos > 1
-            ? `<div class="sku-stack">
-                 <span class="sku-badge multi-sku" title="${produtos.map(p => p.sku).join(', ')}">${numProdutos} Produtos</span>
-                 <span style="font-size:9px; color:var(--text-3); margin-top:2px; display:block;">${produtos[0].sku}...</span>
-               </div>`
-            : `<span class="sku-badge" data-tooltip="Clique para ver detalhes">${p.sku}</span>`;
-        tr.innerHTML = `
-      <div class="cell-order">
-        <span class="order-num">${p.numero}</span>
-      </div>
-      <div class="cell-sku">${skuDisplay}</div>
-      <div class="cell-date" style="font-size:11px; color:var(--text-2); font-weight:500;">${p.dataCriacao}</div>
-      <div class="cell-qty">${p.quantidade}×<br><span style="font-size:10px;color:var(--text-3)">${numProdutos > 1 ? numProdutos + ' itens' : p.tamanho}</span></div>
-      <div class="cell-client">
-        <span class="client-name">${p.cliente}</span>
-        <span class="client-cpf">${p.cpf}</span>
-      </div>
-      <div class="cell-etapa">
-        <span class="etapa-badge" style="background:${ETAPA_COLORS[p.etapa]}22; color:${ETAPA_COLORS[p.etapa]}; border: 1px solid ${ETAPA_COLORS[p.etapa]}">
-          <span class="etapa-icon">${ETAPA_ICONS[p.etapa] || '📋'}</span>${ETAPA_LABELS[p.etapa] || p.etapa}
-        </span>
-      </div>
-      <div class="cell-sla">
-        <div class="sla-bar-wrap">
-          ${(() => {
-                const ph = slaPhaseInfo(p); return `
-          <span class="alerta-tag alerta-${p.alerta} sla-phase-tag">
-            ${ph.icon} ${ph.label}
-          </span>
-          <div class="sla-bar"><div class="sla-fill ${p.alerta.toLowerCase()}" style="width:${slaWidth(p)}%"></div></div>
-          <span class="sla-label">${ph.sub}</span>
-          `;
-            })()}
-        </div>
-      </div>
-      <div class="cell-prioridade">
-        <div class="priority-wrap">
-          ${p.urgente ? '<span class="urgente-tag">🔴 URGENTE</span>' : ''}
-          <div class="priority-dots">${priorityDots(p.prioridade)}</div>
-        </div>
-      </div>
-      <div class="cell-prazo" style="font-size:11.5px;color:var(--text-2);font-weight:600">${p.prazo}</div>
-      <div class="row-actions">
-        ${p.pdf ? `<button class="row-action-btn" title="Ver PDF" onclick="event.stopPropagation();openLink('${p.pdf}')">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-        </button>` : ''}
-      </div>
-    `;
-        tr.addEventListener('click', () => openDrawer(p.id));
-        tbody.appendChild(tr);
+        const isMulti = numProdutos > 1;
+
+        // --- LINHA PAI (PEDIDO) ---
+        const parentTr = document.createElement('div');
+        parentTr.className = `table-row parent ${isMulti ? 'has-children' : ''}`;
+        parentTr.dataset.id = p.id;
+
+        const skuSummary = isMulti
+            ? `<span class="sku-badge multi-sku">${numProdutos} Produtos</span>`
+            : `<span class="sku-badge">${p.sku}</span>`;
+
+        parentTr.innerHTML = `
+            <div class="cell-order">
+                <div style="display:flex; align-items:center;">
+                    ${isMulti ? `<div class="toggle-tree" onclick="event.stopPropagation(); toggleTree(this, '${p.numero}')">▶</div>` : ''}
+                    <span class="order-num">${p.numero}</span>
+                </div>
+            </div>
+            <div class="cell-sku">${skuSummary}</div>
+            <div class="cell-date">${p.dataCriacao}</div>
+            <div class="cell-qty">${p.quantidade}×</div>
+            <div class="cell-client">
+                <span class="client-name">${p.cliente}</span>
+            </div>
+            <div class="cell-etapa">
+                <span class="etapa-badge" style="background:${ETAPA_COLORS[p.etapa]}22; color:${ETAPA_COLORS[p.etapa]}; border: 1px solid ${ETAPA_COLORS[p.etapa]}">
+                    <span class="etapa-icon">${ETAPA_ICONS[p.etapa] || '📋'}</span>${ETAPA_LABELS[p.etapa] || p.etapa}
+                </span>
+            </div>
+            <div class="cell-sla">${slaPhaseInfo(p).label}</div>
+            <div class="cell-prioridade">${p.urgente ? '🔴 URG' : ''}</div>
+            <div class="cell-prazo">${p.prazo}</div>
+        `;
+        parentTr.onclick = () => openDrawer(p.id);
+        tbody.appendChild(parentTr);
+
+        // --- LINHAS FILHAS (PRODUTOS) ---
+        if (isMulti) {
+            const childrenGroup = document.createElement('div');
+            childrenGroup.className = 'child-group';
+            childrenGroup.id = `children-${p.numero}`;
+            childrenGroup.style.display = 'none'; // Inicia fechado
+
+            produtos.forEach(prod => {
+                const childTr = document.createElement('div');
+                childTr.className = 'table-row child';
+                const simId = prod.dadosTecnicos?.simulationId || 'N/A';
+
+                childTr.innerHTML = `
+                    <div class="cell-order">
+                        <span class="tree-line"></span>
+                        <span style="font-size:10px; color:var(--text-3)">${prod.numero}</span>
+                    </div>
+                    <div class="cell-sku">
+                        <span class="sku-badge" style="background:#f0f0f0; border-color:#ccc; color:#666">${prod.sku}</span>
+                        <span class="simulation-id" title="Simulation ID">${simId}</span>
+                    </div>
+                    <div class="cell-date">--</div>
+                    <div class="cell-qty">${prod.quantidade}× <span style="font-size:10px">${prod.tamanho}</span></div>
+                    <div class="cell-client">--</div>
+                    <div class="cell-etapa">
+                        <span style="font-size:10px; color:var(--text-3)">${prod.tecnica}</span>
+                    </div>
+                    <div class="cell-sla">--</div>
+                    <div class="cell-prioridade">--</div>
+                    <div class="cell-prazo">--</div>
+                `;
+                childTr.onclick = (e) => {
+                    e.stopPropagation();
+                    openDrawer(p.id); // Abre o pedido principal
+                };
+                childrenGroup.appendChild(childTr);
+            });
+            tbody.appendChild(childrenGroup);
+        }
     });
+}
+
+function toggleTree(btn, num) {
+    const group = $(`children-${num}`);
+    if (group) {
+        const isOpen = group.style.display !== 'none';
+        group.style.display = isOpen ? 'none' : 'block';
+        btn.classList.toggle('open', !isOpen);
+        btn.textContent = isOpen ? '▶' : '▼';
+    }
 }
 
 
