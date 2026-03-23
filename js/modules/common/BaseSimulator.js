@@ -6,7 +6,8 @@
 class BaseSimulator {
     constructor(config) {
         this.config = config || {};
-        this.state = {};
+        // Immediate sync if window.state exists, otherwise {}
+        this.state = window.state || {};
         this.containerId = 'controls-container';
         this.simKey = this.config.storageKey || 'hnt_simulator_state';
     }
@@ -389,7 +390,10 @@ class BaseSimulator {
     }
 
     async handleAddToCart() {
-        if (!this.state.termsAccepted) {
+        // Double check state sync before proceeding
+        const currentTerms = this.state.termsAccepted || (window.state && window.state.termsAccepted);
+
+        if (!currentTerms) {
             alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
             const termsBox = document.getElementById('terms-checkbox');
             if (termsBox) termsBox.focus();
