@@ -251,10 +251,12 @@ function renderKanban(data) {
       <div class="kanban-cards-wrap" id="kcol-${etapa}" data-etapa="${etapa}">
         ${cards.map(p => {
             const ph = slaPhaseInfo(p);
+            const numProds = p.produtos ? p.produtos.length : 1;
+            const skuLabel = numProds > 1 ? `<span style="color:var(--amber);font-weight:700">📦 ${numProds} Itens</span>` : p.sku;
             return `
           <div class="kanban-card ${p.alerta}${isPendencia ? ' pendencia-card' : ''}" data-id="${p.id}" onclick="openDrawer('${p.id}')" draggable="true">
             <div class="kanban-num">${p.numero}</div>
-            <div class="kanban-sku">${p.sku} · ${p.tamanho} · ${p.quantidade}×</div>
+            <div class="kanban-sku">${skuLabel} · ${p.tamanho} · ${p.quantidade}×</div>
             <div class="kanban-footer">
               <span class="alerta-tag alerta-${p.alerta}">${ph.icon} ${ph.label}</span>
               ${p.urgente ? '<span class="urgente-tag">🔴 URG</span>' : ''}
