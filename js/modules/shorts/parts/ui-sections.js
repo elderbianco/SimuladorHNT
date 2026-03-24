@@ -69,7 +69,7 @@ function renderFinalForm() {
     finalInputs.innerHTML = `
         <div style="margin-top:15px; border-top: 1px solid #333; padding-top: 15px;">
             <label style="font-weight:bold; display:block; margin-bottom:5px; color:#fff;">Observações:</label>
-            <textarea id="obs-input" style="width:100%; border:1px solid #444; background:#222; color:#fff; padding:8px; border-radius:4px;" rows="3" placeholder="Ex: Detalhes específicos de arte, posições, etc."></textarea>
+            <textarea id="obs-input" style="width:100%; border:1px solid #444; background:#222; color:#fff; padding:8px; border-radius:4px;" rows="3" placeholder="Ex: Detalhes específicos de arte, posições, etc.">${state.observations || ''}</textarea>
         </div>
         
         <div id="emb-section-container" style="margin-top:15px; border-top: 1px solid #333; padding-top: 15px; ${embSectionStyle}">
@@ -91,7 +91,7 @@ function renderFinalForm() {
         
         <div style="margin-top:10px; background:rgba(212, 175, 55, 0.05); padding:12px; border:1px solid var(--gold-primary); border-radius:var(--radius-md);">
             <label style="font-weight:bold; display:block; margin-bottom:8px; color:var(--gold-primary);">Telefone para Contato <span style="color:red">*</span> ${(typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_telefone', 'Necessário para contato sobre ajustes técnicos e análise de produção') : ''}</label>
-            <input type="tel" id="phone-input" style="width:100%; border:1px solid #444; background:#111; color:#fff; padding:10px; border-radius:4px; font-size:1rem;" placeholder="(XX) XXXXX XXXX" maxlength="15">
+            <input type="tel" id="phone-input" value="${state.phone || ''}" style="width:100%; border:1px solid #444; background:#111; color:#fff; padding:10px; border-radius:4px; font-size:1rem;" placeholder="(XX) XXXXX XXXX" maxlength="15">
         </div>
 
         <div style="margin-top:15px; background:#111; border:1px solid #333; padding:12px; border-radius:4px; color:#aaa; font-size:0.8rem;">
@@ -102,7 +102,7 @@ function renderFinalForm() {
                 Ao prosseguir, você declara que leu e concorda com todas as informações e condições do produto disponíveis em nosso <a href="IndexFaq.html" target="_blank" style="color:#D4AF37; text-decoration:underline;">FAQ</a>, além de confirmar que possui os direitos autorais sobre as artes enviadas, assumindo total responsabilidade legal. Em caso de dúvidas, entre em contato com nossa equipe.
             </p>
             <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; color:#fff; font-weight:bold;">
-                <input type="checkbox" id="terms-checkbox" style="width:18px; height:18px; margin-top:2px;">
+                <input type="checkbox" id="terms-checkbox" ${state.termsAccepted ? 'checked' : ''} style="width:18px; height:18px; margin-top:2px;">
                 <span>EU LI E CONCORDO COM OS TERMOS E CONDIÇÕES ACIMA <span style="color:red">*</span></span>
             </label>
         </div>
