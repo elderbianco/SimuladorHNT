@@ -137,11 +137,67 @@ class BaseSimulator {
 
         // 4. Final Form (Aviso/Termos/Obs) - v14.51 Fix
         if (typeof window.renderFinalForm === 'function') {
-            container.appendChild(window.renderFinalForm());
+            const finalForm = window.renderFinalForm();
+            container.appendChild(finalForm);
+            this.bindFinalFormListeners(container);
         }
 
         // Restore scroll
         container.scrollTop = scrollPos;
+    }
+
+    /**
+     * Sincroniza os inputs do formulário final com o estado
+     * @param {HTMLElement} container 
+     */
+    bindFinalFormListeners(container) {
+        const phoneInput = container.querySelector('#phone-input');
+        const obsInput = container.querySelector('#obs-input');
+        const termsCheckbox = container.querySelector('#terms-checkbox');
+
+        if (phoneInput) {
+            phoneInput.value = this.state.phone || '';
+            phoneInput.oninput = (e) => {
+                // Máscara básica (XX) XXXXX-XXXX
+                let val = e.target.value.replace(/\D/g, '');
+                if (val.length > 11) val = val.slice(0, 11);
+
+                let formatted = val;
+                if (val.length > 2) {
+                    formatted = `(${val.slice(0, 2)}) ${val.slice(2)}`;
+                }
+                if (val.length > 7) {
+                    formatted = `(${val.slice(0, 2)}) ${val.slice(2, 7)}-${val.slice(7)}`;
+                }
+
+                e.target.value = formatted;
+                this.state.phone = formatted;
+                if (typeof saveState === 'function') saveState();
+            };
+        }
+
+        if (obsInput) {
+            obsInput.value = this.state.observations || '';
+            obsInput.oninput = (e) => {
+                this.state.observations = e.target.value;
+                if (typeof saveState === 'function') saveState();
+            };
+        }
+
+        if (termsCheckbox) {
+            termsCheckbox.checked = !!this.state.termsAccepted;
+            termsCheckbox.onchange = (e) => {
+                const val = e.target.checked;
+                this.state.termsAccepted = val;
+                if (window.state) window.state.termsAccepted = val;
+                if (typeof saveState === 'function') saveState();
+
+                // Sincronização Global para outros simuladores
+                if (typeof DBAdapter !== 'undefined' && DBAdapter.CustomerData) {
+                    DBAdapter.CustomerData.save(this.state.phone, val);
+                }
+            };
+        }
     }
 
     // toggleCategory removed as requested (always visible)
