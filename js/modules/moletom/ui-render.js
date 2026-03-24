@@ -385,11 +385,11 @@ function renderFinalForm() {
     finalInputs.innerHTML = `
         <div style="margin-top:10px; border-top:1px solid #333; padding-top:10px;">
             <label style="font-weight:bold; display:block; color:#fff;">Observações:</label>
-            <textarea id="obs-input" style="width:100%; height:60px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; padding:5px;"></textarea>
+            <textarea id="obs-input" style="width:100%; height:60px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; padding:5px;">${state.observations || ''}</textarea>
         </div>
         <div style="margin-top:10px; background:#fff3cd; padding:10px; border-left:4px solid #ffc107; border-radius:4px;">
             <label style="font-weight:bold; display:block; color:#856404;">Telefone <span style="color:red">*</span> ${(typeof InfoSystem !== 'undefined') ? InfoSystem.getIconHTML('info_telefone', 'Necessário para contato sobre ajustes técnicos e análise de produção') : ''}</label>
-            <input type="tel" id="phone-input" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="(XX) XXXXX-XXXX">
+            <input type="tel" id="phone-input" value="${state.phone || ''}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="(XX) XXXXX-XXXX">
         </div>
         <div style="margin-top:15px; background:#111; border:1px solid #333; padding:12px; border-radius:4px; color:#aaa; font-size:0.8rem;">
             <p style="margin:0 0 10px 0; line-height:1.4;">
@@ -399,7 +399,7 @@ function renderFinalForm() {
                 Ao prosseguir, você declara que leu e concorda com todas as informações e condições do produto disponíveis em nosso <a href="IndexFaq.html" target="_blank" style="color:#D4AF37; text-decoration:underline;">FAQ</a>, além de confirmar que possui os direitos autorais sobre as artes enviadas, assumindo total responsabilidade legal. Em caso de dúvidas, entre em contato com nossa equipe.
             </p>
             <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; color:#fff; font-weight:bold;">
-                <input type="checkbox" id="terms-checkbox" style="width:18px; height:18px; margin-top:2px;">
+                <input type="checkbox" id="terms-checkbox" ${state.termsAccepted ? 'checked' : ''} style="width:18px; height:18px; margin-top:2px;">
                 <span>EU LI E CONCORDO COM OS TERMOS E CONDIÇÕES ACIMA <span style="color:red">*</span></span>
             </label>
         </div>
