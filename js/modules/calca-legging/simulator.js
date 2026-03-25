@@ -139,8 +139,8 @@ function setupMainEvents() {
     const btnPdf = document.getElementById('btn-pdf');
     if (btnPdf) {
         btnPdf.onclick = async () => {
-            if (window.LeggingSimulatorInstance && window.LeggingSimulatorInstance.hideAllVisualLimits) {
-                window.LeggingSimulatorInstance.hideAllVisualLimits();
+            if (window.CalcaLeggingSimulatorInstance && window.CalcaLeggingSimulatorInstance.hideAllVisualLimits) {
+                window.CalcaLeggingSimulatorInstance.hideAllVisualLimits();
             }
 
             if (typeof PDFGenerator !== 'undefined') {
