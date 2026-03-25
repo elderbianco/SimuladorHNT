@@ -90,14 +90,15 @@ function renderCustomizationSection() {
         zoneDiv.innerHTML = `<div class="zone-title">${titleText} ${infoIcon}</div>`;
 
         const hasImage = state.elements[z.id] && state.elements[z.id].length > 0;
-        const currentImgElement = hasImage ? state.elements[z.id][0] : null;
+        const currentEl = hasImage ? state.elements[z.id][0] : null;
+        const currentImgTag = currentEl ? currentEl.querySelector('img') : null;
 
         let uploadState = {
-            src: currentImgElement ? currentImgElement.src : null,
-            filename: currentImgElement ? (currentImgElement.dataset.filename || 'Imagem Enviada') : null,
-            isCustom: currentImgElement ? (currentImgElement.dataset.isCustom === 'true') : false,
-            hasEmbPromise: currentImgElement ? (currentImgElement.dataset.embPromise === 'true') : false,
-            scale: currentImgElement ? (parseFloat(currentImgElement.style.width) || z.width) / z.width : 1.0
+            src: currentImgTag ? currentImgTag.src : null,
+            filename: currentEl ? (currentEl.dataset.filename || 'Imagem Enviada') : null,
+            isCustom: currentEl ? (currentEl.dataset.isCustom === 'true') : false,
+            hasEmbPromise: currentEl ? (currentEl.dataset.embPromise === 'true') : false,
+            scale: currentEl ? (parseFloat(currentEl.style.width) || z.width) / z.width : 1.0
         };
 
         const uploader = window.UIComponents.createImageUploader({

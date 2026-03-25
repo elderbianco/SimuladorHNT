@@ -112,14 +112,15 @@ function renderCustomizationSection() {
 
         // 2. Upload Logic using Shared Component
         const hasImage = state.elements[z.id] && state.elements[z.id].length > 0;
-        const currentImgElement = hasImage ? state.elements[z.id][0] : null;
+        const currentEl = hasImage ? state.elements[z.id][0] : null;
+        const currentImgTag = currentEl ? currentEl.querySelector('img') : null;
 
         let uploadState = {
-            src: currentImgElement ? currentImgElement.src : null,
-            filename: currentImgElement ? (currentImgElement.dataset.filename || 'Imagem Enviada') : null,
-            isCustom: currentImgElement ? (currentImgElement.dataset.isCustom === 'true') : false,
-            hasEmbPromise: currentImgElement ? (currentImgElement.dataset.embPromise === 'true') : false,
-            scale: currentImgElement ? (parseFloat(currentImgElement.style.width) || z.width) / z.width : 1.0
+            src: currentImgTag ? currentImgTag.src : null,
+            filename: currentEl ? (currentEl.dataset.filename || 'Imagem Enviada') : null,
+            isCustom: currentEl ? (currentEl.dataset.isCustom === 'true') : false,
+            hasEmbPromise: currentEl ? (currentEl.dataset.embPromise === 'true') : false,
+            scale: currentEl ? (parseFloat(currentEl.style.width) || z.width) / z.width : 1.0
         };
 
         const uploader = window.UIComponents.createImageUploader({
@@ -514,6 +515,13 @@ function handleImageUpload(e, z) {
 }
 function createImageElement(z, s, isCustom, filename = '', formattedFilename = '') {
     const l = document.getElementById('customization-layer'); const zc = CONFIG.zones[z];
+
+    // Remove existing element for this zone before adding a new one
+    if (state.elements[z] && state.elements[z].length > 0) {
+        state.elements[z].forEach(e => e.remove());
+        state.elements[z] = [];
+    }
+
     const el = document.createElement('div'); el.className = 'custom-element draggable';
     el.style.left = zc.x + '%'; el.style.top = zc.y + '%'; el.style.width = zc.width + '%';
     el.style.transform = 'translate(-50%, -50%)'; el.style.zIndex = 1500;
