@@ -301,9 +301,9 @@ function getZoneBoundaries(element) {
     const elWidth = element.offsetWidth * scale;
     const elHeight = element.offsetHeight * scale;
 
-    // Se a imagem for maior que a zona (com margem de erro)
-    const isZooming = (elWidth > containerW + 1) || (elHeight > containerH + 1);
-    const expansionFactor = isZooming ? 1.60 : 1.0;
+    // 🎯 LIBERDADE DE MOVIMENTO: Se estiver com zoom (>1.0), aumentar drasticamente o limite para não "prender"
+    const isZooming = (scale > 1.05); // Pequena margem para evitar ruído
+    const expansionFactor = isZooming ? 5.0 : 1.1; // 5x a zona se estiver com zoom
 
     // Expandir Boundaries
     const centerX = (boundaries.left + boundaries.right) / 2;
@@ -317,14 +317,34 @@ function getZoneBoundaries(element) {
     boundaries.top = centerY - newHalfH;
     boundaries.bottom = centerY + newHalfH;
 
-    // Converter para minX/maxX PERCENTUAIS para compatibilidade com interactions.js
-    return {
-        minX: (boundaries.left / vw) * 100,
-        maxX: (boundaries.right / vw) * 100,
-        minY: (boundaries.top / vh) * 100,
-        maxY: (boundaries.bottom / vh) * 100,
-        parentZoneId: parentZoneId
-    };
+    let minX = (boundaries.left / vw) * 100;
+    let maxX = (boundaries.right / vw) * 100;
+    let minY = (boundaries.top / vh) * 100;
+    let maxY = (boundaries.bottom / vh) * 100;
+
+    const halfElW = (elWidth / vw) * 100 / 2;
+    const halfElH = (elHeight / vh) * 100 / 2;
+
+    // Compensar o tamanho do elemento nos limites (interactions.js usa o centro)
+    minX += halfElW / 2; maxX -= halfElW / 2;
+    minY += halfElH / 2; maxY -= halfElH / 2;
+
+    // 🎯 PREVENÇÃO DE SALTOS: Se o elemento for maior que a zona expandida, 
+    // invertemos os limites de forma contínua para permitir movimento sem travas.
+    if (minX > maxX) {
+        const center = (centerX / vw) * 100;
+        const radius = Math.abs((newHalfW / vw) * 100 - (elWidth / vw) * 100 / 2);
+        minX = center - radius;
+        maxX = center + radius;
+    }
+    if (minY > maxY) {
+        const center = (centerY / vh) * 100;
+        const radius = Math.abs((newHalfH / vh) * 100 - (elHeight / vh) * 100 / 2);
+        minY = center - radius;
+        maxY = center + radius;
+    }
+
+    return { minX, maxX, minY, maxY, parentZoneId };
 }
 
 /**
