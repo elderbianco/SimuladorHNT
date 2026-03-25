@@ -334,7 +334,7 @@ class BaseSimulator {
                         src: el?.src,
                         filename: el?.dataset.filename || 'Imagem',
                         isCustom: el?.dataset.isCustom === 'true',
-                        scale: el?.style.width ? (parseFloat(el.style.width) / (u.width || 20)) : 1.0
+                        scale: el?.dataset.scale ? parseFloat(el.dataset.scale) : 1.0
                     },
                     limitEnabled: this.state.zoneLimits?.[u.id] !== false,
                     config: window.CONFIG || {},
@@ -344,8 +344,9 @@ class BaseSimulator {
                         onToggleLimit: (zid, val) => { if (this.state.zoneLimits) this.state.zoneLimits[zid] = val; this.onStateUpdate(); },
                         onScale: (zid, val) => {
                             if (this.state.elements?.[zid]?.[0]) {
-                                const baseW = u.width || (u.xMax - u.xMin) || 20;
-                                this.state.elements[zid][0].style.width = (baseW * val) + '%';
+                                const imgEl = this.state.elements[zid][0];
+                                imgEl.style.transform = `translate(-50%, -50%) scale(${val})`;
+                                imgEl.dataset.scale = val;
                                 this.saveState();
                             }
                         },
