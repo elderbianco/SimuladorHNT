@@ -15,7 +15,14 @@
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/shorts-style.css?v=400">
     <link rel="stylesheet" href="css/shorts-gallery.css">
-    <link rel="stylesheet" href="css/simulator.css?v=202603091900">
+    <link rel="stylesheet" href="css/simulator.css?v=2026.03.11.10">
+    <script>
+        // Force cache invalidation
+        const CACHE_VERSION = "2026.03.11.10";
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Cache Version:', CACHE_VERSION);
+        });
+    </script>
     <!-- Action Library (XLSX) -->
     <script defer src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -100,9 +107,7 @@
             </div>
 
             <div class="action-bar" style="padding:10px; display:none; gap:10px;">
-                <button id="btn-add-cart" class="btn-primary"
-                    style="flex:1; background-color: #28a745; border-color: #28a745;">🛒 Adicionar ao Carrinho</button>
-                <button id="btn-pdf" class="btn-primary" style="flex:1;">🖨️ Salvar PDF</button>
+                <!-- Buttons are now dynamically rendered by BaseSimulator for stability -->
             </div>
 
             <div id="controls-container" style="padding: 10px;">
@@ -240,35 +245,35 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Supabase Integration -->
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0"></script>
-    <script defer src="js/modules/auth/supabase-client.js?v=14.55"></script>
-    <script defer src="js/modules/auth/auth-widget.js?v=14.55"></script>
-    <script defer src="js/modules/common/pricing-validator.js?v=14.55"></script>
-    <script defer src="js/modules/common/supabase-adapter.js?v=14.55"></script>
-    <script defer src="js/modules/common/rascunho-manager.js?v=14.55"></script>
+    <script defer src="js/modules/auth/supabase-client.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/auth/auth-widget.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/common/pricing-validator.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/common/supabase-adapter.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/common/rascunho-manager.js?v=2026.03.11.10"></script>
 
-    <script defer src="js/modules/common/database-manager.js?v=14.55"></script>
+    <script defer src="js/modules/common/database-manager.js?v=2026.03.11.10"></script>
     <!-- PDF Generation Libs -->
     <script defer
         src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/2.8.0/dom-to-image-more.min.js"></script>
     <script defer
         src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/2.8.0/dom-to-image-more.min.js"></script>
-    <script defer src="js/modules/common/pdf-generator-v2.js?v=14.55"></script>
-    <script defer src="js/modules/top/state.js?v=14.55"></script>
-    <script defer src="js/modules/top/logic.js?v=14.55"></script>
-    <script defer src="js/modules/top/pricing.js?v=14.55"></script>
-    <script defer src="js/modules/top/visuals.js?v=14.55"></script>
-    <script defer src="js/modules/top/interactions.js?v=14.55"></script>
+    <script defer src="js/modules/common/pdf-generator-v2.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/top/state.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/top/logic.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/top/pricing.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/top/visuals.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/top/interactions.js?v=2026.03.11.10"></script>
     <!-- Common UI Components (Module 5) -->
-    <script defer src="js/modules/common/ui-components/ColorPicker.js?v=14.55"></script>
-    <script defer src="js/modules/common/ui-components/ToggleButton.js?v=14.55"></script>
-    <script defer src="js/modules/common/ui-components/SizeSelector.js?v=14.55"></script>
-    <script defer src="js/modules/common/ui-components/ImageUploader.js?v=14.55"></script>
-    <script defer src="js/modules/common/ui-components/TextEditor.js?v=14.55"></script>
-    <script defer src="js/modules/common/utils/OrderNumbers.js?v=14.55"></script>
-    <script defer src="js/modules/common/BaseSimulator.js?v=14.55"></script>
-    <script defer src="js/modules/top/ui-render.js?v=14.55"></script>
-    <script defer src="js/modules/top/TopSimulator.js?v=14.55"></script>
-    <script defer src="js/modules/top/simulator.js?v=14.55"></script>
+    <script defer src="js/modules/common/ui-components/ColorPicker.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/common/ui-components/ToggleButton.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/common/ui-components/SizeSelector.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/common/ui-components/ImageUploader.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/common/ui-components/TextEditor.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/common/utils/OrderNumbers.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/common/BaseSimulator.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/top/ui-render.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/top/TopSimulator.js?v=2026.03.11.10"></script>
+    <script defer src="js/modules/top/simulator.js?v=2026.03.11.10"></script>
 </body>
 
 </html>
