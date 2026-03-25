@@ -194,7 +194,7 @@ function setupMainEvents() {
                     } catch (e) {
                         console.error("Erro no processamento do carrinho:", e);
                         loader.remove();
-                        alert("Erro ao processar pedido. Veja o console.");
+                        alert("❌ Erro ao processar pedido:\n\n" + (e && e.message ? e.message : String(e)) + "\n\nVeja o console para mais detalhes.");
                     }
                 };
 
