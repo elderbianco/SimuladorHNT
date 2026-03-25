@@ -167,13 +167,21 @@ window.UIComponents.createImageUploader = function ({
 
         const scaleVal = uploadState.scale || 1.0;
 
+        // 🎯 LOGARITHMIC MAPPING: 
+        // Slider 0 -> 100
+        // Center 50 -> 1.0
+        // Formula: scale = 10 ^ ((val - 50) / 50)
+        const scaleToSlider = (s) => (Math.log10(s) * 50) + 50;
+        const sliderToScale = (v) => Math.pow(10, (v - 50) / 50);
+
         const sl = document.createElement('input');
         sl.className = 'range-slider';
-        sl.type = 'range'; sl.min = 0.1; sl.max = 5.0; sl.step = 0.01; sl.value = scaleVal;
+        sl.type = 'range'; sl.min = 0; sl.max = 100; sl.step = 0.1;
+        sl.value = scaleToSlider(scaleVal);
         sl.style.flex = '1';
 
         const num = document.createElement('input');
-        num.type = 'number'; num.min = 0.1; num.max = 5.0; num.step = 0.01; num.value = scaleVal.toFixed(2);
+        num.type = 'number'; num.min = 0.1; num.max = 10.0; num.step = 0.01; num.value = scaleVal.toFixed(2);
         num.style.width = '75px';
         num.style.padding = '4px 8px';
         num.style.boxSizing = 'border-box';
@@ -182,18 +190,20 @@ window.UIComponents.createImageUploader = function ({
         num.style.color = '#fff';
         num.style.border = '1px solid #444';
         num.style.borderRadius = '4px';
-        num.style.fontSize = '0.9rem'; // Added slightly larger font
+        num.style.fontSize = '0.9rem';
         num.style.lineHeight = '1.2';
 
         sl.oninput = (e) => {
-            const val = parseFloat(e.target.value);
+            const val = sliderToScale(parseFloat(e.target.value));
             num.value = val.toFixed(2);
             if (callbacks.onScale) callbacks.onScale(zone.id, val);
         };
 
         num.oninput = (e) => {
-            const val = parseFloat(e.target.value) || 1.0;
-            sl.value = val;
+            let val = parseFloat(e.target.value) || 1.0;
+            if (val < 0.1) val = 0.1;
+            if (val > 10.0) val = 10.0;
+            sl.value = scaleToSlider(val);
             if (callbacks.onScale) callbacks.onScale(zone.id, val);
         };
 
