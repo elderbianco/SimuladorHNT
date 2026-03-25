@@ -494,7 +494,13 @@ async function uploadFileToServer(file, base64, zoneId) {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData)
         });
         const data = await res.json();
-        if (data.success) console.log('✅ Upload:', data.path);
+        if (data.success) {
+            console.log('✅ Upload:', data.path);
+            if (state.uploads && state.uploads[zoneId]) {
+                state.uploads[zoneId].src = data.path;
+                saveState();
+            }
+        }
     } catch (e) { console.error('❌ Upload:', e); }
 }
 
@@ -506,6 +512,11 @@ function handleImageUpload(e, z) {
     const r = new FileReader();
     r.onload = (ev) => {
         const base64 = ev.target.result;
+
+        // Sync state.uploads for User Uploads
+        state.uploads = state.uploads || {};
+        state.uploads[z] = { src: base64, filename: fmt || f.name, isCustom: true };
+
         uploadFileToServer(f, base64, z);
         createImageElement(z, base64, true, fmt);
     };

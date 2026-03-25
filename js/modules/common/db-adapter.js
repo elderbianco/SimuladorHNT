@@ -143,7 +143,7 @@ const DBAdapter = {
         const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
 
         return {
-            order_id: state.simulationId || state.orderNumber || 'N/A',
+            order_id: state.orderNumber || state.simulationId || 'N/A',
             client_name: 'Cliente (Simulador)', // Placeholder
             client_phone: state.phone || '',
             product_type: (state && state.productInitial) || (config && config.product) || 'Produto',

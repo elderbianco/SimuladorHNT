@@ -342,10 +342,12 @@ function appendGalleryItem(container, i) {
             if (typeof updateLimits === 'function') updateLimits();
             let fmt = i.name;
             if (typeof generateFormattedFilename === 'function') fmt = generateFormattedFilename(state.pendingUploadZone, i.name, 'ACERVO');
-            if (typeof createImageElement === 'function') createImageElement(state.pendingUploadZone, i.src, false, fmt);
 
+            // Core: Update state.uploads before creating element
             state.uploads = state.uploads || {};
             state.uploads[state.pendingUploadZone] = { src: i.src, filename: i.name || 'Imagem do Acervo', isCustom: false };
+
+            if (typeof createImageElement === 'function') createImageElement(state.pendingUploadZone, i.src, false, fmt);
             saveState();
         }
         window.closeGallery();
@@ -365,7 +367,13 @@ async function uploadFileToServer(file, base64, zoneId) {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData)
         });
         const data = await res.json();
-        if (data.success) console.log('✅ Upload:', data.path);
+        if (data.success) {
+            console.log('✅ Upload:', data.path);
+            if (state.uploads && state.uploads[zoneId]) {
+                state.uploads[zoneId].src = data.path;
+                saveState();
+            }
+        }
     } catch (e) { console.error('❌ Upload:', e); }
 }
 
@@ -377,6 +385,11 @@ function handleImageUpload(e, z) {
     const r = new FileReader();
     r.onload = (ev) => {
         const base64 = ev.target.result;
+
+        // Ensure state.uploads is updated for User Uploads too
+        state.uploads = state.uploads || {};
+        state.uploads[z] = { src: base64, filename: fmt || f.name, isCustom: true };
+
         uploadFileToServer(f, base64, z);
         createImageElement(z, base64, true, fmt);
     };
