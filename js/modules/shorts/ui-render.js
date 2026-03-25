@@ -260,6 +260,15 @@ function renderControls() {
     btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
     btnCart.style.flex = '1';
 
+    // 🎯 FIX: Garantir que o evento de clique seja registrado toda vez que o controle for re-renderizado
+    btnCart.onclick = () => {
+        if (window.ShortsSimulatorInstance) {
+            window.ShortsSimulatorInstance.handleAddToCart();
+        } else {
+            console.error("ShortsSimulatorInstance não encontrado");
+        }
+    };
+
     if (isEditing) {
         btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         btnCart.style.border = 'none';
