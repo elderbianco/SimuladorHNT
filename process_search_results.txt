@@ -1,0 +1,30 @@
+js\modules\calca-legging\ui-render.js:                <strong style="color:#D4AF37;">⚠️ AVISO IMPORTANTE:</strong> Este documento é uma <strong>SIMULAÇÃO DIGITAL</strong> para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação.
+js\modules\cart\cart-controller.js:            console.error(`❌ Falha crítica ao processar item no índice ${index}: Estrutura inválida ou item ausente.`, data);
+js\modules\checkout\payment-controller.js:    btn.innerText = "Processando... ⌛";
+js\modules\checkout\payment-controller.js:        console.log("💳 Iniciando processamento de pagamento simulado...");
+js\modules\checkout\payment-controller.js:        alert("Erro ao processar pagamento. Tente novamente.");
+js\modules\common\BaseSimulator.js:                <div style="font-weight:700;font-size:1.2rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;color:#D4AF37;">PROCESSANDO PEDIDO...</div>
+js\modules\common\db-integration.js:        // 1. Process Parts/Colors
+js\modules\common\db-integration.js:        // 2. Process Extras
+js\modules\common\db-integration.js:        // 3. Process Texts
+js\modules\common\db-integration.js:        // 4. Process Uploads
+js\modules\common\db-integration.js:                            console.warn(`formatForDatabase: erro ao processar elemento na zona ${zoneId}:`, elErr);
+js\modules\common\pdf-generator-v2.js:     * Usa html2canvas + Pré-processamento Base66 para garantir rotação e escala exatas.
+js\modules\common\pdf-generator-v2.js:            if (txt) txt.innerText = '10% - Processando...';
+js\modules\common\supabase-adapter.js:                    console.error("Erro ao processar JSON técnico:", e);
+js\modules\common\ui\tests\simple-load-test.js:        process.exit(1);
+js\modules\common\ui\tests\simple-load-test.js:            process.exit(1);
+js\modules\common\ui\tests\simple-load-test.js:    process.exit(1);
+js\modules\common\ui\utils\ImageValidator.js:                error: `Erro ao processar imagem: ${error.message}`
+js\modules\common\utils\font-loader.js:}, 1000); // Wait 1 second after script load to start font processing
+js\modules\moletom\ui-render.js:                <strong style="color:#D4AF37;">⚠️ AVISO IMPORTANTE:</strong> Este documento é uma <strong>SIMULAÇÃO DIGITAL</strong> para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação.
+js\modules\shorts\logic.js: * Módulo de Lógica de Negócio e Processamento - Shorts
+js\modules\shorts\logic.js: * Processa o upload de uma imagem do usuário
+js\modules\shorts\logic.js: * Processa o upload de uma imagem do usuário
+js\modules\shorts\logic.js:    if (typeof showLoadingFeedback === 'function') showLoadingFeedback("Processando imagem...");
+js\modules\shorts\parts\ui-sections.js:                <strong style="color:#D4AF37;">⚠️ AVISO IMPORTANTE:</strong> Este documento é uma <strong>SIMULAÇÃO DIGITAL</strong> para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação.
+js\modules\shorts\ui-render.js:                <div style="font-weight:700;font-size:1.3rem;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:#D4AF37;">PROCESSANDO PEDIDO</div>
+js\modules\shorts-legging\logic.js:        // process.nextTick removal - browser environment
+js\modules\shorts-legging\ui-render.js:                <strong style="color:#D4AF37;">⚠️ AVISO IMPORTANTE:</strong> Este documento é uma <strong>SIMULAÇÃO DIGITAL</strong> para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação.
+js\modules\top\ui-render-refactored.js:                <div style="font-weight:700;font-size:1.3rem;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:#D4AF37;">PROCESSANDO PEDIDO</div>
+js\modules\top\ui-render.js:                <strong style="color:#D4AF37;">⚠️ AVISO IMPORTANTE:</strong> Este documento é uma <strong>SIMULAÇÃO DIGITAL</strong> para fins de orçamento e visualização. O resultado final físico pode apresentar pequenas variações de cor, tamanho, proporções e ajuste, devido aos processos artesanais e à calibração de cada monitor. Todos os arquivos e artes passarão por análise técnica de viabilidade de bordado, e o valor final está sujeito a confirmação após essa avaliação.
