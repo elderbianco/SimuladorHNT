@@ -244,9 +244,9 @@ function getZoneBoundaries(element) {
 
     const zoneHeightPct = zone.height || (zone.width * 1.5);
 
-    // Check Zooming State
-    const isZooming = (elementWidthPct > zone.width + 0.1) || (elementHeightPct > zoneHeightPct + 0.1);
-    const expansionFactor = isZooming ? 1.60 : 1.0;
+    // 🎯 LIBERDADE DE MOVIMENTO: Se estiver com zoom (>1.0), aumentar drasticamente o limite para não "prender"
+    const isZooming = (sc > 1.05); // Pequena margem para evitar ruído
+    const expansionFactor = isZooming ? 5.0 : 1.1; // 5x a zona se estiver com zoom
 
     // Expand Boundaries
     const expandedZoneW = zone.width * expansionFactor;
@@ -260,14 +260,19 @@ function getZoneBoundaries(element) {
     let minY = zone.y - hEH + halfH;
     let maxY = zone.y + hEH - halfH;
 
-    // STRICT LOCK: If Element > Zone, Allow Move if Zooming
+    // 🎯 PREVENÇÃO DE SALTOS: Se o elemento for maior que a zona expandida, 
+    // invertemos os limites de forma contínua para permitir movimento sem travas.
     if (minX > maxX) {
-        if (isZooming) { const temp = minX; minX = maxX; maxX = temp; }
-        else { minX = zone.x; maxX = zone.x; }
+        const center = zone.x;
+        const radius = Math.abs(hEW - halfW);
+        minX = center - radius;
+        maxX = center + radius;
     }
     if (minY > maxY) {
-        if (isZooming) { const temp = minY; minY = maxY; maxY = temp; }
-        else { minY = zone.y; maxY = zone.y; }
+        const center = zone.y;
+        const radius = Math.abs(hEH - halfH);
+        minY = center - radius;
+        maxY = center + radius;
     }
 
     return {
