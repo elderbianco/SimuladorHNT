@@ -99,8 +99,8 @@ function applyBoundaryLimits(pctX, pctY, elementWidthPct, elementHeightPct, zone
     const halfW = elementWidthPct / 2;
     const halfH = elementHeightPct / 2;
 
-    // 🎯 EXPANSÃO CONTROLADA: 30% em CADA lado = fator 1.6
-    const expansionFactor = isZooming ? 1.60 : 1.0;
+    // 🎯 LIBERDADE DE MOVIMENTO: Se estiver com zoom (>1.0), aumentar drasticamente o limite para não "prender"
+    const expansionFactor = isZooming ? 5.0 : 1.1; // 5x a zona se estiver com zoom
 
     // Buscar limites
     let limit = null;
@@ -118,7 +118,6 @@ function applyBoundaryLimits(pctX, pctY, elementWidthPct, elementHeightPct, zone
     // ---------------------------------------------------------
     // LOGIC A: ROTATED ZONES (OBB - Oriented Bounding Box)
     // ---------------------------------------------------------
-    // STRICT BACKUP BEHAVIOR: 'limit.defaultRotation &&' excludes 0.
     if (limit.defaultRotation && limit.width && limit.height && limit.cssLeft && limit.cssTop) {
         const wrapper = document.querySelector('.simulator-wrapper');
         const rect = wrapper.getBoundingClientRect();
@@ -147,15 +146,9 @@ function applyBoundaryLimits(pctX, pctY, elementWidthPct, elementHeightPct, zone
         let xLimit = (zW / 2) - (elW_px / 2);
         let yLimit = (zH / 2) - (elH_px / 2);
 
-        // STRICT LOCK: If element bigger than zone, allow movement if zooming
-        if (xLimit < 0) {
-            if (isZooming) xLimit = Math.abs(xLimit);
-            else xLimit = 0;
-        }
-        if (yLimit < 0) {
-            if (isZooming) yLimit = Math.abs(yLimit);
-            else yLimit = 0;
-        }
+        // 🎯 PREVENÇÃO DE SALTOS EM ZONAS ROTACIONADAS
+        if (xLimit < 0) xLimit = Math.abs(xLimit);
+        if (yLimit < 0) yLimit = Math.abs(yLimit);
 
         const clampedLocalX = Math.max(-xLimit, Math.min(localX, xLimit));
         const clampedLocalY = Math.max(-yLimit, Math.min(localY, yLimit));
@@ -175,10 +168,6 @@ function applyBoundaryLimits(pctX, pctY, elementWidthPct, elementHeightPct, zone
     // ---------------------------------------------------------
     // LOGIC B: NON-ROTATED ZONES (Center-Based Logic)
     // ---------------------------------------------------------
-    // Use Real Dimensions (width/height) derived logic if available
-
-    // Prefer "cssLeft/cssTop" + "width/height" from Data if strictly available
-    // OR "x/y" + "width/height" (Backup Format)
     let zCx = null, zCy = null, zW = null, zH = null;
 
     if (limit.width) {
@@ -203,14 +192,18 @@ function applyBoundaryLimits(pctX, pctY, elementWidthPct, elementHeightPct, zone
         let minY = zCy - halfZh + halfH;
         let maxY = zCy + halfZh - halfH;
 
-        // STRICT LOCK: If Min > Max (Element > Zone), Lock to Center unless zooming
+        // 🎯 PREVENÇÃO DE SALTOS EM ZONAS NÃO-ROTACIONADAS
         if (minX > maxX) {
-            if (isZooming) { const temp = minX; minX = maxX; maxX = temp; }
-            else { minX = zCx; maxX = zCx; }
+            const center = zCx;
+            const radius = Math.abs(halfZw - halfW);
+            minX = center - radius;
+            maxX = center + radius;
         }
         if (minY > maxY) {
-            if (isZooming) { const temp = minY; minY = maxY; maxY = temp; }
-            else { minY = zCy; maxY = zCy; }
+            const center = zCy;
+            const radius = Math.abs(halfZh - halfH);
+            minY = center - radius;
+            maxY = center + radius;
         }
 
         let finalX = Math.max(minX, Math.min(maxX, pctX));
