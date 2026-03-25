@@ -277,39 +277,20 @@ function renderControls() {
     headerRow.appendChild(simIdDiv);
     container.appendChild(headerRow);
 
-    // === BOTÕES DE AÇÃO ===
-    const actionBtns = document.createElement('div');
-    actionBtns.style.display = 'flex';
-    actionBtns.style.gap = '10px';
-    actionBtns.style.margin = '10px 0 20px 0';
-
     const isEditing = state._editingIndex !== undefined && state._editingIndex !== null;
-    const btnCart = document.createElement('button');
-    btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
-    btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
-    btnCart.style.flex = '1';
-
-    if (isEditing) {
-        btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        btnCart.style.border = 'none';
-        btnCart.style.color = '#fff';
-    }
-
-    btnCart.onclick = async () => {
-        if (window.MoletomSimulatorInstance) {
-            await window.MoletomSimulatorInstance.handleAddToCart();
+    const btnCart = document.getElementById('btn-add-cart');
+    if (btnCart) {
+        btnCart.innerText = isEditing ? '💾 SALVAR EDIÇÃO' : '🛒 Adicionar ao Carrinho';
+        if (isEditing) {
+            btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            btnCart.style.border = 'none';
+            btnCart.style.color = '#fff';
+        } else {
+            btnCart.style.background = '';
+            btnCart.style.border = '';
+            btnCart.style.color = '';
         }
-    };
-
-    const btnClear = document.createElement('button');
-    btnClear.innerText = 'LIMPAR DADOS';
-    btnClear.className = 'btn-secondary btn-clear';
-    btnClear.style.flex = '1';
-    btnClear.onclick = () => clearState();
-
-    actionBtns.appendChild(btnCart);
-    actionBtns.appendChild(btnClear);
-    container.appendChild(actionBtns);
+    }
 
     // === SEÇÕES MODULARES ===
     container.appendChild(renderSizesSection());

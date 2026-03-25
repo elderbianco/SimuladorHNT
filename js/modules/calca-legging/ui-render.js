@@ -189,46 +189,20 @@ function renderControls() {
     headerRow.innerHTML = `<div style="display:flex; align-items:center; gap:5px;"><span style="color:#aaa; font-size:0.8rem;">PEDIDO:</span><input type="text" id="order-input-top" value="${state.orderNumber || ''}" placeholder="000000" readonly style="background:#0a0a0a; border:1px solid #444; color:#fff; font-family:'Bebas Neue', sans-serif; font-size:0.9rem; padding:4px 8px; width:100px; text-align:center; border-radius:4px; outline:none; cursor:default;"></div><div style="color:#888; font-size:0.75rem;">ID: ${state.simulationId}</div>`;
     container.appendChild(headerRow);
 
-    const actionBtns = document.createElement('div');
-    actionBtns.style.display = 'flex'; actionBtns.style.gap = '10px'; actionBtns.style.margin = '10px 0 20px 0';
-
     const isEditing = state._editingIndex !== undefined && state._editingIndex !== null;
-    const btnCart = document.createElement('button');
-    btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
-    btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
-    btnCart.style.flex = '1';
-
-    if (isEditing) {
-        btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        btnCart.style.border = 'none';
-        btnCart.style.color = '#fff';
+    const btnCart = document.getElementById('btn-add-cart');
+    if (btnCart) {
+        btnCart.innerText = isEditing ? '💾 SALVAR EDIÇÃO' : '🛒 Adicionar ao Carrinho';
+        if (isEditing) {
+            btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            btnCart.style.border = 'none';
+            btnCart.style.color = '#fff';
+        } else {
+            btnCart.style.background = '';
+            btnCart.style.border = '';
+            btnCart.style.color = '';
+        }
     }
-
-    btnCart.onclick = async () => {
-        const currentTerms = state.termsAccepted || (window.state && window.state.termsAccepted);
-        if (!currentTerms) {
-            alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
-            const termsBox = document.getElementById('terms-checkbox');
-            if (termsBox) termsBox.focus();
-            return;
-        }
-
-        if (!isEditing) {
-            const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId) ? state.orderNumber : 'HNT';
-            let newSeq = (typeof generateNextSequenceNumber === 'function') ? generateNextSequenceNumber() : String(Date.now()).slice(-6);
-            state.simulationId = `${orderPrefix}-CL-${newSeq}`;
-        } else if (state._editingOrderId) {
-            state.simulationId = state._editingOrderId;
-        }
-
-        let pdfUrl = (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) ? await PDFGenerator.generateAndSaveForCart(state.simulationId, true) : null;
-        if (pdfUrl) state.pdfUrl = pdfUrl;
-        if (typeof saveOrderToHistory === 'function' && (await saveOrderToHistory())) {
-            if (confirm(isEditing ? '✅ Edição salva com sucesso! Retornando...' : '✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) window.location.href = 'IndexPedidoSimulador.html';
-        }
-    };
-    const btnClear = document.createElement('button'); btnClear.className = 'btn-secondary btn-clear'; btnClear.innerText = 'LIMPAR DADOS'; btnClear.style.flex = '1'; btnClear.onclick = () => clearState();
-    actionBtns.appendChild(btnCart); actionBtns.appendChild(btnClear); container.appendChild(actionBtns);
 
     container.appendChild(renderSizesSection());
     container.appendChild(renderColorSection());

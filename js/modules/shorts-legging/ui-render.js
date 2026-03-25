@@ -303,86 +303,18 @@ function renderControls() {
     headerRow.appendChild(simIdDiv);
     container.appendChild(headerRow);
 
-    // === BOTÕES DE AÇÃO ===
-    const actionBtns = document.createElement('div');
-    actionBtns.style.display = 'flex';
-    actionBtns.style.gap = '10px';
-    actionBtns.style.margin = '10px 0 20px 0';
-
     const isEditing = state._editingIndex !== undefined && state._editingIndex !== null;
-    const btnCart = document.createElement('button');
-    btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
-    btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
-    btnCart.style.flex = '1';
-
-    if (isEditing) {
-        btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        btnCart.style.border = 'none';
-        btnCart.style.color = '#fff';
+    const btnCart = document.getElementById('btn-add-cart');
+    if (btnCart) {
+        btnCart.innerText = isEditing ? '💾 SALVAR EDIÇÃO' : '🛒 Adicionar ao Carrinho';
+        if (isEditing) {
+            btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            btnCart.style.border = 'none';
+        } else {
+            btnCart.style.background = '';
+            btnCart.style.border = '';
+        }
     }
-
-    btnCart.onclick = async () => {
-        const currentTerms = state.termsAccepted || (window.state && window.state.termsAccepted);
-        if (!currentTerms) {
-            alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
-            const termsBox = document.getElementById('terms-checkbox');
-            if (termsBox) termsBox.focus();
-            return;
-        }
-
-        // Bloquear regeneração de ID se estiver editando!
-        if (!isEditing) {
-            let newSeq = '';
-            if (typeof generateNextSequenceNumber === 'function') {
-                newSeq = generateNextSequenceNumber();
-            } else {
-                let last = parseInt(localStorage.getItem('hnt_sequence_id') || '0');
-                let next = last + 1;
-                localStorage.setItem('hnt_sequence_id', next);
-                newSeq = String(next).padStart(6, '0');
-            }
-
-            const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId)
-                ? state.orderNumber
-                : 'HNT';
-
-            state.simulationId = `${orderPrefix}-SL-${newSeq}`;
-        } else if (state._editingOrderId) {
-            state.simulationId = state._editingOrderId;
-        }
-
-        let pdfUrl = null;
-        if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
-            try {
-                console.log('📄 Gerando PDF para carrinho...');
-                pdfUrl = await PDFGenerator.generateAndSaveForCart();
-            } catch (err) {
-                console.error('Erro ao gerar PDF:', err);
-            }
-        }
-
-        if (pdfUrl) {
-            state.pdfUrl = pdfUrl;
-        }
-
-        if (typeof saveOrderToHistory === 'function') {
-            if (await saveOrderToHistory()) {
-                if (confirm(isEditing ? '✅ Edição salva com sucesso! Retornando...' : '✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) {
-                    window.location.href = 'IndexPedidoSimulador.html';
-                }
-            }
-        }
-    };
-
-    const btnClear = document.createElement('button');
-    btnClear.innerText = 'LIMPAR DADOS';
-    btnClear.className = 'btn-secondary btn-clear';
-    btnClear.style.flex = '1';
-    btnClear.onclick = () => clearState();
-
-    actionBtns.appendChild(btnCart);
-    actionBtns.appendChild(btnClear);
-    container.appendChild(actionBtns);
 
     // === SEÇÕES MODULARES ===
     container.appendChild(renderSizesSection());
