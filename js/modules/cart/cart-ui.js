@@ -229,6 +229,15 @@ window.CartUI = {
                 <div id="prod-${uid}" class="tab-content active">
                     <div class="grid-info">
                         ${this.renderPartsList(state.parts || {}, state.color)}
+                        ${state.hntLogoColor ? `
+                            <div class="info-grp">
+                                <div class="info-label">Logo HNT</div>
+                                <div class="info-val">
+                                    <span style="display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:5px; border:1px solid #444; background:${(state.hntLogoColor === 'branco' || state.hntLogoColor === '#FFFFFF') ? '#fff' : (state.hntLogoColor === 'preto' || state.hntLogoColor === '#000') ? '#000' : '#888'}"></span>
+                                    ${state.hntLogoColor.toUpperCase()}
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                     ${hasObs ? `
                         <div style="margin:15px 0; padding:12px; background:rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px; font-size:0.9rem; color:#ccc;">
@@ -236,7 +245,7 @@ window.CartUI = {
                         </div>
                     ` : ''}
                     <div style="margin-top:20px;">
-                        ${this.renderExtrasOnly(state.extras || {})}
+                        ${this.renderExtrasOnly(state.extras || {}, state.config || {})}
                     </div>
                 </div>
 
@@ -637,9 +646,16 @@ window.CartUI = {
         }).join('');
     },
 
-    renderExtrasOnly: function (extras) {
-        if (!extras || Object.keys(extras).length === 0) return '';
-        const validExtras = Object.entries(extras).filter(([key, e]) => {
+    renderExtrasOnly: function (extras, config = {}) {
+        let allExtras = extras ? { ...extras } : {};
+
+        // Add config-based upgrades if not in extras
+        if (config.pocketUpgrade) allExtras['bolso_canguru'] = 'ATIVO';
+        if (config.zipperUpgrade) allExtras['zipper_frontal'] = 'ATIVO';
+        if (config.logoPunho) allExtras['logo_punho'] = 'ATIVO';
+
+        if (Object.keys(allExtras).length === 0) return '';
+        const validExtras = Object.entries(allExtras).filter(([key, e]) => {
             if (!e) return false;
             // Support object formats {enabled: true, value: "Color"}
             if (typeof e === 'object') return e.enabled || e.active;
