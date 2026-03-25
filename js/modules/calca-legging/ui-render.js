@@ -179,7 +179,7 @@ function renderControls() {
     container.innerHTML = '';
 
     if (!state.simulationId && typeof generateNextSequenceNumber === 'function') {
-        state.simulationId = `HNT-SL-${generateNextSequenceNumber()}`;
+        state.simulationId = `HNT-LG-${generateNextSequenceNumber()}`;
     }
     if ((!state.orderNumber || state.orderNumber === state.simulationId) && typeof generateNextOrderNumber === 'function') {
         state.orderNumber = generateNextOrderNumber();
