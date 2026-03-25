@@ -32,9 +32,6 @@ const DATA = {
         { id: "Playfair Display", name: "Playfair Display" }
     ],
 
-    parts: [
-        { id: "main", name: "Cor Principal", restrictedColors: [] }
-    ],
 
     // Zones as Object for Direct Lookup in ui-render.js
     zones: {

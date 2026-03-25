@@ -142,7 +142,7 @@ const DBAdapter = {
         // --- POPULATE SPECS ---
 
         // 1. Process Parts/Colors
-        if (productData.parts) {
+        if (productData.parts && state.parts) {
             // Shorts (Multi-part)
             productData.parts.forEach(p => {
                 const colorId = state.parts[p.id];
