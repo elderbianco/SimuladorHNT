@@ -98,7 +98,7 @@ function renderCustomizationSection() {
             filename: currentEl ? (currentEl.dataset.filename || 'Imagem Enviada') : null,
             isCustom: currentEl ? (currentEl.dataset.isCustom === 'true') : false,
             hasEmbPromise: currentEl ? (currentEl.dataset.embPromise === 'true') : false,
-            scale: currentEl ? (parseFloat(currentEl.style.width) || z.width) / z.width : 1.0
+            scale: currentEl ? (parseFloat(currentEl.dataset.scale) || 1.0) : 1.0
         };
 
         const uploader = window.UIComponents.createImageUploader({
@@ -119,7 +119,9 @@ function renderCustomizationSection() {
                 },
                 onScale: (zoneId, val) => {
                     if (state.elements[zoneId] && state.elements[zoneId][0]) {
-                        state.elements[zoneId][0].style.width = (z.width * val) + '%';
+                        const el = state.elements[zoneId][0];
+                        el.style.transform = `translate(-50%, -50%) scale(${val})`;
+                        el.dataset.scale = val;
                         saveState();
                     }
                 },

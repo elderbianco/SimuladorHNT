@@ -126,8 +126,8 @@ function renderCustomizationSection() {
             filename: currentEl ? (currentEl.dataset.filename || 'Imagem Enviada') : null,
             isCustom: currentEl ? (currentEl.dataset.isCustom === 'true') : false,
             hasEmbPromise: false,
-            // Map % width to Scale Factor.
-            scale: currentEl ? (parseFloat(currentEl.style.width) || z.width) / z.width : 1.0
+            // Read scale from dataset (set by onScale callback)
+            scale: currentEl ? (parseFloat(currentEl.dataset.scale) || 1.0) : 1.0
         };
 
         const uploader = window.UIComponents.createImageUploader({
@@ -151,9 +151,9 @@ function renderCustomizationSection() {
                 onScale: (zoneId, val) => {
                     if (state.elements[zoneId] && state.elements[zoneId].length > 0) {
                         const el = state.elements[zoneId][state.elements[zoneId].length - 1];
-                        const baseP = z.width;
-                        const newP = baseP * val;
-                        el.style.width = newP + '%';
+                        // Use CSS transform scale for smooth, linear, non-jumping zoom
+                        el.style.transform = `translate(-50%, -50%) scale(${val})`;
+                        el.dataset.scale = val; // persist scale for re-render
                         saveState();
                     }
                 },
