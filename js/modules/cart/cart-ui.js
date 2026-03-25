@@ -650,8 +650,6 @@ window.CartUI = {
         let allExtras = extras ? { ...extras } : {};
 
         // Add config-based upgrades if not in extras
-        if (config.pocketUpgrade) allExtras['bolso_canguru'] = 'ATIVO';
-        if (config.zipperUpgrade) allExtras['zipper_frontal'] = 'ATIVO';
         if (config.logoPunho) allExtras['logo_punho'] = 'ATIVO';
 
         if (Object.keys(allExtras).length === 0) return '';

@@ -130,8 +130,6 @@ const DBAdapter = {
         }
 
         // Extras (Moletom)
-        if (state.config.zipperUpgrade) customDetails.push('Zíper: SIM');
-        if (state.config.pocketUpgrade) customDetails.push('Bolso Canguru: SIM');
         if (state.logoPunho && state.logoPunho.enabled) customDetails.push('Logo Punho: SIM');
 
         // Total Peças
