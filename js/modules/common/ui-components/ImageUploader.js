@@ -169,11 +169,11 @@ window.UIComponents.createImageUploader = function ({
 
         const sl = document.createElement('input');
         sl.className = 'range-slider';
-        sl.type = 'range'; sl.min = 0.1; sl.max = 5.0; sl.step = 0.1; sl.value = scaleVal;
+        sl.type = 'range'; sl.min = 0.1; sl.max = 5.0; sl.step = 0.01; sl.value = scaleVal;
         sl.style.flex = '1';
 
         const num = document.createElement('input');
-        num.type = 'number'; num.min = 0.1; num.max = 5.0; num.step = 0.1; num.value = scaleVal.toFixed(2);
+        num.type = 'number'; num.min = 0.1; num.max = 5.0; num.step = 0.01; num.value = scaleVal.toFixed(2);
         num.style.width = '75px';
         num.style.padding = '4px 8px';
         num.style.boxSizing = 'border-box';
