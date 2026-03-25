@@ -72,11 +72,12 @@ const PaymentController = {
 
             let successCount = 0;
             if (typeof SupabaseAdapter !== 'undefined' && window.SupabaseAdapter) {
-                for (const order of cartItems) {
+                for (let i = 0; i < cartItems.length; i++) {
+                    const order = cartItems[i];
                     const orderId = order.order_id || order.ID_PEDIDO;
-                    console.log(`⏳ Aprovando pedido: ${orderId}`);
+                    console.log(`⏳ Aprovando pedido ${i + 1}/${cartItems.length}: ${orderId}`);
                     try {
-                        const success = await window.SupabaseAdapter.aprovarPedidoParaProducao(order);
+                        const success = await window.SupabaseAdapter.aprovarPedidoParaProducao(order, i);
                         if (success) {
                             successCount++;
                         } else {
