@@ -175,7 +175,7 @@ window.CartUI = {
                  <div style="flex:1; margin-left: 15px; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <div style="color:#fff; font-weight:bold;">${esc(this.getProductName(item, order))}</div>
-                        <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc(item.specs?.orderNumber || '---')}</span></div>
+                        <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc(state.orderNumber || item.specs?.orderNumber || '---')}</span></div>
                         <div style="font-size:0.7rem; color:#666; margin-top: 2px;">
                             ID: <span style="color:#888;">${esc(state.simulationId || order.ID_SIMULACAO || '---')}</span> • 
                             ${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '---'}
@@ -228,7 +228,7 @@ window.CartUI = {
 
                 <div id="prod-${uid}" class="tab-content active">
                     <div class="grid-info">
-                        ${this.renderPartsList(state.parts || {})}
+                        ${this.renderPartsList(state.parts || {}, state.color)}
                     </div>
                     ${hasObs ? `
                         <div style="margin:15px 0; padding:12px; background:rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px; font-size:0.9rem; color:#ccc;">
@@ -607,8 +607,19 @@ window.CartUI = {
 
     // --- HELPER RENDERS ---
 
-    renderPartsList: function (parts) {
-        if (!parts) return '';
+    renderPartsList: function (parts, primaryColor = null) {
+        if (!parts || Object.keys(parts).length === 0) {
+            if (primaryColor) {
+                return `
+                <div class="info-grp">
+                    <div class="info-label">Cor Principal</div>
+                    <div class="info-val">
+                        ${window.Security ? window.Security.escape(primaryColor) : primaryColor}
+                    </div>
+                </div>`;
+            }
+            return '';
+        }
         return Object.keys(parts).map(key => {
             const p = parts[key];
             const colorValue = (typeof p === 'object' && p !== null) ? (p.value || 'N/A') : (p || 'N/A');
