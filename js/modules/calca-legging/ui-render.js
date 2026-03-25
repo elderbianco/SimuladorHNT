@@ -227,10 +227,10 @@ function renderControls() {
 
     // 🎯 FIX: Garantir que o evento de clique seja registrado toda vez que o controle for re-renderizado
     btnCart.onclick = () => {
-        if (window.LeggingSimulatorInstance) {
-            window.LeggingSimulatorInstance.handleAddToCart();
+        if (window.CalcaLeggingSimulatorInstance) {
+            window.CalcaLeggingSimulatorInstance.handleAddToCart();
         } else {
-            console.error("LeggingSimulatorInstance não encontrado");
+            console.error("CalcaLeggingSimulatorInstance não encontrado");
         }
     };
 
