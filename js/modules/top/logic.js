@@ -267,10 +267,9 @@ function getZoneBoundaries(element) {
     const halfH = elHPct / 2;
     const zH = zone.height || (zone.width * 1.5);
 
-    // 🎯 EXPANSÃO CONTROLADA (Lógica replicada do Shorts)
-    // Se a imagem for maior que a zona (width > zone.width), consideramos "Zoomed"
-    const isZooming = (elWPct > zone.width + 0.1) || (elHPct > (zone.height || zone.width) + 0.1);
-    const expansionFactor = isZooming ? 1.60 : 1.0;
+    // 🎯 LIBERDADE DE MOVIMENTO: Se estiver com zoom (>1.0), aumentar drasticamente o limite para não "prender"
+    const isZooming = (scale > 1.05); // Pequena margem para evitar ruído
+    const expansionFactor = isZooming ? 5.0 : 1.1; // 5x a zona se estiver com zoom
 
     // Atualizar limites com fator de expansão
     const expandedWidth = zone.width * expansionFactor;
@@ -281,14 +280,19 @@ function getZoneBoundaries(element) {
     let minY = zone.y - (expandedHeight / 2) + halfH;
     let maxY = zone.y + (expandedHeight / 2) - halfH;
 
-    // STRICT LOCK: Se Elemento > Zona, permitir movimento se isZooming (Inverter Limites)
+    // 🎯 PREVENÇÃO DE SALTOS: Se o elemento for maior que a zona expandida, 
+    // invertemos os limites de forma contínua para permitir movimento sem travas.
     if (minX > maxX) {
-        if (isZooming) { const temp = minX; minX = maxX; maxX = temp; }
-        else { minX = zone.x; maxX = zone.x; }
+        const center = zone.x;
+        const radius = Math.abs((expandedWidth / 2) - halfW);
+        minX = center - radius;
+        maxX = center + radius;
     }
     if (minY > maxY) {
-        if (isZooming) { const temp = minY; minY = maxY; maxY = temp; }
-        else { minY = zone.y; maxY = zone.y; }
+        const center = zone.y;
+        const radius = Math.abs((expandedHeight / 2) - halfH);
+        minY = center - radius;
+        maxY = center + radius;
     }
 
     return {
