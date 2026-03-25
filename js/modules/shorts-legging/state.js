@@ -173,7 +173,8 @@ function saveState() {
         hntLogoColor: state.hntLogoColor,
         observations: state.observations,
         phone: state.phone,
-        termsAccepted: state.termsAccepted
+        termsAccepted: state.termsAccepted,
+        uploads: state.uploads
     };
     try {
         localStorage.setItem('hnt_shorts_legging_state', JSON.stringify(data));

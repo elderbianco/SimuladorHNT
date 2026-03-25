@@ -126,6 +126,12 @@ function renderCustomizationSection() {
                         const el = state.elements[zoneId][0];
                         el.style.transform = `translate(-50%, -50%) scale(${val})`;
                         el.dataset.scale = val;
+
+                        // Sync to uploads state
+                        if (!state.uploads) state.uploads = {};
+                        if (!state.uploads[zoneId]) state.uploads[zoneId] = {};
+                        state.uploads[zoneId].scale = val;
+
                         saveState();
                     }
                 },
@@ -400,7 +406,13 @@ async function uploadFileToServer(file, base64, zoneId) {
     } catch (e) { console.error('❌ Upload:', e); }
 }
 
-function addImage(z) { document.getElementById(`upload-${z}`).click(); }
+function addImage(z, s, f, is) {
+    if (s) {
+        createImageElement(z, s, is, f);
+    } else {
+        document.getElementById(`upload-${z}`).click();
+    }
+}
 function handleImageUpload(e, z) {
     const f = e.target.files[0]; if (!f) return;
     let fmt = f.name;
@@ -429,7 +441,13 @@ function createImageElement(z, s, isCustom, filename = '', formattedFilename = '
 
     const el = document.createElement('div'); el.className = 'custom-element draggable';
     el.style.left = zc.x + '%'; el.style.top = zc.y + '%'; el.style.width = zc.width + '%';
-    el.style.transform = 'translate(-50%, -50%)'; el.style.zIndex = 1500;
+
+    // Get current scale from state if it exists
+    const currentScale = (state.uploads && state.uploads[z] && state.uploads[z].scale) ? state.uploads[z].scale : 1.0;
+
+    el.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+    el.dataset.scale = currentScale;
+    el.style.zIndex = 1500;
     el.dataset.type = 'image';
     el.dataset.isCustom = isCustom;
     el.dataset.filename = filename || 'custom_upload';

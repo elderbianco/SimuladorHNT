@@ -188,6 +188,7 @@ function saveState() {
         observations: state.observations,
         phone: state.phone,
         termsAccepted: state.termsAccepted,
+        uploads: state.uploads,
         zoom: currentZoom
     }));
     // GLOBAL SYNC ORDER
