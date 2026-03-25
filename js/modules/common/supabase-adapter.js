@@ -79,7 +79,6 @@ const SupabaseAdapter = {
 
         try {
             // Tratamento robusto de preços e quantidades
-            // formattedData.total_price pode vir do DBAdapter (número) ou de edições (string)
             const finalPrice = this.cleanPrice(formattedData.total_price);
             const finalQty = parseInt(formattedData.quantity) || 0;
             const unitPrice = finalQty > 0 ? (finalPrice / finalQty) : finalPrice;
@@ -125,8 +124,6 @@ const SupabaseAdapter = {
                 console.warn('⚠️ PricingValidator not found. Skipping client-side integrity check.');
             }
 
-
-
             const row = {
                 ID_PEDIDO: formattedData.order_id,
                 ID_SIMULACAO: technicalJson.simulationId || (completeJson ? completeJson.simulationId : ''),
@@ -143,7 +140,6 @@ const SupabaseAdapter = {
                 auth_user_id: userId, // 🛡️ Linked to Supabase Auth
                 is_price_verified: isPriceVerified, // 🛡️ Tampering detection flag
                 STATUS_PEDIDO: isPriceVerified ? 'Simulação' : 'PENDING_AUDIT'
-
             };
 
             console.log('📤 Enviando linha para Supabase:', {
@@ -177,7 +173,6 @@ const SupabaseAdapter = {
         }
 
         try {
-            // IMPORTANT: The real timestamp column in the 'pedidos' table is 'criado_em', NOT 'created_at'
             const { data, error } = await window.supabaseClient
                 .from('pedidos')
                 .select('*')
@@ -218,7 +213,6 @@ const SupabaseAdapter = {
 
     /**
      * Exclui múltiplos pedidos do Banco de Dados
-     * @param {string[]} orderIds - Lista de IDs de pedido
      */
     async deletePedidos(orderIds) {
         if (!window.supabaseClient || !orderIds || orderIds.length === 0) {
@@ -242,7 +236,6 @@ const SupabaseAdapter = {
 
     /**
      * Aprova um pedido para a produção (Integração HNT-OPS)
-     * Realiza a ponte entre o Simulador e o chão de fábrica.
      * @param {Object} orderData - Dados do rascunho
      * @param {number} itemIndex - Índice para evitar duplicidade de Numero de Pedido
      */
@@ -267,7 +260,9 @@ const SupabaseAdapter = {
                 }
             }
 
-            const specs = item.specs || {};
+            item = item || {};
+            const specs = item.specs || item;
+            const parts = specs.parts || {};
 
             // Garantir que temos um número de pedido base
             let baseOrderNumber = (specs.orderNumber || orderId).toString();
@@ -278,266 +273,223 @@ const SupabaseAdapter = {
                 const suffix = (itemIndex + 1).toString().padStart(2, '0');
                 finalOrderNumber = `${baseOrderNumber}-${suffix}`;
             }
-            // If the parsed JSON is just the specs, wrap it
-            if (item && !item.specs && (item.parts || item.sizes)) {
-                item = { specs: item, simulator_type: orderData.TIPO_PRODUTO };
-            }
-        } catch (e) { console.error("Erro ao parsear dados técnicos:", e); }
-    }
-            item = item || {};
-    const specs = item.specs || item; // Fallback to item itself if not wrapped
-    const parts = specs.parts || {};
 
-    // Extract profile for fallback or ID lookup
-    let profile = null;
-    try {
-        const pStr = localStorage.getItem('hnt_customer_profile');
-        if(pStr) profile = JSON.parse(pStr);
-    } catch(e) { }
+            // Extract profile for fallback or ID lookup
+            let profile = null;
+            try {
+                const pStr = localStorage.getItem('hnt_customer_profile');
+                if (pStr) profile = JSON.parse(pStr);
+            } catch (e) { }
 
             const docComprador = item.client_info?.document || orderData.cliente_cpf || orderData.document || profile?.document;
 
-    console.log(`🚀 Iniciando aprovação de pedido ${orderId} para HNT-OPS...`);
+            console.log(`🚀 Iniciando aprovação de pedido ${orderId} para HNT-OPS... (Nº Prod: ${finalOrderNumber})`);
 
-    // 1. Buscar ou Criar o ID interno do cliente cadastrado (Foreign Key)
-    let clienteInternalId = null;
-    if(docComprador) {
-        const cpfLimp = docComprador.replace(/\D/g, '');
+            // 1. Buscar ou Criar o ID interno do cliente cadastrado (Foreign Key)
+            let clienteInternalId = null;
+            if (docComprador) {
+                const cpfLimp = docComprador.replace(/\D/g, '');
 
-        // Primeiro tenta buscar
-        const { data: client, error: clientErr } = await window.supabaseClient
-            .from('clientes_cadastrados')
-            .select('id')
-            .eq('cpf_cnpj_comprador', cpfLimp)
-            .maybeSingle();
-
-        if (!clientErr && client) {
-            clienteInternalId = client.id;
-        } else {
-            // Se não achou, vamos tentar criar um registro básico para o HNT-OPS não ficar sem nome
-            const nomeFallback = item.client_info?.name || profile?.name || 'Cliente';
-            if (nomeFallback !== 'Cliente') {
-                console.log(`👤 Cliente não encontrado. Criando registro temporário para: ${nomeFallback}`);
-                const { data: newClient, error: insErr } = await window.supabaseClient
+                const { data: client, error: clientErr } = await window.supabaseClient
                     .from('clientes_cadastrados')
-                    .upsert({
-                        nome_comprador: nomeFallback,
-                        cpf_cnpj_comprador: cpfLimp,
-                        celular_comprador: item.client_info?.phone || profile?.whatsapp || '',
-                        email_comprador: item.client_info?.email || profile?.email || ''
-                    }, { onConflict: 'cpf_cnpj_comprador' })
                     .select('id')
-                    .single();
+                    .eq('cpf_cnpj_comprador', cpfLimp)
+                    .maybeSingle();
 
-                if (!insErr && newClient) {
-                    clienteInternalId = newClient.id;
+                if (!clientErr && client) {
+                    clienteInternalId = client.id;
+                } else {
+                    const nomeFallback = item.client_info?.name || profile?.name || 'Cliente';
+                    if (nomeFallback !== 'Cliente') {
+                        const { data: newClient, error: insErr } = await window.supabaseClient
+                            .from('clientes_cadastrados')
+                            .upsert({
+                                nome_comprador: nomeFallback,
+                                cpf_cnpj_comprador: cpfLimp,
+                                celular_comprador: item.client_info?.phone || profile?.whatsapp || '',
+                                email_comprador: item.client_info?.email || profile?.email || ''
+                            }, { onConflict: 'cpf_cnpj_comprador' })
+                            .select('id')
+                            .single();
+
+                        if (!insErr && newClient) clienteInternalId = newClient.id;
+                    }
                 }
             }
-        }
-    }
 
             // 2. Atualizar status na tabela original de pedidos
             await window.supabaseClient
-        .from('pedidos')
-        .update({
-            STATUS_PEDIDO: 'Aprovado',
-            json_tec: item
-        })
-        .eq('ID_PEDIDO', orderId);
+                .from('pedidos')
+                .update({ STATUS_PEDIDO: 'Aprovado', json_tec: item })
+                .eq('ID_PEDIDO', orderId);
 
-    // 3. Preparar Linha de Produção (HNT-OPS)
-    const prazo = new Date();
-    prazo.setDate(prazo.getDate() + 15);
+            // 3. Preparar Linha de Produção (HNT-OPS)
+            const prazo = new Date();
+            prazo.setDate(prazo.getDate() + 15);
 
-    // Helper to clean color object to string
-    const getColorLabel = (val) => {
-        if (!val) return null;
-        return (typeof val === 'object') ? (val.value || val.name || null) : val;
-    };
+            const getColorLabel = (val) => {
+                if (!val) return null;
+                return (typeof val === 'object') ? (val.value || val.name || null) : val;
+            };
 
-    // Size Summary
-    let sizeStr = 'Grade Única';
-    if(specs.sizes) {
-        const entries = Object.entries(specs.sizes).filter(([s, q]) => q > 0);
-if (entries.length > 0) {
-    sizeStr = entries.map(([s, q]) => `${q}x ${s}`).join(', ');
-}
+            let sizeStr = 'Grade Única';
+            if (specs.sizes) {
+                const entries = Object.entries(specs.sizes).filter(([s, q]) => q > 0);
+                if (entries.length > 0) sizeStr = entries.map(([s, q]) => `${q}x ${s}`).join(', ');
             } else if (orderData.TAMANHO) {
-    sizeStr = orderData.TAMANHO;
-}
+                sizeStr = orderData.TAMANHO;
+            }
 
-const prodRow = {
-    pedido_origem_id: orderId,
-    cliente_id: clienteInternalId,
-    sku: item.simulator_type || orderData.TIPO_PRODUTO || 'SKU-INDEFINIDO',
-    quantidade: parseInt(item.qty_total || orderData.QUANTIDADE || 1),
-    tamanho: sizeStr,
-    link_pdf: orderData.pdfUrl || orderData.pdf_url || item.pdf_path || '',
+            const prodRow = {
+                pedido_origem_id: orderId,
+                cliente_id: clienteInternalId,
+                sku: item.simulator_type || orderData.TIPO_PRODUTO || 'SKU-INDEFINIDO',
+                quantidade: parseInt(item.qty_total || orderData.QUANTIDADE || 1),
+                tamanho: sizeStr,
+                link_pdf: orderData.pdfUrl || orderData.pdf_url || item.pdf_path || '',
+                cor_centro: getColorLabel(parts.Centro || parts.Base || parts.cor_centro),
+                cor_laterais: getColorLabel(parts.Laterais || parts.cor_laterais),
+                cor_filete: getColorLabel(parts.Filete || parts.Filetes || parts.cor_filete),
+                tecnica: (parts.Tecnica || parts.tecnica || 'Bordado').includes('DTF') ? 'DTF' : 'Bordado',
+                dados_tecnicos: {
+                    parts: parts,
+                    texts: specs.texts || {},
+                    extras: specs.extras || {},
+                    logoPunho: specs.logoPunho || null,
+                    simulationId: specs.simulationId
+                },
+                link_renders: {
+                    frente: orderData.render_frente || null,
+                    costas: orderData.render_costas || null,
+                    lateral: orderData.render_lateral || null
+                },
+                numero_pedido: finalOrderNumber,
+                prazo_entrega: prazo.toISOString().split('T')[0],
+                etapa_atual: 'Preparacao',
+                urgente: !!(orderData.urgente || false),
+                observacoes: specs.observations || ''
+            };
 
-    // Technical Colors Mapping
-    cor_centro: getColorLabel(parts.Centro || parts.Base || parts.cor_centro),
-    cor_laterais: getColorLabel(parts.Laterais || parts.cor_laterais),
-    cor_filete: getColorLabel(parts.Filete || parts.Filetes || parts.cor_filete),
+            const { data: prodResult, error: prodErr } = await window.supabaseClient
+                .from('producao_pedidos')
+                .insert([prodRow])
+                .select();
 
-    // Technique Mapping (Fallback to Bordado)
-    tecnica: (parts.Tecnica || parts.tecnica || 'Bordado').includes('DTF') ? 'DTF' : 'Bordado',
-
-    // NOVO: Full Technical Details for HNT-OPS dynamic rendering
-    dados_tecnicos: {
-        parts: parts,
-        texts: specs.texts || {},
-        extras: specs.extras || {},
-        logoPunho: specs.logoPunho || null,
-        simulationId: specs.simulationId
-    },
-
-    // NOVO: Render Links mapping
-    link_renders: {
-        frente: orderData.render_frente || null,
-        costas: orderData.render_costas || null,
-        lateral: orderData.render_lateral || null
-    },
-
-    numero_pedido: finalOrderNumber, // Sincroniza número puro (ex: 010008-01) com HNT-OPS
-    prazo_entrega: prazo.toISOString().split('T')[0],
-    etapa_atual: 'Preparacao',
-    urgente: !!(orderData.urgente || false),
-    observacoes: specs.observations || ''
-};
-
-
-const { data: prodResult, error: prodErr } = await window.supabaseClient
-    .from('producao_pedidos')
-    .insert([prodRow])
-    .select();
-
-if (prodErr) throw prodErr;
-
-console.log('✅ Pedido inserido no HNT-OPS com mapeamento completo:', prodResult);
-return true;
+            if (prodErr) throw prodErr;
+            console.log('✅ Pedido inserido no HNT-OPS:', prodResult);
+            return true;
 
         } catch (err) {
-    console.error('❌ Erro na integração Simulador -> HNT-OPS:', err);
-    return false;
-}
+            console.error('❌ Erro na integração Simulador -> HNT-OPS:', err);
+            return false;
+        }
     },
 
     /**
      * Obtém o próximo número de pedido disponível, considerando o banco e configs.
      */
     async getNextOrderNumber() {
-    if (!window.supabaseClient) return null;
-    try {
-        // 1. Buscar maior número na produção
-        const { data: lastPedido, error: err1 } = await window.supabaseClient
-            .from('producao_pedidos')
-            .select('numero_pedido')
-            .order('numero_pedido', { ascending: false })
-            .limit(1);
+        if (!window.supabaseClient) return null;
+        try {
+            const { data: lastPedido, error: err1 } = await window.supabaseClient
+                .from('producao_pedidos')
+                .select('numero_pedido')
+                .order('numero_pedido', { ascending: false })
+                .limit(1);
 
-        let maxFound = 0;
-        if (lastPedido && lastPedido.length > 0) {
-            // Remove prefixos se houver (ex: HNT-1000 -> 1000)
-            const raw = lastPedido[0].numero_pedido.toString();
-            maxFound = parseInt(raw.replace(/\D/g, '')) || 0;
+            let maxFound = 0;
+            if (lastPedido && lastPedido.length > 0) {
+                const raw = lastPedido[0].numero_pedido.toString();
+                maxFound = parseInt(raw.replace(/\D/g, '')) || 0;
+            }
+
+            const { data: configRow, error: err2 } = await window.supabaseClient
+                .from('admin_config')
+                .select('valor')
+                .eq('chave', 'proximo_id_simulacao');
+
+            let startFrom = 1000;
+            if (configRow && configRow.length > 0) {
+                startFrom = parseInt(configRow[0].valor) || 1000;
+            }
+
+            const nextNum = Math.max(maxFound, startFrom - 1) + 1;
+            return {
+                number: nextNum,
+                formatted: String(nextNum).padStart(6, '0')
+            };
+        } catch (e) {
+            console.error('❌ Erro ao calcular próximo número de pedido:', e);
+            return null;
         }
-
-        // 2. Buscar número inicial na admin_config
-        const { data: configRow, error: err2 } = await window.supabaseClient
-            .from('admin_config')
-            .select('valor')
-            .eq('chave', 'proximo_id_simulacao');
-
-        let startFrom = 1000;
-        if (configRow && configRow.length > 0) {
-            startFrom = parseInt(configRow[0].valor) || 1000;
-        }
-
-        // O próximo é o maior entre os dois + 1
-        const nextNum = Math.max(maxFound, startFrom - 1) + 1;
-        console.log(`🔢 Próximo número calculado: ${nextNum} (Max Prod: ${maxFound}, Start Admin: ${startFrom})`);
-
-        return {
-            number: nextNum,
-            formatted: String(nextNum).padStart(6, '0')
-        };
-
-    } catch (e) {
-        console.error('❌ Erro ao calcular próximo número de pedido:', e);
-        return null;
-    }
-},
+    },
 
     /**
      * Busca múltiplas configurações da tabela admin_config em uma única chamada.
      */
     async getAdminConfigs(chaves) {
-    if (!window.supabaseClient) return {};
-    try {
-        const { data, error } = await window.supabaseClient
-            .from('admin_config')
-            .select('chave, valor')
-            .in('chave', chaves);
+        if (!window.supabaseClient) return {};
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('admin_config')
+                .select('chave, valor')
+                .in('chave', chaves);
 
-        if (error) throw error;
+            if (error) throw error;
 
-        const configs = {};
-        data.forEach(row => {
-            try {
-                // Tenta fazer parse se parecer JSON, senão usa valor bruto
-                configs[row.chave] = (row.valor.startsWith('{') || row.valor.startsWith('['))
-                    ? JSON.parse(row.valor)
-                    : row.valor;
-            } catch (e) {
-                configs[row.chave] = row.valor;
-            }
-        });
-        return configs;
-    } catch (e) {
-        console.error('❌ Falha ao buscar configs em lote:', e);
-        return {};
-    }
-},
+            const configs = {};
+            data.forEach(row => {
+                try {
+                    configs[row.chave] = (row.valor.startsWith('{') || row.valor.startsWith('['))
+                        ? JSON.parse(row.valor)
+                        : row.valor;
+                } catch (e) {
+                    configs[row.chave] = row.valor;
+                }
+            });
+            return configs;
+        } catch (e) {
+            console.error('❌ Falha ao buscar configs em lote:', e);
+            return {};
+        }
+    },
 
     /**
      * Atualiza uma chave na tabela admin_config
      */
     async updateAdminConfig(chave, valor, descricao = '') {
-    if (!window.supabaseClient) return;
-    try {
-        const { error } = await window.supabaseClient
-            .from('admin_config')
-            .upsert([{ chave, valor: valor.toString(), descricao, atualizado_em: new Date() }]);
-        if (error) throw error;
-        console.log(`⚙️ Config '${chave}' atualizada para '${valor}'`);
-    } catch (e) {
-        console.error(`❌ Falha ao atualizar config ${chave}:`, e);
-    }
-},
-
+        if (!window.supabaseClient) return;
+        try {
+            const { error } = await window.supabaseClient
+                .from('admin_config')
+                .upsert([{ chave, valor: valor.toString(), descricao, atualizado_em: new Date() }]);
+            if (error) throw error;
+        } catch (e) {
+            console.error(`❌ Falha ao atualizar config ${chave}:`, e);
+        }
+    },
 
     /**
      * Registra um evento na tabela de auditoria
      */
     async logAudit(eventType, severity, description, metadata = {}) {
-    if (!window.supabaseClient) return;
-    try {
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
-        const { error } = await window.supabaseClient
-            .from('audit_logs')
-            .insert([{
-                event_type: eventType,
-                severity: severity,
-                description: description,
-                user_id: session?.user?.id || null,
-                metadata: metadata
-            }]);
-        if (error) throw error;
-    } catch (e) {
-        console.error('❌ Falha ao registrar log de auditoria:', e);
+        if (!window.supabaseClient) return;
+        try {
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            const { error } = await window.supabaseClient
+                .from('audit_logs')
+                .insert([{
+                    event_type: eventType,
+                    severity: severity,
+                    description: description,
+                    user_id: session?.user?.id || null,
+                    metadata: metadata
+                }]);
+            if (error) throw error;
+        } catch (e) {
+            console.error('❌ Falha ao registrar log de auditoria:', e);
+        }
     }
-}
 };
 
 window.SupabaseAdapter = SupabaseAdapter;
-
