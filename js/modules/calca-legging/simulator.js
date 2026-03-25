@@ -153,64 +153,7 @@ function setupMainEvents() {
         };
     }
 
-    const btnCart = document.getElementById('btn-add-cart');
-    if (btnCart) {
-        btnCart.onclick = async () => {
-            const loader = document.createElement('div');
-            loader.innerHTML = `
-                <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:white;padding:20px 40px;border-radius:10px;z-index:100000;display:flex;flex-direction:column;align-items:center;gap:15px;box-shadow:0 10px 30px rgba(0,0,0,0.5);border:1px solid #444;">
-                    <div class="spinner-hnt" style="width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid var(--gold,#d4af37);border-radius:50%;animation:spin-hnt 1s linear infinite;"></div>
-                    <div style="font-weight:600;font-size:1.1rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">PROCESSANDO PEDIDO...</div>
-                    <div style="font-size:0.8rem;color:#aaa;">Gerando Ficha Técnica em background</div>
-                </div>
-                <style>@keyframes spin-hnt { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-            `;
-            document.body.appendChild(loader);
-
-            try {
-                const action = async () => {
-                    try {
-                        if (window.LeggingSimulatorInstance && window.LeggingSimulatorInstance.hideAllVisualLimits) {
-                            window.LeggingSimulatorInstance.hideAllVisualLimits();
-                        }
-
-                        let pdfUrl = null;
-                        if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
-                            PDFGenerator.showCaptureFlash();
-                            await PDFGenerator.updateSnapshot(true);
-                            pdfUrl = await PDFGenerator.generateAndSaveForCart();
-                        }
-
-                        if (await saveOrderToHistory(false, pdfUrl)) {
-                            if (typeof resetSimulatorData === 'function') {
-                                resetSimulatorData();
-                            }
-                            setTimeout(() => {
-                                loader.remove();
-                                window.location.href = 'IndexPedidoSimulador.html';
-                            }, 500);
-                        } else {
-                            loader.remove();
-                        }
-                    } catch (e) {
-                        console.error("Erro no processamento do carrinho:", e);
-                        loader.remove();
-                        alert("Erro ao processar pedido. Veja o console.");
-                    }
-                };
-
-                if (typeof validateEmbBeforeAction === 'function') {
-                    validateEmbBeforeAction(action);
-                } else {
-                    await action();
-                }
-            } catch (e) {
-                console.error("Erro global no clique do carrinho:", e);
-                loader.remove();
-                alert("Erro inesperado ao adicionar ao carrinho: " + e.message);
-            }
-        };
-    }
+    // btn-add-cart handled in ui-render.js for persistence
 
     const btnClear = document.getElementById('btn-clear');
     if (btnClear) {

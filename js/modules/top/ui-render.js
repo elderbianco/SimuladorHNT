@@ -206,6 +206,16 @@ function renderControls() {
     btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
     btnCart.style.flex = '1';
     btnCart.style.fontWeight = 'bold';
+
+    // 🎯 FIX: Garantir que o evento de clique seja registrado toda vez que o controle for re-renderizado
+    btnCart.onclick = () => {
+        if (window.TopSimulatorInstance) {
+            window.TopSimulatorInstance.handleAddToCart();
+        } else {
+            console.error("TopSimulatorInstance não encontrado");
+        }
+    };
+
     if (!isEditing) {
         btnCart.style.backgroundColor = '#28a745';
         btnCart.style.borderColor = '#28a745';
