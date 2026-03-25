@@ -433,7 +433,7 @@ class BaseSimulator {
     hideAllVisualLimits() {
         if (!this.state.limits && !window.state?.limits) return;
 
-        const limits = this.state.limits || window.state.limits;
+        const limits = this.state.limits || (window.state && window.state.limits) || {};
 
         Object.keys(limits).forEach(zid => {
             limits[zid] = false;
