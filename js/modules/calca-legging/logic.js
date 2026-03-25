@@ -187,7 +187,9 @@ function loadAdminConfig() {
     });
 
     // Filtra cores disponíveis
-    const disabled = state.config.partColors['main'] || [];
+    // 🛡️ DEFENSIVE: Garantir que partColors exista para evitar erro "reading main"
+    const partColors = state.config.partColors || {};
+    const disabled = partColors['main'] || [];
     state.availableColors = CONFIG.colors.filter(c => !disabled.includes(c.id));
     if (state.availableColors.length === 0) state.availableColors = CONFIG.colors;
 
