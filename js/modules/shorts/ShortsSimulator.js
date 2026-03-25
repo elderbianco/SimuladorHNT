@@ -127,6 +127,12 @@ class ShortsSimulator extends BaseSimulator {
                                 const imgEl = this.state.elements[zid][0];
                                 imgEl.style.transform = `translate(-50%, -50%) scale(${val})`;
                                 imgEl.dataset.scale = val;
+
+                                // Sync to uploads state
+                                if (!this.state.uploads) this.state.uploads = {};
+                                if (!this.state.uploads[zid]) this.state.uploads[zid] = {};
+                                this.state.uploads[zid].scale = val;
+
                                 this.saveState();
                             }
                         },
