@@ -166,7 +166,8 @@ function saveState() {
         hntLogoColor: state.hntLogoColor,
         observations: state.observations,
         phone: state.phone,
-        termsAccepted: state.termsAccepted
+        termsAccepted: state.termsAccepted,
+        uploads: state.uploads
     };
     try {
         localStorage.setItem('hnt_legging_state', JSON.stringify(data));
@@ -205,6 +206,7 @@ function loadState() {
             if (data.observations) state.observations = data.observations;
             if (data.phone) state.phone = data.phone;
             if (data.termsAccepted !== undefined) state.termsAccepted = data.termsAccepted;
+            if (data.uploads) state.uploads = data.uploads;
 
             // SOBREPOR COM DADOS GLOBAIS (SINCRONIA)
             if (typeof DBAdapter !== 'undefined') {
