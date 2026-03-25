@@ -243,8 +243,10 @@ const SupabaseAdapter = {
     /**
      * Aprova um pedido para a produção (Integração HNT-OPS)
      * Realiza a ponte entre o Simulador e o chão de fábrica.
+     * @param {Object} orderData - Dados do rascunho
+     * @param {number} itemIndex - Índice para evitar duplicidade de Numero de Pedido
      */
-    async aprovarPedidoParaProducao(orderData) {
+    async aprovarPedidoParaProducao(orderData, itemIndex = 0) {
         if (!window.supabaseClient) {
             console.error('❌ Supabase Client não inicializado');
             return false;
@@ -381,7 +383,7 @@ const SupabaseAdapter = {
                     lateral: orderData.render_lateral || null
                 },
 
-                numero_pedido: specs.orderNumber || orderId, // Sincroniza número puro (010008) com HNT-OPS
+                numero_pedido: finalOrderNumber, // Sincroniza número puro (ex: 010008-01) com HNT-OPS
                 prazo_entrega: prazo.toISOString().split('T')[0],
                 etapa_atual: 'Preparacao',
                 urgente: !!(orderData.urgente || false),
