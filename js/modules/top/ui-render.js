@@ -171,18 +171,84 @@ function renderControls() {
     headerRow.innerHTML = `<div style="display:flex; align-items:center; gap:5px;"><span style="color:#aaa; font-size:0.8rem;">PEDIDO:</span><input type="text" id="order-input-top" value="${state.orderNumber || ''}" placeholder="000000" readonly style="background:#0a0a0a; border:1px solid #444; color:#fff; font-family:'Bebas Neue', sans-serif; font-size:0.9rem; padding:4px 8px; width:100px; text-align:center; border-radius:4px; outline:none; cursor:default;"></div><div style="color:#888; font-size:0.75rem;">ID: ${state.simulationId}</div>`;
     container.appendChild(headerRow);
 
+    // === BOTÕES DE AÇÃO ===
+    const actionBtns = document.createElement('div');
+    actionBtns.style.display = 'flex';
+    actionBtns.style.gap = '10px';
+    actionBtns.style.margin = '10px 0 20px 0';
+
     const isEditing = state._editingIndex !== undefined && state._editingIndex !== null;
-    const btnCart = document.getElementById('btn-add-cart');
-    if (btnCart) {
-        btnCart.innerText = isEditing ? '💾 SALVAR EDIÇÃO' : '🛒 Adicionar ao Carrinho';
-        if (isEditing) {
-            btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            btnCart.style.border = 'none';
-        } else {
-            btnCart.style.background = '';
-            btnCart.style.border = '';
-        }
+    const btnCart = document.createElement('button');
+    btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
+    btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
+    btnCart.style.flex = '1';
+
+    if (isEditing) {
+        btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        btnCart.style.border = 'none';
+        btnCart.style.color = '#fff';
     }
+
+    btnCart.onclick = async () => {
+        if (!state.termsAccepted) {
+            alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
+            const termsBox = document.getElementById('terms-checkbox');
+            if (termsBox) termsBox.focus();
+            return;
+        }
+
+        if (!isEditing) {
+            let newSeq = '';
+            if (typeof generateNextSequenceNumber === 'function') {
+                newSeq = generateNextSequenceNumber();
+            } else {
+                let last = parseInt(localStorage.getItem('hnt_sequence_id') || '0');
+                let next = last + 1;
+                localStorage.setItem('hnt_sequence_id', next);
+                newSeq = String(next).padStart(6, '0');
+            }
+
+            const orderPrefix = (state.orderNumber && state.orderNumber.trim() !== '' && state.orderNumber !== state.simulationId)
+                ? state.orderNumber
+                : 'HNT';
+
+            state.simulationId = `${orderPrefix}-TP-${newSeq}`;
+        } else if (state._editingOrderId) {
+            state.simulationId = state._editingOrderId;
+        }
+
+        let pdfUrl = null;
+        if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
+            try {
+                console.log('📄 Gerando PDF para carrinho...');
+                pdfUrl = await PDFGenerator.generateAndSaveForCart();
+            } catch (err) {
+                console.error('Erro ao gerar PDF:', err);
+            }
+        }
+
+        if (pdfUrl) {
+            state.pdfUrl = pdfUrl;
+        }
+
+        if (typeof saveOrderToHistory === 'function') {
+            if (await saveOrderToHistory()) {
+                if (confirm(isEditing ? '✅ Edição salva com sucesso! Retornando...' : '✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?')) {
+                    window.location.href = 'IndexPedidoSimulador.html';
+                }
+            }
+        }
+    };
+
+    const btnClearDynamic = document.createElement('button');
+    btnClearDynamic.innerText = 'LIMPAR DADOS';
+    btnClearDynamic.className = 'btn-secondary btn-clear';
+    btnClearDynamic.style.flex = '1';
+    btnClearDynamic.onclick = () => clearState();
+
+    actionBtns.appendChild(btnCart);
+    actionBtns.appendChild(btnClearDynamic);
+    container.appendChild(actionBtns);
 
     container.appendChild(renderSizesSection());
     container.appendChild(renderColorSection());
