@@ -102,14 +102,20 @@ const DBAdapter = {
                 preview_image: "", // To be filled by Simulator before saving if possible
                 pdf_path: pdfUrl || "", // Path to generated PDF in assets/BancoDados/PedidosPDF/
 
+                config: state.config || {},
                 // Especificações Técnicas
                 specs: {
                     sizes: { ...sizes },
-                    parts: {},     // Cores de zonas
-                    extras: {},    // Laces, details
-                    texts: [],     // Text contents
-                    uploads: [],   // Custom images
-                    observations: state.observations || "" // New field
+                    parts: {},     // Cores de zonas (will be filled below)
+                    extras: {
+                        zipper: state.zipper || {},
+                        pocket: state.pocket || {},
+                        logoPunho: state.logoPunho || {}
+                    },
+                    elements: state.elements || {},
+                    texts: state.texts || {},
+                    uploads: state.uploads || {},
+                    observations: state.observations || ""
                 },
 
                 // Financeiro do Item
