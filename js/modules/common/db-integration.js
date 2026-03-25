@@ -241,22 +241,40 @@ const DBAdapter = {
                 }
             });
         } else if (state.elements) {
-            // Drag-drop Zones (Top, Legging)
+            // Drag-drop Zones (Top, Legging, Moletom)
             Object.keys(state.elements).forEach(zoneId => {
                 const els = state.elements[zoneId];
                 if (Array.isArray(els)) {
                     els.forEach((el, idx) => {
-                        // Extract IMG src safely
-                        const imgTag = el.querySelector('img');
-                        const src = imgTag ? imgTag.src : '';
+                        try {
+                            // el may be a DOM element or a plain object (serialized state)
+                            let src = '';
+                            let filename = `Item_${idx + 1}`;
+                            let isCustom = false;
 
-                        record.item.specs.uploads.push({
-                            zone_label: (typeof window !== 'undefined' && typeof window.resolveZoneLabel === 'function') ? window.resolveZoneLabel(zoneId) : (typeof resolveZoneLabel === 'function' ? resolveZoneLabel(zoneId) : zoneId),
-                            zone_id: zoneId,
-                            file_name: el.dataset.filename || `Item_${idx + 1}`,
-                            file_url: src,
-                            is_custom: el.dataset.isCustom === 'true'
-                        });
+                            if (el && typeof el.querySelector === 'function') {
+                                // Live DOM element
+                                const imgTag = el.querySelector('img');
+                                src = imgTag ? imgTag.src : '';
+                                filename = el.dataset?.filename || filename;
+                                isCustom = el.dataset?.isCustom === 'true';
+                            } else if (el && typeof el === 'object') {
+                                // Serialized/plain object fallback
+                                src = el.src || el.supabaseUrl || '';
+                                filename = el.filename || filename;
+                                isCustom = el.isCustom || false;
+                            }
+
+                            record.item.specs.uploads.push({
+                                zone_label: (typeof window !== 'undefined' && typeof window.resolveZoneLabel === 'function') ? window.resolveZoneLabel(zoneId) : (typeof resolveZoneLabel === 'function' ? resolveZoneLabel(zoneId) : zoneId),
+                                zone_id: zoneId,
+                                file_name: filename,
+                                file_url: src,
+                                is_custom: isCustom
+                            });
+                        } catch (elErr) {
+                            console.warn(`formatForDatabase: erro ao processar elemento na zona ${zoneId}:`, elErr);
+                        }
                     });
                 }
             });
