@@ -188,13 +188,34 @@ function renderControls() {
         }
     }
 
-    // === DYNAMIC: inject Limpar Dados button into controls ===
-    const btnClearDynamic = document.createElement('button');
-    btnClearDynamic.innerText = '🗑️ LIMPAR DADOS';
-    btnClearDynamic.className = 'btn-secondary btn-clear';
-    btnClearDynamic.style.cssText = 'width:100%; margin: 8px 0 16px 0;';
-    btnClearDynamic.onclick = () => clearState();
-    container.appendChild(btnClearDynamic);
+    // === ACTION BUTTONS (Standard Shorts Pattern) ===
+    const actionBtns = document.createElement('div');
+    actionBtns.style.cssText = 'display:flex; gap:10px; margin-bottom:15px;';
+
+    const btnCart = document.createElement('button');
+    btnCart.id = 'btn-add-cart';
+    btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
+    btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
+    btnCart.style.flex = '1';
+    btnCart.style.fontWeight = 'bold';
+    if (!isEditing) {
+        btnCart.style.backgroundColor = '#28a745';
+        btnCart.style.borderColor = '#28a745';
+    }
+
+    const btnClear = document.createElement('button');
+    btnClear.innerText = 'LIMPAR DADOS';
+    btnClear.className = 'btn-secondary btn-clear';
+    btnClear.style.cssText = 'flex:1; background-color: #dc3545; border-color: #dc3545; color: white; font-weight:bold;';
+    btnClear.onclick = () => {
+        if (typeof clearState === 'function') clearState();
+    };
+
+    actionBtns.appendChild(btnCart);
+    actionBtns.appendChild(btnClear);
+    container.appendChild(actionBtns);
+
+    // === SECTIONS ===
 
 
     container.appendChild(renderSizesSection());

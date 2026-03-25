@@ -207,7 +207,6 @@ function renderControls() {
     }
 
     // === ACTION BUTTONS (Standard Shorts Pattern) ===
-    const isEditing = state._editingIndex !== undefined && state._editingIndex !== null;
     const actionBtns = document.createElement('div');
     actionBtns.style.cssText = 'display:flex; gap:10px; margin-bottom:15px;';
 
