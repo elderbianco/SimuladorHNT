@@ -88,40 +88,9 @@ function applyImageContainment(divElement, zoneData, imageElement) {
 
     if (!zone || !zone.width || !zone.height) return;
 
-    // ✨ PULAR REDUÇÃO AUTOMÁTICA DE SCALE SE ESTIVER EM MODO ZOOM
-    if (!isZooming) {
-        // Limites com tolerância de 5%
-        const maxZoneWidth = parseFloat(zone.width);
-        const maxZoneHeight = parseFloat(zone.height);
-        const tolerance = 1.05;
-        const limitWidth = maxZoneWidth * tolerance;
-        const limitHeight = maxZoneHeight * tolerance;
-
-        // Verificar se excede limites
-        if (realWidthPct > limitWidth || realHeightPct > limitHeight) {
-            // Calcular fator de escala necessário
-            const scaleX = limitWidth / realWidthPct;
-            const scaleY = limitHeight / realHeightPct;
-            const scaleFactor = Math.min(scaleX, scaleY);
-
-            // Extrair transformações atuais
-            const currentTransform = divElement.style.transform || '';
-            const rotationMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-            const scaleMatch = currentTransform.match(/scale\(([^)]+)\)/);
-
-            const currentRotation = rotationMatch ? rotationMatch[1] : '0deg';
-            const currentScale = scaleMatch ? parseFloat(scaleMatch[1]) : 1.0;
-
-            // Aplicar novo scale (clamped)
-            const newScale = currentScale * scaleFactor;
-            divElement.style.transform = `translate(-50%, -50%) rotate(${currentRotation}) scale(${newScale})`;
-
-            // Atualizar state
-            if (state.uploads[uploadId]) {
-                state.uploads[uploadId].scale = newScale;
-            }
-        }
-    }
+    // ✨ REMOVIDO: Redução automática de scale. 
+    // Para garantir LINEARIDADE total do zoom, não devemos alterar o scale fora do slider.
+    // O updateVisuals já define uma largura inicial baseada na zona, o que é suficiente.
 
     // Verificar e corrigir posição se estiver fora dos limites
     const currentPosX = parseFloat(divElement.style.left);
