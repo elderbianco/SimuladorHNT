@@ -265,8 +265,9 @@ function loadAdminConfig() {
         Object.assign(state.config, specificConfig);
 
         // 3. Cores Desabilitadas
-        const disabledParts = JSON.parse(localStorage.getItem('hnt_legging_part_colors') || '{}');
-        const mainDisabled = disabledParts['main'] || [];
+        const disabledPartsRaw = localStorage.getItem('hnt_legging_part_colors') || '{}';
+        const disabledParts = JSON.parse(disabledPartsRaw === 'null' ? '{}' : disabledPartsRaw) || {};
+        const mainDisabled = (disabledParts && disabledParts['main']) ? disabledParts['main'] : [];
 
         // Filtra cores disponíveis
         state.availableColors = CONFIG.colors.filter(c => !mainDisabled.includes(c.id));
