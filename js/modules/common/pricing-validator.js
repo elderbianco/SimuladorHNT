@@ -132,7 +132,10 @@ const PricingValidator = {
         else if (totalQty >= 10 && cfg.price10 > 0) tierBasePrice = cfg.price10;
 
         // 4. Calculate Subtotal with Sizes
-        let fullUnitBase = (type === 'Moletom' ? cfg.basePrice : unitBase) + customizationCost;
+        const base = (type === 'Moletom' ? (cfg.basePrice || 189.90) : (unitBase || 149.90));
+        let fullUnitBase = base + customizationCost;
+        if (isNaN(fullUnitBase)) fullUnitBase = base;
+
         let subTotal = 0;
 
         Object.entries(sizes).forEach(([sz, q]) => {
