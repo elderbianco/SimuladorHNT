@@ -601,6 +601,15 @@ function addImage(zoneId, src, filename = "Imagem Enviada", isCustom = true) {
         ? generateFormattedFilename(zoneId, filename, isCustom ? 'EXT' : 'ACERVO')
         : filename;
 
+    // Sync to uploads state
+    if (!state.uploads) state.uploads = {};
+    state.uploads[zoneId] = {
+        src: src,
+        filename: filename,
+        isCustom: isCustom,
+        scale: (state.uploads[zoneId] && state.uploads[zoneId].scale) ? state.uploads[zoneId].scale : 1.0
+    };
+
     createImageElement(zoneId, src, isCustom, filename, formattedName);
 }
 
@@ -618,7 +627,12 @@ function createImageElement(zoneId, src, isCustom, filename = '', formattedFilen
     div.style.left = zone.x + '%';
     div.style.top = zone.y + '%';
     div.style.width = zone.width + '%';
-    div.style.transform = 'translate(-50%, -50%) scale(1)';
+
+    // Get current scale from state if it exists
+    const currentScale = (state.uploads && state.uploads[zoneId] && state.uploads[zoneId].scale) ? state.uploads[zoneId].scale : 1.0;
+
+    div.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+    div.dataset.scale = currentScale;
     div.style.zIndex = '1500';
     div.dataset.type = 'image';
     div.dataset.zone = zoneId;

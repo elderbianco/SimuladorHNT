@@ -122,6 +122,12 @@ function renderCustomizationSection() {
                         const el = state.elements[zoneId][0];
                         el.style.transform = `translate(-50%, -50%) scale(${val})`;
                         el.dataset.scale = val;
+
+                        // Sync to uploads state
+                        if (!state.uploads) state.uploads = {};
+                        if (!state.uploads[zoneId]) state.uploads[zoneId] = {};
+                        state.uploads[zoneId].scale = val;
+
                         saveState();
                     }
                 },
