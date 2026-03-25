@@ -446,9 +446,8 @@ class BaseSimulator {
     }
 
     async handleAddToCart() {
-        // Double check state sync before proceeding
+        // 1. Validar Termos
         const currentTerms = this.state.termsAccepted || (window.state && window.state.termsAccepted);
-
         if (!currentTerms) {
             alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
             const termsBox = document.getElementById('terms-checkbox');
@@ -456,12 +455,52 @@ class BaseSimulator {
             return;
         }
 
-        this.hideAllVisualLimits();
+        // 2. Exibir Loader Premium
+        const loader = document.createElement('div');
+        loader.innerHTML = `
+            <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:white;padding:25px 45px;border-radius:12px;z-index:100000;display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:0 15px 40px rgba(0,0,0,0.6);border:1px solid #555;backdrop-filter:blur(5px);">
+                <div class="spinner-hnt" style="width:45px;height:45px;border:4px solid #f3f3f3;border-top:4px solid #D4AF37;border-radius:50%;animation:spin-hnt 1s linear infinite;"></div>
+                <div style="font-weight:700;font-size:1.2rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;color:#D4AF37;">PROCESSANDO PEDIDO...</div>
+                <div style="font-size:0.85rem;color:#ccc;text-align:center;">Gerando ficha técnica e salvando no carrinho</div>
+            </div>
+            <style>@keyframes spin-hnt { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+        `;
+        document.body.appendChild(loader);
 
-        if (typeof window.saveOrderToHistory === 'function') {
-            if (await window.saveOrderToHistory()) {
-                if (confirm('✅ Adicionado ao carrinho! Ir para pedidos?')) window.location.href = 'IndexPedidoSimulador.html';
+        try {
+            // 3. Preparar Captura (Esconder guias)
+            this.hideAllVisualLimits();
+
+            let pdfUrl = null;
+            // 4. Integrar PDF se disponível
+            if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
+                if (typeof PDFGenerator.showCaptureFlash === 'function') PDFGenerator.showCaptureFlash();
+                if (typeof PDFGenerator.updateSnapshot === 'function') await PDFGenerator.updateSnapshot(true);
+                pdfUrl = await PDFGenerator.generateAndSaveForCart();
             }
+
+            // 5. Salvar e Redirecionar
+            if (typeof window.saveOrderToHistory === 'function') {
+                if (await window.saveOrderToHistory(false, pdfUrl)) {
+                    // Limpar estado se sucesso
+                    if (typeof window.resetSimulatorData === 'function') window.resetSimulatorData();
+
+                    setTimeout(() => {
+                        loader.remove();
+                        window.location.href = 'IndexPedidoSimulador.html';
+                    }, 600);
+                } else {
+                    loader.remove();
+                }
+            } else {
+                console.error("saveOrderToHistory não encontrado");
+                loader.remove();
+                alert("Erro: Sistema de salvamento indisponível.");
+            }
+        } catch (e) {
+            console.error("Erro no handleAddToCart (Base):", e);
+            loader.remove();
+            alert("Erro ao adicionar ao carrinho: " + (e.message || String(e)));
         }
     }
 
