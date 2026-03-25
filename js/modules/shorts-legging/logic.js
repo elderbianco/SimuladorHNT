@@ -460,7 +460,7 @@ async function saveOrderToHistory(silent = false, pdfUrlOverride = null) {
 
     // --- SUPABASE SYNC (ASYNC/NON-BLOCKING) ---
     if (typeof SupabaseAdapter !== 'undefined') {
-        process.nextTick = process.nextTick || ((fn) => setTimeout(fn, 0)); // Fallback polyfill if needed in some envs
+        // process.nextTick removal - browser environment
         console.log('🚀 Iniciando sincronização em segundo plano com Supabase (Shorts Legging)...');
         SupabaseAdapter.savePedido(newRow, state)
             .then(() => console.log('✅ Sincronizado com Supabase.'))
