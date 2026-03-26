@@ -99,6 +99,37 @@ class BaseSimulator {
         // 2. Action Buttons (Top)
         container.appendChild(this.renderActionButtons());
 
+        // 2. Pricing and Info Row (Action Bar Replacement)
+        const actionBar = document.createElement('div');
+        actionBar.className = 'action-bar';
+        actionBar.style.marginBottom = '20px';
+        actionBar.style.padding = '0';
+        actionBar.style.background = 'transparent';
+        actionBar.style.border = 'none';
+
+        const isEditing = this.state._editingIndex !== undefined && this.state._editingIndex !== null;
+
+        const btnCart = document.createElement('button');
+        btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
+        btnCart.className = 'btn-action btn-primary-action';
+        btnCart.style.flex = '2';
+        btnCart.onclick = () => this.handleAddToCart();
+
+        const btnClear = document.createElement('button');
+        btnClear.innerText = 'LIMPAR';
+        btnClear.className = 'btn-action btn-secondary-action';
+        btnClear.style.flex = '1';
+        btnClear.onclick = () => {
+            if (confirm("Deseja zerar a simulação?")) {
+                localStorage.removeItem(this.storageKey);
+                window.location.reload();
+            }
+        };
+
+        actionBar.appendChild(btnCart);
+        actionBar.appendChild(btnClear);
+        container.appendChild(actionBar);
+
         // 3. Categories Loop (Tabs style content)
         const categories = window.DATA.categories || [];
         console.log(`🛠️ [BaseSimulator] Rendering ${categories.length} categories:`, categories.map(c => c.id));
