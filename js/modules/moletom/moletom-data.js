@@ -42,14 +42,14 @@ const DATA = {
             // Backup State.js values: x: 30.95, y: 46.93, width: 11.83, height: 15 (Seems very small/specific?)
             // Let's use the explicit values from the backup file found in state.js
             x: 30.95, y: 46.93, width: 11.83, height: 15,
-            category: "Frente",
+            category: "Personalizacao",
             priceVariable: "logoFrontPrice"
         },
         "costas_centro": {
             id: "costas_centro",
             name: "Costas Centro",
             x: 68.32, y: 52.1, width: 14.67, height: 21,
-            category: "Costas",
+            category: "Personalizacao",
             priceVariable: "logoBackPrice"
         }
     },
@@ -59,7 +59,7 @@ const DATA = {
             id: "text_frente",
             parentZone: "frente_centro",
             name: "Texto Frente",
-            category: "Frente",
+            category: "Personalizacao",
             priceVariable: "textFrontPrice",
             x: 30.95, y: 46.93
         },
@@ -67,7 +67,7 @@ const DATA = {
             id: "text_costas",
             parentZone: "costas_centro",
             name: "Texto Costas",
-            category: "Costas",
+            category: "Personalizacao",
             priceVariable: "textBackPrice",
             x: 68.32, y: 52.1
         }
