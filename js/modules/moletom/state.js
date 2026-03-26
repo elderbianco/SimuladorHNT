@@ -57,16 +57,18 @@ if (typeof CONFIG !== 'undefined' && CONFIG.zones) {
 }
 
 // Initialize text zones
-CONFIG.textZones.forEach(z => {
-    state.texts[z.id] = {
-        enabled: false,
-        content: '',
-        fontFamily: 'Anton',
-        color: '#FFFFFF',
-        maxLines: 1,
-        scale: 1.0
-    };
-});
+if (typeof CONFIG !== 'undefined' && CONFIG.textZones) {
+    CONFIG.textZones.forEach(z => {
+        state.texts[z.id] = {
+            enabled: false,
+            content: '',
+            fontFamily: 'Anton',
+            color: '#FFFFFF',
+            maxLines: 1,
+            scale: 1.0
+        };
+    });
+}
 
 
 let dragItem = null;
@@ -189,5 +191,3 @@ window.addEventListener('storage', (e) => {
         }
     }
 });
-
-// Initialized by simulator.js or IndexMoletom.html scripts order.
