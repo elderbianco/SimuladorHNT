@@ -144,10 +144,25 @@ window.CartUI = {
         let state = null;
         if (order && order.DADOS_TECNICOS_JSON) {
             try {
-                state = JSON.parse(order.DADOS_TECNICOS_JSON);
+                const parsed = JSON.parse(order.DADOS_TECNICOS_JSON);
+                // If DADOS_TECNICOS_JSON wraps a nested 'specs' (Supabase format), flatten it
+                state = (parsed && parsed.specs) ? { ...parsed, ...parsed.specs } : parsed;
             } catch (e) { console.warn("Failed to parse DADOS_TECNICOS", e); }
         }
-        if (!state) state = item.specs || {};
+        if (!state) {
+            // item.specs already normalized by cart-controller
+            const rawSpecs = item.specs || {};
+            // Also try: order.json_tec.specs (direct Supabase format without normalization)
+            let jsonTec = order.json_tec;
+            if (!jsonTec && order.DADOS_TECNICOS_JSON) {
+                try { jsonTec = JSON.parse(order.DADOS_TECNICOS_JSON); } catch (e) { }
+            }
+            if (jsonTec && jsonTec.specs) {
+                state = { ...jsonTec, ...jsonTec.specs };
+            } else {
+                state = rawSpecs;
+            }
+        }
 
         // Unify observations (many possible keys)
         const obs = (
