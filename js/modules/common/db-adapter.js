@@ -153,7 +153,8 @@ const DBAdapter = {
         const simType = typeMap[initial] || state.simulator_type || (config && config.product?.toLowerCase().replace(/\s+/g, '_')) || 'shorts_fight';
 
         return {
-            order_id: state.orderNumber || state.simulationId || 'N/A',
+            order_id: state.simulationId || state.orderNumber || 'N/A',
+            order_number: state.orderNumber || '---',
             client_name: 'Cliente (Simulador)', // Placeholder
             client_phone: state.phone || '',
             product_type: (state && state.productInitial) || (config && config.product) || 'Produto',
