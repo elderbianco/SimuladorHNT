@@ -196,67 +196,91 @@ function loadDashboard() {
                     const finalDate = data.criado_em || data.DATA_CRIACAO || data.created_at || new Date().toISOString();
                     const finalPdf = data.pdf_url || data.pdfUrl || data.PDF_URL || "";
 
-                    // Reconstruir o item para o CartUI
+                    // CRITICAL FIX: Supabase may nest customizations under json_tec.specs
+                    // Flatten so code can read from technicalData.parts, technicalData.uploads etc.
+                    const techSpecs = technicalData.specs || {};
+                    const rawParts = technicalData.parts || techSpecs.parts || {};
+                    const rawUploads = technicalData.uploads || techSpecs.uploads || {};
+                    const rawTexts = technicalData.texts || techSpecs.texts || {};
+                    const rawSizes = technicalData.sizes || techSpecs.sizes || {};
+                    const rawExtras = technicalData.extras || techSpecs.extras || {};
+                    const rawConfig = technicalData.config || techSpecs.config || {};
+                    const rawObs = data.observations || data.observacoes || technicalData.observations || techSpecs.observations || "";
+                    const rawOrderNumber = technicalData.orderNumber || techSpecs.orderNumber || data.NUMERO_PEDIDO || data.order_number || "";
+
+                    // Normalizar parts
                     const partsArr = {};
-                    if (technicalData.parts) {
-                        Object.entries(technicalData.parts).forEach(([k, v]) => {
+                    if (rawParts) {
+                        Object.entries(rawParts).forEach(([k, v]) => {
                             const colorVal = (typeof v === 'object' && v !== null) ? (v.value || v.name || 'N/A') : (v || 'N/A');
                             const colorHex = (typeof v === 'object' && v !== null) ? (v.hex || '#333') : '#333';
                             partsArr[k] = { value: colorVal, hex: colorHex };
                         });
                     }
 
+                    // Normalizar uploads (suporte a array ou objeto)
                     const uploadsArr = [];
-                    if (technicalData.uploads) {
-                        Object.entries(technicalData.uploads).forEach(([id, u]) => {
-                            if (u && (u.src || u.filename || u.file_url)) {
-                                uploadsArr.push({
-                                    zone_id: id,
-                                    zone_label: u.zone_label || (typeof resolveZoneLabel === 'function' ? resolveZoneLabel(id) : id),
-                                    file_name: u.file_name || u.filename || 'Imagem',
-                                    file_url: u.file_url || u.src,
-                                    is_custom: u.is_custom !== undefined ? u.is_custom : (u.isCustom || false)
-                                });
-                            }
-                        });
-                    }
+                    const uploadsSource = Array.isArray(rawUploads)
+                        ? rawUploads
+                        : Object.entries(rawUploads).map(([id, u]) => ({ ...u, zone_id: id }));
 
+                    uploadsSource.forEach(u => {
+                        if (u && (u.src || u.filename || u.file_url || u.file_name)) {
+                            const zid = u.zone_id || u.pos || 'pos';
+                            uploadsArr.push({
+                                zone_id: zid,
+                                zone_label: u.zone_label || (typeof resolveZoneLabel === 'function' ? resolveZoneLabel(zid) : zid),
+                                file_name: u.file_name || u.filename || 'Imagem',
+                                file_url: u.file_url || u.src,
+                                is_custom: u.is_custom !== undefined ? u.is_custom : (u.isCustom || false),
+                                unit_price: u.unit_price || 0
+                            });
+                        }
+                    });
+
+                    // Normalizar textos (suporte a array ou objeto)
                     const textsArr = [];
-                    if (technicalData.texts) {
-                        Object.entries(technicalData.texts).forEach(([id, t]) => {
-                            if (t && t.enabled && t.content) {
-                                textsArr.push({
-                                    zone_id: id,
-                                    zone_label: t.zone_label || (typeof resolveZoneLabel === 'function' ? resolveZoneLabel(id) : id),
-                                    content: t.content,
-                                    color: t.color,
-                                    font_family: t.fontFamily || t.font_family
-                                });
-                            }
-                        });
-                    }
+                    const textsSource = Array.isArray(rawTexts)
+                        ? rawTexts
+                        : Object.entries(rawTexts).map(([id, t]) => ({ ...t, zone_id: id }));
+
+                    textsSource.forEach(t => {
+                        if (t && t.content) {
+                            const zid = t.zone_id || 'pos';
+                            textsArr.push({
+                                zone_id: zid,
+                                zone_label: t.zone_label || (typeof resolveZoneLabel === 'function' ? resolveZoneLabel(zid) : zid),
+                                content: t.content,
+                                color: t.color_hex || t.color,
+                                font_family: t.fontFamily || t.font_family,
+                                color_name: t.color_name || t.color,
+                                unit_price: t.unit_price || 0
+                            });
+                        }
+                    });
 
                     const initialMap = { 'SH': 'shorts', 'TP': 'top', 'LG': 'legging', 'ML': 'moletom', 'SL': 'shorts_legging', 'CL': 'calca_legging' };
-                    const detectedType = technicalData.productType || technicalData.simulator_type || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "shorts") : "shorts");
+                    const detectedType = technicalData.productType || technicalData.simulator_type || techSpecs.simulator_type || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "shorts") : "shorts");
+                    const modelName = technicalData.model_name || techSpecs.model_name || technicalData.product_type || data.TIPO_PRODUTO || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "Simulação") : "Simulação");
 
                     data.item = {
                         simulator_type: detectedType,
-                        model_name: technicalData.model_name || technicalData.product_type || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "Simulação") : "Simulação"),
+                        model_name: modelName,
                         qty_total: finalQty,
                         specs: {
                             parts: partsArr,
-                            sizes: technicalData.sizes || {},
+                            sizes: rawSizes,
                             uploads: uploadsArr,
                             texts: textsArr,
-                            orderNumber: technicalData.orderNumber || data.NUMERO_PEDIDO || data.order_number || "",
-                            observations: data.observations || data.observacoes || technicalData.observations || "",
-                            extras: technicalData.extras || {},
-                            config: technicalData.config || {}
+                            orderNumber: rawOrderNumber,
+                            observations: rawObs,
+                            extras: rawExtras,
+                            config: rawConfig
                         },
                         logistics: {
                             orderDate: data.created_at || technicalData.created_at || new Date().toISOString(),
-                            deliveryDate: technicalData.deliveryDate || "", // To be calculated if missing
-                            phone: data.client_phone || technicalData.phone || profile?.phone || ""
+                            deliveryDate: technicalData.deliveryDate || techSpecs.deliveryDate || "",
+                            phone: data.client_phone || technicalData.phone || techSpecs.phone || profile?.phone || ""
                         },
                         pricing: {
                             total_price: finalPrice,
