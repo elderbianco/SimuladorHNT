@@ -169,15 +169,19 @@ const PDFGenerator = {
                 if (!finalDataUrl && typeof html2canvas !== 'undefined') {
                     try {
                         console.log('📸 Fallback para html2canvas v36...');
-                        const canvas = await html2canvas(mirror, {
-                            scale: 1,
-                            useCORS: true,
-                            allowTaint: true,
-                            backgroundColor: '#111111',
-                            width: 1600,
-                            height: 1200
-                        });
-                        finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                        try {
+                            const canvas = await html2canvas(mirror, {
+                                useCORS: true,
+                                allowTaint: true,
+                                backgroundColor: null,
+                                scale: 1,
+                                logging: false
+                            });
+                            finalDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                        } catch (e) {
+                            console.warn('⚠️ html2canvas failed, returning null for mirror:', e);
+                            finalDataUrl = null;
+                        }
                     } catch (err) {
                         console.error('⚠️ html2canvas também falhou:', err);
                     }
@@ -1110,9 +1114,11 @@ if (typeof window !== 'undefined') {
 
     // Captura inicial após 3 segundos (Apenas se estiver no Simulador)
     setTimeout(() => {
-        if (PDFGenerator.updateSnapshot && document.querySelector('.simulator-area')) {
-            PDFGenerator.updateSnapshot();
-        }
+        try {
+            if (PDFGenerator.updateSnapshot && document.querySelector('.simulator-area')) {
+                PDFGenerator.updateSnapshot();
+            }
+        } catch (e) { console.warn('PDFGenerator Initial Hook failed:', e); }
     }, 3000);
 
     // Recapturar quando houver mudanças visuais (conectar com scheduleRender se disponível)
@@ -1121,9 +1127,15 @@ if (typeof window !== 'undefined') {
         window.scheduleRender = function (...args) {
             originalScheduleRender(...args);
             // Agendar atualização do snapshot (debounced)
-            if (PDFGenerator.updateSnapshot) {
-                setTimeout(() => PDFGenerator.updateSnapshot(), 500);
-            }
+            try {
+                if (PDFGenerator.updateSnapshot) {
+                    setTimeout(() => {
+                        try {
+                            PDFGenerator.updateSnapshot();
+                        } catch (e) { }
+                    }, 500);
+                }
+            } catch (e) { }
         };
     }
 }
