@@ -76,7 +76,7 @@ window.CONFIG = DATA;
 window.DATA = DATA;
 window.DATA.categories = [
     { id: 'Geral', name: 'Geral' },
-    { id: 'Personalizacao', name: 'Personalização' }
+    { id: 'Personalizacao', name: 'Áreas de Personalização' }
 ];
 
 window.LIMIT_IMAGES = {

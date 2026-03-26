@@ -69,10 +69,11 @@ class MoletomSimulator extends BaseSimulator {
     provideCustomCategoryZones(type) {
         let zones = (type === 'upload') ? (window.DATA?.uploadZones || (window.DATA?.zones ? Object.values(window.DATA.zones) : null)) : window.DATA?.textZones;
         if (!zones) return undefined;
-        // Ensure all zones map to 'Personalizacao' for Moletom
+        // Map to the correct category name for grouping
+        const targetCat = window.DATA?.categories?.find(c => c.id === 'Personalizacao')?.name || 'Áreas de Personalização';
         return zones.map(z => ({
             ...z,
-            category: 'Personalizacao'
+            category: targetCat
         }));
     }
 }
