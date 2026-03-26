@@ -17,10 +17,10 @@ class MoletomSimulator extends BaseSimulator {
         // 1. Sizes
         sections.push({
             id: 'tamanhos',
-            label: '', // Empty label to avoid duplication with SizeSelector's internal header
+            label: '',
             type: 'size',
             category: 'Geral',
-            sizes: (window.MOLETOM_DATA || window.DATA)?.sizes,
+            sizes: (window.DATA || window.CONFIG)?.sizes,
             selectedSizes: this.state.sizes,
             onUpdate: (label, newVal) => {
                 this.state.sizes[label] = newVal;
@@ -29,7 +29,7 @@ class MoletomSimulator extends BaseSimulator {
         });
 
         // 2. Color
-        const availableColors = (window.MOLETOM_DATA || window.DATA)?.colors || [];
+        const availableColors = (window.DATA || window.CONFIG)?.colors || [];
         const cObj = availableColors.find(c => c.id === this.state.color);
         sections.push({
             id: 'cor_principal',
@@ -55,15 +55,13 @@ class MoletomSimulator extends BaseSimulator {
                 { id: 'preto', name: 'PRETO', hex: '#000000' },
                 { id: 'branco', name: 'BRANCO', hex: '#FFFFFF' }
             ],
-            selectedColor: this.state.logoPunho ? this.state.logoPunho.color : 'preto',
+            selectedColor: this.state.hntLogoColor || 'preto',
             onSelect: (newId) => {
-                if (!this.state.logoPunho) this.state.logoPunho = { enabled: true, color: 'preto' };
-                this.state.logoPunho.color = newId;
-                if (typeof window.updateLogoPunho === 'function') window.updateLogoPunho();
+                this.state.hntLogoColor = newId;
+                if (typeof window.updateHntLayer === 'function') window.updateHntLayer();
                 else this.onStateUpdate();
             }
         });
-
 
         return sections;
     }
@@ -71,15 +69,18 @@ class MoletomSimulator extends BaseSimulator {
     provideCustomCategoryZones(type) {
         let zones = (type === 'upload') ? (window.DATA?.uploadZones || (window.DATA?.zones ? Object.values(window.DATA.zones) : null)) : window.DATA?.textZones;
         if (!zones) return undefined;
+        // Ensure all zones map to 'Personalizacao' for Moletom
         return zones.map(z => ({
             ...z,
-            category: z.category || 'Personalizacao'
+            category: 'Personalizacao'
         }));
     }
 }
 
 window.MoletomSimulatorInstance = new MoletomSimulator();
-window.renderControls = () => window.MoletomSimulatorInstance.render();
+window.renderControls = () => {
+    if (window.MoletomSimulatorInstance) window.MoletomSimulatorInstance.render();
+};
 
 // Robust init wrapper
 (function () {
@@ -88,11 +89,11 @@ window.renderControls = () => window.MoletomSimulatorInstance.render();
             const oldInit = window.init;
             window.init = async function () {
                 await oldInit();
+                console.log("🚀 [Moletom] Calling Instance.init()");
                 if (window.MoletomSimulatorInstance) window.MoletomSimulatorInstance.init();
             };
             clearInterval(check);
         }
     }, 100);
-    // Safety timeout
-    setTimeout(() => clearInterval(check), 2000);
+    setTimeout(() => clearInterval(check), 5000);
 })();
