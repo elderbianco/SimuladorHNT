@@ -244,12 +244,14 @@ function loadDashboard() {
                         model_name: technicalData.model_name || technicalData.product_type || (technicalData.productInitial ? (initialMap[technicalData.productInitial] || "Simulação") : "Simulação"),
                         qty_total: finalQty,
                         specs: {
-                            orderNumber: technicalData.orderNumber || data.NUMERO_PEDIDO || data.order_number || '---',
                             parts: partsArr,
+                            sizes: technicalData.sizes || {},
                             uploads: uploadsArr,
                             texts: textsArr,
-                            sizes: technicalData.sizes || {},
-                            observations: data.observations || data.observacoes || technicalData.observations || technicalData.observacoes || ""
+                            orderNumber: technicalData.orderNumber || data.NUMERO_PEDIDO || data.order_number || "",
+                            observations: data.observations || data.observacoes || technicalData.observations || "",
+                            extras: technicalData.extras || {},
+                            config: technicalData.config || {}
                         },
                         logistics: {
                             orderDate: data.created_at || technicalData.created_at || new Date().toISOString(),
@@ -260,15 +262,6 @@ function loadDashboard() {
                             total_price: finalPrice,
                             unit_price: data.PRECO_UNITARIO || data.unit_price || (technicalData.pricing ? technicalData.pricing.unit_price : (finalPrice / finalQty)),
                             breakdown: technicalData.pricing ? (technicalData.pricing.breakdown || technicalData.pricing) : {}
-                        },
-                        specs: {
-                            parts: partsArr,
-                            sizes: technicalData.sizes || {},
-                            uploads: uploadsArr,
-                            texts: textsArr,
-                            orderNumber: technicalData.orderNumber || "",
-                            observations: data.observations || data.observacoes || technicalData.observations || "",
-                            extras: technicalData.extras || {}
                         },
                         pdf_path: finalPdf
                     };

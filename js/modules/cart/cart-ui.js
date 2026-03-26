@@ -177,11 +177,19 @@ window.CartUI = {
                         <div style="color:#fff; font-weight:bold;">${esc(this.getProductName(item, order))}</div>
                         <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc((() => {
             if (order.order_number && order.order_number !== '---') return order.order_number;
-            const id = order.order_id || '';
-            const match = id.match(/^([A-Z0-9-]+)-(?:SH|SL|TP|LG|ML|CL)-/);
+            const id = order.order_id || state.simulationId || order.ID_SIMULACAO || '';
+
+            // 1. Try to match the 6-digit prefix (e.g., 001000)
+            const prefixMatch = id.match(/^(\d{6})/);
+            if (prefixMatch) return prefixMatch[1];
+
+            // 2. Try to match anything before the first dash if it's numeric/alphanumeric
+            const match = id.match(/^([A-Z0-9]+)-(?:SH|SL|TP|LG|ML|CL)-/i);
             if (match) return match[1];
+
             const simpleMatch = id.split('-')[0];
             if (simpleMatch && simpleMatch.length >= 4 && /^\d+$/.test(simpleMatch)) return simpleMatch;
+
             return order.order_number || state.orderNumber || '---';
         })())}</span></div>
                         <div style="font-size:0.7rem; color:#666; margin-top: 2px;">
