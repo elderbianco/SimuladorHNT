@@ -3,6 +3,33 @@
  */
 
 const DBAdapter = {
+    /**
+     * Gerenciamento de Dados do Cliente (Global)
+     */
+    CustomerData: {
+        STORAGE_KEY: 'hnt_global_client_data',
+        save: function (phone, terms) {
+            const data = {
+                phone: phone || '',
+                terms: terms || false,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+        },
+        load: function () {
+            try {
+                const data = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+                return {
+                    phone: data.phone || '',
+                    terms: data.terms || false
+                };
+            } catch (e) {
+                console.error('Error loading global customer data:', e);
+                return { phone: '', terms: false };
+            }
+        }
+    },
+
     validateOrder(state) {
         const errors = [];
         const sizes = state.sizes || {};
