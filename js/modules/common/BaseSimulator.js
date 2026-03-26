@@ -101,6 +101,8 @@ class BaseSimulator {
 
         // 3. Categories Loop (Tabs style content)
         const categories = window.DATA.categories || [];
+        console.log(`🛠️ [BaseSimulator] Rendering ${categories.length} categories:`, categories.map(c => c.id));
+
         categories.forEach(cat => {
             try {
                 const d = document.createElement('div');
@@ -112,16 +114,18 @@ class BaseSimulator {
                     iconHtml = window.InfoSystem.getIconHTML(`info_${cat.id.toLowerCase()}`) || '';
                 }
 
-                // Removed toggleCategory call and icon
                 d.innerHTML = `<div class="category-header">
-                ${cat.name} ${iconHtml}
-            </div>`;
+                    ${cat.name} ${iconHtml}
+                </div>`;
 
                 const groupContent = document.createElement('div');
                 groupContent.className = 'category-group-content';
 
                 // Custom Hooks (Sizes, Product Specific)
                 try {
+                    const sections = this.getCustomSections() || [];
+                    const catSections = sections.filter(s => s.category === cat.id || s.category === cat.name || (!s.category && cat.id === 'Geral'));
+                    console.log(`  - Category ${cat.id}: ${catSections.length} sections found`);
                     this.renderCategorySections(cat, groupContent);
                 } catch (e) {
                     console.error(`❌ Error rendering sections for ${cat.name}:`, e);
@@ -164,6 +168,7 @@ class BaseSimulator {
 
         // Restore scroll
         container.scrollTop = scrollPos;
+        console.log("✅ [BaseSimulator] Render finished.");
     }
 
     /**
