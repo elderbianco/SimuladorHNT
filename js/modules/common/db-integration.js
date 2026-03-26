@@ -57,8 +57,20 @@ const DBAdapter = {
         const sizes = state.sizes || {};
         const totalQty = Object.values(sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
 
+        const typeMap = {
+            'SH': 'shorts_fight',
+            'TP': 'top',
+            'LG': 'legging',
+            'CL': 'calca_legging',
+            'ML': 'moletom',
+            'SL': 'shorts_legging'
+        };
+        const initial = (state && state.productInitial) || 'SH';
+        const simType = typeMap[initial] || this.detectProductType(state, true);
+
         const record = {
-            order_id: state.orderNumber || state.simulationId || 'N/A',
+            order_id: state.simulationId || state.orderNumber || 'N/A',
+            order_number: state.orderNumber || '---',
             client_name: 'Cliente (Simulador)',
             client_phone: state.phone || '',
             product_type: this.detectProductType(state, false),
@@ -73,7 +85,7 @@ const DBAdapter = {
             DATA_CRIACAO: new Date().toISOString(),
             DADOS_TECNICOS_JSON: "",
             item: {
-                simulator_type: this.detectProductType(state, true),
+                simulator_type: simType,
                 model_name: this.detectProductType(state, false),
                 config: state.config || config || {},
                 specs: {
