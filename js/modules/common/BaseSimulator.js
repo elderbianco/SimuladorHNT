@@ -23,279 +23,159 @@ class BaseSimulator {
      * Initializes the simulator
      */
     init() {
-        this.ensureStandardData();
-        this.loadState();
-
-        // No longer need to auto-select since all are visible
-
+        console.log(`[BaseSimulator] Initializing ${this.constructor.name}...`);
+        this.render();
         this.setupEventListeners();
+
+        // 1. Validar state inicial (defensivo)
+        if (!this.state.parts) this.state.parts = {};
+        if (!this.state.sizes) this.state.sizes = {};
+        if (!this.state.texts) this.state.texts = {};
+        if (!this.state.elements) this.state.elements = {};
+        if (!this.state.zoneLimits) this.state.zoneLimits = {};
+
+        // 2. Hydrate from Storage if available
+        this.loadState();
         this.render();
     }
 
-    /**
-     * Ensures DATA.categories and a 'Personalização' category exists
-     */
-    ensureStandardData() {
-        if (!window.DATA) window.DATA = {};
-
-        // 1. Fallback for categories if not defined
-        if (!window.DATA.categories) {
-            window.DATA.categories = window.CONFIG?.categories || [
-                { id: 'Geral', name: 'Geral' }
-            ];
-        }
-
-        // 2. Always ensure 'Geral' category
-        const hasGeral = window.DATA.categories.find(c => c.id === 'Geral' || c.name === 'Geral');
-        if (!hasGeral) {
-            window.DATA.categories.unshift({ id: 'Geral', name: 'Geral' });
-        }
-
-        // 3. Always ensure 'Personalizacao' category
-        const hasCustom = window.DATA.categories.find(c =>
-            c.id === 'Personalizacao' ||
-            c.name === 'Personalização' ||
-            c.id === 'Personalização' ||
-            c.name === 'Personalizacao'
-        );
-        if (!hasCustom) {
-            window.DATA.categories.push({ id: 'Personalizacao', name: 'Personalização' });
-        }
-    }
-
-    /**
-     * Load state from localStorage or defaults
-     */
-    loadState() {
-        if (typeof window.state !== 'undefined') {
-            this.state = window.state;
-        }
-    }
-
-    /**
-     * Save state to localStorage
-     */
     saveState() {
-        if (typeof window.saveState === 'function') {
-            window.saveState();
-        } else {
-            console.warn('saveState() not implemented globally');
+        if (!this.state) return;
+        localStorage.setItem(this.simKey, JSON.stringify(this.state));
+    }
+
+    loadState() {
+        try {
+            const saved = localStorage.getItem(this.simKey);
+            if (saved) {
+                const data = JSON.parse(saved);
+                // Selective merge to avoid breaking references
+                Object.assign(this.state, data);
+            }
+        } catch (e) {
+            console.warn("[BaseSimulator] Error loading state:", e);
         }
     }
 
     /**
-     * Core Render Method
+     * Main Render Loop
      */
     render() {
         const container = document.getElementById(this.containerId);
-        if (!container) return;
+        if (!container) {
+            console.warn(`[BaseSimulator] Container #${this.containerId} not found.`);
+            return;
+        }
 
-        const scrollPos = container.scrollTop;
+        // 1. Limpar
         container.innerHTML = '';
 
-        // 1. Header
-        container.appendChild(this.renderHeader());
+        try {
+            // 2. Header (ID, Pedido)
+            container.appendChild(this.renderHeader());
 
-        // 2. Action Buttons (Top)
-        container.appendChild(this.renderActionButtons());
+            // 3. Botões de Ação (Adicionar ao Carrinho, Limpar)
+            container.appendChild(this.renderActionButtons());
 
-        // 3. Categories Loop (Tabs style content)
-        const categories = window.DATA.categories || [];
-        console.log(`🛠️ [BaseSimulator] Rendering ${categories.length} categories:`, categories.map(c => c.id));
+            // 4. Categorias Dinâmicas
+            const categories = window.DATA.categories || [];
+            console.log(`🛠️ [BaseSimulator] Rendering ${categories.length} categories:`, categories.map(c => c.id));
 
-        categories.forEach(cat => {
-            try {
-                const d = document.createElement('div');
-                d.className = 'category-group active'; // Always expanded visually
+            categories.forEach(cat => {
+                const group = document.createElement('div');
+                group.className = 'category-group active'; // Always active as requested
 
-                // Icon logic
+                // Header da Categoria
+                const header = document.createElement('div');
+                header.className = 'category-header';
+
                 let iconHtml = '';
-                if (typeof window.InfoSystem !== 'undefined') {
-                    iconHtml = window.InfoSystem.getIconHTML(`info_${cat.id.toLowerCase()}`) || '';
-                }
+                try {
+                    iconHtml = window.InfoSystem ? window.InfoSystem.getIconHTML(`info_${cat.id.toLowerCase()}`) || '' : '';
+                } catch (e) { }
 
-                d.innerHTML = `<div class="category-header">
-                    ${cat.name} ${iconHtml}
-                </div>`;
+                header.innerHTML = `${cat.name.toUpperCase()} ${iconHtml}`;
+                group.appendChild(header);
 
+                // Conteúdo da Categoria
                 const groupContent = document.createElement('div');
-                groupContent.className = 'category-group-content';
+                groupContent.className = 'category-content';
+                groupContent.style.display = 'block';
 
-                // Custom Hooks (Sizes, Product Specific)
+                // Injetar Seções Customizadas (Overridden by subclasses)
                 try {
                     const sections = this.getCustomSections() || [];
                     const catSections = sections.filter(s => s.category === cat.id || s.category === cat.name || (!s.category && cat.id === 'Geral'));
+
                     console.log(`  - Category ${cat.id}: ${catSections.length} sections found`);
-                    this.renderCategorySections(cat, groupContent);
+
+                    catSections.forEach(s => {
+                        const item = document.createElement('div');
+                        item.className = 'control-item';
+
+                        if (s.label) {
+                            const label = document.createElement('label');
+                            label.className = 'control-label';
+                            label.innerText = s.label;
+                            item.appendChild(label);
+                        }
+
+                        if (s.type === 'color' && window.UIComponents?.createColorPicker) {
+                            item.appendChild(window.UIComponents.createColorPicker(s.colors, s.selectedColor, s.onSelect, { className: 'inline-picker' }));
+                        } else if (s.type === 'size' && window.UIComponents?.createSizeSelector) {
+                            item.appendChild(window.UIComponents.createSizeSelector(s.sizes, s.selectedSizes || {}, this.state.config || {}, s.onUpdate));
+                        } else if (s.element) {
+                            item.appendChild(s.element);
+                        }
+
+                        groupContent.appendChild(item);
+                    });
                 } catch (e) {
                     console.error(`❌ Error rendering sections for ${cat.name}:`, e);
                 }
 
-                // Parts (Legacy/Colors)
-                try {
-                    this.renderCategoryParts(cat, groupContent);
-                } catch (e) {
-                    console.error(`❌ Error rendering parts for ${cat.name}:`, e);
-                }
+                // Injetar Peças (Parts) se houver mapeamento
+                this.renderCategoryParts(cat, groupContent);
 
-                // Extras
-                try {
-                    this.renderCategoryExtras(cat, groupContent);
-                } catch (e) {
-                    console.error(`❌ Error rendering extras for ${cat.name}:`, e);
-                }
+                // Injetar Personalização (Zonas de Upload/Texto)
+                this.renderCategoryCustomizations(cat, groupContent);
 
-                // Personalization (Images/Texts)
-                try {
-                    this.renderCategoryCustomizations(cat, groupContent);
-                } catch (e) {
-                    console.error(`❌ Error rendering customizations for ${cat.name}:`, e);
-                }
+                // Injetar Extras (se houver)
+                this.renderCategoryExtras(cat, groupContent);
 
-                d.appendChild(groupContent);
-                container.appendChild(d);
-            } catch (err) {
-                console.error(`❌ Critical error rendering category ${cat.name}:`, err);
+                group.appendChild(groupContent);
+                container.appendChild(group);
+            });
+
+            // 5. Formulário Final (Observações, Telefone, Termos)
+            if (typeof window.renderFinalForm === 'function') {
+                const finalForm = window.renderFinalForm();
+                container.appendChild(finalForm);
+                this.syncFinalForm(finalForm);
             }
-        });
 
-        // 4. Final Form (Aviso/Termos/Obs) - v14.51 Fix
-        if (typeof window.renderFinalForm === 'function') {
-            const finalForm = window.renderFinalForm();
-            container.appendChild(finalForm);
-            this.bindFinalFormListeners(container);
+        } catch (e) {
+            console.error("❌ Critical Render Error (BaseSimulator):", e);
+            container.innerHTML = `<div style="color:red;padding:20px;background:#fee;border:1px solid red;border-radius:4px;">Erro ao renderizar simulador: ${e.message}</div>`;
         }
-
-        // Restore scroll
-        container.scrollTop = scrollPos;
-        console.log("✅ [BaseSimulator] Render finished.");
-    }
-
-    /**
-     * Sincroniza os inputs do formulário final com o estado
-     * @param {HTMLElement} container 
-     */
-    bindFinalFormListeners(container) {
-        const phoneInput = container.querySelector('#phone-input');
-        const obsInput = container.querySelector('#obs-input');
-        const termsCheckbox = container.querySelector('#terms-checkbox');
-
-        if (phoneInput) {
-            phoneInput.value = this.state.phone || '';
-            phoneInput.oninput = (e) => {
-                // Máscara básica (XX) XXXXX-XXXX
-                let val = e.target.value.replace(/\D/g, '');
-                if (val.length > 11) val = val.slice(0, 11);
-
-                let formatted = val;
-                if (val.length > 2) {
-                    formatted = `(${val.slice(0, 2)}) ${val.slice(2)}`;
-                }
-                if (val.length > 7) {
-                    formatted = `(${val.slice(0, 2)}) ${val.slice(2, 7)}-${val.slice(7)}`;
-                }
-
-                e.target.value = formatted;
-                this.state.phone = formatted;
-                if (typeof saveState === 'function') saveState();
-            };
-        }
-
-        if (obsInput) {
-            obsInput.value = this.state.observations || '';
-            obsInput.oninput = (e) => {
-                this.state.observations = e.target.value;
-                if (typeof saveState === 'function') saveState();
-            };
-        }
-
-        if (termsCheckbox) {
-            termsCheckbox.checked = !!this.state.termsAccepted;
-            termsCheckbox.onchange = (e) => {
-                const val = e.target.checked;
-                this.state.termsAccepted = val;
-                if (window.state) window.state.termsAccepted = val;
-                if (typeof saveState === 'function') saveState();
-
-                // Sincronização Global para outros simuladores
-                if (typeof DBAdapter !== 'undefined' && DBAdapter.CustomerData) {
-                    DBAdapter.CustomerData.save(this.state.phone, val);
-                }
-            };
-        }
-    }
-
-    // toggleCategory removed as requested (always visible)
-
-    renderHeader() {
-        if (!this.state.simulationId) {
-            this.state.simulationId = `HNT-${this.config.prefix || 'GEN'}-${Date.now().toString().slice(-6)}`;
-        }
-        const headerRow = document.createElement('div');
-        headerRow.className = 'simulator-header-row';
-        headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;';
-
-        headerRow.innerHTML = `
-            <div style="display:flex;align-items:center;gap:5px;">
-                <span style="color:#aaa;font-size:0.8rem;">PEDIDO:</span>
-                <input type="text" value="${this.state.orderNumber || ''}" 
-                       onchange="state.orderNumber = this.value; saveState();"
-                       style="background:#111;border:1px solid #444;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;padding:4px 8px;width:120px;text-align:center;border-radius:4px;">
-            </div>
-            <div style="color:#888;font-size:0.75rem;">ID: ${this.state.simulationId}</div>
-        `;
-        return headerRow;
-    }
-
-    renderActionButtons() {
-        const actionBtns = document.createElement('div');
-        actionBtns.style.cssText = 'display:flex; gap:10px; margin-bottom:15px;';
-
-        const isEditing = this.state._editingIndex !== undefined && this.state._editingIndex !== null;
-
-        const btnCart = document.createElement('button');
-        btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
-        btnCart.className = 'btn-action btn-primary-action';
-        btnCart.style.flex = '2';
-        btnCart.onclick = (e) => {
-            e.preventDefault();
-            this.handleAddToCart();
-        };
-
-        const btnClear = document.createElement('button');
-        btnClear.innerText = 'LIMPAR';
-        btnClear.className = 'btn-action btn-secondary-action';
-        btnClear.style.flex = '1';
-        btnClear.onclick = (e) => {
-            e.preventDefault();
-            if (confirm("Deseja zerar a simulação?")) {
-                localStorage.removeItem(this.storageKey);
-                window.location.reload();
-            }
-        };
-
-        actionBtns.appendChild(btnCart);
-        actionBtns.appendChild(btnClear);
-        return actionBtns;
     }
 
     renderCategoryParts(cat, container) {
         if (!window.DATA.parts) return;
-        const parts = window.DATA.parts.filter(p => p.category === cat.id && !p.id.includes('hnt'));
+        const catParts = window.DATA.parts.filter(p => p.category === cat.id);
 
-        parts.forEach(p => {
+        catParts.forEach(p => {
             const r = document.createElement('div');
             r.className = 'control-item';
 
-            const curId = this.state.parts?.[p.id];
-            const cObj = window.DATA.colors.find(c => c.id === curId);
-            const labelText = `${p.name.toUpperCase()}${cObj ? ': ' + cObj.name.toUpperCase() : ''}`;
-
-            r.innerHTML = `<span class="control-label">${labelText}</span>`;
+            const label = document.createElement('label');
+            label.className = 'control-label';
+            label.innerText = p.name.toUpperCase();
+            r.appendChild(label);
 
             if (window.UIComponents?.createColorPicker) {
-                let available = window.DATA.colors || [];
-                if (p.restrictedColors) available = available.filter(c => p.restrictedColors.includes(c.id));
+                const available = (window.CONFIG?.colors || window.DATA?.colors || []);
+                const curId = this.state.parts[p.id] || p.defaultColor;
 
                 r.appendChild(window.UIComponents.createColorPicker(available, curId, (id) => {
                     this.state.parts[p.id] = id;
@@ -307,30 +187,7 @@ class BaseSimulator {
     }
 
     renderCategorySections(cat, container) {
-        const sections = this.getCustomSections() || [];
-        const catSections = sections.filter(s => s.category === cat.id || s.category === cat.name || (!s.category && cat.id === 'Geral'));
-
-        catSections.forEach(s => {
-            const item = document.createElement('div');
-            item.className = 'control-item';
-
-            if (s.label) {
-                const label = document.createElement('label');
-                label.className = 'control-label';
-                label.innerText = s.label;
-                item.appendChild(label);
-            }
-
-            if (s.type === 'color' && window.UIComponents?.createColorPicker) {
-                item.appendChild(window.UIComponents.createColorPicker(s.colors, s.selectedColor, s.onSelect, { className: 'inline-picker' }));
-            } else if (s.type === 'size' && window.UIComponents?.createSizeSelector) {
-                item.appendChild(window.UIComponents.createSizeSelector(s.sizes, s.selectedSizes || {}, this.state.config || {}, s.onUpdate));
-            } else if (s.element) {
-                item.appendChild(s.element);
-            }
-
-            container.appendChild(item);
-        });
+        // Obsolete: legacy mapping handled in main render loop now
     }
 
     renderCategoryExtras(cat, container) {
@@ -351,8 +208,8 @@ class BaseSimulator {
     renderCategoryCustomizations(cat, container) {
         if (cat.id !== 'Personalizacao' && cat.name !== 'Personalização') return;
 
-        const uploadZones = this.provideCustomCategoryZones?.('upload') || window.DATA?.uploadZones || (window.CONFIG?.zones ? Object.values(window.CONFIG.zones) : []);
-        const textZones = this.provideCustomCategoryZones?.('text') || window.DATA?.textZones || (window.CONFIG?.textZones || []);
+        const uploadZones = this.provideCustomCategoryZones?.('upload') || window.DATA?.uploadZones || (window.DATA?.zones ? Object.values(window.DATA.zones) : []);
+        const textZones = this.provideCustomCategoryZones?.('text') || window.DATA?.textZones || (window.DATA?.textZones || []);
 
         uploadZones.forEach(u => {
             if (u.id.endsWith('_ii')) return;
@@ -391,11 +248,9 @@ class BaseSimulator {
                                 imgEl.style.transform = `translate(-50%, -50%) scale(${val})`;
                                 imgEl.dataset.scale = val;
 
-                                // Sync to uploads state
                                 if (!this.state.uploads) this.state.uploads = {};
                                 if (!this.state.uploads[zid]) this.state.uploads[zid] = {};
                                 this.state.uploads[zid].scale = val;
-
                                 this.saveState();
                             }
                         },
@@ -455,8 +310,6 @@ class BaseSimulator {
                 });
                 zoneDiv.appendChild(textEditor);
             }
-
-
             container.appendChild(zoneDiv);
         });
     }
@@ -470,80 +323,120 @@ class BaseSimulator {
         this.render();
     }
 
-    /**
-     * Oculta todas as guias visuais/quadros de limite (Solicitado pelo Usuário)
-     */
-    hideAllVisualLimits() {
-        if (!this.state.limits && !window.state?.limits) return;
+    syncFinalForm(container) {
+        const phoneInput = container.querySelector('#phone-input');
+        const obsInput = container.querySelector('#obs-input');
+        const termsCheckbox = container.querySelector('#terms-checkbox');
 
-        const limits = this.state.limits || (window.state && window.state.limits) || {};
+        if (phoneInput) {
+            phoneInput.value = this.state.phone || '';
+            phoneInput.oninput = (e) => {
+                let val = e.target.value.replace(/\D/g, '');
+                if (val.length > 11) val = val.slice(0, 11);
+                let formatted = val;
+                if (val.length > 2) formatted = `(${val.slice(0, 2)}) ${val.slice(2)}`;
+                if (val.length > 7) formatted = `(${val.slice(0, 2)}) ${val.slice(2, 7)}-${val.slice(7)}`;
+                e.target.value = formatted;
+                this.state.phone = formatted;
+                if (typeof window.saveState === 'function') window.saveState();
+            };
+        }
 
-        Object.keys(limits).forEach(zid => {
-            limits[zid] = false;
-        });
+        if (obsInput) {
+            obsInput.value = this.state.observations || '';
+            obsInput.oninput = (e) => {
+                this.state.observations = e.target.value;
+                if (typeof window.saveState === 'function') window.saveState();
+            };
+        }
 
-        if (typeof window.updateVisuals === 'function') window.updateVisuals();
-        if (typeof window.refreshActiveLimits === 'function') window.refreshActiveLimits();
+        if (termsCheckbox) {
+            termsCheckbox.checked = !!this.state.termsAccepted;
+            termsCheckbox.onchange = (e) => {
+                const val = e.target.checked;
+                this.state.termsAccepted = val;
+                if (window.state) window.state.termsAccepted = val;
+                if (typeof window.saveState === 'function') window.saveState();
+            };
+        }
+    }
 
-        this.render();
+    renderHeader() {
+        if (!this.state.simulationId) {
+            this.state.simulationId = `HNT-${this.config.prefix || 'GEN'}-${Date.now().toString().slice(-6)}`;
+        }
+        const headerRow = document.createElement('div');
+        headerRow.className = 'simulator-header-row';
+        headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;';
+
+        headerRow.innerHTML = `
+            <div style="display:flex;align-items:center;gap:5px;">
+                <span style="color:#aaa;font-size:0.8rem;">PEDIDO:</span>
+                <input type="text" value="${this.state.orderNumber || ''}" 
+                       onchange="state.orderNumber = this.value; if(typeof saveState==='function')saveState();"
+                       style="background:#111;border:1px solid #444;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;padding:4px 8px;width:120px;text-align:center;border-radius:4px;">
+            </div>
+            <div style="color:#888;font-size:0.75rem;">ID: ${this.state.simulationId}</div>
+        `;
+        return headerRow;
+    }
+
+    renderActionButtons() {
+        const bar = document.createElement('div');
+        bar.className = 'action-bar-top';
+        bar.style.cssText = 'display:flex;gap:10px;margin-bottom:20px;';
+
+        const cartBtn = document.createElement('button');
+        cartBtn.className = 'btn-action btn-primary-action';
+        cartBtn.innerHTML = '🛒 ADICIONAR AO CARRINHO';
+        cartBtn.style.flex = '1';
+        cartBtn.onclick = () => this.handleAddToCart();
+        bar.appendChild(cartBtn);
+
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'btn-action';
+        clearBtn.innerHTML = 'Limpar Dados';
+        clearBtn.style.padding = '0 15px';
+        clearBtn.onclick = () => { if (typeof window.resetSimulatorData === 'function') window.resetSimulatorData(); };
+        bar.appendChild(clearBtn);
+
+        return bar;
     }
 
     async handleAddToCart() {
-        // 1. Validar Termos
         const currentTerms = this.state.termsAccepted || (window.state && window.state.termsAccepted);
         if (!currentTerms) {
             alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
-            const termsBox = document.getElementById('terms-checkbox');
-            if (termsBox) termsBox.focus();
             return;
         }
 
-        // 2. Exibir Loader Premium
         const loader = document.createElement('div');
         loader.innerHTML = `
-            <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:white;padding:25px 45px;border-radius:12px;z-index:100000;display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:0 15px 40px rgba(0,0,0,0.6);border:1px solid #555;backdrop-filter:blur(5px);">
-                <div class="spinner-hnt" style="width:45px;height:45px;border:4px solid #f3f3f3;border-top:4px solid #D4AF37;border-radius:50%;animation:spin-hnt 1s linear infinite;"></div>
-                <div style="font-weight:700;font-size:1.2rem;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;color:#D4AF37;">PROCESSANDO PEDIDO...</div>
-                <div style="font-size:0.85rem;color:#ccc;text-align:center;">Gerando ficha técnica e salvando no carrinho</div>
+            <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:100000;display:flex;justify-content:center;align-items:center;color:white;font-family:sans-serif;">
+                <div style="text-align:center;">
+                    <div style="width:50px;height:50px;border:5px solid #fff;border-top:5px solid #D4AF37;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
+                    <div style="font-size:1.2rem;font-weight:bold;">PROCESSANDO PEDIDO...</div>
+                </div>
             </div>
-            <style>@keyframes spin-hnt { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
         `;
         document.body.appendChild(loader);
 
         try {
-            // 3. Preparar Captura (Esconder guias)
-            this.hideAllVisualLimits();
-
-            let pdfUrl = null;
-            // 4. Integrar PDF se disponível
             if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
-                if (typeof PDFGenerator.showCaptureFlash === 'function') PDFGenerator.showCaptureFlash();
-                if (typeof PDFGenerator.updateSnapshot === 'function') await PDFGenerator.updateSnapshot(true);
-                pdfUrl = await PDFGenerator.generateAndSaveForCart();
-            }
-
-            // 5. Salvar e Redirecionar
-            if (typeof window.saveOrderToHistory === 'function') {
-                if (await window.saveOrderToHistory(false, pdfUrl)) {
-                    // Limpar estado se sucesso
-                    if (typeof window.resetSimulatorData === 'function') window.resetSimulatorData();
-
-                    setTimeout(() => {
-                        loader.remove();
-                        window.location.href = 'IndexPedidoSimulador.html';
-                    }, 600);
-                } else {
-                    loader.remove();
+                const pdfUrl = await PDFGenerator.generateAndSaveForCart();
+                if (typeof window.saveOrderToHistory === 'function') {
+                    await window.saveOrderToHistory(false, pdfUrl);
+                    window.location.href = 'IndexPedidoSimulador.html';
                 }
             } else {
-                console.error("saveOrderToHistory não encontrado");
-                loader.remove();
-                alert("Erro: Sistema de salvamento indisponível.");
+                alert("Erro: Gerador de PDF não encontrado.");
             }
         } catch (e) {
-            console.error("Erro no handleAddToCart (Base):", e);
+            console.error(e);
+            alert("Erro ao adicionar ao carrinho: " + e.message);
+        } finally {
             loader.remove();
-            alert("Erro ao adicionar ao carrinho: " + (e.message || String(e)));
         }
     }
 
