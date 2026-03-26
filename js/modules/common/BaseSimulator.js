@@ -261,14 +261,16 @@ class BaseSimulator {
             // 2. Upload
             if (window.UIComponents?.createImageUploader) {
                 const el = this.state.elements?.[u.id]?.[0];
+                const imgTag = el?.tagName === 'IMG' ? el : el?.querySelector('img');
+                const uploadState = {
+                    src: imgTag ? imgTag.src : el?.src, // Fallback to el.src just in case
+                    filename: el?.dataset.filename || 'Imagem',
+                    isCustom: el?.dataset.isCustom === 'true',
+                    scale: el?.dataset.scale ? parseFloat(el.dataset.scale) : 1.0
+                };
                 const uploader = window.UIComponents.createImageUploader({
                     zone: u,
-                    uploadState: {
-                        src: el?.src,
-                        filename: el?.dataset.filename || 'Imagem',
-                        isCustom: el?.dataset.isCustom === 'true',
-                        scale: el?.dataset.scale ? parseFloat(el.dataset.scale) : 1.0
-                    },
+                    uploadState: uploadState,
                     limitEnabled: this.state.zoneLimits?.[u.id] !== false,
                     config: window.CONFIG || {},
                     callbacks: {
