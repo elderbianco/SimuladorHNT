@@ -140,11 +140,24 @@ const DBAdapter = {
         const now = new Date();
         const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
 
+        // Mapping for simulator_type to match cart-ui.js iconMap
+        const typeMap = {
+            'SH': 'shorts_fight',
+            'TP': 'top',
+            'LG': 'legging',
+            'CL': 'calca_legging',
+            'ML': 'moletom',
+            'SL': 'shorts_legging'
+        };
+        const initial = (state && state.productInitial) || 'SH';
+        const simType = typeMap[initial] || state.simulator_type || (config && config.product?.toLowerCase().replace(/\s+/g, '_')) || 'shorts_fight';
+
         return {
             order_id: state.orderNumber || state.simulationId || 'N/A',
             client_name: 'Cliente (Simulador)', // Placeholder
             client_phone: state.phone || '',
             product_type: (state && state.productInitial) || (config && config.product) || 'Produto',
+            simulator_type: simType, // Added for Cart UI icon mapping
             color: state.color || 'N/A',
             grade: gradeStr,
             quantity: totalQty,
@@ -157,6 +170,7 @@ const DBAdapter = {
             DATA_ATUALIZACAO: now.toISOString(),
             DADOS_TECNICOS_JSON: JSON.stringify({
                 ...state,
+                simulator_type: simType,
                 config: config, // Salva os preços e definições vigentes no momento do pedido
                 pricing: pricing // Preserva a matemática completa (breakdown, descontos, taxas)
             })
