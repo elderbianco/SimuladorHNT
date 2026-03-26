@@ -424,9 +424,11 @@ class BaseSimulator {
         bar.style.cssText = 'display:flex;gap:10px;margin-bottom:20px;';
 
         const cartBtn = document.createElement('button');
-        cartBtn.className = isEditing ? 'btn-modern' : 'btn-action btn-primary-action';
+        // Padrão Fight Shorts: btn-cart (Verde)
+        cartBtn.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
         cartBtn.innerHTML = isEditing ? '✅ SALVAR EDIÇÃO' : '🛒 ADICIONAR AO CARRINHO';
         cartBtn.style.flex = '1';
+
         if (isEditing) {
             cartBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             cartBtn.style.border = 'none';
@@ -436,7 +438,8 @@ class BaseSimulator {
         bar.appendChild(cartBtn);
 
         const clearBtn = document.createElement('button');
-        clearBtn.className = 'btn-action';
+        // Padrão Fight Shorts: btn-clear (Vermelho)
+        clearBtn.className = 'btn-secondary btn-clear';
         clearBtn.innerHTML = 'LIMPAR DADOS';
         clearBtn.style.padding = '0 15px';
         clearBtn.onclick = () => { if (typeof window.resetSimulatorData === 'function') window.resetSimulatorData(); };
