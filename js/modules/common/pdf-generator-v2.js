@@ -46,6 +46,13 @@ const PDFGenerator = {
                 // --- toBase64: Fetch-based immunization (v37) ---
                 const toBase64 = async (url) => {
                     if (!url || url.startsWith('data:')) return url;
+
+                    // 🛡️ PROTOCOL BYPASS: file:// protocol doesn't support fetch for local assets due to CORS
+                    if (window.location.protocol === 'file:') {
+                        console.log(`📂 [Local Mode] Bypassing immunization for: ${url}`);
+                        return url;
+                    }
+
                     try {
                         let finalUrl = url;
                         if (url.startsWith('../')) {
