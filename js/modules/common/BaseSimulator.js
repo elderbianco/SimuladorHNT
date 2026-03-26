@@ -102,37 +102,57 @@ class BaseSimulator {
         // 3. Categories Loop (Tabs style content)
         const categories = window.DATA.categories || [];
         categories.forEach(cat => {
-            const d = document.createElement('div');
-            d.className = 'category-group active'; // Always expanded visually
+            try {
+                const d = document.createElement('div');
+                d.className = 'category-group active'; // Always expanded visually
 
-            // Icon logic
-            let iconHtml = '';
-            if (typeof window.InfoSystem !== 'undefined') {
-                iconHtml = window.InfoSystem.getIconHTML(`info_${cat.id.toLowerCase()}`) || '';
-            }
+                // Icon logic
+                let iconHtml = '';
+                if (typeof window.InfoSystem !== 'undefined') {
+                    iconHtml = window.InfoSystem.getIconHTML(`info_${cat.id.toLowerCase()}`) || '';
+                }
 
-            // Removed toggleCategory call and icon
-            d.innerHTML = `<div class="category-header">
+                // Removed toggleCategory call and icon
+                d.innerHTML = `<div class="category-header">
                 ${cat.name} ${iconHtml}
             </div>`;
 
-            const groupContent = document.createElement('div');
-            groupContent.className = 'category-group-content';
+                const groupContent = document.createElement('div');
+                groupContent.className = 'category-group-content';
 
-            // Custom Hooks (Sizes, Product Specific)
-            this.renderCategorySections(cat, groupContent);
+                // Custom Hooks (Sizes, Product Specific)
+                try {
+                    this.renderCategorySections(cat, groupContent);
+                } catch (e) {
+                    console.error(`❌ Error rendering sections for ${cat.name}:`, e);
+                }
 
-            // Parts (Legacy/Colors)
-            this.renderCategoryParts(cat, groupContent);
+                // Parts (Legacy/Colors)
+                try {
+                    this.renderCategoryParts(cat, groupContent);
+                } catch (e) {
+                    console.error(`❌ Error rendering parts for ${cat.name}:`, e);
+                }
 
-            // Extras
-            this.renderCategoryExtras(cat, groupContent);
+                // Extras
+                try {
+                    this.renderCategoryExtras(cat, groupContent);
+                } catch (e) {
+                    console.error(`❌ Error rendering extras for ${cat.name}:`, e);
+                }
 
-            // Personalization (Images/Texts)
-            this.renderCategoryCustomizations(cat, groupContent);
+                // Personalization (Images/Texts)
+                try {
+                    this.renderCategoryCustomizations(cat, groupContent);
+                } catch (e) {
+                    console.error(`❌ Error rendering customizations for ${cat.name}:`, e);
+                }
 
-            d.appendChild(groupContent);
-            container.appendChild(d);
+                d.appendChild(groupContent);
+                container.appendChild(d);
+            } catch (err) {
+                console.error(`❌ Critical error rendering category ${cat.name}:`, err);
+            }
         });
 
         // 4. Final Form (Aviso/Termos/Obs) - v14.51 Fix
