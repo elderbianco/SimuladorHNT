@@ -152,7 +152,15 @@ function loadState() {
             state.orderNumber = globalOrder || '';
         }
         state.simulationId = getFormattedId();
+        state.simulationId = getFormattedId();
         saveState();
+    }
+
+    // ENSURE AT LEAST 1 ITEM IS SELECTED (PREVENTS R$ 0,00 ON LOAD)
+    const totalQty = Object.values(state.sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
+    if (totalQty === 0) {
+        state.sizes = { "M": 1 };
+        console.log('Resetting to default size M:1 to prevent R$ 0,00 price.');
     }
 
     // SOBREPOR COM DADOS GLOBAIS (SINCRONIA)
