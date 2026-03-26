@@ -2,7 +2,6 @@
  * Módulo de Interações - Moletom
  */
 
-// Helper: detecta se está em dispositivo mobile/touch
 function isMobile() {
     return window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window && window.innerWidth <= 768);
 }
@@ -25,7 +24,6 @@ function setupViewportPan() {
     });
     window.addEventListener('mouseup', () => { isPanning = false; });
 
-    // TOUCH PANNING
     vp.addEventListener('touchstart', (e) => {
         if (state.isLocked) return;
         if (e.target.closest('.custom-element')) return;
@@ -42,7 +40,7 @@ function setupViewportPan() {
     }, { passive: false });
     window.addEventListener('touchend', () => { isPanning = false; });
     vp.addEventListener('wheel', (e) => {
-        if (state.isLocked || isMobile()) return; // Lock zoom scroll on mobile
+        if (state.isLocked || isMobile()) return;
         e.preventDefault(); const delta = e.deltaY > 0 ? -0.1 : 0.1;
         const old = currentZoom; currentZoom = Math.max(0.5, Math.min(2.5, currentZoom + delta));
         const rect = vp.getBoundingClientRect();
@@ -79,7 +77,6 @@ function setupGlobalDrag() {
         if (zid && state.texts[zid]) { state.texts[zid].x = px; state.texts[zid].y = py; }
     };
     vp.addEventListener('mousedown', (e) => start(e, false)); window.addEventListener('mousemove', (e) => move(e, false)); window.addEventListener('mouseup', () => dragItem = null);
-    // No mobile, imagens são estáticas — drag por touch desabilitado
     if (!isMobile()) {
         vp.addEventListener('touchstart', (e) => start(e, true), { passive: false }); window.addEventListener('touchmove', (e) => move(e, true), { passive: false }); window.addEventListener('touchend', () => dragItem = null);
     }
