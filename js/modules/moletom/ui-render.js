@@ -124,9 +124,15 @@ function renderCustomizationSection() {
 function renderControls() {
     const container = document.getElementById('controls-container');
     if (!container) return;
-    const scrollPos = container.scrollTop; container.innerHTML = '';
+    const scrollPos = container.scrollTop;
+
     if (window.MoletomSimulatorInstance) {
-        window.MoletomSimulatorInstance.render();
+        if (!window.MoletomSimulatorInstance.isInitialized) {
+            console.log("🔄 [Moletom UI] Auto-triggering instance.init()");
+            window.MoletomSimulatorInstance.init();
+        } else {
+            window.MoletomSimulatorInstance.render();
+        }
         container.scrollTop = scrollPos;
         return;
     }
