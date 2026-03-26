@@ -303,8 +303,8 @@ function renderControls() {
         <span style="color:#aaa; font-size:0.8rem;">PEDIDO:</span>
         <input type="text" id="order-input-top" 
                value="${state.orderNumber || ''}" 
-               placeholder="000000" readonly
-               style="background:#0a0a0a; border:1px solid #444; color:#fff; font-family:'Bebas Neue', sans-serif; font-size:0.9rem; padding:4px 8px; width:100px; text-align:center; border-radius:4px; outline:none; cursor:default;">
+               placeholder="000000"
+               style="background:#0a0a0a; border:1px solid #444; color:#fff; font-family:'Bebas Neue', sans-serif; font-size:0.9rem; padding:4px 8px; width:100px; text-align:center; border-radius:4px; outline:none;">
     `;
 
     headerRow.appendChild(orderDiv);

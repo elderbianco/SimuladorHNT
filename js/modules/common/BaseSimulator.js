@@ -409,7 +409,7 @@ class BaseSimulator {
             <div style="display:flex;align-items:center;gap:5px;">
                 <span style="color:#aaa;font-size:0.8rem;">PEDIDO:</span>
                 <input type="text" id="order-input-top" value="${this.state.orderNumber || ''}" 
-                       onchange="window.state.orderNumber = this.value; if(typeof saveState==='function')saveState();"
+                       onchange="this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''); window.state.orderNumber = this.value; if(typeof saveState==='function')saveState();"
                        style="background:#0a0a0a;border:1px solid #444;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;padding:4px 8px;width:120px;text-align:center;border-radius:4px;"
                        placeholder="000000">
             </div>
