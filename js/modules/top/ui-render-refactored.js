@@ -416,8 +416,9 @@ function renderControls() {
     };
 
     const btnReset = document.createElement('button');
-    btnReset.innerText = 'LIMPAR';
-    btnReset.className = 'btn-secondary';
+    btnReset.innerText = 'LIMPAR DADOS';
+    btnReset.className = 'btn-secondary btn-clear';
+    btnReset.style.flex = '1';
     btnReset.onclick = () => {
         if (confirm('Deseja realmente limpar todos os dados?')) {
             if (typeof resetSimulatorData === 'function') {
