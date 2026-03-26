@@ -38,9 +38,6 @@ const DATA = {
         "frente_centro": {
             id: "frente_centro",
             name: "Frente Centro",
-            x: 50, y: 50, width: 23, height: 30, // Adjusted based on visual approx if backup values are too small physically, but let's try to infer better defaults or use calibration if available.
-            // Backup State.js values: x: 30.95, y: 46.93, width: 11.83, height: 15 (Seems very small/specific?)
-            // Let's use the explicit values from the backup file found in state.js
             x: 30.95, y: 46.93, width: 11.83, height: 15,
             category: "Personalizacao",
             priceVariable: "logoFrontPrice"
@@ -77,7 +74,10 @@ const DATA = {
 // Expose to window
 window.CONFIG = DATA;
 window.DATA = DATA;
-window.DATA.categories = [{ id: 'Geral', name: 'Geral' }, { id: 'Personalizacao', name: 'Personalização' }];
+window.DATA.categories = [
+    { id: 'Geral', name: 'Geral' },
+    { id: 'Personalizacao', name: 'Personalização' }
+];
 
 window.LIMIT_IMAGES = {
     dark: { frente_centro: 'MoLimBrFrente.png', costas_centro: 'MoLimBrCostas.png' },
@@ -87,5 +87,5 @@ window.LIMIT_IMAGES = {
 window.COLOR_LIMIT_MAP = {
     'branco': 'light',
     'preto': 'dark',
-    'cinza_mescla': 'light' // Adding cinza for safety
+    'cinza_mescla': 'light'
 };
