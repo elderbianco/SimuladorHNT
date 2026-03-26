@@ -10,6 +10,15 @@ function generateUUID() {
 
 // CONFIG, LIMIT_IMAGES, and COLOR_LIMIT_MAP are now loaded from moletom-data.js (global CONFIG)
 
+window.dataCache = window.dataCache || {
+    partsById: new Map(),
+    extrasById: new Map(),
+    uploadZonesById: new Map(),
+    textZonesById: new Map(),
+    colorsById: new Map(),
+    categoriesById: new Map()
+};
+
 // Helper function to get the full formatted ID
 function getFormattedId() {
     if (typeof SKUGenerator !== 'undefined') {
