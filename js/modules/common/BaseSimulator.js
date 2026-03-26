@@ -11,6 +11,7 @@ class BaseSimulator {
 
         // Dynamic state sync: always point to window.state if available
         this._localState = window.state || {};
+        this.isInitialized = false;
         Object.defineProperty(this, 'state', {
             get: function () { return window.state || this._localState; },
             set: function (val) { this._localState = val; },
@@ -22,10 +23,9 @@ class BaseSimulator {
     /**
      * Initializes the simulator
      */
-    init() {
+    async init() {
+        if (this.isInitialized) return;
         console.log(`[BaseSimulator] Initializing ${this.constructor.name}...`);
-        this.render();
-        this.setupEventListeners();
 
         // 1. Validar state inicial (defensivo)
         if (!this.state.parts) this.state.parts = {};
@@ -36,7 +36,13 @@ class BaseSimulator {
 
         // 2. Hydrate from Storage if available
         this.loadState();
+
+        // 3. Prepare Data
+        if (this.loadData) await this.loadData();
+
+        this.isInitialized = true;
         this.render();
+        this.setupEventListeners();
     }
 
     saveState() {

@@ -78,19 +78,30 @@ class MoletomSimulator extends BaseSimulator {
 }
 
 window.MoletomSimulatorInstance = new MoletomSimulator();
+
+// Redefine renderControls to be state-aware
 window.renderControls = () => {
-    if (window.MoletomSimulatorInstance) window.MoletomSimulatorInstance.render();
+    if (window.MoletomSimulatorInstance) {
+        if (!window.MoletomSimulatorInstance.isInitialized) {
+            console.log("🔄 [Moletom] renderControls triggered auto-init");
+            window.MoletomSimulatorInstance.init();
+        } else {
+            window.MoletomSimulatorInstance.render();
+        }
+    }
 };
 
-// Robust init wrapper
+// Also keep the init wrapper as a second entry point
 (function () {
     const check = setInterval(() => {
         if (typeof window.init === 'function') {
             const oldInit = window.init;
             window.init = async function () {
                 await oldInit();
-                console.log("🚀 [Moletom] Calling Instance.init()");
-                if (window.MoletomSimulatorInstance) window.MoletomSimulatorInstance.init();
+                console.log("🚀 [Moletom] Global init() wrapper calling Instance.init()");
+                if (window.MoletomSimulatorInstance && !window.MoletomSimulatorInstance.isInitialized) {
+                    window.MoletomSimulatorInstance.init();
+                }
             };
             clearInterval(check);
         }
