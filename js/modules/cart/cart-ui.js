@@ -175,7 +175,15 @@ window.CartUI = {
                  <div style="flex:1; margin-left: 15px; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <div style="color:#fff; font-weight:bold;">${esc(this.getProductName(item, order))}</div>
-                        <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc(order.order_number || state.orderNumber || item.specs?.orderNumber || '---')}</span></div>
+                        <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc((() => {
+            if (order.order_number && order.order_number !== '---') return order.order_number;
+            const id = order.order_id || '';
+            const match = id.match(/^([A-Z0-9-]+)-(?:SH|SL|TP|LG|ML|CL)-/);
+            if (match) return match[1];
+            const simpleMatch = id.split('-')[0];
+            if (simpleMatch && simpleMatch.length >= 4 && /^\d+$/.test(simpleMatch)) return simpleMatch;
+            return order.order_number || state.orderNumber || '---';
+        })())}</span></div>
                         <div style="font-size:0.7rem; color:#666; margin-top: 2px;">
                             ID: <span style="color:#888;">${esc(order.order_id || state.simulationId || order.ID_SIMULACAO || '---')}</span> • 
                             ${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '---'}
