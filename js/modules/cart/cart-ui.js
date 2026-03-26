@@ -828,9 +828,11 @@ window.CartUI = {
             'top': 'assets/ui-icons/icon-top.png'
         };
 
-        const iconPath = iconMap[type.toLowerCase().replace(/\s+/g, '_')] ||
+        const normalizedType = type.toLowerCase().replace(/[\s-]+/g, '_');
+        const iconPath = iconMap[normalizedType] ||
             iconMap[type.toLowerCase()] ||
             iconMap[item.product_type?.toLowerCase()] ||
+            iconMap[item.product_type?.toLowerCase().replace(/[\s-]+/g, '_')] ||
             'assets/ui-icons/icon-fight-shorts.png';
 
         if (iconPath) {
