@@ -11,6 +11,12 @@ class MoletomSimulator extends BaseSimulator {
         });
     }
 
+    render() {
+        // Moletom renderiza sua própria UI através do ui-render.js
+        // Isso previne que o BaseSimulator destrua a div controls-container.
+        console.log("[Moletom] BaseSimulator render() ignorado para preservar a UI modular do Moletom.");
+    }
+
     getCustomSections() {
         const sections = [];
 
@@ -80,19 +86,6 @@ class MoletomSimulator extends BaseSimulator {
 
 window.MoletomSimulatorInstance = new MoletomSimulator();
 
-// Redefine renderControls to be state-aware
-window.renderControls = () => {
-    if (window.MoletomSimulatorInstance) {
-        if (!window.MoletomSimulatorInstance.isInitialized) {
-            console.log("🔄 [Moletom] renderControls triggered auto-init");
-            window.MoletomSimulatorInstance.init();
-        } else {
-            window.MoletomSimulatorInstance.render();
-        }
-    }
-};
-
-// Also keep the init wrapper as a second entry point
 (function () {
     const check = setInterval(() => {
         if (typeof window.init === 'function') {
