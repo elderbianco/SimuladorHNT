@@ -28,6 +28,8 @@ class BaseSimulator {
         console.log(`[BaseSimulator] Starting init for ${this.constructor.name}...`);
 
         try {
+            this.isInitialized = true; // Set early to prevent parallel init attempts
+
             // 1. Validar state inicial (defensivo)
             if (!this.state.parts) this.state.parts = {};
             if (!this.state.sizes) this.state.sizes = {};
@@ -48,12 +50,21 @@ class BaseSimulator {
                 console.log("[BaseSimulator] loadData finished");
             }
 
-            this.isInitialized = true;
             console.log("[BaseSimulator] Initialization complete - Rendering...");
             this.render();
             this.setupEventListeners();
+
+            // 4. Update Price after first render
+            this.updatePrice();
         } catch (e) {
+            this.isInitialized = false;
             console.error("[BaseSimulator] Init ERROR:", e);
+        }
+    }
+
+    updatePrice() {
+        if (typeof window.updatePrice === 'function') {
+            window.updatePrice(); // Call global fallback for now to keep HTML sync
         }
     }
 
