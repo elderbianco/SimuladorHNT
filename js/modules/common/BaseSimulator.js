@@ -25,24 +25,36 @@ class BaseSimulator {
      */
     async init() {
         if (this.isInitialized) return;
-        console.log(`[BaseSimulator] Initializing ${this.constructor.name}...`);
+        console.log(`[BaseSimulator] Starting init for ${this.constructor.name}...`);
 
-        // 1. Validar state inicial (defensivo)
-        if (!this.state.parts) this.state.parts = {};
-        if (!this.state.sizes) this.state.sizes = {};
-        if (!this.state.texts) this.state.texts = {};
-        if (!this.state.elements) this.state.elements = {};
-        if (!this.state.zoneLimits) this.state.zoneLimits = {};
+        try {
+            // 1. Validar state inicial (defensivo)
+            if (!this.state.parts) this.state.parts = {};
+            if (!this.state.sizes) this.state.sizes = {};
+            if (!this.state.texts) this.state.texts = {};
+            if (!this.state.elements) this.state.elements = {};
+            if (!this.state.zoneLimits) this.state.zoneLimits = {};
 
-        // 2. Hydrate from Storage if available
-        this.loadState();
+            console.log("[BaseSimulator] State validated");
 
-        // 3. Prepare Data
-        if (this.loadData) await this.loadData();
+            // 2. Hydrate from Storage if available
+            this.loadState();
+            console.log("[BaseSimulator] State loaded");
 
-        this.isInitialized = true;
-        this.render();
-        this.setupEventListeners();
+            // 3. Prepare Data
+            if (this.loadData) {
+                console.log("[BaseSimulator] Awaiting loadData...");
+                await this.loadData();
+                console.log("[BaseSimulator] loadData finished");
+            }
+
+            this.isInitialized = true;
+            console.log("[BaseSimulator] Initialization complete - Rendering...");
+            this.render();
+            this.setupEventListeners();
+        } catch (e) {
+            console.error("[BaseSimulator] Init ERROR:", e);
+        }
     }
 
     saveState() {
