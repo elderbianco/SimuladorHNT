@@ -445,10 +445,12 @@ class BaseSimulator {
         return bar;
     }
 
-    async handleAddToCart() {
+    async handleAddToCart(isEditing = false) {
         const currentTerms = this.state.termsAccepted || (window.state && window.state.termsAccepted);
         if (!currentTerms) {
             alert("⚠️ Você precisa aceitar os Termos e Condições para continuar.");
+            const termsBox = document.getElementById('terms-checkbox');
+            if (termsBox) termsBox.focus();
             return;
         }
 
@@ -457,7 +459,7 @@ class BaseSimulator {
             <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:100000;display:flex;justify-content:center;align-items:center;color:white;font-family:sans-serif;">
                 <div style="text-align:center;">
                     <div style="width:50px;height:50px;border:5px solid #fff;border-top:5px solid #D4AF37;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
-                    <div style="font-size:1.2rem;font-weight:bold;">PROCESSANDO PEDIDO...</div>
+                    <div style="font-size:1.2rem;font-weight:bold;">${isEditing ? 'SALVANDO ALTERAÇÕES...' : 'PROCESSANDO PEDIDO...'}</div>
                 </div>
             </div>
             <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
@@ -465,20 +467,27 @@ class BaseSimulator {
         document.body.appendChild(loader);
 
         try {
+            let pdfUrl = null;
             if (typeof PDFGenerator !== 'undefined' && PDFGenerator.generateAndSaveForCart) {
-                const pdfUrl = await PDFGenerator.generateAndSaveForCart();
-                if (typeof window.saveOrderToHistory === 'function') {
-                    await window.saveOrderToHistory(false, pdfUrl);
-                    window.location.href = 'IndexPedidoSimulador.html';
+                pdfUrl = await PDFGenerator.generateAndSaveForCart();
+            }
+
+            if (typeof window.saveOrderToHistory === 'function') {
+                const success = await window.saveOrderToHistory(false, pdfUrl);
+                if (success) {
+                    const msg = isEditing ? '✅ Edição salva com sucesso! Retornando...' : '✅ Produto adicionado ao carrinho!\n\nDeseja ir para a página de pedidos finalizar?';
+                    if (confirm(msg)) {
+                        window.location.href = 'IndexPedidoSimulador.html';
+                    }
                 }
             } else {
-                alert("Erro: Gerador de PDF não encontrado.");
+                alert("Erro: Função saveOrderToHistory não encontrada.");
             }
         } catch (e) {
             console.error(e);
-            alert("Erro ao adicionar ao carrinho: " + e.message);
+            alert("Erro ao processar: " + e.message);
         } finally {
-            loader.remove();
+            if (loader.parentNode) loader.parentNode.removeChild(loader);
         }
     }
 
