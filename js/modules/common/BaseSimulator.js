@@ -391,7 +391,8 @@ class BaseSimulator {
 
     renderHeader() {
         if (!this.state.simulationId) {
-            this.state.simulationId = `HNT-${this.config.prefix || 'GEN'}-${Date.now().toString().slice(-6)}`;
+            const pref = this.config.prefix || 'GEN';
+            this.state.simulationId = `HNT-${pref}-${Date.now().toString().slice(-6)}`;
         }
         const headerRow = document.createElement('div');
         headerRow.className = 'simulator-header-row';
@@ -400,30 +401,36 @@ class BaseSimulator {
         headerRow.innerHTML = `
             <div style="display:flex;align-items:center;gap:5px;">
                 <span style="color:#aaa;font-size:0.8rem;">PEDIDO:</span>
-                <input type="text" value="${this.state.orderNumber || ''}" 
-                       onchange="state.orderNumber = this.value; if(typeof saveState==='function')saveState();"
-                       style="background:#111;border:1px solid #444;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;padding:4px 8px;width:120px;text-align:center;border-radius:4px;">
+                <input type="text" id="order-input-top" value="${this.state.orderNumber || ''}" 
+                       onchange="window.state.orderNumber = this.value; if(typeof saveState==='function')saveState();"
+                       style="background:#0a0a0a;border:1px solid #444;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1rem;padding:4px 8px;width:120px;text-align:center;border-radius:4px;"
+                       placeholder="000000">
             </div>
             <div style="color:#888;font-size:0.75rem;">ID: ${this.state.simulationId}</div>
         `;
         return headerRow;
     }
 
-    renderActionButtons() {
+    renderActionButtons(isEditing = false) {
         const bar = document.createElement('div');
         bar.className = 'action-bar-top';
         bar.style.cssText = 'display:flex;gap:10px;margin-bottom:20px;';
 
         const cartBtn = document.createElement('button');
-        cartBtn.className = 'btn-action btn-primary-action';
-        cartBtn.innerHTML = '🛒 ADICIONAR AO CARRINHO';
+        cartBtn.className = isEditing ? 'btn-modern' : 'btn-action btn-primary-action';
+        cartBtn.innerHTML = isEditing ? '✅ SALVAR EDIÇÃO' : '🛒 ADICIONAR AO CARRINHO';
         cartBtn.style.flex = '1';
-        cartBtn.onclick = () => this.handleAddToCart();
+        if (isEditing) {
+            cartBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            cartBtn.style.border = 'none';
+        }
+
+        cartBtn.onclick = () => this.handleAddToCart(isEditing);
         bar.appendChild(cartBtn);
 
         const clearBtn = document.createElement('button');
         clearBtn.className = 'btn-action';
-        clearBtn.innerHTML = 'Limpar Dados';
+        clearBtn.innerHTML = 'LIMPAR DADOS';
         clearBtn.style.padding = '0 15px';
         clearBtn.onclick = () => { if (typeof window.resetSimulatorData === 'function') window.resetSimulatorData(); };
         bar.appendChild(clearBtn);
