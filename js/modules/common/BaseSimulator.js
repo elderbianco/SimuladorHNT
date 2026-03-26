@@ -234,7 +234,12 @@ class BaseSimulator {
     }
 
     renderCategoryCustomizations(cat, container) {
-        if (cat.id !== 'Personalizacao' && cat.name !== 'Personalização') return;
+        const catId = (cat.id || '').toLowerCase();
+        const catName = (cat.name || '').toLowerCase();
+
+        // Match "Personalizacao" or "Personalização" (with or without accent, case insensitive)
+        const isPersonalization = catId.includes('personalizacao') || catName.includes('personaliza') || catName.includes('personalizacao');
+        if (!isPersonalization) return;
 
         const uploadZones = this.provideCustomCategoryZones?.('upload') || window.DATA?.uploadZones || (window.DATA?.zones ? Object.values(window.DATA.zones) : []);
         const textZones = this.provideCustomCategoryZones?.('text') || window.DATA?.textZones || (window.DATA?.textZones || []);
