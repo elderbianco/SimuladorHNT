@@ -91,28 +91,27 @@ class BaseSimulator {
      */
     render() {
         const container = document.getElementById(this.containerId);
-        if (!container) {
-            console.warn(`[BaseSimulator] Container #${this.containerId} not found.`);
-            return;
-        }
+        if (!container) return;
 
-        // 1. Limpar
+        // Preserve scroll position
+        const scrollPos = container.scrollTop;
         container.innerHTML = '';
 
         try {
-            // 2. Header (ID, Pedido)
+            // Check if editing mode is active
+            const isEditing = this.state._editingIndex !== undefined && this.state._editingIndex !== null;
+
+            // 1. Header (ID, Pedido)
             container.appendChild(this.renderHeader());
 
-            // 3. Botões de Ação (Adicionar ao Carrinho, Limpar)
-            container.appendChild(this.renderActionButtons());
+            // 2. Botões de Ação (Adicionar ao Carrinho, Limpar)
+            container.appendChild(this.renderActionButtons(isEditing));
 
-            // 4. Categorias Dinâmicas
-            const categories = window.DATA.categories || [];
-            console.log(`🛠️ [BaseSimulator] Rendering ${categories.length} categories:`, categories.map(c => c.id));
-
+            // 3. Categorias Dinâmicas
+            const categories = window.DATA?.categories || [];
             categories.forEach(cat => {
                 const group = document.createElement('div');
-                group.className = 'category-group active'; // Always active as requested
+                group.className = 'category-group active';
 
                 // Header da Categoria
                 const header = document.createElement('div');
