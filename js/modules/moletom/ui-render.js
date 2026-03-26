@@ -126,16 +126,38 @@ function renderControls() {
     if (!container) return;
     const scrollPos = container.scrollTop;
 
+    container.innerHTML = '';
+
+    // Adiciona Header e Botões originários do BaseSimulator
     if (window.MoletomSimulatorInstance) {
-        if (!window.MoletomSimulatorInstance.isInitialized) {
-            console.log("🔄 [Moletom UI] Auto-triggering instance.init()");
-            window.MoletomSimulatorInstance.init();
-        } else {
-            window.MoletomSimulatorInstance.render();
+        if (typeof window.MoletomSimulatorInstance.renderHeader === 'function') {
+            container.appendChild(window.MoletomSimulatorInstance.renderHeader());
         }
-        container.scrollTop = scrollPos;
-        return;
+        if (typeof window.MoletomSimulatorInstance.renderActionButtons === 'function') {
+            container.appendChild(window.MoletomSimulatorInstance.renderActionButtons());
+        }
     }
+
+    // Renderiza as seções específicas criadas neste arquivo
+    container.appendChild(renderSizesSection());
+    container.appendChild(renderColorSection());
+    container.appendChild(renderHNTLogoSection());
+    container.appendChild(renderCustomizationSection());
+
+    if (typeof renderFinalForm === 'function') {
+        const form = document.createElement('div');
+        form.appendChild(renderFinalForm());
+        container.appendChild(form);
+
+        if (window.MoletomSimulatorInstance && typeof window.MoletomSimulatorInstance.syncFinalForm === 'function') {
+            window.MoletomSimulatorInstance.syncFinalForm(form);
+        }
+    }
+
+    // Força a validação inicial dos limites e preços
+    if (typeof updateLimits === 'function') updateLimits();
+
+    container.scrollTop = scrollPos;
 }
 
 function renderFinalForm() {

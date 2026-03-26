@@ -11,6 +11,14 @@ class ShortsSimulator extends BaseSimulator {
         });
     }
 
+    render() {
+        // Shorts renderiza sua própria UI através do ui-render.js e parts/
+        // Isso previne que o BaseSimulator destrua e desenhe na div controls-container incorretamente.
+        console.log("[Shorts] BaseSimulator render() ignorado para preservar a UI modular do Shorts.");
+    }
+
+    // Mantemos as seções abaixo caso em algum momento no futuro decida-se migrar totalmente o Shorts
+    // para a arquitetura do BaseSimulator, mas atualmente ele usa seu próprio orquestrador.
     getCustomSections() {
         const sections = [];
 
@@ -50,10 +58,6 @@ class ShortsSimulator extends BaseSimulator {
         return sections;
     }
 
-    /**
-     * Shorts has specific unlockable logic for customization.
-     * We'll implement it within the standard category customization flow.
-     */
     renderCategoryCustomizations(cat, container) {
         if (cat.id !== 'Personalizacao' && cat.name !== 'Personalização') return;
 
@@ -177,10 +181,5 @@ class ShortsSimulator extends BaseSimulator {
 }
 
 window.ShortsSimulatorInstance = new ShortsSimulator();
-window.renderControls = () => window.ShortsSimulatorInstance.render();
+// REMOVIDO: A sobreposição do render() e init() que quebrava o simulador Shorts.
 
-const originalInitShorts = window.init;
-window.init = async function () {
-    if (originalInitShorts) await originalInitShorts();
-    window.ShortsSimulatorInstance.init();
-};

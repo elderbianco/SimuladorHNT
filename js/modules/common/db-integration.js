@@ -1,5 +1,5 @@
 /**
- * Módulo de Integração com Banco de Dados e Produção - v14.60_FINAL
+ * Módulo de Integração com Banco de Dados e Produção - v14.61_FINAL
  */
 
 const DBAdapter = {
@@ -25,7 +25,7 @@ const DBAdapter = {
     },
 
     formatForDatabase(state, pricing, config, pdfUrl = null) {
-        console.log("🛠️ [DBAdapter] v14.60 Formatting...", { simulator: this.detectProductType(state, true) });
+        console.log("🛠️ [DBAdapter] v14.61 Formatting...", { simulator: this.detectProductType(state, true) });
 
         const sizes = state.sizes || {};
         const totalQty = Object.values(sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
