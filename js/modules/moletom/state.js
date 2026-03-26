@@ -1,5 +1,5 @@
 /**
- * Módulo de Estado e Persistência - Moletom
+ * Módulo de Estado e Persistência - Moletom - v14.61
  */
 
 function generateUUID() {
@@ -156,7 +156,7 @@ function loadState() {
     }
 
     // SOBREPOR COM DADOS GLOBAIS (SINCRONIA)
-    if (typeof DBAdapter !== 'undefined') {
+    if (typeof DBAdapter !== 'undefined' && DBAdapter.CustomerData) {
         const global = DBAdapter.CustomerData.load();
         if (global.phone) state.phone = global.phone;
         if (global.terms !== undefined) state.termsAccepted = global.terms;

@@ -1,5 +1,5 @@
 /**
- * Módulo de Estado e Persistência - Shorts
+ * Módulo de Estado e Persistência - Shorts - v14.61
  */
 
 function generateUUID() {
@@ -87,7 +87,7 @@ function saveState() {
         // SINCRONIZAÇÃO GLOBAL
         if (state.orderNumber) localStorage.setItem('hnt_global_order', state.orderNumber);
 
-        if (typeof DBAdapter !== 'undefined') {
+        if (typeof DBAdapter !== 'undefined' && DBAdapter.CustomerData) {
             DBAdapter.CustomerData.save(state.phone, state.termsAccepted);
         }
     } catch (e) {
@@ -147,7 +147,7 @@ function loadState() {
     state.simulationId = getFormattedId();
 
     // SOBREPOR COM DADOS GLOBAIS (SINCRONIA)
-    if (typeof DBAdapter !== 'undefined') {
+    if (typeof DBAdapter !== 'undefined' && DBAdapter.CustomerData) {
         const global = DBAdapter.CustomerData.load();
         if (global.phone) state.phone = global.phone;
         if (global.terms !== undefined) state.termsAccepted = global.terms;
@@ -179,10 +179,12 @@ window.addEventListener('storage', (e) => {
     }
     // SINCRONIZAÇÃO GLOBAL DE CLIENTE
     if (e.key === 'hnt_global_client_phone' || e.key === 'hnt_global_client_terms') {
-        const global = DBAdapter.CustomerData.load();
-        state.phone = global.phone;
-        state.termsAccepted = global.terms;
-        if (typeof renderControls === 'function') renderControls();
+        if (typeof DBAdapter !== 'undefined' && DBAdapter.CustomerData) {
+            const global = DBAdapter.CustomerData.load();
+            state.phone = global.phone;
+            state.termsAccepted = global.terms;
+            if (typeof renderControls === 'function') renderControls();
+        }
     }
     // GLOBAL ORDER SYNC
     if (e.key === 'hnt_global_order') {
