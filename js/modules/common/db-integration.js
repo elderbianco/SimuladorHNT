@@ -15,7 +15,7 @@ const DBAdapter = {
     },
 
     detectProductType(state, isInternal = true) {
-        const initial = state.productInitial || "";
+        const initial = (state && state.productInitial) ? state.productInitial : "";
         if (initial === 'ML') return isInternal ? 'moletom' : 'Moletom';
         if (initial === 'TP') return isInternal ? 'top' : 'Top';
         if (initial === 'LG') return isInternal ? 'legging' : 'Calça Legging';
