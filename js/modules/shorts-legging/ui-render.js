@@ -337,7 +337,12 @@ function renderControls() {
     btnCart.innerText = isEditing ? 'SALVAR EDIÇÃO' : 'ADICIONAR AO CARRINHO';
     btnCart.className = isEditing ? 'btn-modern btn-cart' : 'btn-primary btn-cart';
     btnCart.style.flex = '1';
-    btnCart.style.fontWeight = 'bold';
+
+    if (isEditing) {
+        btnCart.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        btnCart.style.border = 'none';
+        btnCart.style.color = '#fff';
+    }
 
     // 🎯 FIX: Garantir que o evento de clique seja registrado toda vez que o controle for re-renderizado
     btnCart.onclick = () => {
@@ -348,15 +353,10 @@ function renderControls() {
         }
     };
 
-    if (!isEditing) {
-        btnCart.style.backgroundColor = '#28a745';
-        btnCart.style.borderColor = '#28a745';
-    }
-
     const btnClear = document.createElement('button');
     btnClear.innerText = 'LIMPAR DADOS';
     btnClear.className = 'btn-secondary btn-clear';
-    btnClear.style.cssText = 'flex:1; background-color: #dc3545; border-color: #dc3545; color: white; font-weight:bold;';
+    btnClear.style.flex = '1';
     btnClear.onclick = () => {
         if (typeof clearState === 'function') clearState();
     };
