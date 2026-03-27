@@ -127,55 +127,26 @@ window.CartUI = {
     /**
      * V1-Style Complete Card for an Item
      */
-renderSubItemV1Style: function (order, currentItem = 1, totalItems = 1) {
-    // Safety checks
-    if (!order || !order.item) {
-        console.warn('Invalid order data:', order);
-        return '<div style="color:red; padding:20px;">Erro: Dados do pedido inválidos</div>';
-    }
-
-    const item = order.item;
-    const index = order._index;
-    const uid = `item-${index}`;
-    const pricing = item.pricing || { unit_price: 0, total_price: 0, breakdown: {} };
-    const esc = (s) => (window.Security ? window.Security.escape(s) : s);
-
-    let state = null;
-    if (order && order.DADOS_TECNICOS_JSON) {
-        try {
-            const parsed = JSON.parse(order.DADOS_TECNICOS_JSON);
-            state = (parsed && parsed.specs) ? { ...parsed, ...parsed.specs } : parsed;
-        } catch (e) { console.warn("Failed to parse DADOS_TECNICOS", e); }
-    }
-    if (!state) {
-        const rawSpecs = item.specs || {};
-        let jsonTec = order.json_tec;
-        if (!jsonTec && order.DADOS_TECNICOS_JSON) {
-            try { jsonTec = JSON.parse(order.DADOS_TECNICOS_JSON); } catch (e) { }
+    renderSubItemV1Style: function (order, currentItem = 1, totalItems = 1) {
+        // Safety checks
+        if (!order || !order.item) {
+            console.warn('Invalid order data:', order);
+            return '<div style="color:red; padding:20px;">Erro: Dados do pedido inválidos</div>';
         }
-<<<<<<< HEAD
-        if (jsonTec && jsonTec.specs) {
-            state = { ...jsonTec, ...jsonTec.specs };
-        } else {
-            state = rawSpecs;
-=======
 
         const item = order.item;
         const index = order._index;
         const uid = `item-${index}`;
         const pricing = item.pricing || { unit_price: 0, total_price: 0, breakdown: {} };
-        const client = order.client_info || {};
         const esc = (s) => (window.Security ? window.Security.escape(s) : s);
 
         let state = null;
         if (order && order.DADOS_TECNICOS_JSON) {
             try {
                 const parsed = JSON.parse(order.DADOS_TECNICOS_JSON);
-                // If DADOS_TECNICOS_JSON wraps a nested 'specs' (Supabase format), flatten it
                 state = (parsed && parsed.specs) ? { ...parsed, ...parsed.specs } : parsed;
             } catch (e) { console.warn("Failed to parse DADOS_TECNICOS", e); }
         }
-
         if (!state) {
             // item.specs already normalized by cart-controller
             const normalizedSpecs = item.specs || {};
@@ -189,101 +160,99 @@ renderSubItemV1Style: function (order, currentItem = 1, totalItems = 1) {
             } else {
                 state = normalizedSpecs;
             }
->>>>>>> 3d3eb87 (Auto-sync: 26/03/2026 21:47:41,26)
         }
-    }
 
-    const obs = (
-        item.specs?.observations ||
-        state.observations ||
-        state.observacoes ||
-        order.observations ||
-        order.observacoes ||
-        ""
-    ).toString().trim();
+        const obs = (
+            item.specs?.observations ||
+            state.observations ||
+            state.observacoes ||
+            order.observations ||
+            order.observacoes ||
+            ""
+        ).toString().trim();
 
-    // === ORDER NUMBER ===
-    const orderNum = (() => {
-        if (order.order_number && order.order_number !== '---') return order.order_number;
-        const id = order.order_id || state.simulationId || order.ID_SIMULACAO || '';
-        const prefixMatch = id.match(/^(\d{6})/);
-        if (prefixMatch) return prefixMatch[1];
-        const match = id.match(/^([A-Z0-9]+)-(?:SH|SL|TP|LG|ML|CL)-/i);
-        if (match) return match[1];
-        const simpleMatch = id.split('-')[0];
-        if (simpleMatch && simpleMatch.length >= 4 && /^\d+$/.test(simpleMatch)) return simpleMatch;
-        return order.order_number || state.orderNumber || '---';
-    })();
+        // === ORDER NUMBER ===
+        const orderNum = (() => {
+            if (order.order_number && order.order_number !== '---') return order.order_number;
+            const id = order.order_id || state.simulationId || order.ID_SIMULACAO || '';
+            const prefixMatch = id.match(/^(\d{6})/);
+            if (prefixMatch) return prefixMatch[1];
+            const match = id.match(/^([A-Z0-9]+)-(?:SH|SL|TP|LG|ML|CL)-/i);
+            if (match) return match[1];
+            const simpleMatch = id.split('-')[0];
+            if (simpleMatch && simpleMatch.length >= 4 && /^\d+$/.test(simpleMatch)) return simpleMatch;
+            return order.order_number || state.orderNumber || '---';
+        })();
 
-    // === SIZES ===
-    const sizes = state.sizes || item.specs?.sizes || {};
-    const sizeEntries = Object.entries(sizes).filter(([, q]) => q > 0);
-    const totalQty = sizeEntries.reduce((s, [, q]) => s + q, 0);
-    const sizesHTML = sizeEntries.length > 0
-        ? sizeEntries.map(([sz, qty]) => `<div style="display:flex;flex-direction:column;align-items:center;background:#0a0a0a;border:2px solid #2a2a2a;padding:10px 16px;min-width:58px;border-radius:2px;"><span style="font-size:0.6rem;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:700;">${esc(sz)}</span><span style="font-size:2.2rem;font-weight:900;color:#fff;line-height:1;font-family:'Bebas Neue',sans-serif;">${qty}</span><span style="font-size:0.58rem;color:#444;">un</span></div>`).join('')
-        : '<span style="color:#333;font-style:italic;font-size:0.85rem;">Sem grade</span>';
+        // === SIZES ===
+        const sizes = state.sizes || item.specs?.sizes || {};
+        const sizeEntries = Object.entries(sizes).filter(([, q]) => q > 0);
+        const totalQty = sizeEntries.reduce((s, [, q]) => s + q, 0);
+        const sizesHTML = sizeEntries.length > 0
+            ? sizeEntries.map(([sz, qty]) => `<div style="display:flex;flex-direction:column;align-items:center;background:#0a0a0a;border:2px solid #2a2a2a;padding:10px 16px;min-width:58px;border-radius:2px;"><span style="font-size:0.6rem;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:700;">${esc(sz)}</span><span style="font-size:2.2rem;font-weight:900;color:#fff;line-height:1;font-family:'Bebas Neue',sans-serif;">${qty}</span><span style="font-size:0.58rem;color:#444;">un</span></div>`).join('')
+            : '<span style="color:#333;font-style:italic;font-size:0.85rem;">Sem grade</span>';
 
-    // === PARTS / CORES ===
-    const parts = state.parts || item.specs?.parts || {};
-    const partsEntries = Object.entries(parts);
-    const partsHTML = partsEntries.length > 0
-        ? partsEntries.map(([key, val]) => {
-            const label = (window.resolveZoneLabel ? window.resolveZoneLabel(key) : key).replace(/_/g, ' ');
-            const colorVal = (typeof val === 'object' && val !== null) ? (val.value || 'N/A') : (val || 'N/A');
-            const colorHex = (typeof val === 'object' && val !== null) ? (val.hex || '#444') : '#444';
-            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid ${colorHex};margin-bottom:5px;"><div style="width:18px;height:18px;border-radius:50%;background:${colorHex};border:2px solid #444;flex-shrink:0;"></div><div><div style="font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</div><div style="font-size:0.88rem;color:#eee;font-weight:600;">${esc(colorVal)}</div></div></div>`;
-        }).join('')
-        : '<span style="color:#333;font-style:italic;font-size:0.85rem;">Sem cores</span>';
+        // === PARTS / CORES ===
+        const parts = state.parts || item.specs?.parts || {};
+        const partsEntries = Object.entries(parts);
+        const partsHTML = partsEntries.length > 0
+            ? partsEntries.map(([key, val]) => {
+                const label = (window.resolveZoneLabel ? window.resolveZoneLabel(key) : key).replace(/_/g, ' ');
+                const colorVal = (typeof val === 'object' && val !== null) ? (val.value || 'N/A') : (val || 'N/A');
+                const colorHex = (typeof val === 'object' && val !== null) ? (val.hex || '#444') : '#444';
+                return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid ${colorHex};margin-bottom:5px;"><div style="width:18px;height:18px;border-radius:50%;background:${colorHex};border:2px solid #444;flex-shrink:0;"></div><div><div style="font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</div><div style="font-size:0.88rem;color:#eee;font-weight:600;">${esc(colorVal)}</div></div></div>`;
+            }).join('')
+            : '<span style="color:#333;font-style:italic;font-size:0.85rem;">Sem cores</span>';
 
-    // === EXTRAS ===
-    const extras = state.extras || item.specs?.extras || {};
-    const validExtras = Object.entries(extras).filter(([, e]) => {
-        if (!e) return false;
-        if (typeof e === 'object') return e.enabled || e.active;
-        return e === true || String(e).toLowerCase() === 'sim';
-    });
-    const extrasHTML = validExtras.length > 0
-        ? validExtras.map(([key, e]) => {
-            const val = (typeof e === 'object' && e !== null) ? (e.value || 'SIM') : 'SIM';
-            const cleanKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            return `<span style="background:#181200;border:1px solid #D4AF37;color:#D4AF37;padding:2px 8px;font-size:0.72rem;border-radius:1px;font-weight:700;">+${esc(cleanKey)}: ${esc(val)}</span>`;
-        }).join('')
-        : '';
+        // === EXTRAS ===
+        const extras = state.extras || item.specs?.extras || {};
+        const validExtras = Object.entries(extras).filter(([, e]) => {
+            if (!e) return false;
+            if (typeof e === 'object') return e.enabled || e.active;
+            return e === true || String(e).toLowerCase() === 'sim';
+        });
+        const extrasHTML = validExtras.length > 0
+            ? validExtras.map(([key, e]) => {
+                const val = (typeof e === 'object' && e !== null) ? (e.value || 'SIM') : 'SIM';
+                const cleanKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                return `<span style="background:#181200;border:1px solid #D4AF37;color:#D4AF37;padding:2px 8px;font-size:0.72rem;border-radius:1px;font-weight:700;">+${esc(cleanKey)}: ${esc(val)}</span>`;
+            }).join('')
+            : '';
 
-    // === LOGOS / UPLOADS ===
-    const rawUploads = state.uploads || item.specs?.uploads || {};
-    const uploadsArr = Array.isArray(rawUploads)
-        ? rawUploads
-        : Object.entries(rawUploads).map(([id, u]) => ({ ...u, zone_id: id }));
-    const validUploads = uploadsArr.filter(u => u && (u.src || u.file_url || u.filename || u.file_name));
+        // === LOGOS / UPLOADS ===
+        const rawUploads = state.uploads || item.specs?.uploads || {};
+        const uploadsArr = Array.isArray(rawUploads)
+            ? rawUploads
+            : Object.entries(rawUploads).map(([id, u]) => ({ ...u, zone_id: id }));
+        const validUploads = uploadsArr.filter(u => u && (u.src || u.file_url || u.filename || u.file_name));
 
-    const logosHTML = validUploads.length > 0
-        ? validUploads.map(u => {
-            const label = (window.resolveZoneLabel ? window.resolveZoneLabel(u.zone_id || u.zone_label) : (u.zone_id || 'Zona'));
-            const name = u.file_name || u.filename || u.file_url || u.src || 'Imagem';
-            const isCustom = u.is_custom || u.isCustom;
-            const src = u.file_url || u.src;
-            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid ${isCustom ? '#FFA500' : '#28a745'};margin-bottom:5px;"><span style="font-size:1rem;flex-shrink:0;">${isCustom ? '⚠️' : '✅'}</span><div style="flex:1;min-width:0;"><div style="font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</div><div style="font-size:0.82rem;color:#eee;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(name)}</div><div style="font-size:0.65rem;color:${isCustom ? '#FFA500' : '#28a745'};">${isCustom ? '⚠ Criar Matriz' : 'Acervo HNT'}</div></div>${src ? `<a href="${src}" download title="Baixar" style="color:#D4AF37;font-size:1rem;text-decoration:none;flex-shrink:0;">⬇</a>` : ''}</div>`;
-        }).join('')
-        : '<span style="color:#333;font-style:italic;font-size:0.82rem;">Sem logos/artes</span>';
+        const logosHTML = validUploads.length > 0
+            ? validUploads.map(u => {
+                const label = (window.resolveZoneLabel ? window.resolveZoneLabel(u.zone_id || u.zone_label) : (u.zone_id || 'Zona'));
+                const name = u.file_name || u.filename || u.file_url || u.src || 'Imagem';
+                const isCustom = u.is_custom || u.isCustom;
+                const src = u.file_url || u.src;
+                return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid ${isCustom ? '#FFA500' : '#28a745'};margin-bottom:5px;"><span style="font-size:1rem;flex-shrink:0;">${isCustom ? '⚠️' : '✅'}</span><div style="flex:1;min-width:0;"><div style="font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</div><div style="font-size:0.82rem;color:#eee;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(name)}</div><div style="font-size:0.65rem;color:${isCustom ? '#FFA500' : '#28a745'};">${isCustom ? '⚠ Criar Matriz' : 'Acervo HNT'}</div></div>${src ? `<a href="${src}" download title="Baixar" style="color:#D4AF37;font-size:1rem;text-decoration:none;flex-shrink:0;">⬇</a>` : ''}</div>`;
+            }).join('')
+            : '<span style="color:#333;font-style:italic;font-size:0.82rem;">Sem logos/artes</span>';
 
-    // === TEXTS ===
-    const rawTexts = state.texts || item.specs?.texts || {};
-    const textsArr = Array.isArray(rawTexts)
-        ? rawTexts.filter(t => t && t.enabled && t.content)
-        : Object.entries(rawTexts).filter(([, t]) => t && t.enabled && t.content).map(([id, t]) => ({ ...t, zone_id: id }));
+        // === TEXTS ===
+        const rawTexts = state.texts || item.specs?.texts || {};
+        const textsArr = Array.isArray(rawTexts)
+            ? rawTexts.filter(t => t && t.enabled && t.content)
+            : Object.entries(rawTexts).filter(([, t]) => t && t.enabled && t.content).map(([id, t]) => ({ ...t, zone_id: id }));
 
-    const textsHTML = textsArr.length > 0
-        ? textsArr.map(t => {
-            const label = (window.resolveZoneLabel ? window.resolveZoneLabel(t.zone_id) : (t.zone_id || 'Texto'));
-            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid #00b4d8;margin-bottom:5px;"><span style="font-size:0.9rem;flex-shrink:0;">🔤</span><div><div style="font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</div><div style="font-size:0.85rem;color:#eee;font-weight:600;">"${esc(t.content)}"</div><div style="font-size:0.65rem;color:#555;">${esc(t.fontFamily || 'Padrão')}</div></div></div>`;
-        }).join('')
-        : '';
+        const textsHTML = textsArr.length > 0
+            ? textsArr.map(t => {
+                const label = (window.resolveZoneLabel ? window.resolveZoneLabel(t.zone_id) : (t.zone_id || 'Texto'));
+                return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid #00b4d8;margin-bottom:5px;"><span style="font-size:0.9rem;flex-shrink:0;">🔤</span><div><div style="font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</div><div style="font-size:0.85rem;color:#eee;font-weight:600;">"${esc(t.content)}"</div><div style="font-size:0.65rem;color:#555;">${esc(t.fontFamily || 'Padrão')}</div></div></div>`;
+            }).join('')
+            : '';
 
-    const hasArtwork = validUploads.length > 0 || textsArr.length > 0;
-    const hasObs = obs.length > 0;
+        const hasArtwork = validUploads.length > 0 || textsArr.length > 0;
+        const hasObs = obs.length > 0;
 
-    return `
+        return `
         <div class="prod-ficha" style="background:#131313;border:1px solid #1e1e1e;border-radius:3px;margin-bottom:14px;overflow:hidden;font-family:'Outfit',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,0.4);">
 
             <!-- ══ CABEÇALHO ══ -->
@@ -302,12 +271,7 @@ renderSubItemV1Style: function (order, currentItem = 1, totalItems = 1) {
                         ${this.getProductIconElement(item, order)}
                     </div>
                     <div>
-<<<<<<< HEAD
                         <div style="color:#fff;font-size:1rem;font-weight:700;letter-spacing:0.5px;">${esc(this.getProductName(item, order))}</div>
-                        <div style="color:#444;font-size:0.68rem;margin-top:1px;">${esc(order.order_id || order.ID_SIMULACAO || '---')} &nbsp;•&nbsp; ${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '---'}</div>
-                        ${extrasHTML ? `<div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap;">${extrasHTML}</div>` : ''}
-=======
-                        <div style="color:#fff; font-weight:bold;">${esc(this.getProductName(item, order))}</div>
                         <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc((() => {
             if (order.order_number && order.order_number !== '---') return order.order_number;
             const id = order.order_id || state.simulationId || order.ID_SIMULACAO || '';
@@ -334,7 +298,7 @@ renderSubItemV1Style: function (order, currentItem = 1, totalItems = 1) {
                             ID: <span style="color:#888;">${esc(order.order_id || state.simulationId || order.ID_SIMULACAO || '---')}</span> • 
                             ${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '---'}
                         </div>
->>>>>>> 0e956af (Auto-sync: 26/03/2026 21:53:12,26)
+                        ${extrasHTML ? `<div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap;">${extrasHTML}</div>` : ''}
                     </div>
                 </div>
 
@@ -397,7 +361,7 @@ renderSubItemV1Style: function (order, currentItem = 1, totalItems = 1) {
             </div>
         </div>
         `;
-},
+    },
 
     /**
      * Helper to generate detailed values HTML
