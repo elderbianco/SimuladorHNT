@@ -172,10 +172,9 @@ window.CartUI = {
                  </div>
                  
                  <div style="flex:1; margin-left: 15px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="color:#fff; font-weight:bold;">\${this.getProductName(item, order)}</div>
-                        <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">\${order.order_id ? String(order.order_id).substring(0,6) : (item.specs?.orderNumber || '---')}</span></div>
-                        <div style="font-size:0.7rem; color:#666;">REF: \${order.order_id} • \${new Date(order.created_at).toLocaleDateString()}</div>
+                        <div style="color:#fff; font-weight:bold;">${this.getProductName(item, order)}</div>
+                        <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${order.order_id ? String(order.order_id).substring(0, 6) : (item.specs?.orderNumber || '---')}</span></div>
+                        <div style="font-size:0.7rem; color:#666;">REF: ${order.order_id} • ${new Date(order.created_at).toLocaleDateString()}</div>
                     </div>
                     <div style="color:var(--gold); font-size: 1.1rem; font-family: 'Bebas Neue', sans-serif; border: 1px solid #333; padding: 4px 10px; border-radius: 8px; margin-right: 25px; min-width: 45px; text-align: center; background: #111;">
                         ${currentItem}/${totalItems}
