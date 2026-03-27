@@ -3069,4 +3069,151 @@ function toggleProducaoCard(id) {
     if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
+/**
+ * renderProdutoFicha — Renderiza ficha técnica de alta densidade por setores
+ */
+function renderProdutoFicha(prod, isSubItem = false) {
+    const dt = prod.dadosTecnicos || {};
+    const parts = dt.parts || {};
+    const texts = dt.texts || {};
+    const extras = dt.extras || {};
+    const uploads = dt.uploads || {};
+    const grade = dt.grade || dt.sizes || {};
+    const logoPunho = dt.logoPunho || null;
+    const p0 = prod;
 
+    const gradeEntries = Object.entries(grade).filter(([, q]) => q > 0);
+    const gradeHtml = gradeEntries.length > 0
+        ? gradeEntries.map(([sz, qty]) => `<div class="ficha-grade-pill">${sz}<span>${qty}×</span></div>`).join('')
+        : `<span style="font-size:12px;font-weight:700;">${p0.tamanho || '—'} × ${p0.quantidade || 1} un.</span>`;
+
+    const coresHtml = Object.entries(parts).slice(0, 10).map(([k, v]) => {
+        const colorName = typeof v === 'object' ? (v.value || v.name || '—') : (v || '—');
+        const label = PART_LABEL_MAP?.[k] || k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        return `<div class="ficha-setor-row"><span class="ficha-setor-key">${label}</span><span class="ficha-setor-val">${colorName}</span></div>`;
+    }).join('') || '<span style="color:var(--text-3);font-size:11px">Sem cores definidas</span>';
+
+    const uploadList = Object.entries(uploads).filter(([, d]) => d && d.src);
+    const logosHtml = uploadList.length > 0 || logoPunho
+        ? `<div class="ficha-logo-row">
+            ${uploadList.map(([k, d]) => `<img class="ficha-logo-mini" src="${d.src}" title="${d.filename || k}" onclick="window.open('${d.src}','_blank')">`).join('')}
+            ${logoPunho ? `<img class="ficha-logo-mini" src="${logoPunho}" title="Logo Punho" onclick="window.open('${logoPunho}','_blank')">` : ''}
+           </div>`
+        : '<span style="color:var(--text-3);font-size:11px">—</span>';
+
+    const textsHtml = Object.entries(texts).filter(([, d]) => d.enabled && d.content).map(([k, d]) =>
+        `<div class="ficha-setor-row"><span class="ficha-setor-key">${TEXT_LABEL_MAP?.[k] || k}</span><span class="ficha-setor-val">"${d.content}"</span></div>`
+    ).join('') || '<span style="color:var(--text-3);font-size:11px">—</span>';
+
+    const extrasHtml = Object.entries(extras).filter(([, d]) => d && d.enabled).map(([k, d]) =>
+        `<div class="ficha-setor-row"><span class="ficha-setor-key">✅ ${EXTRA_LABEL_MAP?.[k] || k}</span><span class="ficha-setor-val">${d.color || 'Sim'}</span></div>`
+    ).join('') || '<span style="color:var(--text-3);font-size:11px">—</span>';
+
+    const valorFmt = p0.valor ? `R$ ${parseFloat(p0.valor).toFixed(2).replace('.', ',')}` : '—';
+    const sectionClass = isSubItem ? 'drawer-ficha-section' : 'ficha-setor-bloco';
+    const titleClass = isSubItem ? 'drawer-ficha-title' : 'ficha-setor-title';
+
+    return `
+        <div class="produto-ficha-container ${isSubItem ? 'sub-item' : ''}">
+            <div class="${sectionClass} setor-preparacao">
+                <div class="${titleClass} setor-preparacao">📋 Preparação</div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">SKU</span><span class="ficha-setor-val">${p0.sku || '—'}</span></div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">Técnica</span><span class="ficha-setor-val">${p0.tecnica}</span></div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">Qtd.</span><span class="ficha-setor-val">${p0.quantidade} un.</span></div>
+            </div>
+            <div class="${sectionClass} setor-separacao">
+                <div class="${titleClass} setor-separacao">📦 Grade & Cores</div>
+                <div class="ficha-grade-compact">${gradeHtml}</div>
+                <div style="margin-top:10px">${coresHtml}</div>
+            </div>
+            <div class="${sectionClass} setor-arte">
+                <div class="${titleClass} setor-arte">✒️ Arte & Logos</div>
+                ${logosHtml}
+                <div style="margin-top:8px">${textsHtml}</div>
+            </div>
+            <div class="${sectionClass} setor-costura">
+                <div class="${titleClass} setor-costura">✂️ Costura & Extras</div>
+                ${extrasHtml}
+                ${p0.observacoes ? `<div style="margin-top:8px; padding:8px; background:var(--amber-dim); border-radius:4px; font-size:11px; color:#92400e;">${p0.observacoes}</div>` : ''}
+            </div>
+            <div class="${sectionClass} setor-expedicao">
+                <div class="${titleClass} setor-expedicao">🚚 Expedição</div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">Valor unit.</span><span class="ficha-setor-val" style="color:var(--green);font-weight:800">${valorFmt}</span></div>
+            </div>
+        </div>`;
+}
+
+/**
+ * renderFichaTecnicaDrawer — Ficha Técnica Completa (drawer tab)
+ */
+function renderFichaTecnicaDrawer(p) {
+    const produtos = p.produtos || [p];
+    const numProdutos = produtos.length;
+    const etapa = p.etapa || 'Preparação';
+    const totalQty = produtos.reduce((a, x) => a + (x.quantidade || 1), 0);
+    const etapaCol = ETAPA_COLORS?.[etapa] || '#888';
+
+    return `
+        <div class="drawer-ficha-wrap">
+            <div style="padding:16px; background:var(--surface); border-bottom:2px solid ${etapaCol}20; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:36px; height:36px; border-radius:8px; background:${etapaCol}15; display:flex; align-items:center; justify-content:center; font-size:18px;">${ETAPA_ICONS?.[etapa] || '📋'}</div>
+                    <div>
+                        <div style="font-weight:900; font-size:16px">${p.numero}</div>
+                        <div style="font-size:11px; color:${etapaCol}; font-weight:800; text-transform:uppercase">${ETAPA_LABELS?.[etapa] || etapa}</div>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px;">
+                    <div style="background:var(--surface-2); padding:6px 8px; border-radius:4px;">
+                        <span style="font-size:9px; color:var(--text-3); font-weight:700;">CLIENTE</span>
+                        <div style="font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${p.cliente || '—'}</div>
+                    </div>
+                    <div style="background:var(--surface-2); padding:6px 8px; border-radius:4px;">
+                        <span style="font-size:9px; color:var(--text-3); font-weight:700;">TOTAL</span>
+                        <div style="font-size:12px; font-weight:700">${totalQty} un.</div>
+                    </div>
+                    <div style="background:var(--surface-2); padding:6px 8px; border-radius:4px;">
+                        <span style="font-size:9px; color:var(--text-3); font-weight:700;">PRAZO</span>
+                        <div style="font-size:12px; font-weight:700">${p.prazo || '—'}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ficha-products-list">
+                ${produtos.map((prod, idx) => `
+                    <div class="ficha-product-item" style="${numProdutos > 1 ? 'border-bottom:4px solid var(--surface-3);' : ''}">
+                        ${numProdutos > 1 ? `
+                            <div style="background:var(--surface-2); padding:8px 16px; font-size:10px; font-weight:800; color:var(--text-3); text-transform:uppercase; border-bottom:1px solid var(--border)">
+                                Item ${idx + 1} de ${numProdutos}
+                            </div>` : ''}
+                        ${renderProdutoFicha(prod, true)}
+                    </div>
+                `).join('')}
+            </div>
+            <div style="padding:16px; border-top:1px solid var(--border)">
+                <button class="btn btn-primary" style="width:100%; height:48px; font-size:14px; font-weight:800;" 
+                    onclick="moverEtapa('${p.id}', '${NEXT_ETAPA?.[etapa] || etapa}')">
+                    🚀 Próxima Etapa: ${ETAPA_LABELS?.[NEXT_ETAPA?.[etapa]] || 'Concluir'}
+                </button>
+            </div>
+        </div>`;
+}
+
+function switchDrawerTab(tabId) {
+    if (!selectedId) return;
+    drawerTab = tabId;
+    const p = PEDIDOS.find(x => x.id.toString() == selectedId.toString());
+    if (p) renderDrawer(p);
+    renderDrawerTab(p);
+    renderDrawerFooter(p);
+}
+
+async function sendChat() {
+    const input = $('chat-msg-input');
+    if (!input || !input.value.trim() || !selectedId) return;
+    const texto = input.value.trim();
+    input.value = '';
+    const op = currentOperador ? currentOperador.nome : 'Sistema';
+    await api.sendChat(selectedId, op, texto);
+    const p = PEDIDOS.find(x => x.id.toString() == selectedId.toString());
+    if (p) renderDrawerTab(p);
+}
