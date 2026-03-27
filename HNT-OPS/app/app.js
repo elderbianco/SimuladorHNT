@@ -3323,26 +3323,19 @@ function buildFichaSetores(produtos) {
 }
 
 /**
- * renderFichaTecnicaDrawer — Ficha Técnica Completa (drawer tab)
- * Compact production summary when clicking any row in Lista view
+ * renderProdutoFicha — Renders the detailed 7-sector ficha for a single product.
+ * This is used internally by renderFichaTecnicaDrawer.
  */
-function renderFichaTecnicaDrawer(p) {
-    const produtos = p.produtos || [p];
-    const dt = produtos[0]?.dadosTecnicos || {};
+function renderProdutoFicha(p, isDrawerContext = false) {
+    const dt = p.dadosTecnicos || {};
     const parts = dt.parts || {};
     const texts = dt.texts || {};
     const extras = dt.extras || {};
     const uploads = dt.uploads || {};
     const grade = dt.grade || dt.sizes || {};
-    const p0 = produtos[0] || p;
+    const p0 = p; // For consistency with original code, p0 refers to the single product
 
-    const etapa = p.etapa || p.etapaAtual || 'Preparação';
-    const etapaIcon = ETAPA_ICONS?.[etapa] || '📋';
-    const etapaCol = ETAPA_COLORS?.[etapa] || '#888';
-    const etapaLbl = ETAPA_LABELS?.[etapa] || etapa;
-    const totalQty = produtos.reduce((a, x) => a + (x.quantidade || 1), 0);
-    const prazoColor = p.diasRestantes < 0 ? '#ef4444' :
-        p.diasRestantes <= 1 ? '#f97316' : 'var(--text-2)';
+    const totalQty = p.quantidade || 1;
     const valorFmt = p0.valor ? `R$ ${parseFloat(p0.valor).toFixed(2).replace('.', ',')}` : '—';
 
     // ── Grade de tamanhos ──────────────────────────────────
@@ -3395,24 +3388,90 @@ function renderFichaTecnicaDrawer(p) {
             </div>`).join('')
         : '<span style="color:var(--text-3);font-size:11px">—</span>';
 
-    // ── Multi-produto: mostrar lista de SKUs ───────────────
-    const multiHtml = produtos.length > 1
-        ? `<div style="margin-top:6px; border:1px solid var(--border); border-radius:4px; overflow:hidden;">
-            ${produtos.map(x => `
-                <div style="display:flex; gap:8px; align-items:center; padding:5px 10px; border-bottom:1px solid var(--border); font-size:11px;">
-                    <span style="font-weight:700; color:var(--text-1); min-width:80px">${x.sku || '—'}</span>
-                    <span style="color:var(--text-3)">${x.tamanho || '—'} · ${x.quantidade || 1}×</span>
-                </div>`).join('')}
-           </div>`
-        : '';
+    return `
+        <!-- Grade & Produto -->
+        <div class="drawer-ficha-section setor-separacao">
+            <div class="drawer-ficha-title setor-separacao">📦 Grade & Produto</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span style="font-size:11px; color:var(--text-3)">SKU:</span>
+                <span style="font-size:12px; font-weight:700">${p0.sku || '—'}</span>
+                ${p0.tecnica ? `<span style="background:#f1e8d8; color:#92400e; font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px;">${p0.tecnica}</span>` : ''}
+            </div>
+            <div class="ficha-grade-compact">${gradeHtml}</div>
+        </div>
+
+        <!-- Cores por parte -->
+        <div class="drawer-ficha-section setor-preparacao">
+            <div class="drawer-ficha-title setor-preparacao">🎨 Cores</div>
+            ${coresHtml}
+        </div>
+
+        <!-- Arte / Logos / Textos -->
+        <div class="drawer-ficha-section setor-arte">
+            <div class="drawer-ficha-title setor-arte">✒️ Arte & Logos</div>
+            ${logosHtml}
+            ${textsActive.length > 0 ? `<div style="margin-top:8px">${textsHtml}</div>` : ''}
+        </div>
+
+        <!-- Bordado -->
+        <div class="drawer-ficha-section setor-bordado">
+            <div class="drawer-ficha-title setor-bordado">🧵 Bordado</div>
+            ${p0.emb
+            ? `<a href="${p0.emb}" target="_blank" style="font-size:12px; font-weight:700; color:var(--setor-bordado)">⬇ Baixar arquivo .EMB</a>`
+            : '<span style="color:var(--text-3);font-size:11px">Sem arquivo de bordado</span>'}
+        </div>
+
+        <!-- Costura / Extras -->
+        <div class="drawer-ficha-section setor-costura">
+            <div class="drawer-ficha-title setor-costura">✂️ Extras & Costura</div>
+            ${extrasHtml}
+            ${p0.observacoes
+            ? `<div style="margin-top:8px; background:var(--amber-dim); border-radius:4px; padding:8px 10px; font-size:11px; color:#92400e; border-left:3px solid var(--amber);">
+                    <strong>OBS:</strong> ${p0.observacoes}
+                   </div>`
+            : ''}
+        </div>
+
+        <!-- Expedição / Financeiro -->
+        <div class="drawer-ficha-section setor-expedicao">
+            <div class="drawer-ficha-title setor-expedicao">🚚 Expedição & Financeiro</div>
+            <div class="ficha-setor-row">
+                <span class="ficha-setor-key">Valor</span>
+                <span class="ficha-setor-val" style="font-size:14px; font-weight:800; color:var(--green)">${valorFmt}</span>
+            </div>
+            ${p0.celular ? `<div class="ficha-setor-row">
+                <span class="ficha-setor-key">Contato</span>
+                <span class="ficha-setor-val">${p0.celular}</span>
+            </div>` : ''}
+            ${p0.pagamento ? `<div class="ficha-setor-row">
+                <span class="ficha-setor-key">Pagamento</span>
+                <span class="ficha-setor-val">${p0.pagamento}</span>
+            </div>` : ''}
+        </div>`;
+}
+
+/**
+ * renderFichaTecnicaDrawer — Ficha Técnica Completa (drawer tab)
+ * Master production summary showing all items in the order with their full 7-sector data.
+ */
+function renderFichaTecnicaDrawer(p) {
+    const produtos = p.produtos || [p];
+    const numProdutos = produtos.length;
+
+    // Order-level status
+    const etapa = p.etapa || p.etapaAtual || 'Preparação';
+    const etapaIcon = ETAPA_ICONS?.[etapa] || '📋';
+    const etapaCol = ETAPA_COLORS?.[etapa] || '#888';
+    const etapaLbl = ETAPA_LABELS?.[etapa] || etapa;
+    const totalQty = produtos.reduce((a, x) => a + (x.quantidade || 1), 0);
+    const prazoColor = p.diasRestantes < 0 ? '#ef4444' :
+        p.diasRestantes <= 1 ? '#f97316' : 'var(--text-2)';
 
     return `
         <div class="drawer-ficha-wrap">
 
-            <!-- ── Cabeçalho de status ── -->
+            <!-- ── Order Header (Common Data) ── -->
             <div style="padding:14px 16px; background:var(--surface); border-bottom:2px solid ${etapaCol}20; display:flex; flex-direction:column; gap:8px;">
-
-                <!-- Status + ações rápidas -->
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <div style="width:32px; height:32px; border-radius:8px; background:${etapaCol}18; border:1.5px solid ${etapaCol}55; display:flex; align-items:center; justify-content:center; font-size:16px;">
@@ -3435,85 +3494,42 @@ function renderFichaTecnicaDrawer(p) {
                     </div>
                 </div>
 
-                <!-- Dados rápidos horizontais -->
                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
                     <div style="background:var(--surface-2); border-radius:4px; padding:6px 8px;">
                         <div style="font-size:9px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Cliente</div>
                         <div style="font-size:12px; font-weight:700; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${p.cliente || '—'}</div>
                     </div>
                     <div style="background:var(--surface-2); border-radius:4px; padding:6px 8px;">
-                        <div style="font-size:9px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Qtd Total</div>
+                        <div style="font-size:9px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Total Pedido</div>
                         <div style="font-size:12px; font-weight:700; margin-top:2px">${totalQty} un.</div>
                     </div>
                     <div style="background:var(--surface-2); border-radius:4px; padding:6px 8px;">
-                        <div style="font-size:9px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Entrega</div>
+                        <div style="font-size:9px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">SLA Interno</div>
                         <div style="font-size:12px; font-weight:700; margin-top:2px; color:${prazoColor}">${p.prazo || '—'}</div>
                     </div>
                 </div>
             </div>
 
-            <!-- ── Corpo da ficha em setores ── -->
-
-            <!-- Grade & Produto -->
-            <div class="drawer-ficha-section setor-separacao">
-                <div class="drawer-ficha-title setor-separacao">📦 Grade & Produto</div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                    <span style="font-size:11px; color:var(--text-3)">SKU:</span>
-                    <span style="font-size:12px; font-weight:700">${p0.sku || '—'}</span>
-                    ${p0.tecnica ? `<span style="background:#f1e8d8; color:#92400e; font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px;">${p0.tecnica}</span>` : ''}
-                </div>
-                <div class="ficha-grade-compact">${gradeHtml}</div>
-                ${multiHtml}
+            <!-- ── Product Details (All Items) ── -->
+            <div class="ficha-products-list">
+                ${produtos.map((prod, idx) => `
+                    <div class="ficha-product-item" style="${numProdutos > 1 ? 'border-bottom:4px solid var(--surface-3);' : ''}">
+                        ${numProdutos > 1 ? `
+                            <div style="background:var(--surface-2); padding:6px 16px; font-size:10px; font-weight:800; color:var(--text-3); text-transform:uppercase; display:flex; justify-content:space-between; border-bottom:1px solid var(--border)">
+                                <span>Produto ${idx + 1} de ${numProdutos}</span>
+                                <span style="color:var(--amber)">SKU: ${prod.sku}</span>
+                            </div>` : ''}
+                        ${renderProdutoFicha(prod, true)}
+                    </div>
+                `).join('')}
             </div>
 
-            <!-- Cores por parte -->
-            <div class="drawer-ficha-section setor-preparacao">
-                <div class="drawer-ficha-title setor-preparacao">🎨 Cores</div>
-                ${coresHtml}
+            <!-- ── Global Actions (Footer) ── -->
+            <div style="padding:16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:10px;">
+                <button class="btn btn-primary" style="height:44px; font-size:14px; gap:8px;" 
+                    onclick="moverEtapa('${p.id}', '${NEXT_ETAPA?.[etapa] || etapa}')">
+                    <span>🚀 Próxima Etapa:</span> ${ETAPA_LABELS?.[NEXT_ETAPA?.[etapa]] || 'Concluir'}
+                </button>
             </div>
-
-            <!-- Arte / Logos / Textos -->
-            <div class="drawer-ficha-section setor-arte">
-                <div class="drawer-ficha-title setor-arte">✒️ Arte & Logos</div>
-                ${logosHtml}
-                ${textsActive.length > 0 ? `<div style="margin-top:8px">${textsHtml}</div>` : ''}
-            </div>
-
-            <!-- Bordado -->
-            <div class="drawer-ficha-section setor-bordado">
-                <div class="drawer-ficha-title setor-bordado">🧵 Bordado</div>
-                ${p0.emb
-            ? `<a href="${p0.emb}" target="_blank" style="font-size:12px; font-weight:700; color:var(--setor-bordado)">⬇ Baixar arquivo .EMB</a>`
-            : '<span style="color:var(--text-3);font-size:11px">Sem arquivo de bordado</span>'}
-            </div>
-
-            <!-- Costura / Extras -->
-            <div class="drawer-ficha-section setor-costura">
-                <div class="drawer-ficha-title setor-costura">✂️ Extras & Costura</div>
-                ${extrasHtml}
-                ${p0.observacoes
-            ? `<div style="margin-top:8px; background:var(--amber-dim); border-radius:4px; padding:8px 10px; font-size:11px; color:#92400e; border-left:3px solid var(--amber);">
-                        <strong>OBS:</strong> ${p0.observacoes}
-                       </div>`
-            : ''}
-            </div>
-
-            <!-- Expedição / Financeiro -->
-            <div class="drawer-ficha-section setor-expedicao">
-                <div class="drawer-ficha-title setor-expedicao">🚚 Expedição & Financeiro</div>
-                <div class="ficha-setor-row">
-                    <span class="ficha-setor-key">Valor</span>
-                    <span class="ficha-setor-val" style="font-size:14px; font-weight:800; color:var(--green)">${valorFmt}</span>
-                </div>
-                ${p0.celular ? `<div class="ficha-setor-row">
-                    <span class="ficha-setor-key">Contato</span>
-                    <span class="ficha-setor-val">${p0.celular}</span>
-                </div>` : ''}
-                ${p0.pagamento ? `<div class="ficha-setor-row">
-                    <span class="ficha-setor-key">Pagamento</span>
-                    <span class="ficha-setor-val">${p0.pagamento}</span>
-                </div>` : ''}
-            </div>
-
         </div>`;
 }
