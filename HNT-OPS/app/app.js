@@ -589,6 +589,9 @@ function renderDrawerTab(p) {
                 </div>`;
         })();
 
+    } else if (drawerTab === 'ficha') {
+        contentHtml = renderFichaTecnicaDrawer(p);
+
     } else if (drawerTab === 'chat') {
         const pId = p.id;
         body.innerHTML = `<div style="padding:20px;text-align:center"><div class="loading-spinner"></div> Carregando mensagens...</div>`;
