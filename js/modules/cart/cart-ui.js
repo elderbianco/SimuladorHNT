@@ -302,9 +302,39 @@ renderSubItemV1Style: function (order, currentItem = 1, totalItems = 1) {
                         ${this.getProductIconElement(item, order)}
                     </div>
                     <div>
+<<<<<<< HEAD
                         <div style="color:#fff;font-size:1rem;font-weight:700;letter-spacing:0.5px;">${esc(this.getProductName(item, order))}</div>
                         <div style="color:#444;font-size:0.68rem;margin-top:1px;">${esc(order.order_id || order.ID_SIMULACAO || '---')} &nbsp;•&nbsp; ${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '---'}</div>
                         ${extrasHTML ? `<div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap;">${extrasHTML}</div>` : ''}
+=======
+                        <div style="color:#fff; font-weight:bold;">${esc(this.getProductName(item, order))}</div>
+                        <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc((() => {
+            if (order.order_number && order.order_number !== '---') return order.order_number;
+            const id = order.order_id || state.simulationId || order.ID_SIMULACAO || '';
+
+            // 1. Try to match the 6-digit prefix at the very start (standard case)
+            const startDigits = id.match(/^(\d{5,8})/);
+            if (startDigits) return startDigits[1];
+
+            // 2. Try to match the segment immediately BEFORE the product code (SH, SL, TP, etc.)
+            // Example: HNT-PD-010013-LG-.... -> matches 010013
+            const typeMatch = id.match(/([A-Z0-9]+)-(?:SH|SL|TP|LG|ML|CL)-/i);
+            if (typeMatch) return typeMatch[1];
+
+            // 3. Fallback: Find the longest numeric sequence in the ID (usually 5-9 digits)
+            const allNumbers = id.match(/(\d{5,9})/);
+            if (allNumbers) return allNumbers[1];
+
+            const simpleMatch = id.split('-')[0];
+            if (simpleMatch && simpleMatch.length >= 4 && /^\d+$/.test(simpleMatch)) return simpleMatch;
+
+            return order.order_number || state.orderNumber || '---';
+        })())}</span></div>
+                        <div style="font-size:0.7rem; color:#666; margin-top: 2px;">
+                            ID: <span style="color:#888;">${esc(order.order_id || state.simulationId || order.ID_SIMULACAO || '---')}</span> • 
+                            ${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '---'}
+                        </div>
+>>>>>>> 0e956af (Auto-sync: 26/03/2026 21:53:12,26)
                     </div>
                 </div>
 
