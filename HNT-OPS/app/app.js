@@ -736,7 +736,7 @@ function renderProdutoFicha(prod, isSubItem = false) {
                 <div class="${titleClass} setor-preparacao">📋 Preparação</div>
                 <div class="ficha-setor-row"><span class="ficha-setor-key">SKU</span><span class="ficha-setor-val">${p0.sku || '—'}</span></div>
                 <div class="ficha-setor-row"><span class="ficha-setor-key">Técnica</span><span class="ficha-setor-val">${p0.tecnica || '—'}</span></div>
-                <div class="ficha-setor-row"><span class="ficha-setor-key">Qtd</span><span class="ficha-setor-val">${p0.quantidade || 1} un.</span></div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">Qtd.</span><span class="ficha-setor-val">${p0.quantidade || 1} un.</span></div>
             </div>
 
             <div class="${sectionClass} setor-separacao">
