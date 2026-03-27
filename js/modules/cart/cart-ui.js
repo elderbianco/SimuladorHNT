@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cart UI Module
  * Handles HTML generation and DOM rendering for the Cart Dashboard.
  * Part of the "Cart Refactoring Phase 3"
@@ -138,33 +138,30 @@ window.CartUI = {
         const index = order._index;
         const uid = `item-${index}`;
         const pricing = item.pricing || { unit_price: 0, total_price: 0, breakdown: {} };
-        const client = order.client_info || {};
         const esc = (s) => (window.Security ? window.Security.escape(s) : s);
 
         let state = null;
         if (order && order.DADOS_TECNICOS_JSON) {
             try {
                 const parsed = JSON.parse(order.DADOS_TECNICOS_JSON);
-                // If DADOS_TECNICOS_JSON wraps a nested 'specs' (Supabase format), flatten it
                 state = (parsed && parsed.specs) ? { ...parsed, ...parsed.specs } : parsed;
             } catch (e) { console.warn("Failed to parse DADOS_TECNICOS", e); }
         }
         if (!state) {
             // item.specs already normalized by cart-controller
-            const rawSpecs = item.specs || {};
-            // Also try: order.json_tec.specs (direct Supabase format without normalization)
-            let jsonTec = order.json_tec;
-            if (!jsonTec && order.DADOS_TECNICOS_JSON) {
-                try { jsonTec = JSON.parse(order.DADOS_TECNICOS_JSON); } catch (e) { }
-            }
-            if (jsonTec && jsonTec.specs) {
-                state = { ...jsonTec, ...jsonTec.specs };
+            const normalizedSpecs = item.specs || {};
+
+            // Also try: order.json_tec (direct Supabase format)
+            const jsonTec = order.json_tec;
+            if (jsonTec) {
+                // If json_tec has nested specs, flatten it, otherwise use it as is
+                const techSpecs = jsonTec.specs || {};
+                state = { ...jsonTec, ...techSpecs, ...normalizedSpecs };
             } else {
-                state = rawSpecs;
+                state = normalizedSpecs;
             }
         }
 
-        // Unify observations (many possible keys)
         const obs = (
             item.specs?.observations ||
             state.observations ||
@@ -174,33 +171,130 @@ window.CartUI = {
             ""
         ).toString().trim();
 
+        // === ORDER NUMBER ===
+        const orderNum = (() => {
+            if (order.order_number && order.order_number !== '---') return order.order_number;
+            const id = order.order_id || state.simulationId || order.ID_SIMULACAO || '';
+            const prefixMatch = id.match(/^(\d{6})/);
+            if (prefixMatch) return prefixMatch[1];
+            const match = id.match(/^([A-Z0-9]+)-(?:SH|SL|TP|LG|ML|CL)-/i);
+            if (match) return match[1];
+            const simpleMatch = id.split('-')[0];
+            if (simpleMatch && simpleMatch.length >= 4 && /^\d+$/.test(simpleMatch)) return simpleMatch;
+            return order.order_number || state.orderNumber || '---';
+        })();
+
+        // === SIZES ===
+        const sizes = state.sizes || item.specs?.sizes || {};
+        const sizeEntries = Object.entries(sizes).filter(([, q]) => q > 0);
+        const totalQty = sizeEntries.reduce((s, [, q]) => s + q, 0);
+        const sizesHTML = sizeEntries.length > 0
+            ? sizeEntries.map(([sz, qty]) => `<div style="display:flex;flex-direction:column;align-items:center;background:#0a0a0a;border:2px solid #2a2a2a;padding:10px 16px;min-width:58px;border-radius:2px;"><span style="font-size:0.6rem;color:#555;text-transform:uppercase;letter-spacing:1px;font-weight:700;">${esc(sz)}</span><span style="font-size:2.2rem;font-weight:900;color:#fff;line-height:1;font-family:'Bebas Neue',sans-serif;">${qty}</span><span style="font-size:0.58rem;color:#444;">un</span></div>`).join('')
+            : '<span style="color:#333;font-style:italic;font-size:0.85rem;">Sem grade</span>';
+
+        // === PARTS / CORES ===
+        const parts = state.parts || item.specs?.parts || {};
+        const partsEntries = Object.entries(parts);
+        const partsHTML = partsEntries.length > 0
+            ? partsEntries.map(([key, val]) => {
+                const label = (window.resolveZoneLabel ? window.resolveZoneLabel(key) : key).replace(/_/g, ' ');
+                const colorVal = (typeof val === 'object' && val !== null) ? (val.value || 'N/A') : (val || 'N/A');
+                const colorHex = (typeof val === 'object' && val !== null) ? (val.hex || '#444') : '#444';
+                return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid ${colorHex};margin-bottom:5px;"><div style="width:18px;height:18px;border-radius:50%;background:${colorHex};border:2px solid #444;flex-shrink:0;"></div><div><div style="font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</div><div style="font-size:0.88rem;color:#eee;font-weight:600;">${esc(colorVal)}</div></div></div>`;
+            }).join('')
+            : '<span style="color:#333;font-style:italic;font-size:0.85rem;">Sem cores</span>';
+
+        // === EXTRAS ===
+        const extras = state.extras || item.specs?.extras || {};
+        const validExtras = Object.entries(extras).filter(([, e]) => {
+            if (!e) return false;
+            if (typeof e === 'object') return e.enabled || e.active;
+            return e === true || String(e).toLowerCase() === 'sim';
+        });
+        const extrasHTML = validExtras.length > 0
+            ? validExtras.map(([key, e]) => {
+                const val = (typeof e === 'object' && e !== null) ? (e.value || 'SIM') : 'SIM';
+                const cleanKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                return `<span style="background:#181200;border:1px solid #D4AF37;color:#D4AF37;padding:2px 8px;font-size:0.72rem;border-radius:1px;font-weight:700;">+${esc(cleanKey)}: ${esc(val)}</span>`;
+            }).join('')
+            : '';
+
+        // === LOGOS / UPLOADS ===
+        const rawUploads = state.uploads || item.specs?.uploads || {};
+        const uploadsArr = Array.isArray(rawUploads)
+            ? rawUploads
+            : Object.entries(rawUploads).map(([id, u]) => ({ ...u, zone_id: id }));
+        const validUploads = uploadsArr.filter(u => u && (u.src || u.file_url || u.filename || u.file_name));
+
+        const logosHTML = validUploads.length > 0
+            ? validUploads.map(u => {
+                const label = (window.resolveZoneLabel ? window.resolveZoneLabel(u.zone_id || u.zone_label) : (u.zone_id || 'Zona'));
+                const name = u.file_name || u.filename || u.file_url || u.src || 'Imagem';
+                const isCustom = u.is_custom || u.isCustom;
+                const src = u.file_url || u.src;
+                return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid ${isCustom ? '#FFA500' : '#28a745'};margin-bottom:5px;"><span style="font-size:1rem;flex-shrink:0;">${isCustom ? '⚠️' : '✅'}</span><div style="flex:1;min-width:0;"><div style="font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</div><div style="font-size:0.82rem;color:#eee;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(name)}</div><div style="font-size:0.65rem;color:${isCustom ? '#FFA500' : '#28a745'};">${isCustom ? '⚠ Criar Matriz' : 'Acervo HNT'}</div></div>${src ? `<a href="${src}" download title="Baixar" style="color:#D4AF37;font-size:1rem;text-decoration:none;flex-shrink:0;">⬇</a>` : ''}</div>`;
+            }).join('')
+            : '<span style="color:#333;font-style:italic;font-size:0.82rem;">Sem logos/artes</span>';
+
+        // === TEXTS ===
+        const rawTexts = state.texts || item.specs?.texts || {};
+        const textsArr = Array.isArray(rawTexts)
+            ? rawTexts.filter(t => t && t.enabled && t.content)
+            : Object.entries(rawTexts).filter(([, t]) => t && t.enabled && t.content).map(([id, t]) => ({ ...t, zone_id: id }));
+
+        const textsHTML = textsArr.length > 0
+            ? textsArr.map(t => {
+                const label = (window.resolveZoneLabel ? window.resolveZoneLabel(t.zone_id) : (t.zone_id || 'Texto'));
+                return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid #00b4d8;margin-bottom:5px;"><span style="font-size:0.9rem;flex-shrink:0;">🔤</span><div><div style="font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</div><div style="font-size:0.85rem;color:#eee;font-weight:600;">"${esc(t.content)}"</div><div style="font-size:0.65rem;color:#555;">${esc(t.fontFamily || 'Padrão')}</div></div></div>`;
+            }).join('')
+            : '';
+
+        const hasArtwork = validUploads.length > 0 || textsArr.length > 0;
         const hasObs = obs.length > 0;
 
         return `
-        <div class="sub-item-rich" style="background: #151515; border: 1px solid #222; border-radius: 12px; margin-bottom: 20px; overflow: hidden; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-            <!-- Sub Header -->
-            <div class="card-header sub-header" onclick="CartUI.toggleSubTabs('${uid}')" style="background: #1c1c1c; padding: 15px 20px; border-bottom: 1px solid #222; cursor:pointer; display:flex; align-items:center;">
-                 <div class="product-icon-container" style="width: 50px; height: 50px; flex-shrink:0; background: #333; border-radius: 8px; display:flex; align-items:center; justify-content:center; border: 1px solid #444;">
-                    ${this.getProductIconElement(item, order)}
-                 </div>
-                 <div class="toggle-btn-modern" style="margin-left: 10px;">
-                    <span class="toggle-icon">▼</span>
-                 </div>
-                 
-                 <div style="flex:1; margin-left: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="prod-ficha" style="background:#131313;border:1px solid #1e1e1e;border-radius:3px;margin-bottom:14px;overflow:hidden;font-family:'Outfit',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,0.4);">
+
+            <!-- ══ CABEÇALHO ══ -->
+            <div onclick="CartUI.toggleSubTabs('${uid}')" style="display:grid;grid-template-columns:88px 1fr auto;align-items:stretch;background:#0d0d0d;border-bottom:2px solid #1a1a1a;cursor:pointer;user-select:none;">
+
+                <!-- N° Pedido -->
+                <div style="background:#D4AF37;color:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;border-right:2px solid #b8962e;">
+                    <span style="font-size:0.48rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;opacity:0.65;">PEDIDO</span>
+                    <span style="font-size:1.7rem;font-family:'Bebas Neue',sans-serif;line-height:1;">${esc(orderNum)}</span>
+                    <span style="font-size:0.58rem;font-weight:700;opacity:0.55;margin-top:2px;">${currentItem}/${totalItems}</span>
+                </div>
+
+                <!-- Produto -->
+                <div style="padding:10px 16px;display:flex;align-items:center;gap:12px;">
+                    <div style="width:40px;height:40px;flex-shrink:0;background:#1a1a1a;border:1px solid #252525;border-radius:3px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                        ${this.getProductIconElement(item, order)}
+                    </div>
                     <div>
-                        <div style="color:#fff; font-weight:bold;">${esc(this.getProductName(item, order))}</div>
+                        <div style="color:#fff;font-size:1rem;font-weight:700;letter-spacing:0.5px;">${esc(this.getProductName(item, order))}</div>
                         <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc((() => {
+            // Priority: Explicit order_number field
             if (order.order_number && order.order_number !== '---') return order.order_number;
-            const id = order.order_id || state.simulationId || order.ID_SIMULACAO || '';
 
-            // 1. Try to match the 6-digit prefix (e.g., 001000)
-            const prefixMatch = id.match(/^(\d{6})/);
-            if (prefixMatch) return prefixMatch[1];
+            const id = (order.ID_PEDIDO || order.order_id || state.simulationId || order.ID_SIMULACAO || '').toString();
+            if (!id) return '---';
 
-            // 2. Try to match anything before the first dash if it's numeric/alphanumeric
-            const match = id.match(/^([A-Z0-9]+)-(?:SH|SL|TP|LG|ML|CL)-/i);
-            if (match) return match[1];
+            // 1. Try to match HNT-PD-XXXXXX pattern
+            const hntPd = id.match(/HNT-PD-(\d+)/i);
+            if (hntPd) return hntPd[1];
+
+            // 2. Try to match the segment immediately BEFORE the product code (SH, SL, TP, etc.)
+            // Example: HNT-PD-010013-LG-.... -> matches 010013
+            const typeMatch = id.match(/([A-Z0-9]+)-(?:SH|SL|TP|LG|ML|CL)-/i);
+            if (typeMatch && /^\d+$/.test(typeMatch[1])) return typeMatch[1];
+
+            // 3. Try to match the 6-digit prefix at the very start (standard case)
+            const startDigits = id.match(/^(\d{5,8})/);
+            if (startDigits) return startDigits[1];
+
+            // 4. Fallback: Find the longest numeric sequence in the ID (usually 5-9 digits)
+            const allNumbers = id.match(/(\d{5,9})/);
+            if (allNumbers) return allNumbers[1];
 
             const simpleMatch = id.split('-')[0];
             if (simpleMatch && simpleMatch.length >= 4 && /^\d+$/.test(simpleMatch)) return simpleMatch;
@@ -211,144 +305,66 @@ window.CartUI = {
                             ID: <span style="color:#888;">${esc(order.order_id || state.simulationId || order.ID_SIMULACAO || '---')}</span> • 
                             ${order.created_at ? new Date(order.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '---'}
                         </div>
+                        ${extrasHTML ? `<div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap;">${extrasHTML}</div>` : ''}
                     </div>
-                    <div style="color:var(--gold); font-size: 1.1rem; font-family: 'Bebas Neue', sans-serif; border: 1px solid #333; padding: 4px 10px; border-radius: 8px; margin-right: 25px; min-width: 45px; text-align: center; background: #111;">
-                        ${currentItem}/${totalItems}
+                </div>
+
+                <!-- Ações + Total + Toggle -->
+                <div style="padding:10px 14px;display:flex;align-items:center;gap:8px;border-left:1px solid #1a1a1a;">
+                    <div style="text-align:right;margin-right:6px;">
+                        <div style="font-size:0.58rem;color:#333;text-transform:uppercase;letter-spacing:1px;">TOTAL</div>
+                        <div style="font-size:1.15rem;color:#D4AF37;font-weight:800;font-family:'Bebas Neue',sans-serif;">${(pricing?.total_price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                        <div style="font-size:0.62rem;color:#333;">${totalQty} un × ${(pricing?.unit_price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
                     </div>
-                 </div>
-
-                 <div style="text-align:right; margin-right: 25px;">
-                    <div style="font-size:0.8rem; color:#888;">Unitário</div>
-                    <div style="color:var(--gold); font-weight:bold;">${(pricing?.unit_price || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-                 </div>
-
-                 <div style="text-align:right; display:flex; gap:12px; align-items:center;">
-                    ${(order.pdfUrl || item.pdf_path) ? `
-                    <a href="${order.pdfUrl || item.pdf_path}" 
-                       target="_blank" 
-                       onclick="event.stopPropagation()"
-                       title="Abrir Ficha Técnica (PDF)"
-                       class="btn-modern btn-pdf">
-                       <span style="font-size: 1.1rem;">📄</span> <span class="btn-text-mobile">VISUALIZAR PDF</span>
-                    </a>` : `
-                    <div style="font-size: 0.75rem; color: #666; font-style: italic; margin-right: 10px;">PDF Pendente</div>
-                    `}
-
-                    <button class="btn-modern btn-edit-modern" 
-                            onclick="event.stopPropagation(); editOrder(${index})" 
-                            title="Editar este produto">
-                        ✏️ <span class="btn-text-mobile">Editar</span>
-                    </button>
-                    
-                    <button class="btn-delete-tiny" 
-                            onclick="event.stopPropagation(); deleteOrder(${index})" 
-                            title="Remover este item">✖</button>
-                 </div>
+                    ${(order.pdfUrl || item.pdf_path) ? `<a href="${order.pdfUrl || item.pdf_path}" target="_blank" onclick="event.stopPropagation()" title="PDF" style="background:#c0392b;color:#fff;padding:7px 12px;border-radius:2px;font-size:0.72rem;font-weight:800;text-decoration:none;display:flex;align-items:center;gap:4px;">📄 PDF</a>` : `<span style="font-size:0.62rem;color:#2a2a2a;font-style:italic;">PDF Pendente</span>`}
+                    <button onclick="event.stopPropagation();editOrder(${index})" style="background:#1e1e1e;color:#777;border:1px solid #2a2a2a;padding:7px 11px;border-radius:2px;cursor:pointer;font-size:0.72rem;font-family:'Outfit',sans-serif;">✏️</button>
+                    <button onclick="event.stopPropagation();deleteOrder(${index})" style="background:rgba(255,77,77,0.07);color:#ff4d4d;border:1px solid rgba(255,77,77,0.18);width:32px;height:32px;border-radius:2px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✖</button>
+                    <div class="toggle-btn-modern" style="margin-left:2px;"><span class="toggle-icon">▼</span></div>
+                </div>
             </div>
 
-            <!-- Detail Tabs -->
-            <div id="${uid}" class="item-details" style="display:none;">
-                <div class="tabs-nav">
-                    <button class="tab-btn active" onclick="CartUI.switchTab(this, 'prod-${uid}')">🏠 Produto & Cores ▼</button>
-                    <button class="tab-btn" onclick="CartUI.switchTab(this, 'sizes-${uid}')">📏 Tamanhos ▼</button>
-                    <button class="tab-btn" onclick="CartUI.switchTab(this, 'specs-${uid}')">🎨 Lógos/Textos ▼</button>
-                    <button class="tab-btn" onclick="CartUI.switchTab(this, 'price-${uid}')">💰 Valores ▼</button>
-                    <button class="tab-btn" style="color:#00b4d8; font-weight:bold;" onclick="CartUI.switchTab(this, 'ship-${uid}')">📅 Logística ▼</button>
-                    <button class="tab-btn" style="color:#ffa500; font-weight:bold;" onclick="CartUI.switchTab(this, 'obs-${uid}')">📝 Observações ▼</button>
-                </div>
+            <!-- ══ CORPO (colapsável) ══ -->
+            <div id="${uid}" style="display:none;">
 
-                <div id="prod-${uid}" class="tab-content active">
-                    <div class="grid-info">
-                        ${this.renderPartsList(state.parts || {}, state.color)}
-                        ${state.hntLogoColor ? `
-                            <div class="info-grp">
-                                <div class="info-label">Logo HNT</div>
-                                <div class="info-val">
-                                    <span style="display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:5px; border:1px solid #444; background:${(state.hntLogoColor === 'branco' || state.hntLogoColor === '#FFFFFF') ? '#fff' : (state.hntLogoColor === 'preto' || state.hntLogoColor === '#000') ? '#000' : '#888'}"></span>
-                                    ${state.hntLogoColor.toUpperCase()}
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                    ${hasObs ? `
-                        <div style="margin:15px 0; padding:12px; background:rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px; font-size:0.9rem; color:#ccc;">
-                            <strong style="color:var(--gold);">📝 Obs:</strong> Tem observações adicionais (Veja a aba "Observações").
+                <!-- 3 blocos lado a lado -->
+                <div style="display:grid;grid-template-columns:auto 1fr 1.5fr;gap:0;border-bottom:1px solid #1a1a1a;">
+
+                    <!-- GRADE -->
+                    <div style="border-right:1px solid #1a1a1a;padding:14px 16px;min-width:200px;">
+                        <div style="margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;gap:8px;">
+                            <span style="background:#D4AF37;color:#000;font-size:0.55rem;font-weight:800;letter-spacing:1.5px;padding:2px 7px;text-transform:uppercase;">📏 GRADE</span>
+                            <span style="font-size:0.62rem;color:#444;">${totalQty} peças</span>
                         </div>
-                    ` : ''}
-                    <div style="margin-top:20px;">
-                        ${this.renderExtrasOnly(state.extras || {}, state.config || {})}
-                    </div>
-                </div>
-
-                <div id="sizes-${uid}" class="tab-content">
-                    <div class="size-grid">
-                        ${this.renderSizes(state.sizes || {})}
-                    </div>
-                </div>
-
-                <div id="specs-${uid}" class="tab-content">
-                    ${this.renderLogosAndTexts(state || {})}
-                </div>
-
-                <div id="price-${uid}" class="tab-content">
-                    <h3 style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; margin-bottom: 20px;">Relatório de Custos & Prazos</h3>
-                    
-                    <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-                            <thead style="background: #2a2a2a; color: var(--gold); text-align: left;">
-                                <tr>
-                                    <th style="padding: 12px 15px; border-bottom: 1px solid #444; width: 40px;"></th>
-                                    <th style="padding: 12px 15px; border-bottom: 1px solid #444;">Discriminação dos Valores</th>
-                                    <th style="padding: 12px 15px; border-bottom: 1px solid #444; text-align: right;">Total Acumulado</th>
-                                </tr>
-                            </thead>
-                            <tbody style="color: #ccc;">
-                                ${this.generateDetailedValuesHTML(item, pricing, order)}
-                            </tbody>
-                            <tfoot>
-                                <tr style="background:#00b4d8; color:#000; font-weight:800; text-transform:uppercase;">
-                                    <td colspan="3" style="padding:15px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:5px;">
-                                            <span style="font-size:0.9rem;">TOTAL FINAL PREVISTO</span>
-                                            <span style="font-size:1.4rem;">R$ ${pricing.total_price.toFixed(2).replace('.', ',')}</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;">${sizesHTML}</div>
                     </div>
 
-                    <!-- PRODUCTION TIME -->
-                    <div style="background: #222; border-left: 3px solid #00b4d8; padding: 15px; border-radius: 4px; font-size: 0.9rem; color: #aaa; line-height:1.5;">
-                        <strong>📅 Previsão de Produção:</strong><br>
-                        Estimativa de 15 a 25 dias úteis a partir da aprovação final.
-                    </div>
-                </div>
-
-                <div id="ship-${uid}" class="tab-content">
-                    <h3 style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; margin-bottom: 20px;">📅 Logística & Prazos</h3>
-                    <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px;">
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                            <div style="background:#222; padding:15px; border-radius:8px; border-left:3px solid var(--gold);">
-                                <div style="font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:5px;">Data do Pedido</div>
-                                <div style="font-size:1.2rem; color:#fff; font-weight:bold;">${new Date(order.logistics?.orderDate || order.created_at).toLocaleDateString()}</div>
-                            </div>
-                            <div style="background:#222; padding:15px; border-radius:8px; border-left:3px solid #00b4d8;">
-                                <div style="font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:5px;">Previsão de Entrega</div>
-                                <div style="font-size:1.2rem; color:#fff; font-weight:bold;">${order.logistics?.deliveryDate || '15 a 25 dias úteis'}</div>
-                            </div>
-                            <div style="background:#222; padding:15px; border-radius:8px; border-left:3px solid #28a745;">
-                                <div style="font-size:0.8rem; color:#888; text-transform:uppercase; margin-bottom:5px;">Contato Cadastrado</div>
-                                <div style="font-size:1.2rem; color:#fff; font-weight:bold;">${order.logistics?.phone || 'Não informado'}</div>
-                            </div>
+                    <!-- CORES -->
+                    <div style="border-right:1px solid #1a1a1a;padding:14px 16px;">
+                        <div style="margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid #1a1a1a;">
+                            <span style="background:#1a1a1a;border:1px solid #D4AF37;color:#D4AF37;font-size:0.55rem;font-weight:800;letter-spacing:1.5px;padding:2px 7px;text-transform:uppercase;">🎨 CORES</span>
                         </div>
+                        ${partsHTML}
+                        ${state.hntLogoColor ? `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a0a;border-left:3px solid #D4AF37;margin-bottom:5px;"><div style="width:18px;height:18px;border-radius:50%;background:${(state.hntLogoColor === 'branco' || state.hntLogoColor === '#FFFFFF') ? '#fff' : '#000'};border:2px solid #D4AF37;flex-shrink:0;"></div><div><div style="font-size:0.6rem;color:#444;text-transform:uppercase;">Logo HNT</div><div style="font-size:0.88rem;color:#eee;font-weight:600;">${esc(state.hntLogoColor).toUpperCase()}</div></div></div>` : ''}
+                    </div>
+
+                    <!-- ARTES & LOGOS -->
+                    <div style="padding:14px 16px;">
+                        <div style="margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;gap:8px;">
+                            <span style="background:${hasArtwork ? '#0d200d' : '#1a1a1a'};border:1px solid ${hasArtwork ? '#28a745' : '#2a2a2a'};color:${hasArtwork ? '#28a745' : '#333'};font-size:0.55rem;font-weight:800;letter-spacing:1.5px;padding:2px 7px;text-transform:uppercase;">🖼 ARTES & LOGOS</span>
+                            ${hasArtwork ? `<span style="font-size:0.62rem;color:#28a745;">${validUploads.length} arq + ${textsArr.length} texto(s)</span>` : ''}
+                        </div>
+                        ${logosHTML}
+                        ${textsHTML}
                     </div>
                 </div>
 
-                <div id="obs-${uid}" class="tab-content">
-                    <h3 style="color: var(--gold); font-family: 'Bebas Neue', sans-serif; margin-bottom: 20px;">📝 Observações do Cliente</h3>
-                    <div style="background: #1a1a1a; padding: 20px; border: 1px dashed var(--gold); border-radius: 8px; font-size: 1rem; color: #ddd; line-height: 1.6; white-space: pre-wrap;">${esc(obs) || "Nenhuma observação informada."}</div>
-                </div>
+                ${hasObs ? `
+                <!-- OBSERVAÇÕES -->
+                <div style="background:#0f0c00;border-top:2px solid #D4AF37;padding:12px 18px;display:flex;gap:12px;align-items:flex-start;">
+                    <span style="background:#D4AF37;color:#000;font-size:0.55rem;font-weight:800;letter-spacing:1.5px;padding:2px 8px;text-transform:uppercase;flex-shrink:0;margin-top:3px;">⚠ OBS</span>
+                    <span style="font-size:0.9rem;color:#ddd;line-height:1.6;white-space:pre-wrap;">${esc(obs)}</span>
+                </div>` : ''}
+
             </div>
         </div>
         `;
