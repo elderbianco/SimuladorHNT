@@ -3127,16 +3127,11 @@ async function confirmNovoPedidoManual() {
     }
 }
 
-// Utilitário para expandir/recolher cards de itens
+
 window.toggleItemCard = function (index) {
     const card = document.getElementById('item-card-' + index);
     if (!card) return;
-
     const isExpanded = card.classList.contains('expanded');
-
-    // Opcional: fechar outros cards ao abrir um novo (acordeão)
-    // document.querySelectorAll('.item-card').forEach(c => c.classList.remove('expanded'));
-
     if (isExpanded) {
         card.classList.remove('expanded');
     } else {
@@ -3144,3 +3139,275 @@ window.toggleItemCard = function (index) {
     }
 };
 
+// ══════════════════════════════════════════════════════════
+//  PRODUCAO VIEW — Production Line Dashboard
+// ══════════════════════════════════════════════════════════
+
+// Active filter for producao view ('todos' or an etapa key)
+let producaoFiltro = 'todos';
+
+/**
+ * renderProducao — Renders the production line view with expandable sector cards
+ */
+function renderProducao(data) {
+    const view = document.getElementById('producao-view');
+    if (!view) return;
+
+    const etapaFilterOrder = ETAPAS || [
+        'Preparacao', 'Separacao', 'Arte', 'Bordado', 'Costura', 'Qualidade', 'Expedicao', 'Pendencia'
+    ];
+
+    // Build filter tabs
+    const tabsHtml = `
+        <div class="producao-filter-tabs">
+            <button class="producao-filter-tab ${producaoFiltro === 'todos' ? 'active' : ''}"
+                    onclick="setProducaoFiltro('todos')">
+                Todos <span class="producao-filter-count">${data.length}</span>
+            </button>
+            ${etapaFilterOrder.map(etapa => {
+        const count = data.filter(p => p.etapa === etapa).length;
+        const icon = ETAPA_ICONS[etapa] || '📋';
+        const label = ETAPA_LABELS[etapa] || etapa;
+        return `
+                    <button class="producao-filter-tab ${producaoFiltro === etapa ? 'active' : ''}"
+                            onclick="setProducaoFiltro('${etapa}')">
+                        ${icon} ${label}
+                        <span class="producao-filter-count">${count}</span>
+                    </button>`;
+    }).join('')}
+        </div>`;
+
+    const filtered = producaoFiltro === 'todos'
+        ? data
+        : data.filter(p => p.etapa === producaoFiltro);
+
+    if (filtered.length === 0) {
+        view.innerHTML = tabsHtml + `
+            <div style="padding:48px; text-align:center; color:var(--text-3); font-size:13px;">
+                Nenhum pedido nesta etapa.
+            </div>`;
+        return;
+    }
+
+    const cardsHtml = filtered.map(p => buildProducaoCard(p)).join('');
+
+    view.innerHTML = tabsHtml + `<div class="producao-grid">${cardsHtml}</div>`;
+}
+
+/** Sets the production view filter and re-renders. */
+function setProducaoFiltro(filtro) {
+    producaoFiltro = filtro;
+    renderProducao(PEDIDOS);
+}
+
+/**
+ * buildProducaoCard — Builds a single expandable production card HTML
+ */
+function buildProducaoCard(p) {
+    const produtos = p.produtos || [p];
+    const etapa = p.etapa || 'Preparacao';
+    const icon = ETAPA_ICONS[etapa] || '📋';
+    const color = ETAPA_COLORS[etapa] || '#888';
+    const label = ETAPA_LABELS[etapa] || etapa;
+    const etapaKey = etapa.toLowerCase();
+
+    const prazoColor = p.diasRestantes < 0 ? 'var(--red)' :
+        p.diasRestantes <= 1 ? 'var(--orange)' : 'var(--text-2)';
+
+    const multiTag = produtos.length > 1
+        ? `<span class="producao-badge" style="background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3)">📦 ${produtos.length} itens</span>`
+        : `<span class="producao-badge" style="background:var(--surface-2);color:var(--text-2);border:1px solid var(--border)">${p.sku}</span>`;
+
+    const fichaHtml = buildFichaSetores(produtos);
+
+    return `
+        <div class="producao-card" id="prod-card-${p.id}">
+            <div class="producao-card-header" onclick="toggleProducaoCard('${p.id}')">
+                <div class="producao-setor-icon" style="background:${color}18; border:1px solid ${color}44; font-size:18px">
+                    ${icon}
+                </div>
+                <div class="producao-card-main">
+                    <div class="producao-card-num">${p.numero}</div>
+                    <div class="producao-card-sub">${p.cliente} · ${p.quantidade} un. · ${label}</div>
+                </div>
+                ${multiTag}
+                ${p.urgente ? '<span class="producao-urgente">⚠ URG</span>' : ''}
+                <span class="producao-prazo" style="color:${prazoColor}">
+                    📅 ${p.prazo}
+                </span>
+                <span style="font-size:13px; color:var(--text-3); margin-left:4px; transition:transform 0.2s" id="prod-arrow-${p.id}">▼</span>
+            </div>
+            <div class="producao-ficha" id="prod-ficha-${p.id}">
+                <div style="padding:14px 18px 8px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;">
+                    <button class="btn btn-ghost" style="font-size:11px; height:28px; padding:0 10px"
+                            onclick="openDrawer('${p.id}'); event.stopPropagation()">
+                        📝 Abrir Drawer
+                    </button>
+                    <button class="btn" style="font-size:11px; height:28px; padding:0 10px; background:var(--amber-dim); color:#92400e; border:1px solid var(--amber)"
+                            onclick="printFicha(); event.stopPropagation()">
+                        🖨️ Imprimir Ficha
+                    </button>
+                </div>
+                <div class="ficha-setores">${fichaHtml}</div>
+            </div>
+        </div>`;
+}
+
+/** Expands/collapses a production card ficha */
+function toggleProducaoCard(id) {
+    const ficha = document.getElementById('prod-ficha-' + id);
+    const arrow = document.getElementById('prod-arrow-' + id);
+    if (!ficha) return;
+    const isOpen = ficha.style.display === 'block';
+    ficha.style.display = isOpen ? 'none' : 'block';
+    if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+/**
+ * buildFichaSetores — Builds the 7-sector ficha grid for a set of produtos
+ */
+function buildFichaSetores(produtos) {
+    // Merge all data from all products in the order
+    const dt = produtos[0]?.dadosTecnicos || {};
+    const parts = dt.parts || {};
+    const texts = dt.texts || {};
+    const extras = dt.extras || {};
+    const uploads = dt.uploads || {};
+    const grade = dt.grade || dt.sizes || {};
+    const logoPunho = dt.logoPunho || null;
+
+    // ── 1. PREPARAÇÃO ─────────────────────────────────────
+    const p0 = produtos[0] || {};
+    const preparacaoRows = [
+        { k: 'Nº Pedido', v: p0.numero || '—' },
+        { k: 'SKU', v: p0.sku || '—' },
+        { k: 'Qtd. Total', v: (produtos.reduce((a, p) => a + (p.quantidade || 1), 0)) + ' un.' },
+        { k: 'Prazo', v: p0.prazo || '—' },
+        { k: 'Técnica', v: p0.tecnica || '—' },
+        { k: 'Cliente', v: p0.cliente || '—' },
+    ];
+
+    // ── 2. SEPARAÇÃO — grade de tamanhos ─────────────────
+    const gradeEntries = Object.entries(grade).filter(([, qty]) => qty > 0);
+    const gradeHtml = gradeEntries.length > 0
+        ? `<div class="ficha-grade-compact">${gradeEntries.map(([sz, qty]) => `
+            <div class="ficha-grade-pill">${sz}<span>${qty}×</span></div>`).join('')}</div>`
+        : `<span style="color:var(--text-3); font-size:11px">${p0.tamanho || '—'} · ${p0.quantidade || 1} un.</span>`;
+
+    const coresHtml = Object.entries(parts).slice(0, 8).map(([k, v]) => {
+        const colorName = typeof v === 'object' ? (v.value || v.name || '—') : (v || '—');
+        const label = PART_LABEL_MAP[k] || k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        return `<div class="ficha-setor-row">
+            <span class="ficha-setor-key">${label}</span>
+            <span class="ficha-setor-val">${colorName}</span>
+        </div>`;
+    }).join('') || '<div style="color:var(--text-3);font-size:11px">Sem cores definidas</div>';
+
+    // ── 3. ARTE — logos e textos ──────────────────────────
+    const uploadsEntries = Object.entries(uploads).filter(([, d]) => d && d.src);
+    const logosHtml = uploadsEntries.length > 0 || logoPunho
+        ? `<div class="ficha-logo-row">
+            ${uploadsEntries.map(([k, d]) => `<img class="ficha-logo-mini" src="${d.src}" title="${d.filename || k}" onclick="window.open('${d.src}','_blank')">`).join('')}
+            ${logoPunho ? `<img class="ficha-logo-mini" src="${logoPunho}" title="Logo Punho" onclick="window.open('${logoPunho}','_blank')">` : ''}
+           </div>`
+        : '<div style="color:var(--text-3);font-size:11px">Sem logos</div>';
+
+    const textsEntries = Object.entries(texts).filter(([, d]) => d.enabled && d.content);
+    const textsRows = textsEntries.slice(0, 5).map(([k, d]) => `
+        <div class="ficha-setor-row">
+            <span class="ficha-setor-key">${TEXT_LABEL_MAP[k] || k}</span>
+            <span class="ficha-setor-val">"${d.content}"</span>
+        </div>`).join('') || '<div style="color:var(--text-3);font-size:11px">Sem textos</div>';
+
+    // ── 4. BORDADO ────────────────────────────────────────
+    const bordadoRows = p0.emb
+        ? `<div class="ficha-setor-row"><span class="ficha-setor-key">Arquivo</span><span class="ficha-setor-val"><a href="${p0.emb}" target="_blank" style="color:var(--setor-bordado)">Baixar .EMB</a></span></div>`
+        : '<div style="color:var(--text-3);font-size:11px">Sem arquivo de bordado</div>';
+
+    // ── 5. COSTURA — extras ───────────────────────────────
+    const extrasAtivos = Object.entries(extras).filter(([, d]) => d && d.enabled);
+    const extrasRows = extrasAtivos.map(([k, d]) => `
+        <div class="ficha-setor-row">
+            <span class="ficha-setor-key">✅ ${EXTRA_LABEL_MAP[k] || k}</span>
+            <span class="ficha-setor-val">${d.color || 'Sim'}</span>
+        </div>`).join('') || '<div style="color:var(--text-3);font-size:11px">Sem extras</div>';
+
+    const obsHtml = p0.observacoes
+        ? `<div style="margin-top:8px; padding:8px; background:var(--amber-dim); border-radius:4px; font-size:11px; color:#92400e;">${p0.observacoes}</div>`
+        : '';
+
+    // ── 6. QUALIDADE — resumo completo ────────────────────
+    const qualidadeRows = [
+        { k: 'Técnica', v: p0.tecnica || '—' },
+        { k: 'Qtd itens', v: extrasAtivos.length },
+        { k: 'Logos', v: uploadsEntries.length + (logoPunho ? 1 : 0) },
+        { k: 'Textos', v: textsEntries.length },
+        { k: 'Grade', v: gradeEntries.length > 0 ? gradeEntries.length + ' tam.' : p0.tamanho || '—' },
+    ];
+
+    // ── 7. EXPEDIÇÃO ──────────────────────────────────────
+    const valorFmt = p0.valor ? `R$ ${parseFloat(p0.valor).toFixed(2).replace('.', ',')}` : '—';
+    const expedicaoRows = [
+        { k: 'Cliente', v: p0.cliente || '—' },
+        { k: 'Celular', v: p0.celular || '—' },
+        { k: 'Valor', v: valorFmt },
+    ];
+
+    function rowBlock(rows) {
+        return rows.map(r => `<div class="ficha-setor-row">
+            <span class="ficha-setor-key">${r.k}</span>
+            <span class="ficha-setor-val">${r.v}</span>
+        </div>`).join('');
+    }
+
+    return `
+        <div class="ficha-setor-bloco setor-preparacao">
+            <div class="ficha-setor-title setor-preparacao">📋 Preparação</div>
+            ${rowBlock(preparacaoRows)}
+        </div>
+        <div class="ficha-setor-bloco setor-separacao">
+            <div class="ficha-setor-title setor-separacao">📦 Separação & Cores</div>
+            ${gradeHtml}
+            <div style="margin-top:10px">${coresHtml}</div>
+        </div>
+        <div class="ficha-setor-bloco setor-arte">
+            <div class="ficha-setor-title setor-arte">✒️ Arte / Logos</div>
+            ${logosHtml}
+            <div style="margin-top:10px">${textsRows}</div>
+        </div>
+        <div class="ficha-setor-bloco setor-bordado">
+            <div class="ficha-setor-title setor-bordado">🧵 Bordado</div>
+            ${bordadoRows}
+        </div>
+        <div class="ficha-setor-bloco setor-costura">
+            <div class="ficha-setor-title setor-costura">✂️ Costura / Extras</div>
+            ${extrasRows}
+            ${obsHtml}
+        </div>
+        <div class="ficha-setor-bloco setor-qualidade">
+            <div class="ficha-setor-title setor-qualidade">✨ Qualidade</div>
+            ${rowBlock(qualidadeRows)}
+        </div>
+        <div class="ficha-setor-bloco setor-expedicao">
+            <div class="ficha-setor-title setor-expedicao">🚚 Expedição</div>
+            ${rowBlock(expedicaoRows)}
+        </div>`;
+}
+
+/**
+ * renderFichaTecnicaDrawer — Renders the 🏭 Ficha Técnica drawer tab
+ * Shows the 7-sector view for a single order
+ */
+function renderFichaTecnicaDrawer(p) {
+    const produtos = p.produtos || [p];
+    const fichaSetores = buildFichaSetores(produtos);
+    return `
+        <div class="drawer-ficha-wrap">
+            <div style="padding:10px 16px; background:var(--surface-2); border-bottom:1px solid var(--border); font-size:10px; font-weight:700; color:var(--text-3); letter-spacing:0.8px; text-transform:uppercase;">
+                FICHA TÉCNICA · ${p.numero} · ${p.cliente}
+            </div>
+            <div class="ficha-setores" style="display:flex; flex-direction:column">
+                ${fichaSetores.replace(/class="ficha-setor-bloco/g, 'style="padding: 14px 18px;" class="ficha-setor-bloco')}
+            </div>
+        </div>`;
+}
