@@ -415,3 +415,5 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
+function bindChatEvents(order) { const chatArea = document.querySelector('#chatMessages'); if (chatArea) chatArea.scrollTop = chatArea.scrollHeight; }
