@@ -3398,19 +3398,197 @@ function buildFichaSetores(produtos) {
 }
 
 /**
- * renderFichaTecnicaDrawer — Renders the 🏭 Ficha Técnica drawer tab
- * Shows the 7-sector view for a single order
+ * renderFichaTecnicaDrawer — Ficha Técnica Completa (drawer tab)
+ * Compact production summary when clicking any row in Lista view
  */
 function renderFichaTecnicaDrawer(p) {
     const produtos = p.produtos || [p];
-    const fichaSetores = buildFichaSetores(produtos);
+    const dt = produtos[0]?.dadosTecnicos || {};
+    const parts = dt.parts || {};
+    const texts = dt.texts || {};
+    const extras = dt.extras || {};
+    const uploads = dt.uploads || {};
+    const grade = dt.grade || dt.sizes || {};
+    const p0 = produtos[0] || p;
+
+    const etapa = p.etapa || p.etapaAtual || 'Preparação';
+    const etapaIcon = ETAPA_ICONS?.[etapa] || '📋';
+    const etapaCol = ETAPA_COLORS?.[etapa] || '#888';
+    const etapaLbl = ETAPA_LABELS?.[etapa] || etapa;
+    const totalQty = produtos.reduce((a, x) => a + (x.quantidade || 1), 0);
+    const prazoColor = p.diasRestantes < 0 ? '#ef4444' :
+        p.diasRestantes <= 1 ? '#f97316' : 'var(--text-2)';
+    const valorFmt = p0.valor ? `R$ ${parseFloat(p0.valor).toFixed(2).replace('.', ',')}` : '—';
+
+    // ── Grade de tamanhos ──────────────────────────────────
+    const gradeEntries = Object.entries(grade).filter(([, q]) => q > 0);
+    const gradeHtml = gradeEntries.length > 0
+        ? gradeEntries.map(([sz, qty]) =>
+            `<div class="ficha-grade-pill">${sz}<span>${qty}×</span></div>`).join('')
+        : `<span style="font-size:12px;font-weight:700;">${p0.tamanho || '—'} × ${totalQty}</span>`;
+
+    // ── Cores por parte ────────────────────────────────────
+    const coresEntries = Object.entries(parts).slice(0, 10);
+    const coresHtml = coresEntries.length > 0
+        ? coresEntries.map(([k, v]) => {
+            const colorName = typeof v === 'object' ? (v.value || v.name || '—') : (v || '—');
+            const label = PART_LABEL_MAP?.[k] || k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            return `<div class="ficha-setor-row">
+                <span class="ficha-setor-key">${label}</span>
+                <span class="ficha-setor-val">${colorName}</span>
+            </div>`;
+        }).join('')
+        : '<span style="color:var(--text-3);font-size:11px">Sem cores definidas</span>';
+
+    // ── Logos ──────────────────────────────────────────────
+    const uploadList = Object.entries(uploads).filter(([, d]) => d && d.src);
+    const logoPunho = dt.logoPunho || null;
+    const logosHtml = uploadList.length > 0 || logoPunho
+        ? `<div class="ficha-logo-row">
+            ${uploadList.map(([k, d]) => `<img class="ficha-logo-mini" src="${d.src}" title="${d.filename || k}" onclick="window.open('${d.src}','_blank')">`).join('')}
+            ${logoPunho ? `<img class="ficha-logo-mini" src="${logoPunho}" title="Logo Punho" onclick="window.open('${logoPunho}','_blank')">` : ''}
+           </div>`
+        : '<span style="color:var(--text-3);font-size:11px">—</span>';
+
+    // ── Textos ─────────────────────────────────────────────
+    const textsActive = Object.entries(texts).filter(([, d]) => d.enabled && d.content);
+    const textsHtml = textsActive.length > 0
+        ? textsActive.slice(0, 5).map(([k, d]) =>
+            `<div class="ficha-setor-row">
+                <span class="ficha-setor-key">${TEXT_LABEL_MAP?.[k] || k}</span>
+                <span class="ficha-setor-val">"${d.content}"</span>
+            </div>`).join('')
+        : '<span style="color:var(--text-3);font-size:11px">—</span>';
+
+    // ── Extras ─────────────────────────────────────────────
+    const extrasActive = Object.entries(extras).filter(([, d]) => d && d.enabled);
+    const extrasHtml = extrasActive.length > 0
+        ? extrasActive.map(([k, d]) =>
+            `<div class="ficha-setor-row">
+                <span class="ficha-setor-key">✅ ${EXTRA_LABEL_MAP?.[k] || k}</span>
+                <span class="ficha-setor-val">${d.color || 'Sim'}</span>
+            </div>`).join('')
+        : '<span style="color:var(--text-3);font-size:11px">—</span>';
+
+    // ── Multi-produto: mostrar lista de SKUs ───────────────
+    const multiHtml = produtos.length > 1
+        ? `<div style="margin-top:6px; border:1px solid var(--border); border-radius:4px; overflow:hidden;">
+            ${produtos.map(x => `
+                <div style="display:flex; gap:8px; align-items:center; padding:5px 10px; border-bottom:1px solid var(--border); font-size:11px;">
+                    <span style="font-weight:700; color:var(--text-1); min-width:80px">${x.sku || '—'}</span>
+                    <span style="color:var(--text-3)">${x.tamanho || '—'} · ${x.quantidade || 1}×</span>
+                </div>`).join('')}
+           </div>`
+        : '';
+
     return `
         <div class="drawer-ficha-wrap">
-            <div style="padding:10px 16px; background:var(--surface-2); border-bottom:1px solid var(--border); font-size:10px; font-weight:700; color:var(--text-3); letter-spacing:0.8px; text-transform:uppercase;">
-                FICHA TÉCNICA · ${p.numero} · ${p.cliente}
+
+            <!-- ── Cabeçalho de status ── -->
+            <div style="padding:14px 16px; background:var(--surface); border-bottom:2px solid ${etapaCol}20; display:flex; flex-direction:column; gap:8px;">
+
+                <!-- Status + ações rápidas -->
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:32px; height:32px; border-radius:8px; background:${etapaCol}18; border:1.5px solid ${etapaCol}55; display:flex; align-items:center; justify-content:center; font-size:16px;">
+                            ${etapaIcon}
+                        </div>
+                        <div>
+                            <div style="font-family:'Inter Tight',sans-serif; font-weight:800; font-size:15px; letter-spacing:-0.3px">${p.numero}</div>
+                            <div style="font-size:11px; color:${etapaCol}; font-weight:700; text-transform:uppercase; letter-spacing:0.5px">${etapaLbl}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn btn-ghost" style="height:28px; padding:0 10px; font-size:11px; font-weight:700"
+                            onclick="switchDrawerTab('detalhes')">
+                            ✏️ Editar
+                        </button>
+                        <button class="btn btn-ghost" style="height:28px; padding:0 10px; font-size:11px; font-weight:700"
+                            onclick="window.print()">
+                            🖨️
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dados rápidos horizontais -->
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+                    <div style="background:var(--surface-2); border-radius:4px; padding:6px 8px;">
+                        <div style="font-size:9px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Cliente</div>
+                        <div style="font-size:12px; font-weight:700; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${p.cliente || '—'}</div>
+                    </div>
+                    <div style="background:var(--surface-2); border-radius:4px; padding:6px 8px;">
+                        <div style="font-size:9px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Qtd Total</div>
+                        <div style="font-size:12px; font-weight:700; margin-top:2px">${totalQty} un.</div>
+                    </div>
+                    <div style="background:var(--surface-2); border-radius:4px; padding:6px 8px;">
+                        <div style="font-size:9px; color:var(--text-3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px">Entrega</div>
+                        <div style="font-size:12px; font-weight:700; margin-top:2px; color:${prazoColor}">${p.prazo || '—'}</div>
+                    </div>
+                </div>
             </div>
-            <div class="ficha-setores" style="display:flex; flex-direction:column">
-                ${fichaSetores.replace(/class="ficha-setor-bloco/g, 'style="padding: 14px 18px;" class="ficha-setor-bloco')}
+
+            <!-- ── Corpo da ficha em setores ── -->
+
+            <!-- Grade & Produto -->
+            <div class="drawer-ficha-section setor-separacao">
+                <div class="drawer-ficha-title setor-separacao">📦 Grade & Produto</div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span style="font-size:11px; color:var(--text-3)">SKU:</span>
+                    <span style="font-size:12px; font-weight:700">${p0.sku || '—'}</span>
+                    ${p0.tecnica ? `<span style="background:#f1e8d8; color:#92400e; font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px;">${p0.tecnica}</span>` : ''}
+                </div>
+                <div class="ficha-grade-compact">${gradeHtml}</div>
+                ${multiHtml}
             </div>
+
+            <!-- Cores por parte -->
+            <div class="drawer-ficha-section setor-preparacao">
+                <div class="drawer-ficha-title setor-preparacao">🎨 Cores</div>
+                ${coresHtml}
+            </div>
+
+            <!-- Arte / Logos / Textos -->
+            <div class="drawer-ficha-section setor-arte">
+                <div class="drawer-ficha-title setor-arte">✒️ Arte & Logos</div>
+                ${logosHtml}
+                ${textsActive.length > 0 ? `<div style="margin-top:8px">${textsHtml}</div>` : ''}
+            </div>
+
+            <!-- Bordado -->
+            <div class="drawer-ficha-section setor-bordado">
+                <div class="drawer-ficha-title setor-bordado">🧵 Bordado</div>
+                ${p0.emb
+            ? `<a href="${p0.emb}" target="_blank" style="font-size:12px; font-weight:700; color:var(--setor-bordado)">⬇ Baixar arquivo .EMB</a>`
+            : '<span style="color:var(--text-3);font-size:11px">Sem arquivo de bordado</span>'}
+            </div>
+
+            <!-- Costura / Extras -->
+            <div class="drawer-ficha-section setor-costura">
+                <div class="drawer-ficha-title setor-costura">✂️ Extras & Costura</div>
+                ${extrasHtml}
+                ${p0.observacoes
+            ? `<div style="margin-top:8px; background:var(--amber-dim); border-radius:4px; padding:8px 10px; font-size:11px; color:#92400e; border-left:3px solid var(--amber);">
+                        <strong>OBS:</strong> ${p0.observacoes}
+                       </div>`
+            : ''}
+            </div>
+
+            <!-- Expedição / Financeiro -->
+            <div class="drawer-ficha-section setor-expedicao">
+                <div class="drawer-ficha-title setor-expedicao">🚚 Expedição & Financeiro</div>
+                <div class="ficha-setor-row">
+                    <span class="ficha-setor-key">Valor</span>
+                    <span class="ficha-setor-val" style="font-size:14px; font-weight:800; color:var(--green)">${valorFmt}</span>
+                </div>
+                ${p0.celular ? `<div class="ficha-setor-row">
+                    <span class="ficha-setor-key">Contato</span>
+                    <span class="ficha-setor-val">${p0.celular}</span>
+                </div>` : ''}
+                ${p0.pagamento ? `<div class="ficha-setor-row">
+                    <span class="ficha-setor-key">Pagamento</span>
+                    <span class="ficha-setor-val">${p0.pagamento}</span>
+                </div>` : ''}
+            </div>
+
         </div>`;
 }
