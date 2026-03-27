@@ -692,6 +692,10 @@ const EXTRA_LABEL_MAP = {
  * renderProdutoFicha — Renderiza ficha técnica de alta densidade por setores
  * Usado tanto no expand da Produção (grid) quanto no Drawer (vertical)
  */
+/**
+ * renderProdutoFicha — Renderiza ficha técnica de alta densidade por setores
+ * Usado tanto no expand da Produção (grid) quanto no Drawer (vertical)
+ */
 function renderProdutoFicha(prod, isSubItem = false) {
     const dt = prod.dadosTecnicos || {};
     const parts = dt.parts || {};
@@ -732,8 +736,6 @@ function renderProdutoFicha(prod, isSubItem = false) {
 
     const valorFmt = p0.valor ? `R$ ${parseFloat(p0.valor).toFixed(2).replace('.', ',')}` : '—';
 
-    // ── Build HTML — Estrutura de Setores Vertical ──────────
-    // Se for sub-item (Itens tab), reduzimos o padding e removemos cabeçalho de título
     const sectionClass = isSubItem ? 'drawer-ficha-section' : 'ficha-setor-bloco';
     const titleClass = isSubItem ? 'drawer-ficha-title' : 'ficha-setor-title';
 
@@ -783,129 +785,6 @@ function renderProdutoFicha(prod, isSubItem = false) {
             </div>
 
         </div>`;
-}
-
-// Renderização legada (mantida para compatibilidade)
-function renderItemSpecs(item, pdfUrl, embUrl, alerta, diasSla, diasSlaTotal, isSubItem = false) {
-    const parts = item.parts || {};
-    const texts = item.texts || {};
-    const renders = item.renders || {};
-    const extras = item.extras || {};
-    const uploads = item.uploads || {};
-
-    let colorsHtml = '';
-    Object.entries(parts).forEach(([part, data]) => {
-        const colorName = (typeof data === 'object') ? (data.value || data.name || '--') : data;
-        if (colorName && colorName !== '--') {
-            colorsHtml += `<div class="detail-item"><div class="detail-item-label">Cor ${part}</div><div class="detail-item-value">${colorName}</div></div>`;
-        }
-    });
-
-    let extrasHtml = '';
-    Object.entries(extras).forEach(([key, data]) => {
-        if (data.active) {
-            const val = data.value || 'SIM';
-            extrasHtml += `<div class="detail-item"><div class="detail-item-label">➕ ${data.name || key}</div><div class="detail-item-value">${val}</div></div>`;
-        }
-    });
-
-    let textsHtml = '';
-    Object.entries(texts).forEach(([key, data]) => {
-        if (data.active && data.content) {
-            textsHtml += `
-        <div class="personalization-item">
-            <div class="pers-label">✍️ Texto ${key}</div>
-            <div class="pers-content">"${data.content}"</div>
-            <div class="pers-meta">${data.fontFamily || 'Padrão'} · ${data.color || 'Preto'}</div>
-        </div>`;
-        }
-    });
-
-    let uploadsHtml = '';
-    Object.entries(uploads).forEach(([key, data]) => {
-        if (data.src) {
-            uploadsHtml += `
-            <div class="art-thumb" style="cursor:pointer; border-radius:8px; border:1px solid var(--border-color); background:#fff;" onclick="window.open('${data.src}','_blank')">
-                <img src="${data.src}" style="width:100%;height:100%;object-fit:contain; padding:5px;">
-                <span style="font-size:10px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%; text-align:center;">${data.filename || 'Logo'}</span>
-            </div>`;
-        }
-    });
-
-    // Grade de tamanhos se disponível (JSON estruturado)
-    let gradeHtml = '';
-    if (item.sizes && Object.keys(item.sizes).length > 0) {
-        gradeHtml = `
-        <div class="detail-section" style="border:none; background:rgba(0,0,0,0.03); border-radius:8px; padding:12px; margin-top:20px;">
-            <div class="detail-section-title" style="font-size:0.75rem; margin-bottom:8px;">📊 Grade de Produção</div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap">
-                ${Object.entries(item.sizes).filter(([sz, qty]) => qty > 0).map(([sz, qty]) => `
-                    <div style="background:#fff; border:1px solid var(--border-color); padding:5px 10px; border-radius:6px; text-align:center; min-width:40px;">
-                        <div style="font-size:10px; color:var(--text-3); text-transform:uppercase">${sz}</div>
-                        <div style="font-weight:700; color:var(--text-1)">${qty}</div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>`;
-    }
-
-    return `
-        <div class="item-specs-container">
-            <div class="detail-section" style="${isSubItem ? 'border:none; background:transparent; padding:0;' : ''}">
-                <div class="detail-section-title">${isSubItem ? '🔍 Detalhes Técnicos' : '📦 Detalhes do Produto'}</div>
-                <div class="detail-grid">
-                    <div class="detail-item"><div class="detail-item-label">SKU</div><div class="detail-item-value">${item.sku || 'N/A'}</div></div>
-                    <div class="detail-item"><div class="detail-item-label">Tamanho Base</div><div class="detail-item-value">${item.size || 'U'}</div></div>
-                    <div class="detail-item"><div class="detail-item-label">Quantidade</div><div class="detail-item-value">${item.quantity || 1} un.</div></div>
-                    ${!isSubItem ? `<div class="detail-item"><div class="detail-item-label">Prazo Etapa</div><div class="detail-item-value"><span class="alerta-tag alerta-${alerta}">${alertaIcon(alerta)} ${diasSla <= 0 ? 'Vencido' : diasSla + 'd.u.'}</span></div></div>` : ''}
-                    
-                    ${colorsHtml}
-                    ${extrasHtml}
-                    
-                    ${item.observacoes ? `<div class="detail-item full" style="background:rgba(212,175,55,0.1); border:1px solid var(--gold-soft); border-radius:8px; padding:10px; margin-top:10px;"><div class="detail-item-label" style="color:#856404">📝 Observações de Produção</div><div class="detail-item-value" style="color:#856404; font-weight:500;">${item.observacoes}</div></div>` : ''}
-                </div>
-            </div>
-
-            ${gradeHtml}
-
-            ${textsHtml ? `
-            <div class="detail-section" style="${isSubItem ? 'border:none; background:transparent; padding:0; margin-top:20px;' : ''}">
-                <div class="detail-section-title">🧵 Personalização (Textos)</div>
-                <div class="personalization-grid">
-                    ${textsHtml}
-                </div>
-            </div>` : ''}
-
-            <div class="detail-section" style="${isSubItem ? 'border:none; background:transparent; padding:0; margin-top:20px;' : ''}">
-                <div class="detail-section-title">🎨 Artes e Arquivos (Logos e Renders)</div>
-                <div class="art-grid">
-                    ${uploadsHtml}
-                    <div class="art-thumb" style="cursor:pointer" onclick="${renders.frente ? `window.open('${renders.frente}','_blank')` : 'return false'}">
-                        ${renders.frente ? `<img src="${renders.frente}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
-                        <span>Frente</span>
-                    </div>
-                    <div class="art-thumb" style="cursor:pointer" onclick="${renders.costas ? `window.open('${renders.costas}','_blank')` : 'return false'}">
-                        ${renders.costas ? `<img src="${renders.costas}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
-                        <span>Costas</span>
-                    </div>
-                    <div class="art-thumb" style="cursor:pointer" onclick="${renders.lateral ? `window.open('${renders.lateral}','_blank')` : 'return false'}">
-                        ${renders.lateral ? `<img src="${renders.lateral}" style="width:100%;height:100%;object-fit:contain">` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>`}
-                        <span>Lateral</span>
-                    </div>
-                </div>
-                <div class="file-links" style="margin-top:10px">
-                    ${pdfUrl ? `<a class="file-link" href="${pdfUrl}" target="_blank">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                        <span class="file-link-name">PDF de Simulação</span><span class="file-link-type">PDF</span>
-                    </a>` : ''}
-                    ${embUrl ? `<a class="file-link" href="${embUrl}" target="_blank">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-                        <span class="file-link-name">🧵 Matriz de Bordado</span><span class="file-link-type">.EMB</span>
-                    </a>` : ''}
-                </div>
-            </div>
-        </div>
-    `;
 }
 
 // Helper para trocar abas PROGRAMATICAMENTE
@@ -3380,13 +3259,11 @@ function renderProdutoFicha(p, isDrawerContext = false) {
 
     // ── Extras ─────────────────────────────────────────────
     const extrasActive = Object.entries(extras).filter(([, d]) => d && d.enabled);
-    const extrasHtml = extrasActive.length > 0
-        ? extrasActive.map(([k, d]) =>
-            `<div class="ficha-setor-row">
-                <span class="ficha-setor-key">✅ ${EXTRA_LABEL_MAP?.[k] || k}</span>
-                <span class="ficha-setor-val">${d.color || 'Sim'}</span>
-            </div>`).join('')
-        : '<span style="color:var(--text-3);font-size:11px">—</span>';
+    const extrasHtml = extrasActive.map(([k, d]) =>
+        `<div class="ficha-setor-row">
+            <span class="ficha-setor-key">✅ ${EXTRA_LABEL_MAP?.[k] || k}</span>
+            <span class="ficha-setor-val">${d.color || 'Sim'}</span>
+        </div>`).join('') || '<span style="color:var(--text-3);font-size:11px">—</span>';
 
     return `
         <!-- Grade & Produto -->
