@@ -609,11 +609,14 @@
             });
         });
 
-        // Extra: show chat send bar when on chat tab
+        // Wire drawer tab clicks to switchDrawerTab and handle chat input visibility
         document.querySelectorAll('.drawer-tab').forEach(t => {
             t.addEventListener('click', () => {
-                document.getElementById('chat-input-row').style.display =
-                    t.dataset.tab === 'chat' ? 'flex' : 'none';
+                switchDrawerTab(t.dataset.tab);
+                const chatRow = document.getElementById('chat-input-row');
+                if (chatRow) {
+                    chatRow.style.display = t.dataset.tab === 'chat' ? 'flex' : 'none';
+                }
             });
         });
 
