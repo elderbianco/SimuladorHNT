@@ -210,12 +210,30 @@ function loadDashboard() {
 
                     // Normalizar parts
                     const partsArr = {};
-                    if (rawParts) {
+                    if (rawParts && Object.keys(rawParts).length > 0) {
                         Object.entries(rawParts).forEach(([k, v]) => {
                             const colorVal = (typeof v === 'object' && v !== null) ? (v.value || v.name || 'N/A') : (v || 'N/A');
                             const colorHex = (typeof v === 'object' && v !== null) ? (v.hex || '#333') : '#333';
                             partsArr[k] = { value: colorVal, hex: colorHex };
                         });
+                    }
+
+                    // FALLBACK: Se parts estiver vazio, tenta 'color' do topo (Moletom/Legging/Top)
+                    if (Object.keys(partsArr).length === 0) {
+                        const fallbackColor = technicalData.color || techSpecs.color;
+                        if (fallbackColor) {
+                            const colorVal = (typeof fallbackColor === 'object' && fallbackColor !== null) ? (fallbackColor.value || fallbackColor.name || 'N/A') : (fallbackColor || 'N/A');
+                            const colorHex = (typeof fallbackColor === 'object' && fallbackColor !== null) ? (fallbackColor.hex || '#333') : '#333';
+                            partsArr['Cor Principal'] = { value: colorVal, hex: colorHex };
+                        }
+                    }
+
+                    // Adicionar hntLogoColor se disponível
+                    const hntColor = technicalData.hntLogoColor || techSpecs.hntLogoColor || technicalData.logoColor || techSpecs.logoColor;
+                    if (hntColor && !partsArr['Logo HNT'] && !partsArr['Logo Hanuthai']) {
+                        const val = (typeof hntColor === 'object') ? (hntColor.value || hntColor.name || 'N/A') : hntColor;
+                        const hex = (typeof hntColor === 'object') ? (hntColor.hex || '#888') : (hntColor === 'branco' ? '#fff' : hntColor === 'preto' ? '#000' : '#888');
+                        partsArr['Logo Hanuthai'] = { value: val.toUpperCase(), hex: hex };
                     }
 
                     // Normalizar uploads (suporte a array ou objeto)
