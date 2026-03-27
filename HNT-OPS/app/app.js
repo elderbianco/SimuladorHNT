@@ -688,183 +688,101 @@ const EXTRA_LABEL_MAP = {
  * @param {object} prod - Objeto produto mapeado (com dadosTecnicos, sku, tamanho, etc.)
  * @param {boolean} isSubItem - Se verdadeiro, remove bordas externas (usado em cards de itens)
  */
+/**
+ * renderProdutoFicha — Renderiza ficha técnica de alta densidade por setores
+ * Usado tanto no expand da Produção (grid) quanto no Drawer (vertical)
+ */
 function renderProdutoFicha(prod, isSubItem = false) {
     const dt = prod.dadosTecnicos || {};
     const parts = dt.parts || {};
     const texts = dt.texts || {};
     const extras = dt.extras || {};
     const uploads = dt.uploads || {};
-    const renders = prod.renders || dt.renders || {};
     const grade = dt.grade || dt.sizes || {};
     const logoPunho = dt.logoPunho || null;
-    const simulationId = dt.simulationId || '';
+    const p0 = prod;
 
-    // ── Cores/Partes ─────────────────────────────────────────
-    const partsEntries = Object.entries(parts);
-    let colorsHtml = '';
-    if (partsEntries.length > 0) {
-        colorsHtml = partsEntries.map(([key, val]) => {
-            const name = typeof val === 'object' ? (val.value || val.name || val) : val;
-            const label = PART_LABEL_MAP[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            return `
-                <div class="ficha-part-item">
-                    <div class="ficha-color-swatch" style="background:var(--color-${name}, #888)" title="${name}"></div>
-                    <div>
-                        <div class="ficha-part-label">${label}</div>
-                        <div class="ficha-part-value">${name}</div>
-                    </div>
-                </div>`;
-        }).join('');
-    }
+    // ── Helpers ─────────────────────────────────────────────
+    const gradeEntries = Object.entries(grade).filter(([, q]) => q > 0);
+    const gradeHtml = gradeEntries.length > 0
+        ? gradeEntries.map(([sz, qty]) => `<div class="ficha-grade-pill">${sz}<span>${qty}×</span></div>`).join('')
+        : `<span style="font-size:12px;font-weight:700;">${p0.tamanho || '—'} × ${p0.quantidade || 1}</span>`;
 
-    // ── Grade de Tamanhos ────────────────────────────────────
-    let gradeHtml = '';
-    const gradeEntries = Object.entries(grade).filter(([, qty]) => qty > 0);
-    if (gradeEntries.length > 0) {
-        gradeHtml = `
-            <div class="ficha-section">
-                <div class="ficha-section-title">📊 Grade de Produção</div>
-                <div class="ficha-grade">
-                    ${gradeEntries.map(([sz, qty]) => `
-                        <div class="ficha-grade-item">
-                            <div class="ficha-grade-sz">${sz}</div>
-                            <div class="ficha-grade-qty">${qty}</div>
-                        </div>`).join('')}
-                </div>
-            </div>`;
-    } else if (prod.tamanho && prod.tamanho !== 'U') {
-        gradeHtml = `
-            <div class="ficha-section">
-                <div class="ficha-section-title">📊 Tamanho</div>
-                <div class="ficha-grade">
-                    <div class="ficha-grade-item">
-                        <div class="ficha-grade-sz">${prod.tamanho}</div>
-                        <div class="ficha-grade-qty">${prod.quantidade}</div>
-                    </div>
-                </div>
-            </div>`;
-    }
+    const coresHtml = Object.entries(parts).slice(0, 10).map(([k, v]) => {
+        const colorName = typeof v === 'object' ? (v.value || v.name || '—') : (v || '—');
+        const label = PART_LABEL_MAP?.[k] || k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        return `<div class="ficha-setor-row"><span class="ficha-setor-key">${label}</span><span class="ficha-setor-val">${colorName}</span></div>`;
+    }).join('') || '<span style="color:var(--text-3);font-size:11px">Sem cores definidas</span>';
 
-    // ── Textos Personalizados ────────────────────────────────
-    const textsEntries = Object.entries(texts).filter(([, d]) => d.enabled && d.content);
-    let textsHtml = '';
-    if (textsEntries.length > 0) {
-        textsHtml = `
-            <div class="ficha-section">
-                <div class="ficha-section-title">✍️ Textos Personalizados</div>
-                <div class="ficha-texts">
-                    ${textsEntries.map(([key, d]) => {
-            const label = TEXT_LABEL_MAP[key] || key;
-            return `
-                        <div class="ficha-text-item">
-                            <div class="ficha-text-zone">${label}</div>
-                            <div class="ficha-text-content">"${d.content}"</div>
-                            <div class="ficha-text-meta">
-                                <span>${d.fontFamily || 'Outfit'}</span>
-                                <span class="ficha-color-dot" style="background:${d.color || '#fff'}"></span>
-                                <span>${d.color || '#fff'}</span>
-                            </div>
-                        </div>`;
-        }).join('')}
-                </div>
-            </div>`;
-    }
+    const uploadList = Object.entries(uploads).filter(([, d]) => d && d.src);
+    const logosHtml = uploadList.length > 0 || logoPunho
+        ? `<div class="ficha-logo-row">
+            ${uploadList.map(([k, d]) => `<img class="ficha-logo-mini" src="${d.src}" title="${d.filename || k}" onclick="window.open('${d.src}','_blank')">`).join('')}
+            ${logoPunho ? `<img class="ficha-logo-mini" src="${logoPunho}" title="Logo Punho" onclick="window.open('${logoPunho}','_blank')">` : ''}
+           </div>`
+        : '<span style="color:var(--text-3);font-size:11px">—</span>';
 
-    // ── Logos/Uploads ────────────────────────────────────────
-    const uploadsEntries = Object.entries(uploads).filter(([, d]) => d && d.src);
-    let uploadsHtml = '';
-    if (uploadsEntries.length > 0 || logoPunho) {
-        const thumbs = [
-            ...uploadsEntries.map(([key, d]) => `
-                <div class="ficha-logo-thumb" onclick="window.open('${d.src}','_blank')" title="Abrir logo">
-                    <img src="${d.src}" alt="${d.filename || key}">
-                    <span>${d.filename || key.replace(/_/g, ' ')}</span>
-                </div>`),
-            logoPunho ? `
-                <div class="ficha-logo-thumb" onclick="window.open('${logoPunho}','_blank')" title="Logo Punho">
-                    <img src="${logoPunho}" alt="Logo Punho">
-                    <span>Logo Punho</span>
-                </div>` : ''
-        ].join('');
-        uploadsHtml = `
-            <div class="ficha-section">
-                <div class="ficha-section-title">🖼️ Logos / Artes</div>
-                <div class="ficha-logos">${thumbs}</div>
-            </div>`;
-    }
+    const textsHtml = Object.entries(texts).filter(([, d]) => d.enabled && d.content).map(([k, d]) =>
+        `<div class="ficha-setor-row"><span class="ficha-setor-key">${TEXT_LABEL_MAP?.[k] || k}</span><span class="ficha-setor-val">"${d.content}"</span></div>`
+    ).join('') || '<span style="color:var(--text-3);font-size:11px">—</span>';
 
-    // ── Extras ───────────────────────────────────────────────
-    const extrasAtivos = Object.entries(extras).filter(([, d]) => d && d.enabled);
-    let extrasHtml = '';
-    if (extrasAtivos.length > 0) {
-        extrasHtml = `
-            <div class="ficha-section">
-                <div class="ficha-section-title">✨ Extras / Acabamentos</div>
-                <div class="ficha-extras">
-                    ${extrasAtivos.map(([key, d]) => {
-            const label = EXTRA_LABEL_MAP[key] || key;
-            return `<div class="ficha-extra-item">
-                            <span class="ficha-extra-icon">✅</span>
-                            <div>
-                                <div class="ficha-extra-label">${label}</div>
-                                ${d.color ? `<div class="ficha-extra-color"><div class="ficha-color-swatch small" style="background:var(--color-${d.color}, #888)" title="${d.color}"></div><span>${d.color}</span></div>` : ''}
-                            </div>
-                        </div>`;
-        }).join('')}
-                </div>
-            </div>`;
-    }
+    const extrasHtml = Object.entries(extras).filter(([, d]) => d && d.enabled).map(([k, d]) =>
+        `<div class="ficha-setor-row"><span class="ficha-setor-key">✅ ${EXTRA_LABEL_MAP?.[k] || k}</span><span class="ficha-setor-val">${d.color || 'Sim'}</span></div>`
+    ).join('') || '<span style="color:var(--text-3);font-size:11px">—</span>';
 
-    // ── Links de Arquivos ────────────────────────────────────
-    let linksHtml = '';
-    if (prod.pdf || prod.emb || simulationId) {
-        linksHtml = `
-            <div class="ficha-section">
-                <div class="ficha-section-title">📁 Arquivos</div>
-                <div class="file-links">
-                    ${prod.pdf ? `<a class="file-link" href="${prod.pdf}" target="_blank">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                        <span class="file-link-name">Ficha PDF</span><span class="file-link-type">PDF</span>
-                    </a>` : ''}
-                    ${prod.emb ? `<a class="file-link" href="${prod.emb}" target="_blank">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-                        <span class="file-link-name">Matriz Bordado</span><span class="file-link-type">.EMB</span>
-                    </a>` : ''}
-                    ${simulationId ? `<div class="file-link" style="cursor:default;opacity:0.7">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5"/></svg>
-                        <span class="file-link-name">ID Simulação</span><span class="file-link-type">${simulationId.split('-').pop()}</span>
-                    </div>` : ''}
-                </div>
-            </div>`;
-    }
+    const valorFmt = p0.valor ? `R$ ${parseFloat(p0.valor).toFixed(2).replace('.', ',')}` : '—';
 
-    // ── Observações ──────────────────────────────────────────
-    let obsHtml = '';
-    if (prod.observacoes) {
-        obsHtml = `
-            <div class="ficha-obs">
-                <div class="ficha-obs-label">📝 Observações de Produção</div>
-                <div class="ficha-obs-text">${prod.observacoes}</div>
-            </div>`;
-    }
-
-    const wrapStyle = isSubItem ? 'padding:0;' : '';
+    // ── Build HTML — Estrutura de Setores Vertical ──────────
+    // Se for sub-item (Itens tab), reduzimos o padding e removemos cabeçalho de título
+    const sectionClass = isSubItem ? 'drawer-ficha-section' : 'ficha-setor-bloco';
+    const titleClass = isSubItem ? 'drawer-ficha-title' : 'ficha-setor-title';
 
     return `
-        <div class="produto-ficha" style="${wrapStyle}">
-            ${colorsHtml ? `
-            <div class="ficha-section">
-                <div class="ficha-section-title">🎨 Cores do Produto</div>
-                <div class="ficha-parts">${colorsHtml}</div>
-            </div>` : ''}
-            ${gradeHtml}
-            ${textsHtml}
-            ${uploadsHtml}
-            ${extrasHtml}
-            ${linksHtml}
-            ${obsHtml}
-        </div>
-    `;
+        <div class="produto-ficha-container ${isSubItem ? 'sub-item' : ''}" style="${isSubItem ? 'padding:0' : 'padding:15px'}">
+            
+            <div class="${sectionClass} setor-preparacao">
+                <div class="${titleClass} setor-preparacao">📋 Preparação</div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">SKU</span><span class="ficha-setor-val">${p0.sku || '—'}</span></div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">Técnica</span><span class="ficha-setor-val">${p0.tecnica || '—'}</span></div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">Qtd</span><span class="ficha-setor-val">${p0.quantidade || 1} un.</span></div>
+            </div>
+
+            <div class="${sectionClass} setor-separacao">
+                <div class="${titleClass} setor-separacao">📦 Separação & Cores</div>
+                <div class="ficha-grade-compact">${gradeHtml}</div>
+                <div style="margin-top:10px">${coresHtml}</div>
+            </div>
+
+            <div class="${sectionClass} setor-arte">
+                <div class="${titleClass} setor-arte">✒️ Arte / Logos / Textos</div>
+                ${logosHtml}
+                <div style="margin-top:10px">${textsHtml}</div>
+            </div>
+
+            <div class="${sectionClass} setor-bordado">
+                <div class="${titleClass} setor-bordado">🧵 Bordado</div>
+                ${p0.emb
+            ? `<div class="ficha-setor-row"><span class="ficha-setor-key">Arquivo</span><span class="ficha-setor-val"><a href="${p0.emb}" target="_blank" style="color:var(--setor-bordado)">Baixar .EMB</a></span></div>`
+            : '<span style="color:var(--text-3);font-size:11px">Sem bordado</span>'}
+            </div>
+
+            <div class="${sectionClass} setor-costura">
+                <div class="${titleClass} setor-costura">✂️ Costura / Extras</div>
+                ${extrasHtml}
+                ${p0.observacoes ? `<div style="margin-top:8px; background:var(--amber-dim); padding:8px; border-radius:4px; font-size:11px; color:#92400e; border-left:3px solid var(--amber)"><strong>OBS:</strong> ${p0.observacoes}</div>` : ''}
+            </div>
+
+            <div class="${sectionClass} setor-qualidade">
+                <div class="${titleClass} setor-qualidade">✨ Qualidade</div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">Revisão</span><span class="ficha-setor-val">Pendente</span></div>
+            </div>
+
+            <div class="${sectionClass} setor-expedicao">
+                <div class="${titleClass} setor-expedicao">🚚 Expedição / Valor</div>
+                <div class="ficha-setor-row"><span class="ficha-setor-key">Valor unit.</span><span class="ficha-setor-val" style="color:var(--green); font-weight:800">${valorFmt}</span></div>
+            </div>
+
+        </div>`;
 }
 
 // Renderização legada (mantida para compatibilidade)
