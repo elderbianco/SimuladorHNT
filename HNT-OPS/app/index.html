@@ -4,321 +4,353 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HNT-Ops — Centro de Produção</title>
-    <link rel="stylesheet" href="style.css?v=22">
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <title>HNT-OPS — Painel de Produção</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 
 <body>
 
-    <div class="watermark" aria-hidden="true">HNT</div>
+    <!-- Welcome / Operator Select -->
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-card">
+            <div class="welcome-icon">🏭</div>
+            <div class="welcome-title">HNT-OPS</div>
+            <p style="font-size:13px;color:var(--text-3);margin-bottom:20px;">Painel de Produção — v4.00</p>
+            <div class="field-group">
+                <div class="field-label">Operador</div>
+                <select id="operadorSelect" class="field-input" style="background:var(--surface-2);">
+                    <option value="">Selecione seu nome...</option>
+                </select>
+            </div>
+            <div class="welcome-steps">
+                <div class="w-step">
+                    <div class="w-num">1</div><span>Selecione seu nome acima</span>
+                </div>
+                <div class="w-step">
+                    <div class="w-num">2</div><span>Acesse pedidos pelo Dashboard ou Kanban</span>
+                </div>
+                <div class="w-step">
+                    <div class="w-num">3</div><span>Preencha os campos obrigatórios de cada etapa</span>
+                </div>
+            </div>
+            <button class="btn-start" id="btnStart">Entrar no Sistema →</button>
+        </div>
+    </div>
 
+    <!-- App Shell -->
     <div class="shell">
-        <!-- ══ SIDEBAR ══ -->
-        <aside class="sidebar">
+
+        <!-- Sidebar -->
+        <nav class="sidebar">
             <div class="sidebar-logo"><span>HNT</span></div>
 
-            <div class="nav-item active" data-view="lista" title="Lista de Pedidos">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+            <div class="nav-item active" data-view="list" id="navList">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                <span>Lista</span>
+                <span>Pedidos</span>
             </div>
 
-            <div class="nav-item" data-view="kanban" title="Kanban de Etapas">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+            <div class="nav-item" data-view="kanban" id="navKanban">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                     stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                    <rect x="3" y="3" width="5" height="18" rx="1" />
+                    <rect x="10" y="3" width="5" height="13" rx="1" />
+                    <rect x="17" y="3" width="5" height="16" rx="1" />
                 </svg>
                 <span>Kanban</span>
             </div>
 
-            <div class="nav-item" data-view="producao" title="Linha de Produção">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+            <div class="nav-item" data-view="producao" id="navProducao">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18v-2.25A2.25 2.25 0 0018.75 13.5H5.25A2.25 2.25 0 003 15.75V18a2.25 2.25 0 002.25 2.25z" />
+                        d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                 </svg>
                 <span>Produção</span>
             </div>
 
-            <div class="nav-divider"></div>
-
-            <div class="nav-item" id="nav-relatorios" data-view="relatorios" title="Relatórios e BI">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+            <div class="nav-item" data-view="relatorios" id="navRelatorios">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 <span>BI</span>
             </div>
 
+            <div class="nav-divider"></div>
             <div class="nav-spacer"></div>
 
-            <div class="nav-item" id="nav-admin" data-view="admin" title="Configurações Admin">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+            <div class="nav-item" data-view="admin" id="navAdmin">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <span>Admin</span>
             </div>
+        </nav>
 
-            <div class="sidebar-user" id="current-user-card" style="display:none">
-                <div class="op-avatar" id="sidebar-user-avatar">??</div>
-                <div class="sidebar-user-info">
-                    <div class="user-name" id="sidebar-user-name">Carregando...</div>
-                    <div class="user-role" id="sidebar-user-setor">Setor</div>
-                </div>
-                <button class="user-logout" onclick="logoutOp()" title="Trocar Operador">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                    </svg>
-                </button>
-            </div>
-        </aside>
-
+        <!-- Content Wrapper -->
         <div class="content-wrapper">
-            <!-- ══ HEADER ══ -->
+
+            <!-- Header -->
             <header class="header">
-                <div class="search-wrap" style="max-width: 300px;">
+                <div class="header-title">HNT<span>-OPS</span></div>
+                <div class="search-wrap">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0015.804 15.803z" />
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <input id="search-input" type="search" placeholder="Busca rápida…">
+                    <input type="text" id="searchInput" placeholder="Buscar pedido, cliente, SKU..." autocomplete="off">
                 </div>
-
-                <div style="display:flex; align-items:center; gap:16px; margin-left: 20px;">
-                    <span class="header-title">HNT<span>-Ops</span></span>
-                    <a href="../../index.html" class="header-shortcut-btn btn-simulador"
-                        title="Voltar para Simuladores">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 0012 2.25a14.98 14.98 0 00-8.33 11.23 14.98 14.98 0 006.16 12.12c.07.03.14.06.2.08" />
-                        </svg>
-                        <span>Simuladores</span>
-                    </a>
-                    <span id="hnt-ops-version"
-                        style="font-size:0.75rem; color:#888; font-weight: bold; border: 1px solid #444; padding: 2px 8px; border-radius: 4px;"
-                        title="Versão do Sistema HNT-OPS">V03.02 (Layout Refined)</span>
-                </div>
-
-                <div style="flex: 1"></div>
-
                 <div class="header-actions">
-                    <button class="btn btn-ghost" id="btn-batch">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
-                            stroke="currentColor">
+                    <button class="btn btn-ghost" id="btnSyncHeader" title="Sincronizar">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor" width="15" height="15">
                             <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0018 4.5h-13.5A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5h3.75M9 15c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125H7.875A1.125 1.125 0 016.75 17.625v-1.5c0-.621.504-1.125 1.125-1.125H9zM9 4.875c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125H7.875A1.125 1.125 0 016.75 7.5v-1.5c0-.621.504-1.125 1.125-1.125H9zM16.125 11.625c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125h-1.125a1.125 1.125 0 01-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h1.125z" />
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        Ações em Lote
                     </button>
-                    <button class="btn btn-ghost" id="btn-qr">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.635c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
+                    <button class="btn btn-ghost" id="btnBatchOp">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor" width="15" height="15">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                         </svg>
-                        Ler QR Code
+                        Lote
                     </button>
-                    <button class="btn btn-primary" id="btn-novo-pedido">
+                    <a href="/simulador" class="btn header-shortcut-btn" target="_blank">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                             stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
-                        Novo Pedido
+                        Simulador
+                    </a>
+                    <button class="btn btn-ghost" id="btnStatus">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor" width="15" height="15">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Status
                     </button>
+                    <div id="headerOpInfo"
+                        style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);">
+                        <div class="op-avatar" id="headerOpAvatar">?</div>
+                        <span id="headerOpName">—</span>
+                    </div>
                 </div>
             </header>
 
-            <!-- ══ MAIN ══ -->
             <main class="main">
+                <div class="watermark">PROD</div>
 
-                <!-- ── LISTA VIEW ── -->
-                <div class="view active" id="lista-view">
-
-                    <!-- Stats strip -->
-                    <div class="stats-strip">
-                        <div class="stat-card">
-                            <div class="stat-icon amber">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.8" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="stat-val" id="stat-total">–</div>
-                                <div class="stat-lbl">Pedidos Totais</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon red">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.8" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="stat-val" id="stat-urgente">–</div>
-                                <div class="stat-lbl">Urgentes</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon orange">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.8" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="stat-val" id="stat-atrasado">–</div>
-                                <div class="stat-lbl">Atrasados</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon blue">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.8" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="stat-val" id="stat-hoje">–</div>
-                                <div class="stat-lbl">Prazo Hoje/Amanhã</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon green">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.8" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="stat-val" id="stat-expedicao">–</div>
-                                <div class="stat-lbl">Em Expedição</div>
-                            </div>
-                        </div>
-                    </div>
-
+                <!-- ── VIEW: LIST ── -->
+                <div class="view active" id="viewList">
                     <!-- Tab bar -->
                     <div class="tab-bar">
-                        <div class="tab active" data-filter="todos">Todos <span class="tab-count"
-                                id="count-todos">0</span>
+                        <div class="tab active" data-stage="all" id="tabAll">Todos <span class="tab-count"
+                                id="cntAll">0</span></div>
+                        <div class="tab" data-stage="Preparação">⚙️ Prep <span class="tab-count" id="cntPrep">0</span>
                         </div>
-                        <div class="tab" data-filter="urgente">⚠ Urgentes <span class="tab-count"
-                                id="count-urgente">0</span>
+                        <div class="tab" data-stage="Separação">📦 Sep <span class="tab-count" id="cntSep">0</span>
                         </div>
-                        <div class="tab" data-filter="atrasado">🔴 Atrasados <span class="tab-count"
-                                id="count-atrasado">0</span></div>
-                        <div class="tab" data-filter="hoje">📅 Prazo Hoje <span class="tab-count"
-                                id="count-hoje">0</span>
+                        <div class="tab" data-stage="Arte">🎨 Arte <span class="tab-count" id="cntArt">0</span></div>
+                        <div class="tab" data-stage="Bordado">🪡 Bord <span class="tab-count" id="cntBord">0</span>
                         </div>
-                        <div class="tab" id="tab-meu-setor" data-filter="meu-setor"
-                            style="display:none; margin-left:auto; background:rgba(59,130,246,0.1); color:var(--primary)">
-                            🏭
-                            Meu Setor <span class="tab-count" id="count-meu-setor"
-                                style="background:var(--primary); color:white">0</span></div>
+                        <div class="tab" data-stage="Costura">✂️ Cost <span class="tab-count" id="cntCost">0</span>
+                        </div>
+                        <div class="tab" data-stage="Qualidade">✅ Qual <span class="tab-count" id="cntQual">0</span>
+                        </div>
+                        <div class="tab" data-stage="Expedição">🚚 Exp <span class="tab-count" id="cntExp">0</span>
+                        </div>
+                        <div class="tab" data-stage="⚠️ Pendência" style="color:var(--red);">⚠️ Pend <span
+                                class="tab-count" id="cntPend"
+                                style="background:var(--red-dim);border-color:var(--red);color:var(--red);">0</span>
+                        </div>
+                        <div style="flex:1;"></div>
+                        <select id="filterPrioridade" class="field-input"
+                            style="height:28px;width:130px;font-size:11px;">
+                            <option value="">Toda prioridade</option>
+                            <option value="URGENTE">🔴 Urgente</option>
+                            <option value="ALTA">🟠 Alta</option>
+                            <option value="NORMAL">🟡 Normal</option>
+                        </select>
                     </div>
 
-                    <!-- Table -->
-                    <div style="height:12px"></div>
-                    <div class="table-wrap">
-                        <div class="table-header">
-                            <span>Pedido</span>
-                            <span>Produtos / SKU</span>
-                            <span>Data</span>
-                            <span>Qtd</span>
-                            <span>Cliente</span>
-                            <span>Etapa</span>
-                            <span>Prazo Etapa</span>
-                            <span>Prioridade</span>
-                            <span>Entrega</span>
-                            <span></span>
+                    <!-- Stats Strip -->
+                    <div style="padding:12px 0 0;">
+                        <div class="stats-strip" id="statsStrip">
+                            <div class="stat-card">
+                                <div class="stat-icon amber"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
+                                    </svg></div>
+                                <div>
+                                    <div class="stat-val" id="statTotal">—</div>
+                                    <div class="stat-lbl">Pedidos Ativos</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon red"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg></div>
+                                <div>
+                                    <div class="stat-val" id="statAtrasados">—</div>
+                                    <div class="stat-lbl">Atrasados</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg></div>
+                                <div>
+                                    <div class="stat-val" id="statUrgente">—</div>
+                                    <div class="stat-lbl">Urgentes</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon blue"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg></div>
+                                <div>
+                                    <div class="stat-val" id="statPendencias">—</div>
+                                    <div class="stat-lbl">Pendências Abertas</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon green"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg></div>
+                                <div>
+                                    <div class="stat-val" id="statEntregues">—</div>
+                                    <div class="stat-lbl">Entregues Hoje</div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="table-body"></div>
+
+                        <!-- Table -->
+                        <div class="table-wrap">
+                            <div class="table-header">
+                                <div>Pedido</div>
+                                <div>Cliente / SKU</div>
+                                <div>Etapa</div>
+                                <div>Qtd</div>
+                                <div>Entrega</div>
+                                <div>SLA</div>
+                                <div>Prioridade</div>
+                                <div>Pend.</div>
+                                <div>Operador</div>
+                                <div></div>
+                            </div>
+                            <div id="tableBody">
+                                <div style="padding:40px;text-align:center;color:var(--text-3);">
+                                    <div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;">
+                                    </div>
+                                    <div>Carregando pedidos...</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
 
-                </div><!-- /lista-view -->
-
-                <!-- ── KANBAN VIEW ── -->
-                <div class="view" id="kanban-view">
-                    <div class="tab-bar" style="margin-bottom:12px;border-radius:6px 6px 0 0;overflow:hidden">
-                        <div class="tab active" style="pointer-events:none">Kanban — Mapa da Fábrica</div>
+                <!-- ── VIEW: KANBAN ── -->
+                <div class="view" id="viewKanban">
+                    <div class="tab-bar" style="margin:-16px -20px 12px;padding:0 16px;">
+                        <span style="font-size:11px;font-weight:700;color:var(--text-3);">FILTRAR POR ETAPA:</span>
+                        <div style="flex:1;"></div>
+                        <select id="kanbanFilter" class="field-input" style="height:28px;width:160px;font-size:11px;">
+                            <option value="all">Todas as Etapas</option>
+                            <option value="Preparação">Preparação</option>
+                            <option value="Separação">Separação</option>
+                            <option value="Arte">Arte</option>
+                            <option value="Bordado">Bordado</option>
+                            <option value="Costura">Costura</option>
+                            <option value="Qualidade">Qualidade</option>
+                            <option value="Expedição">Expedição</option>
+                        </select>
                     </div>
-                    <div class="kanban-wrap" id="kanban-body"></div>
+                    <div class="kanban-wrap" id="kanbanBoard"></div>
                 </div>
 
-                <!-- ── PRODUCAO VIEW ── -->
-                <div class="view" id="producao-view">
-                    <!-- populated by renderProducao() -->
+                <!-- ── VIEW: PRODUCAO ── -->
+                <div class="view" id="viewProducao">
+                    <div id="producaoContent">
+                        <div style="padding:40px;text-align:center;color:var(--text-3);">Selecione um pedido para ver
+                            detalhes de produção.</div>
+                    </div>
                 </div>
 
-                <!-- ── RELATORIOS VIEW ── -->
-                <div class="view" id="relatorios-view">
-                    <!-- populated by renderRelatorios() -->
+                <!-- ── VIEW: RELATORIOS ── -->
+                <div class="view" id="viewRelatorios">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                        <div style="font-size:16px;font-weight:800;color:var(--text-1);">📊 Business Intelligence</div>
+                        <div style="display:flex;gap:8px;">
+                            <select id="biPeriodo" class="field-input" style="height:30px;width:130px;font-size:11px;">
+                                <option value="7">Últimos 7 dias</option>
+                                <option value="30" selected>Últimos 30 dias</option>
+                                <option value="90">Últimos 90 dias</option>
+                            </select>
+                            <button class="btn btn-primary" id="btnExportBI" style="height:30px;font-size:11px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                    stroke="currentColor" width="13" height="13">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
+                    <div id="biContent" class="bi-grid"></div>
                 </div>
 
-                <!-- ── ADMIN VIEW ── -->
-                <div class="view" id="admin-view">
-                    <!-- populated by renderAdmin() -->
+                <!-- ── VIEW: ADMIN ── -->
+                <div class="view" id="viewAdmin">
+                    <div style="font-size:16px;font-weight:800;margin-bottom:16px;">⚙️ Administração</div>
+                    <div id="adminContent"></div>
                 </div>
 
-            </main><!-- /main -->
+            </main>
         </div><!-- /content-wrapper -->
     </div><!-- /shell -->
 
-    <!-- ══ DRAWER OVERLAY ══ -->
-    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <!-- ── Pendência FAB ── -->
+    <button class="pendencia-fab hidden" id="pendenciaFab" title="Gerenciar Pendências">⚠️</button>
 
-    <!-- ══ DRAWER ══ -->
+    <!-- ── Drawer Overlay ── -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <!-- ── Drawer ── -->
     <div class="drawer" id="drawer">
         <div class="drawer-header">
-            <div class="drawer-order-info">
-                <div class="drawer-order-num" id="drawer-num">–</div>
-                <div class="drawer-sku" id="drawer-sku">–</div>
+            <div>
+                <div class="drawer-order-num" id="drawerTitle">—</div>
+                <div class="drawer-sku" id="drawerSku">—</div>
             </div>
             <div class="drawer-actions">
-                <button class="print-btn" onclick="printLabel()">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+                <button class="print-btn" id="btnPrintEtiqueta">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0v3.396c0 .621.504 1.125 1.125 1.125h8.25c.621 0 1.125-.504 1.125-1.125V7.03z">
-                        </path>
-                        </path>
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                     </svg>
                     Etiqueta
                 </button>
-                <button class="print-btn" onclick="printFicha()"
-                    style="background:var(--amber); color:#000; border-color:var(--amber);">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z">
-                        </path>
-                    </svg>
-                    Ficha A4
-                </button>
-                <button class="drawer-close" onclick="closeDrawer()">
+                <button class="drawer-close" id="drawerClose">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -327,321 +359,167 @@
             </div>
         </div>
 
-        <div class="stage-mover">
-            <div class="stage-mover-label">Mover para etapa</div>
-            <div class="stage-buttons" id="stage-buttons"></div>
+        <!-- Stage Mover -->
+        <div class="stage-mover" id="stageMover"></div>
+
+        <!-- Drawer Tabs -->
+        <div class="drawer-tabs" id="drawerTabs">
+            <div class="drawer-tab active" data-dtab="resumo">📋 Resumo</div>
+            <div class="drawer-tab" data-dtab="preparacao">⚙️ Preparação</div>
+            <div class="drawer-tab" data-dtab="separacao">📦 Separação</div>
+            <div class="drawer-tab" data-dtab="arte">🎨 Arte</div>
+            <div class="drawer-tab" data-dtab="bordado">🪡 Bordado</div>
+            <div class="drawer-tab" data-dtab="costura">✂️ Costura</div>
+            <div class="drawer-tab" data-dtab="qualidade">✅ Qualidade</div>
+            <div class="drawer-tab" data-dtab="expedicao">🚚 Expedição</div>
+            <div class="drawer-tab" data-dtab="historico">⏱ Histórico</div>
+            <div class="drawer-tab" data-dtab="chat">💬 Chat</div>
         </div>
 
-        <div class="drawer-tabs">
-            <div class="drawer-tab active" data-tab="detalhes">📦 Detalhes</div>
-            <div class="drawer-tab" data-tab="itens">🛒 Itens</div>
-            <div class="drawer-tab" data-tab="ficha">🏭 Ficha Técnica</div>
-            <div class="drawer-tab" data-tab="cliente">👤 Cliente</div>
-            <div class="drawer-tab" data-tab="historico">⏱ Histórico</div>
-            <div class="drawer-tab" data-tab="chat">💬 Chat</div>
+        <div class="drawer-body" id="drawerBody"></div>
+
+        <div class="drawer-footer" id="drawerFooter">
+            <div class="drawer-admin-actions">
+                <button class="btn btn-danger" id="btnAbrirPendencia">⚠️ Registrar Pendência</button>
+                <button class="btn btn-success" id="btnAvancarEtapa">✓ Atividade Concluída</button>
+            </div>
         </div>
-
-        <div class="drawer-body" id="drawer-body"></div>
-
-        <!-- chat input visible only on chat tab (shown via JS) -->
-        <div class="chat-input-row" id="chat-input-row" style="display:none">
-            <input class="chat-input" placeholder="Digite uma mensagem…" id="chat-msg-input">
-            <button class="chat-send" onclick="sendChat()">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                </svg>
-            </button>
-        </div>
-
-        <div class="drawer-footer" id="drawer-footer"></div>
     </div>
 
-    <!-- Welcome Onboarding Overlay -->
-    <div id="welcome-overlay" class="welcome-overlay">
-        <div class="welcome-card">
-            <div class="welcome-icon">🚀</div>
-            <div class="welcome-title">Bem-vindo ao HNT-Ops!</div>
-            <p style="color:var(--text-3); font-size:14px">Este é o cérebro da fábrica Hanuthai. Siga os passos para
-                começar:</p>
-
-            <div class="welcome-steps">
-                <div class="w-step">
-                    <div class="w-num">1</div>
-                    <div><b>Área Admin:</b> O ícone de engrenagem agora é visível para todos, mas exige senha de acesso.
-                    </div>
-                </div>
-                <div class="w-step">
-                    <div class="w-num">2</div>
-                    <div><b>Escaneie o QR:</b> Use o botão circular no celular ou a câmera do PC para dar entrada.</div>
-                </div>
-                <div class="w-step">
-                    <div class="w-num">3</div>
-                    <div><b>Mova a Etapa:</b> Arraste o card no Kanban ou use o botão de "Mover" no pedido.</div>
+    <!-- ── MODAL: Batch Avançar Etapa ── -->
+    <div class="modal-overlay" id="batchModal" style="display:none;">
+        <div class="modal" style="max-width:500px;">
+            <div class="modal-title">📦 Operação em Lote</div>
+            <div class="modal-sub">Escaneie QR-Codes ou insira IDs manualmente</div>
+            <div class="scanner-area-batch" id="batchScanner"></div>
+            <div class="field-group">
+                <div class="field-label">Adicionar por ID</div>
+                <div style="display:flex;gap:8px;">
+                    <input type="text" id="batchManualInput" class="modal-input" placeholder="Ex: HNT-0001"
+                        style="flex:1;margin-bottom:0;">
+                    <button class="btn btn-primary" id="btnBatchAdd">Adicionar</button>
                 </div>
             </div>
-
-            <button class="btn-start" onclick="closeWelcome()">Entendido, Vamos lá!</button>
-        </div>
-    </div>
-
-    <!-- ══ Admin Auth Modal ══ -->
-    <div class="modal-overlay" id="admin-auth-modal">
-        <div class="modal" style="max-width:350px">
-            <div class="modal-title">Acesso Restrito</div>
-            <div class="modal-sub">Digite suas credenciais administrativas:</div>
-            <input type="text" class="modal-input" id="admin-user-input" placeholder="Usuário"
-                style="margin-bottom:12px">
-            <input type="password" class="modal-input" id="admin-password-input" placeholder="Senha"
-                autocomplete="current-password">
-            <div id="auth-error-msg"
-                style="color:var(--red); font-size:12px; margin-top:-8px; margin-bottom:12px; display:none">Senha
-                incorreta.</div>
+            <div class="batch-list" id="batchList"></div>
+            <div class="field-group" style="margin-top:12px;">
+                <div class="field-label">Mover para Etapa</div>
+                <select id="batchStageSelect" class="modal-input">
+                    <option value="Preparação">⚙️ Preparação</option>
+                    <option value="Separação">📦 Separação</option>
+                    <option value="Arte">🎨 Arte</option>
+                    <option value="Bordado">🪡 Bordado</option>
+                    <option value="Costura">✂️ Costura</option>
+                    <option value="Qualidade">✅ Qualidade</option>
+                    <option value="Expedição">🚚 Expedição</option>
+                </select>
+            </div>
             <div class="modal-footer">
-                <button class="btn-modal-cancel" id="auth-cancel">Cancelar</button>
-                <button class="btn-modal-confirm" id="auth-confirm">Entrar</button>
+                <button class="btn-modal-cancel" id="btnBatchCancel">Cancelar</button>
+                <button class="btn-modal-confirm" id="btnBatchConfirm">Aplicar Lote</button>
             </div>
         </div>
     </div>
 
-    <!-- ══ Stage Detail Modal (LISTA POR ETAPA) ══ -->
-    <div class="modal-overlay" id="stage-detail-modal">
-        <div class="modal" style="max-width:90%; width:800px">
-            <div class="modal-title" id="stage-detail-title">Lista de Pedidos - Etapa</div>
-            <div class="modal-sub">Visão detalhada de todos os itens nesta fase da produção.</div>
-
-            <div
-                style="max-height: 450px; overflow-y: auto; margin:15px 0; border: 1px solid var(--border); border-radius: 8px;">
-                <table class="op-table" style="width:100%; border-collapse: collapse;">
-                    <thead style="position: sticky; top:0; background:var(--surface-2); font-size:11px; z-index:10">
-                        <tr>
-                            <th style="padding:10px; text-align:left">Pedido</th>
-                            <th style="padding:10px; text-align:left">Cliente</th>
-                            <th style="padding:10px; text-align:left">Produto</th>
-                            <th style="padding:10px; text-align:center">Qtd</th>
-                            <th style="padding:10px; text-align:center">SLA/Status</th>
-                            <th style="padding:10px; text-align:center">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stage-detail-body">
-                        <!-- Gerado dinamicamente -->
-                </table>
+    <!-- ── MODAL: Pendência ── -->
+    <div class="modal-overlay" id="pendenciaModal" style="display:none;">
+        <div class="modal" style="max-width:480px;">
+            <div class="modal-title">⚠️ Registrar Pendência</div>
+            <div class="modal-sub" id="pendModalPedido">Pedido: —</div>
+            <div class="field-group">
+                <div class="field-label">Tipo de Pendência <span class="req">*</span></div>
+                <select id="pendTipo" class="modal-input">
+                    <option value="">Selecione o tipo...</option>
+                    <option value="Erro de Arte">🎨 Erro de Arte</option>
+                    <option value="Falta de Material">📦 Falta de Material</option>
+                    <option value="Erro de Medida">📏 Erro de Medida</option>
+                    <option value="Erro de Bordado">🪡 Erro de Bordado</option>
+                    <option value="Aprovação do Cliente">👤 Aprovação do Cliente</option>
+                    <option value="Problema de Qualidade">⚠️ Problema de Qualidade</option>
+                    <option value="Outro">📝 Outro</option>
+                </select>
             </div>
-
+            <div class="field-group">
+                <div class="field-label">Setor Responsável <span class="req">*</span></div>
+                <select id="pendSetor" class="modal-input">
+                    <option value="">Selecione o setor...</option>
+                    <option value="Arte">Arte</option>
+                    <option value="Separação">Separação</option>
+                    <option value="Bordado">Bordado</option>
+                    <option value="Costura">Costura</option>
+                    <option value="Qualidade">Qualidade</option>
+                    <option value="Comercial">Comercial</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <div class="field-label">Descrição <span class="req">*</span></div>
+                <textarea id="pendDescricao" class="modal-input field-textarea"
+                    placeholder="Descreva o problema detalhadamente..."></textarea>
+            </div>
+            <!-- Existing pendencies -->
+            <div id="pendenciaLogWrap" style="display:none;">
+                <div class="detail-section-title" style="margin-bottom:8px;">Histórico de Pendências</div>
+                <div class="pendencia-log" id="pendenciaLogBody"></div>
+            </div>
             <div class="modal-footer">
-                <button class="btn-modal-cancel"
-                    onclick="$('stage-detail-modal').classList.remove('open'); setTimeout(()=>$('stage-detail-modal').style.display='none',300)">Fechar</button>
+                <button class="btn-modal-cancel" id="btnPendCancel">Cancelar</button>
+                <button class="btn-modal-confirm" id="btnPendSave">Registrar Pendência</button>
             </div>
         </div>
     </div>
 
-    <!-- ══ Novo Pedido Modal (MANUAL) ══ -->
-    <div class="modal-overlay" id="novo-pedido-modal">
-        <div class="modal" style="max-width:600px">
-            <div class="modal-title">🆕 Criar Novo Pedido Manual</div>
-            <div class="modal-sub">Insira os detalhes do produto e cliente para iniciar a produção.</div>
-
-            <div class="detail-grid" style="margin-top:20px; text-align:left">
-                <div class="detail-item full">
-                    <div class="detail-item-label">Cliente</div><input type="text" class="modal-input"
-                        id="manual-cliente" placeholder="Nome do cliente">
-                </div>
-                <div class="detail-item">
-                    <div class="detail-item-label">Produto</div><input type="text" class="modal-input"
-                        id="manual-produto" placeholder="Ex: Fight Shorts">
-                </div>
-                <div class="detail-item">
-                    <div class="detail-item-label">Tamanho</div><input type="text" class="modal-input"
-                        id="manual-tamanho" placeholder="Ex: G, 42, M">
-                </div>
-                <div class="detail-item">
-                    <div class="detail-item-label">Cor / Técnica</div><input type="text" class="modal-input"
-                        id="manual-tecnica" placeholder="Ex: Sublimação Total">
-                </div>
-                <div class="detail-item">
-                    <div class="detail-item-label">Quantidade</div><input type="number" class="modal-input"
-                        id="manual-qtd" value="1">
-                </div>
-                <div class="detail-item full">
-                    <div class="detail-item-label">Observações</div><textarea class="modal-input" id="manual-obs"
-                        style="height:80px; padding:10px" placeholder="Detalhes específicos do pedido..."></textarea>
-                </div>
-            </div>
-
+    <!-- ── MODAL: Status Query (Client-facing) ── -->
+    <div class="modal-overlay" id="statusModal" style="display:none;">
+        <div class="modal" style="max-width:440px;">
+            <div class="modal-title">🔍 Consultar Status</div>
+            <div class="modal-sub">Digite o número do pedido ou escaneie o QR-Code</div>
+            <input type="text" id="statusQueryInput" class="modal-input" placeholder="Ex: HNT-0001">
+            <div id="statusQueryResult"></div>
             <div class="modal-footer">
-                <button class="btn-modal-cancel" onclick="closeNovoPedidoModal()">Cancelar</button>
-                <button class="btn-modal-confirm" onclick="confirmNovoPedidoManual()">✨ Criar Pedido</button>
+                <button class="btn-modal-cancel" id="btnStatusCancel">Fechar</button>
+                <button class="btn-modal-confirm" id="btnStatusQuery">Consultar</button>
             </div>
         </div>
     </div>
 
-    <!-- ══ Lote Modal ══ -->
-    <div class="modal-overlay" id="batch-modal">
-        <div class="modal"
-            style="width: 95%; max-width: 900px; height: 90vh; max-height: 800px; display: flex; flex-direction: column; overflow: hidden; padding: 20px;">
-            <div class="modal-header-lote" style="flex-shrink: 0;">
-                <div class="modal-title">📦 Operações em Fila / Lote</div>
-                <div class="modal-sub">Escaneie QR Codes ou digite. Ajuste o status individualmente ou force todos de
-                    uma vez.</div>
-            </div>
-
-            <div class="modal-body-lote"
-                style="flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
-                <!-- Top: Scanner & Controls -->
-                <div style="display: flex; gap: 15px; flex-wrap: wrap; flex-shrink: 0;">
-                    <!-- Scanner -->
-                    <div style="flex: 1; min-width: 250px;">
-                        <div id="batch-qr-reader" class="scanner-area-batch" style="height: 140px; margin-bottom: 8px;">
-                        </div>
-                        <input class="modal-input" id="batch-manual-input"
-                            placeholder="Digite o pedido (ex: HNT-123) e tecle Enter..." autocomplete="off"
-                            style="width: 100%;">
-                    </div>
-                    <!-- Global Actions -->
-                    <div
-                        style="flex: 1; min-width: 250px; background: var(--surface-2); padding: 15px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center;">
-                        <label
-                            style="display:block; font-size:11px; font-weight:700; color:var(--text-3); margin-bottom:8px">MUDAR
-                            TODOS DA FILA PARA:</label>
-                        <select id="batch-target-etapa"
-                            style="width:100%; padding:12px; border:2px solid var(--amber); border-radius:6px; background:var(--surface); color:var(--text-1); font-weight: 700; cursor:pointer; margin-bottom: 12px; outline:none;">
-                            <!-- Populated via JS -->
-                        </select>
-                        <button class="btn btn-primary" id="btn-batch-execute"
-                            style="width: 100%; height:46px; font-size: 13px; font-weight:800; box-shadow: var(--shadow-md);">🚀
-                            PROCESSAR FILA (0)</button>
-                        <div id="version-tag" class="btn btn-ghost"
-                            style="font-size: 10px; color: var(--text-3); font-weight: 800;">V03.03 (Dashboard Advanced)
-                        </div>
-                        <div
-                            style="font-size:10px; color:var(--text-3); margin-top:10px; text-align:center; line-height:1.4">
-                            * Alterar o campo acima sobrescreve a etapa de todos os itens já lidos na lista abaixo.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom: List -->
-                <div
-                    style="flex: 1; display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow-sm);">
-                    <div
-                        style="padding: 10px 15px; background: var(--surface-2); border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; font-size: 11px; font-weight: 700; color: var(--text-3); display: flex; justify-content: space-between; align-items:center;">
-                        <span id="batch-list-count-label">FILA DE PEDIDOS LIDOS (0)</span>
-                        <span
-                            style="cursor: pointer; color: var(--amber); padding:4px 8px; border-radius:4px; background:var(--amber-dim);"
-                            onclick="clearBatch()">🗑️ Limpar Tudo</span>
-                    </div>
-                    <div class="batch-list" id="batch-items-list"
-                        style="flex: 1; overflow-y: auto; margin: 0; max-height: none; padding: 10px; background:var(--bg);">
-                        <!-- Items scanned will appear here -->
-                        <div style="padding: 40px 20px; text-align:center; color:var(--text-3); font-size:13px;">A fila
-                            está vazia.<br><br>Comece a escanear códigos ou digite acima para adicionar itens.</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer"
-                style="flex-shrink: 0; border-top: 1px solid var(--border); margin-top: 15px; padding-top: 15px; display:flex; justify-content: flex-end; align-items:center;">
-                <span style="margin-right:auto; font-size:11px; color:var(--text-3)">O leitor QRCode continua ativo
-                    enquanto a janela estiver aberta.</span>
-                <button class="btn" id="batch-cancel"
-                    style="padding:10px 30px; font-weight: 600; color:var(--text-1); background:var(--surface-2); border:1px solid var(--border);">Fechar
-                    Janela</button>
+    <!-- ── MODAL: Color Preview ── -->
+    <div class="modal-overlay" id="colorModal" style="display:none;">
+        <div class="modal" style="max-width:360px;text-align:center;">
+            <div class="modal-title" id="colorModalTitle">Conferência de Cor</div>
+            <div id="colorPreviewSwatch" class="color-preview-swatch"
+                style="width:200px;height:200px;border-radius:12px;margin:20px auto;"></div>
+            <div class="color-preview-hex" id="colorModalHex"></div>
+            <div class="color-preview-name" id="colorModalName"></div>
+            <div class="modal-footer" style="justify-content:center;">
+                <button class="btn-modal-cancel" id="btnColorClose">Fechar</button>
             </div>
         </div>
     </div>
 
-    <!-- ══ QR Modal ══ -->
-    <div class="modal-overlay" id="qr-modal">
-        <div class="modal">
-            <div class="modal-title">Check-in via QR Code</div>
-            <div class="modal-sub">Identifique o pedido para iniciar o andamento. Acione a câmera ou digite:</div>
-            <div id="qr-reader"
-                style="width:100%; min-height: 250px; background: #000; border-radius: 8px; margin-bottom: 12px;"></div>
-            <div class="qr-scan-placeholder" id="qr-placeholder" style="display:none;">
-                <div class="qr-corner tl"></div>
-                <div class="qr-corner tr"></div>
-                <div class="qr-corner bl"></div>
-                <div class="qr-corner br"></div>
-                <div class="qr-scan-line"></div>
-            </div>
-            <input class="modal-input" id="qr-manual-input" placeholder="Ex: HNT-2026-0012" autocomplete="off">
+    <!-- ── MODAL: Image Zoom ── -->
+    <div class="modal-overlay" id="imgModal" style="display:none;">
+        <div style="position:relative;max-width:90vw;max-height:90vh;">
+            <img id="imgModalSrc" src="" style="max-width:90vw;max-height:85vh;border-radius:8px;display:block;" alt="">
+            <button class="btn-modal-cancel" id="btnImgClose"
+                style="position:absolute;top:-12px;right:-12px;width:32px;height:32px;border-radius:50%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-size:18px;">×</button>
+        </div>
+    </div>
+
+    <!-- ── MODAL: Confirm Move Stage ── -->
+    <div class="modal-overlay" id="confirmStageModal" style="display:none;">
+        <div class="modal" style="max-width:400px;">
+            <div class="modal-title" id="confirmStageTitle">Mover para Etapa</div>
+            <p id="confirmStageMsg" style="font-size:13px;color:var(--text-2);margin-bottom:20px;"></p>
+            <div id="confirmStageWarn" style="display:none;" class="obs-destaque"
+                style="margin-bottom:16px;font-size:12px;">⚠️ Campos obrigatórios pendentes!</div>
             <div class="modal-footer">
-                <button class="btn-modal-cancel" id="qr-cancel">Cancelar</button>
-                <button class="btn-modal-confirm" id="qr-confirm">Buscar Pedido</button>
+                <button class="btn-modal-cancel" id="btnConfirmStageCancel">Cancelar</button>
+                <button class="btn-modal-confirm" id="btnConfirmStageOk">Confirmar</button>
             </div>
         </div>
     </div>
 
-    <!-- ══ Progress Modal ══ -->
-    <div class="modal-overlay" id="progress-modal">
-        <div class="modal">
-            <div class="modal-title">Preparando Download</div>
-            <div class="modal-sub">Aguarde enquanto preparamos o arquivo de bordado.</div>
-            <div class="progress-bar-wrap">
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="progress-fill"></div>
-                </div>
-                <div class="progress-label" id="progress-label-txt">Preparando arquivo...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mobile FAB -->
-    <div class="mobile-fab">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.635c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-        </svg>
-    </div>
-
-    <script src="api.js?v=23"></script>
-    <script src="app.js?v=23"></script>
-    <script>
-        // Wire nav switching: if relatorios view or admin view, render it lazily
-        document.querySelectorAll('.nav-item[data-view]').forEach(el => {
-            el.addEventListener('click', () => {
-                if (el.dataset.view === 'relatorios') {
-                    renderRelatorios();
-                } else if (el.dataset.view === 'admin') {
-                    renderAdmin();
-                } else if (el.dataset.view === 'producao') {
-                    renderProducao(PEDIDOS);
-                }
-            });
-        });
-
-        // Wire drawer tab clicks to switchDrawerTab and handle chat input visibility
-        document.querySelectorAll('.drawer-tab').forEach(t => {
-            t.addEventListener('click', () => {
-                switchDrawerTab(t.dataset.tab);
-                const chatRow = document.getElementById('chat-input-row');
-                if (chatRow) {
-                    chatRow.style.display = t.dataset.tab === 'chat' ? 'flex' : 'none';
-                }
-            });
-        });
-
-        function sendChat() {
-            const input = document.getElementById('chat-msg-input');
-            const msg = input.value.trim();
-            if (!msg || !selectedId) return;
-            const wrap = document.querySelector('.chat-wrap');
-            if (!wrap) return;
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble mine';
-            bubble.innerHTML = `
-    <div class="chat-avatar">OP</div>
-    <div class="chat-msg-wrap">
-      <div class="chat-who">Você · agora</div>
-      <div class="chat-text">${msg}</div>
-    </div>`;
-            wrap.appendChild(bubble);
-            input.value = '';
-            bubble.scrollIntoView({ behavior: 'smooth' });
-        }
-    </script>
+    <script src="api.js"></script>
+    <script src="app.js"></script>
 </body>
 
-</html><!-- fix -->
+</html>
