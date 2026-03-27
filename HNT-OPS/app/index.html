@@ -37,9 +37,12 @@
             </div>
 
             <div class="nav-item" data-view="producao" title="Linha de Produção">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18v-2.25A2.25 2.25 0 0018.75 13.5H5.25A2.25 2.25 0 003 15.75V18a2.25 2.25 0 002.25 2.25z" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18v-2.25A2.25 2.25 0 0018.75 13.5H5.25A2.25 2.25 0 003 15.75V18a2.25 2.25 0 002.25 2.25z" />
                 </svg>
                 <span>Produção</span>
             </div>
@@ -590,8 +593,8 @@
         </svg>
     </div>
 
-    <script src="api.js?v=22"></script>
-    <script src="app.js?v=22"></script>
+    <script src="api.js?v=23"></script>
+    <script src="app.js?v=23"></script>
     <script>
         // Wire nav switching: if relatorios view or admin view, render it lazily
         document.querySelectorAll('.nav-item[data-view]').forEach(el => {
@@ -600,6 +603,8 @@
                     renderRelatorios();
                 } else if (el.dataset.view === 'admin') {
                     renderAdmin();
+                } else if (el.dataset.view === 'producao') {
+                    renderProducao(PEDIDOS);
                 }
             });
         });
