@@ -2940,8 +2940,62 @@ window.toggleItemCard = function (index) {
 //  PRODUCAO VIEW — Production Line Dashboard
 // ══════════════════════════════════════════════════════════
 
-// Active filter for producao view ('todos' or an etapa key)
-let producaoFiltro = 'todos';
+// Active filter for producao view ('resumo', 'todos' or an etapa key)
+let producaoFiltro = 'resumo';
+
+/**
+ * PROCESSO_INFO — Characteristics for each production stage
+ */
+const PROCESSO_INFO = {
+    'Preparacao': {
+        icon: '📋',
+        objetivo: 'Validar SKU, técnica e integridade do pedido.',
+        sla: '0.5 dia útil',
+        responsabilidade: 'Conferência de entrada e triagem técnica.'
+    },
+    'Separacao': {
+        icon: '📦',
+        objetivo: 'Separar tecidos, insumos e aviamentos da grade.',
+        sla: '0.5 dia útil',
+        responsabilidade: 'Almoxarifado e separação de lotes.'
+    },
+    'Arte': {
+        icon: '✒️',
+        objetivo: 'Vetorização, ajuste de cores e fechamento de arquivos.',
+        sla: '1.5 dias úteis',
+        responsabilidade: 'Design Gráfico e Arte-final.'
+    },
+    'Bordado': {
+        icon: '🧵',
+        objetivo: 'Criação de matrizes e execução do bordado eletrônico.',
+        sla: '2.0 dias úteis',
+        responsabilidade: 'Programação e Operação de Máquinas.'
+    },
+    'Costura': {
+        icon: '✂️',
+        objetivo: 'União das partes, fechamento e acabamento têxtil.',
+        sla: '2.5 dias úteis',
+        responsabilidade: 'Costura e Montagem.'
+    },
+    'Qualidade': {
+        icon: '✨',
+        objetivo: 'Revisão final, limpeza de fios e etiquetagem.',
+        sla: '0.5 dia útil',
+        responsabilidade: 'Revisão de Qualidade.'
+    },
+    'Expedicao': {
+        icon: '🚚',
+        objetivo: 'Embalagem, bipagem de saída e logística.',
+        sla: '0.3 dia útil',
+        responsabilidade: 'Expedição e Envio.'
+    },
+    'Pendencia': {
+        icon: '⚠️',
+        objetivo: 'Resolução de problemas técnicos ou falta de insumos.',
+        sla: 'Imediato',
+        responsabilidade: 'Gestão de Produção.'
+    }
+};
 
 /**
  * renderProducao — Renders the production line view with expandable sector cards
@@ -2957,6 +3011,10 @@ function renderProducao(data) {
     // Build filter tabs
     const tabsHtml = `
         <div class="producao-filter-tabs">
+            <button class="producao-filter-tab ${producaoFiltro === 'resumo' ? 'active' : ''}"
+                    onclick="setProducaoFiltro('resumo')">
+                📊 Resumo
+            </button>
             <button class="producao-filter-tab ${producaoFiltro === 'todos' ? 'active' : ''}"
                     onclick="setProducaoFiltro('todos')">
                 Todos <span class="producao-filter-count">${data.length}</span>
@@ -2974,12 +3032,35 @@ function renderProducao(data) {
     }).join('')}
         </div>`;
 
+    if (producaoFiltro === 'resumo') {
+        view.innerHTML = tabsHtml + renderProducaoResumo(data);
+        return;
+    }
+
+    // Banner de Caracterização de Processo (se for uma etapa específica)
+    let bannerHtml = '';
+    const info = PROCESSO_INFO[producaoFiltro];
+    if (info) {
+        bannerHtml = `
+            <div class="processo-banner setor-${producaoFiltro.toLowerCase()}">
+                <div class="banner-icon">${info.icon}</div>
+                <div class="banner-content">
+                    <div class="banner-header">
+                        <span class="banner-title">Processo: ${ETAPA_LABELS[producaoFiltro]}</span>
+                        <span class="banner-sla">⏱ SLA Alvo: ${info.sla}</span>
+                    </div>
+                    <div class="banner-objective"><strong>Objetivo:</strong> ${info.objetivo}</div>
+                    <div class="banner-responsibility"><strong>Responsabilidade:</strong> ${info.responsabilidade}</div>
+                </div>
+            </div>`;
+    }
+
     const filtered = producaoFiltro === 'todos'
         ? data
         : data.filter(p => p.etapa === producaoFiltro);
 
     if (filtered.length === 0) {
-        view.innerHTML = tabsHtml + `
+        view.innerHTML = tabsHtml + bannerHtml + `
             <div style="padding:48px; text-align:center; color:var(--text-3); font-size:13px;">
                 Nenhum pedido nesta etapa.
             </div>`;
@@ -2988,7 +3069,67 @@ function renderProducao(data) {
 
     const cardsHtml = filtered.map(p => buildProducaoCard(p)).join('');
 
-    view.innerHTML = tabsHtml + `<div class="producao-grid">${cardsHtml}</div>`;
+    view.innerHTML = tabsHtml + bannerHtml + `<div class="producao-grid">${cardsHtml}</div>`;
+}
+
+/**
+ * renderProducaoResumo — Renders the macro dashboard for production
+ */
+function renderProducaoResumo(data) {
+    const etapaFilterOrder = ETAPAS || [
+        'Preparacao', 'Separacao', 'Arte', 'Bordado', 'Costura', 'Qualidade', 'Expedicao', 'Pendencia'
+    ];
+
+    const urgentCount = data.filter(p => p.urgente || p.alerta === 'Vermelho').length;
+    const delayedCount = data.filter(p => p.diasRestantes <= 0).length;
+
+    const cardsHtml = etapaFilterOrder.map(etapa => {
+        const stageItems = data.filter(p => p.etapa === etapa);
+        const count = stageItems.length;
+        const icon = ETAPA_ICONS[etapa] || '📋';
+        const label = ETAPA_LABELS[etapa] || etapa;
+        const color = ETAPA_COLORS[etapa] || '#888';
+        const stageUrgents = stageItems.filter(p => p.urgente || p.alerta === 'Vermelho').length;
+        const stageDelayed = stageItems.filter(p => p.diasRestantes <= 0).length;
+
+        return `
+            <div class="resumo-kpi-card" onclick="setProducaoFiltro('${etapa}')">
+                <div class="kpi-header">
+                    <div class="kpi-icon" style="background:${color}15; color:${color}">${icon}</div>
+                    <div class="kpi-label">${label}</div>
+                </div>
+                <div class="kpi-value">${count}</div>
+                <div class="kpi-footer">
+                    ${stageUrgents > 0 ? `<span class="kpi-tag urgent">🔥 ${stageUrgents}</span>` : ''}
+                    ${stageDelayed > 0 ? `<span class="kpi-tag delayed">⚠️ ${stageDelayed}</span>` : ''}
+                    ${stageUrgents === 0 && stageDelayed === 0 ? '<span class="kpi-tag stable">✅ Estável</span>' : ''}
+                </div>
+                <div class="kpi-progress">
+                    <div class="kpi-progress-fill" style="width: ${data.length > 0 ? (count / data.length * 100) : 0}%; background:${color}"></div>
+                </div>
+            </div>`;
+    }).join('');
+
+    return `
+        <div class="resumo-dashboard">
+            <div class="resumo-highlights">
+                <div class="highlight-box urgent">
+                    <div class="highlight-val">${urgentCount}</div>
+                    <div class="highlight-label">Urgências Ativas</div>
+                </div>
+                <div class="highlight-box delayed">
+                    <div class="highlight-val">${delayedCount}</div>
+                    <div class="highlight-label">Prazos Estourados</div>
+                </div>
+                <div class="highlight-box total">
+                    <div class="highlight-val">${data.length}</div>
+                    <div class="highlight-label">Total em Produção</div>
+                </div>
+            </div>
+            <div class="resumo-grid-kpi">
+                ${cardsHtml}
+            </div>
+        </div>`;
 }
 
 /** Sets the production view filter and re-renders. */
