@@ -273,19 +273,26 @@ window.CartUI = {
                     <div>
                         <div style="color:#fff;font-size:1rem;font-weight:700;letter-spacing:0.5px;">${esc(this.getProductName(item, order))}</div>
                         <div style="font-size:0.8rem; color:#aaa; font-weight: 500;">PEDIDO: <span style="color:var(--gold);">${esc((() => {
+            // Priority: Explicit order_number field
             if (order.order_number && order.order_number !== '---') return order.order_number;
-            const id = order.order_id || state.simulationId || order.ID_SIMULACAO || '';
 
-            // 1. Try to match the 6-digit prefix at the very start (standard case)
-            const startDigits = id.match(/^(\d{5,8})/);
-            if (startDigits) return startDigits[1];
+            const id = (order.ID_PEDIDO || order.order_id || state.simulationId || order.ID_SIMULACAO || '').toString();
+            if (!id) return '---';
+
+            // 1. Try to match HNT-PD-XXXXXX pattern
+            const hntPd = id.match(/HNT-PD-(\d+)/i);
+            if (hntPd) return hntPd[1];
 
             // 2. Try to match the segment immediately BEFORE the product code (SH, SL, TP, etc.)
             // Example: HNT-PD-010013-LG-.... -> matches 010013
             const typeMatch = id.match(/([A-Z0-9]+)-(?:SH|SL|TP|LG|ML|CL)-/i);
-            if (typeMatch) return typeMatch[1];
+            if (typeMatch && /^\d+$/.test(typeMatch[1])) return typeMatch[1];
 
-            // 3. Fallback: Find the longest numeric sequence in the ID (usually 5-9 digits)
+            // 3. Try to match the 6-digit prefix at the very start (standard case)
+            const startDigits = id.match(/^(\d{5,8})/);
+            if (startDigits) return startDigits[1];
+
+            // 4. Fallback: Find the longest numeric sequence in the ID (usually 5-9 digits)
             const allNumbers = id.match(/(\d{5,9})/);
             if (allNumbers) return allNumbers[1];
 
