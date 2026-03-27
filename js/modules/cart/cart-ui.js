@@ -153,10 +153,43 @@ renderSubItemV1Style: function (order, currentItem = 1, totalItems = 1) {
         if (!jsonTec && order.DADOS_TECNICOS_JSON) {
             try { jsonTec = JSON.parse(order.DADOS_TECNICOS_JSON); } catch (e) { }
         }
+<<<<<<< HEAD
         if (jsonTec && jsonTec.specs) {
             state = { ...jsonTec, ...jsonTec.specs };
         } else {
             state = rawSpecs;
+=======
+
+        const item = order.item;
+        const index = order._index;
+        const uid = `item-${index}`;
+        const pricing = item.pricing || { unit_price: 0, total_price: 0, breakdown: {} };
+        const client = order.client_info || {};
+        const esc = (s) => (window.Security ? window.Security.escape(s) : s);
+
+        let state = null;
+        if (order && order.DADOS_TECNICOS_JSON) {
+            try {
+                const parsed = JSON.parse(order.DADOS_TECNICOS_JSON);
+                // If DADOS_TECNICOS_JSON wraps a nested 'specs' (Supabase format), flatten it
+                state = (parsed && parsed.specs) ? { ...parsed, ...parsed.specs } : parsed;
+            } catch (e) { console.warn("Failed to parse DADOS_TECNICOS", e); }
+        }
+
+        if (!state) {
+            // item.specs already normalized by cart-controller
+            const normalizedSpecs = item.specs || {};
+
+            // Also try: order.json_tec (direct Supabase format)
+            const jsonTec = order.json_tec;
+            if (jsonTec) {
+                // If json_tec has nested specs, flatten it, otherwise use it as is
+                const techSpecs = jsonTec.specs || {};
+                state = { ...jsonTec, ...techSpecs, ...normalizedSpecs };
+            } else {
+                state = normalizedSpecs;
+            }
+>>>>>>> 3d3eb87 (Auto-sync: 26/03/2026 21:47:41,26)
         }
     }
 
