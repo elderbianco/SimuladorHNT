@@ -4369,3 +4369,278 @@ input {
   color: var(--text-1);
   letter-spacing: -0.2px;
 }
+
+/* ── PRODUÇÃO V03.03 - RESUMO & DASHBOARD ────────────────── */
+
+.resumo-dashboard {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.resumo-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.highlight-box {
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.highlight-box:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.highlight-box.urgent {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, var(--surface), rgba(239, 68, 68, 0.05));
+}
+
+.highlight-box.delayed {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, var(--surface), rgba(245, 158, 11, 0.05));
+}
+
+.highlight-box.total {
+  border-color: rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, var(--surface), rgba(212, 175, 55, 0.05));
+}
+
+.highlight-val {
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.highlight-box.urgent .highlight-val {
+  color: var(--red);
+}
+
+.highlight-box.delayed .highlight-val {
+  color: var(--amber);
+}
+
+.highlight-box.total .highlight-val {
+  color: var(--gold);
+}
+
+.highlight-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.resumo-grid-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.resumo-kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.resumo-kpi-card:hover {
+  border-color: var(--gold);
+  background: var(--surface-2);
+  transform: scale(1.02);
+}
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.kpi-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.kpi-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.kpi-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-1);
+  margin-bottom: 8px;
+}
+
+.kpi-footer {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  min-height: 20px;
+}
+
+.kpi-tag {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.kpi-tag.urgent {
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+.kpi-tag.delayed {
+  background: var(--amber-dim);
+  color: var(--amber);
+}
+
+.kpi-tag.stable {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--green);
+}
+
+.kpi-progress {
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.kpi-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+/* ── BANNER DE PROCESSO ─────────────────────────────────── */
+
+.processo-banner {
+  margin: 10px 20px 20px;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  gap: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+  animation: slideDown 0.3s ease-out;
+}
+
+.processo-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+}
+
+.banner-icon {
+  font-size: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.banner-content {
+  flex: 1;
+}
+
+.banner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.banner-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--text-1);
+  text-transform: uppercase;
+}
+
+.banner-sla {
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--surface-2);
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: var(--gold);
+  border: 1px solid var(--gold-border);
+}
+
+.banner-objective {
+  font-size: 0.95rem;
+  color: var(--text-2);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.banner-responsibility {
+  font-size: 0.85rem;
+  color: var(--text-3);
+}
+
+/* Setores banner colors */
+.setor-preparacao::before {
+  background: var(--setor-preparacao);
+}
+
+.setor-separacao::before {
+  background: var(--setor-separacao);
+}
+
+.setor-arte::before {
+  background: var(--setor-arte);
+}
+
+.setor-bordado::before {
+  background: var(--setor-bordado);
+}
+
+.setor-costura::before {
+  background: var(--setor-costura);
+}
+
+.setor-qualidade::before {
+  background: var(--setor-qualidade);
+}
+
+.setor-expedicao::before {
+  background: var(--setor-expedicao);
+}
+
+.setor-pendencia::before {
+  background: var(--red);
+}
