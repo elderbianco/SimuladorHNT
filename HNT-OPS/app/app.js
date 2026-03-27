@@ -381,6 +381,13 @@ function renderDrawer(p) {
         }
         t.classList.toggle('active', t.dataset.tab === drawerTab);
     });
+}
+
+function switchDrawerTab(tabId) {
+    if (!selectedId) return;
+    drawerTab = tabId;
+    const p = PEDIDOS.find(x => x.id.toString() == selectedId.toString());
+    if (p) renderDrawer(p);
 
     // Stage move buttons
     const sb = $('stage-buttons');
