@@ -407,6 +407,9 @@ function init() {
 
     // Show default view
     showView('list');
+
+    // smoke tests
+    if (typeof runHNTTests === 'function') setTimeout(runHNTTests, 3000);
 }
 
 // ── BOOT ─────────────────────────────────────────────────────
