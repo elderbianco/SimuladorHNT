@@ -1,6 +1,5 @@
-/* ============================================================
-   HNT-OPS — App Logic v3.01 (Production Refined)
-   ============================================================ */
+HNT - OPS — App Logic v3.02(Layout Refined)
+    ============================================================ */
 
 // ── State Data (Configurável via Admin) ──────────────────
 let ETAPAS = [];
@@ -3082,32 +3081,46 @@ function renderProdutoFicha(prod, isSubItem = false) {
     const logoPunho = dt.logoPunho || null;
     const p0 = prod;
 
+    // ── Pre-calculate for Grade ────────────────────────────
     const gradeEntries = Object.entries(grade).filter(([, q]) => q > 0);
     const gradeHtml = gradeEntries.length > 0
         ? gradeEntries.map(([sz, qty]) => `<div class="ficha-grade-pill">${sz}<span>${qty}×</span></div>`).join('')
-        : `<span style="font-size:12px;font-weight:700;">${p0.tamanho || '—'} × ${p0.quantidade || 1} un.</span>`;
+        : `<span style="font-size:13px; font-weight:800; color:var(--text-1)">${p0.tamanho || '—'} × ${p0.quantidade || 1} un.</span>`;
 
+    // ── Pre-calculate for Cores ─────────────────────────────
     const coresHtml = Object.entries(parts).slice(0, 10).map(([k, v]) => {
         const colorName = typeof v === 'object' ? (v.value || v.name || '—') : (v || '—');
         const label = PART_LABEL_MAP?.[k] || k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        return `<div class="ficha-setor-row"><span class="ficha-setor-key">${label}</span><span class="ficha-setor-val">${colorName}</span></div>`;
-    }).join('') || '<span style="color:var(--text-3);font-size:11px">Sem cores definidas</span>';
+        return `
+            <div class="ficha-setor-row">
+                <span class="ficha-setor-key">${label}</span>
+                <span class="ficha-setor-val">${colorName}</span>
+            </div>`;
+    }).join('');
 
+    // ── Pre-calculate for Arte ─────────────────────────────
     const uploadList = Object.entries(uploads).filter(([, d]) => d && d.src);
     const logosHtml = uploadList.length > 0 || logoPunho
         ? `<div class="ficha-logo-row">
             ${uploadList.map(([k, d]) => `<img class="ficha-logo-mini" src="${d.src}" title="${d.filename || k}" onclick="window.open('${d.src}','_blank')">`).join('')}
             ${logoPunho ? `<img class="ficha-logo-mini" src="${logoPunho}" title="Logo Punho" onclick="window.open('${logoPunho}','_blank')">` : ''}
            </div>`
-        : '<span style="color:var(--text-3);font-size:11px">—</span>';
+        : '<div style="font-size:11px; color:var(--text-3); margin-top:4px">Nenhuma arte anexada</div>';
 
-    const textsHtml = Object.entries(texts).filter(([, d]) => d.enabled && d.content).map(([k, d]) =>
-        `<div class="ficha-setor-row"><span class="ficha-setor-key">${TEXT_LABEL_MAP?.[k] || k}</span><span class="ficha-setor-val">"${d.content}"</span></div>`
-    ).join('') || '<span style="color:var(--text-3);font-size:11px">—</span>';
+    const textsHtml = Object.entries(texts).filter(([, d]) => d.enabled && d.content).map(([k, d]) => `
+        <div class="ficha-setor-row">
+            <span class="ficha-setor-key">${TEXT_LABEL_MAP?.[k] || k}</span>
+            <span class="ficha-setor-val" style="color:var(--amber)">"${d.content}"</span>
+        </div>`
+    ).join('');
 
-    const extrasHtml = Object.entries(extras).filter(([, d]) => d && d.enabled).map(([k, d]) =>
-        `<div class="ficha-setor-row"><span class="ficha-setor-key">✅ ${EXTRA_LABEL_MAP?.[k] || k}</span><span class="ficha-setor-val">${d.color || 'Sim'}</span></div>`
-    ).join('') || '<span style="color:var(--text-3);font-size:11px">—</span>';
+    // ── Pre-calculate for Extras ────────────────────────────
+    const extrasHtml = Object.entries(extras).filter(([, d]) => d && d.enabled).map(([k, d]) => `
+        <div class="ficha-setor-row">
+            <span class="ficha-setor-key">✅ ${EXTRA_LABEL_MAP?.[k] || k}</span>
+            <span class="ficha-setor-val">${d.color || 'Sim'}</span>
+        </div>`
+    ).join('');
 
     const valorFmt = p0.valor ? `R$ ${parseFloat(p0.valor).toFixed(2).replace('.', ',')}` : '—';
     const sectionClass = isSubItem ? 'drawer-ficha-section' : 'ficha-setor-bloco';
@@ -3115,31 +3128,82 @@ function renderProdutoFicha(prod, isSubItem = false) {
 
     return `
         <div class="produto-ficha-container ${isSubItem ? 'sub-item' : ''}">
+            
+            <!-- SECTOR: PREPARAÇÃO -->
             <div class="${sectionClass} setor-preparacao">
                 <div class="${titleClass} setor-preparacao">📋 Preparação</div>
-                <div class="ficha-setor-row"><span class="ficha-setor-key">SKU</span><span class="ficha-setor-val">${p0.sku || '—'}</span></div>
-                <div class="ficha-setor-row"><span class="ficha-setor-key">Técnica</span><span class="ficha-setor-val">${p0.tecnica}</span></div>
-                <div class="ficha-setor-row"><span class="ficha-setor-key">Qtd.</span><span class="ficha-setor-val">${p0.quantidade} un.</span></div>
+                <div class="drawer-ficha-duo">
+                    <div class="drawer-ficha-item">
+                        <div class="drawer-ficha-item-label">SKU</div>
+                        <div class="drawer-ficha-item-value">${p0.sku || '—'}</div>
+                    </div>
+                    <div class="drawer-ficha-item">
+                        <div class="drawer-ficha-item-label">Técnica</div>
+                        <div class="drawer-ficha-item-value" style="color:var(--amber)">${p0.tecnica || '—'}</div>
+                    </div>
+                </div>
+                <div class="ficha-setor-row" style="margin-top:4px">
+                    <span class="ficha-setor-key">Quantidade Total</span>
+                    <span class="ficha-setor-val" style="font-size:14px">${p0.quantidade || 1} un.</span>
+                </div>
             </div>
+
+            <!-- SECTOR: SEPARAÇÃO & CORES -->
             <div class="${sectionClass} setor-separacao">
-                <div class="${titleClass} setor-separacao">📦 Grade & Cores</div>
-                <div class="ficha-grade-compact">${gradeHtml}</div>
-                <div style="margin-top:10px">${coresHtml}</div>
+                <div class="${titleClass} setor-separacao">📦 Separação & Grade</div>
+                <div class="ficha-grade-compact" style="margin-bottom:12px">${gradeHtml}</div>
+                <div class="drawer-ficha-item-label" style="margin-bottom:6px">Definição de Cores</div>
+                <div style="background:var(--surface-2); border-radius:6px; padding:4px 12px; border:1px solid var(--border)">
+                    ${coresHtml || '<div style="padding:10px; text-align:center; font-size:11px; color:var(--text-3)">Padrão da Peça</div>'}
+                </div>
             </div>
+
+            <!-- SECTOR: ARTE & PERSONALIZAÇÃO -->
             <div class="${sectionClass} setor-arte">
                 <div class="${titleClass} setor-arte">✒️ Arte & Logos</div>
                 ${logosHtml}
-                <div style="margin-top:8px">${textsHtml}</div>
+                ${textsHtml ? `<div style="margin-top:10px">${textsHtml}</div>` : ''}
             </div>
+
+            <!-- SECTOR: BORDADO -->
+            <div class="${sectionClass} setor-bordado">
+                <div class="${titleClass} setor-bordado">🧵 Bordado</div>
+                ${p0.emb
+            ? `<div class="ficha-setor-row">
+                        <span class="ficha-setor-key">Arquivo .EMB</span>
+                        <span class="ficha-setor-val"><a href="${p0.emb}" target="_blank" class="btn btn-ghost" style="height:24px; padding:0 8px; font-size:10px; color:var(--setor-bordado); border-color:var(--setor-bordado)">Baixar Arquivo</a></span>
+                       </div>`
+            : '<div style="font-size:11px; color:var(--text-3)">Sem arquivo de bordado específico</div>'}
+            </div>
+
+            <!-- SECTOR: COSTURA & EXTRAS -->
             <div class="${sectionClass} setor-costura">
                 <div class="${titleClass} setor-costura">✂️ Costura & Extras</div>
-                ${extrasHtml}
-                ${p0.observacoes ? `<div style="margin-top:8px; padding:8px; background:var(--amber-dim); border-radius:4px; font-size:11px; color:#92400e;">${p0.observacoes}</div>` : ''}
+                ${extrasHtml || '<div style="font-size:11px; color:var(--text-3)">Nenhum extra selecionado</div>'}
+                ${p0.observacoes ? `
+                    <div style="margin-top:12px; border-top:1px dashed var(--border); padding-top:10px;">
+                        <div class="drawer-ficha-item-label">Observações de Produção</div>
+                        <div style="background:var(--amber-dim); padding:10px; border-radius:6px; font-size:12px; color:#92400e; line-height:1.4; border-left:4px solid var(--amber)">
+                            ${p0.observacoes}
+                        </div>
+                    </div>` : ''}
             </div>
+
+            <!-- SECTOR: QUALIDADE & EXPEDIÇÃO -->
             <div class="${sectionClass} setor-expedicao">
-                <div class="${titleClass} setor-expedicao">🚚 Expedição</div>
-                <div class="ficha-setor-row"><span class="ficha-setor-key">Valor unit.</span><span class="ficha-setor-val" style="color:var(--green);font-weight:800">${valorFmt}</span></div>
+                <div class="${titleClass} setor-expedicao">✨ Revisão & Envio</div>
+                <div class="drawer-ficha-duo">
+                    <div class="drawer-ficha-item">
+                        <div class="drawer-ficha-item-label">Valor Unit.</div>
+                        <div class="drawer-ficha-item-value" style="color:var(--green)">${valorFmt}</div>
+                    </div>
+                    <div class="drawer-ficha-item">
+                        <div class="drawer-ficha-item-label">Revisão</div>
+                        <div class="drawer-ficha-item-value" style="font-size:11px; text-transform:uppercase; color:var(--text-3)">Pendente</div>
+                    </div>
+                </div>
             </div>
+
         </div>`;
 }
 
