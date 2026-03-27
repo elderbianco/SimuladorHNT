@@ -480,7 +480,7 @@ function updateAuthHeader() {
 
             authContainer.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <span style="font-size:0.75rem; color:#444; margin-right: 15px; font-weight: bold; border: 1px solid #222; padding: 2px 8px; border-radius: 4px;">v14.70</span>
+                    <span style="font-size:0.75rem; color:#444; margin-right: 15px; font-weight: bold; border: 1px solid #222; padding: 2px 8px; border-radius: 4px;">v14.80</span>
                     <span style="color: #ccc;">Olá, <strong style="color: var(--gold);"> ${firstName}</strong></span>
                     <a href="indexCadastro.html" title="Editar Perfil" style="color: #888; text-decoration: none; font-size: 1.1rem; transition: 0.3s;">⚙️</a>
                     <a href="#" onclick="logoutUser(event)" title="Sair" style="color: #ff4444; border: 1px solid #ff4444; padding: 4px 10px; border-radius: 12px; text-decoration: none; font-size: 0.8rem; transition: 0.3s;">Sair</a>
