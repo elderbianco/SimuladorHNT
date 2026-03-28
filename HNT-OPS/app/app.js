@@ -4138,12 +4138,12 @@ async function renderStatusTab(p) {
             <!-- Botões de Ação para Arquivos -->
             <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px">
                 <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.pdf || '#'}', '_blank')">📄 PDF OS</button>
-                <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.renders?.mockup || p.renders?.front || '#'}', '_blank')">🖼️ MOCKUP</button>
+                <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${currentItem.renders?.mockup || currentItem.renders?.front || '#'}', '_blank')">🖼️ MOCKUP</button>
                 <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.emb || '#'}', '_blank')">🪡 ARQUIVO EMB</button>
             </div>
 
             <!-- Linha do Tempo de Produção (Histórico) -->
-            <div id="status-timeline-wrap" style="background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden">
+            <div id="status-timeline-wrap" style="background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; box-shadow:var(--shadow-sm)">
                 <div style="padding:12px 16px; background:var(--surface-2); border-bottom:1px solid var(--border); font-weight:800; font-size:12px; color:var(--text-2); display:flex; justify-content:space-between; align-items:center">
                     <span>TRACKING DE BIPAGEM (ENTRY/EXIT)</span>
                     <span style="font-size:10px; font-weight:600; color:var(--text-4)">HISTÓRICO REALTIME</span>
