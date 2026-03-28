@@ -257,21 +257,17 @@ function renderTable(data) {
                         <span class="tree-line" style="position:absolute; left:12px; top:0; bottom:0; width:2px; background:rgba(0,0,0,0.05)"></span>
                         <span style="font-size:10px; color:var(--text-3)">${displayOrder}</span>
                     </div>
-                    <div class="cell-simid" title="${displaySimId}" style="font-size:10px; color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displaySimId}</div>
-                    <div class="cell-pos" style="font-size:11px; color:var(--text-3)">${idx + 1}/${numProdutos}</div>
-                    <div class="cell-prod" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                        <span class="sku-badge" style="background:#f0f0f0; border-color:#ccc; color:#666">${prod.sku}</span>
-                    </div>
-                    <div class="cell-qty">${prod.quantidade}× <span style="font-size:10px">${prod.tamanho}</span></div>
+                    <div class="cell-simid" title="${displaySimId}">${displaySimId}</div>
+                    <div class="cell-pos" style="color:var(--text-4)">${idx + 1}/${numProdutos}</div>
+                    <div class="cell-prod"><span class="sku-badge style-ghost">${prod.sku}</span></div>
+                    <div class="cell-qty">${prod.quantidade}× <span style="font-size:10px; color:var(--text-3)">${prod.tamanho}</span></div>
                     <div class="cell-date" style="color:var(--text-4)">${p.dataCriacao}</div>
-                    <div class="cell-prazo" style="color:var(--text-4)">${p.prazo}</div>
-                    <div class="cell-etapa">
-                        <span style="font-size:10px; color:var(--text-3); text-transform:uppercase; font-weight:700;">${prod.tecnica}</span>
-                    </div>
-                    <div class="cell-sla" style="color:var(--text-4)">--</div>
-                    <div class="cell-status" style="text-align:center; opacity:0.7">${statusIcon}</div>
-                    <div class="cell-pendencia" style="font-size:10px; color:var(--text-4); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${pendenciaTexto}</div>
-                    <div class="cell-prioridade" style="color:var(--text-4)">--</div>
+                    <div class="cell-entrega" style="color:var(--text-4)">${p.prazo}</div>
+                    <div class="cell-etapa" style="font-size:10px; font-weight:600; color:var(--text-3); text-transform:uppercase">${prod.etapa}</div>
+                    <div class="cell-prazo">--</div>
+                    <div class="cell-status" style="text-align:center">${prod.status === 'Pronto' ? '✅' : '--'}</div>
+                    <div class="cell-pendencia">--</div>
+                    <div class="cell-prioridade">--</div>
                 `;
                 childTr.onclick = (e) => {
                     e.stopPropagation();
