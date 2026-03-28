@@ -286,6 +286,17 @@
                     <!-- populated by renderProducao() -->
                 </div>
 
+                <!-- ── ARTE DEV VIEW ── -->
+                <div class="view" id="arte_dev-view">
+                    <div class="tab-bar" style="margin-bottom:12px;border-radius:6px 6px 0 0;overflow:hidden">
+                        <div class="tab active" style="pointer-events:none">Desenvolvimento de Arte Bordado</div>
+                    </div>
+                    <div id="arte-dev-body"
+                        style="padding:20px; background:var(--surface-color); border-radius:8px; border:1px solid var(--border)">
+                        <!-- populated by JS -->
+                    </div>
+                </div>
+
                 <!-- ── RELATORIOS VIEW ── -->
                 <div class="view" id="relatorios-view">
                     <!-- populated by renderRelatorios() -->
@@ -346,12 +357,14 @@
         </div>
 
         <div class="drawer-tabs">
-            <div class="drawer-tab active" data-tab="detalhes">📦 Detalhes</div>
-            <div class="drawer-tab" data-tab="itens">🛒 Itens</div>
-            <div class="drawer-tab" data-tab="ficha">🏭 Ficha Técnica</div>
-            <div class="drawer-tab" data-tab="cliente">👤 Cliente</div>
-            <div class="drawer-tab" data-tab="historico">⏱ Histórico</div>
-            <div class="drawer-tab" data-tab="chat">💬 Chat</div>
+            <div class="drawer-tab active" data-tab="preparacao">📋 Preparação</div>
+            <div class="drawer-tab" data-tab="separacao">📦 Separação</div>
+            <div class="drawer-tab" data-tab="arte">✒️ Arte</div>
+            <div class="drawer-tab" data-tab="bordado">🧵 Bordado</div>
+            <div class="drawer-tab" data-tab="costura">✂️ Costura</div>
+            <div class="drawer-tab" data-tab="qualidade">✨ Qualidade</div>
+            <div class="drawer-tab" data-tab="expedicao">🚚 Expedição</div>
+            <div class="drawer-tab" data-tab="pendencia">⚠️ Pendência</div>
         </div>
 
         <div class="drawer-body" id="drawer-body"></div>
