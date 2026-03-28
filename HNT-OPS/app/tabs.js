@@ -114,11 +114,11 @@ function renderFichaTecnica(item, order) {
         h += '</div></div>';
     }
 
-    const te = Array.isArray(item.texts) ? item.texts : Object.entries(item.texts || {}).map(([k, v]) => ({ id: k, ...v }));
-    const ee = Array.isArray(item.extras) ? item.extras : Object.entries(item.extras || {}).map(([k, v]) => ({ id: k, ...v }));
+    const te = Array.isArray(item.texts) ? item.texts : Object.entries(item.texts || {}).map(([k, v]) => typeof v === 'object' ? { id: k, ...v } : { id: k, value: v });
+    const ee = Array.isArray(item.extras) ? item.extras : Object.entries(item.extras || {}).map(([k, v]) => typeof v === 'object' ? { id: k, ...v } : { id: k, value: v });
 
     if (te.length > 0 || ee.length > 0) {
-        h += '<div class="ficha-setor-bloco" style="background:var(--surface-2);border-top:2px solid var(--border);">';
+        h += '<div class="ficha-setor-bloco" style="background:var(--surface-2);border-top:2px solid var(--border);border-bottom:none;">';
         h += '<div class="ficha-setor-title">Personalizações (Textos e Extras)</div>';
         h += '<div class="detail-grid">';
         te.forEach(t => {
@@ -126,19 +126,19 @@ function renderFichaTecnica(item, order) {
             const color = t.color || {};
             const hex = color.hex || '#ccc';
             const nome = color.name || color.value || 'Cor Indefinida';
-            h += '<div class="detail-item full" style="border-bottom:1px solid var(--border);padding-bottom:8px;">';
-            h += '<div style="font-size:11px;color:var(--text-3);text-transform:uppercase;">' + (t.id || 'Texto') + '</div>';
-            h += '<div style="font-size:15px;font-weight:700;">' + (t.text || '--') + '</div>';
-            if (font) h += '<div style="font-size:11px;">Fonte: ' + font + '</div>';
-            h += '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><span class="color-dot" style="width:12px;height:12px;background:' + hex + '"></span><span style="font-size:11px;">' + nome + '</span></div>';
+            h += '<div class="detail-item full" style="border-bottom:1px solid var(--border);padding-bottom:12px;">';
+            h += '<div style="font-size:11px;color:var(--text-3);text-transform:uppercase;font-weight:700;">' + (t.id || 'Texto') + '</div>';
+            h += '<div style="font-size:16px;font-weight:800;margin:4px 0;">' + (t.text || '--') + '</div>';
+            if (font) h += '<div style="font-size:11px;color:var(--text-3);">Fonte: ' + font + '</div>';
+            h += '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;"><span class="color-dot" style="width:12px;height:12px;background:' + hex + '"></span><span style="font-size:11px;">' + nome + '</span></div>';
             h += '</div>';
         });
         ee.forEach(e => {
             const key = e.id || e.key || 'Extra';
             const val = e.value || e.nome || JSON.stringify(e);
-            h += '<div class="detail-item full" style="border-bottom:1px solid var(--border);padding-bottom:8px;">';
-            h += '<div style="font-size:11px;color:var(--text-3);text-transform:uppercase;">' + key + '</div>';
-            h += '<div style="font-size:13px;font-weight:600;">' + val + '</div>';
+            h += '<div class="detail-item full" style="border-bottom:1px solid var(--border);padding-bottom:12px;">';
+            h += '<div style="font-size:11px;color:var(--text-3);text-transform:uppercase;font-weight:700;">' + key + '</div>';
+            h += '<div style="font-size:14px;font-weight:600;margin-top:4px;">' + val + '</div>';
             h += '</div>';
         });
         h += '</div></div>';
