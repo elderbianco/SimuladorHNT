@@ -332,31 +332,37 @@ const SupabaseAdapter = {
                 return (typeof val === 'object') ? (val.value || val.name || null) : val;
             };
 
-            let sizeStr = 'Grade Única';
+            let sizeStr = 'Grade Unica';
             if (specs.sizes) {
                 const entries = Object.entries(specs.sizes).filter(([s, q]) => q > 0);
                 if (entries.length > 0) sizeStr = entries.map(([s, q]) => `${q}x ${s}`).join(', ');
             } else if (orderData.TAMANHO) {
                 sizeStr = orderData.TAMANHO;
             }
+            if (!sizeStr || sizeStr === 'undefined') sizeStr = 'Grade Unica';
+
+            // Garante que a técnica nunca será nula
+            let tecRaw = parts.Tecnica || parts.tecnica || 'Bordado';
+            if (typeof tecRaw !== 'string') tecRaw = 'Bordado';
+            const tecnicaFinal = tecRaw.includes('DTF') ? 'DTF' : 'Bordado';
 
             const prodRow = {
                 pedido_origem_id: orderId,
-                cliente_id: clienteInternalId,
+                cliente_id: clienteInternalId || null,
                 sku: item.simulator_type || orderData.TIPO_PRODUTO || 'SKU-INDEFINIDO',
-                quantidade: parseInt(item.qty_total || orderData.QUANTIDADE || 1),
+                quantidade: parseInt(item.qty_total || orderData.QUANTIDADE || 1) || 1,
                 tamanho: sizeStr,
                 link_pdf: orderData.pdfUrl || orderData.pdf_url || item.pdf_path || '',
-                cor_centro: getColorLabel(parts.Centro || parts.Base || parts.cor_centro),
-                cor_laterais: getColorLabel(parts.Laterais || parts.cor_laterais),
-                cor_filete: getColorLabel(parts.Filete || parts.Filetes || parts.cor_filete),
-                tecnica: (parts.Tecnica || parts.tecnica || 'Bordado').includes('DTF') ? 'DTF' : 'Bordado',
+                cor_centro: getColorLabel(parts.Centro || parts.Base || parts.cor_centro) || '',
+                cor_laterais: getColorLabel(parts.Laterais || parts.cor_laterais) || '',
+                cor_filete: getColorLabel(parts.Filete || parts.Filetes || parts.cor_filete) || '',
+                tecnica: tecnicaFinal,
                 dados_tecnicos: {
                     parts: parts,
                     texts: specs.texts || {},
                     extras: specs.extras || {},
                     logoPunho: specs.logoPunho || null,
-                    simulationId: specs.simulationId
+                    simulationId: specs.simulationId || ''
                 },
                 link_renders: {
                     frente: orderData.render_frente || null,
@@ -375,7 +381,10 @@ const SupabaseAdapter = {
                 .insert([prodRow])
                 .select();
 
-            if (prodErr) throw prodErr;
+            if (prodErr) {
+                console.error('❌ Supabase Falhou no Insert de producao_pedidos:', prodErr, prodRow);
+                throw prodErr;
+            }
             console.log('✅ Pedido inserido no HNT-OPS:', prodResult);
             return true;
 
