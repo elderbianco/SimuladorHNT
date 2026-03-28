@@ -4057,55 +4057,89 @@ async function renderStatusTab(p) {
     const items = p.produtos || [p];
     const numItems = items.length;
 
+    // Encontrar posição do item atual se selecionado via ID específico
+    const currentIndex = items.findIndex(it => it.id.toString() == selectedId.toString());
+    const currentItem = currentIndex >= 0 ? items[currentIndex] : items[0];
+    const positionLabel = `${currentIndex + 1} / ${numItems}`;
+    const productLabel = currentItem.tipoProduto || currentItem.sku || 'Produto HNT';
+
+    // Cálculo do Semaforo de Prazo
+    let prazoDate = new Date();
+    if (p.prazo && p.prazo !== '--') {
+        const parts = p.prazo.split('/');
+        prazoDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    const hj = new Date();
+    const isLate = hj > prazoDate;
+    const isWarning = (prazoDate - hj) < (3 * 24 * 60 * 60 * 1000) && !isLate;
+    const semaforoCor = isLate ? 'var(--red)' : (isWarning ? 'var(--amber)' : 'var(--green)');
+    const semaforoLabel = isLate ? 'ATRASADO' : (isWarning ? 'ATENÇÃO' : 'NO PRAZO');
+
     // 1. Renderizar Estrutura Base (Shell)
     wrap.innerHTML = `
-        <div style="padding:16px; display:flex; flex-direction:column; gap:20px;">
+        <div style="padding:16px; display:flex; flex-direction:column; gap:16px;">
             
-            <!-- Resumo Compacto -->
-            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; padding:16px; background:var(--surface-color); border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow-sm)">
-                <div style="grid-column: span 2">
-                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Cliente / Pedido</label>
-                    <div style="font-weight:800; font-size:15px; color:var(--text-1)">${p.cliente} <span style="color:var(--gold)">#${p.numero}</span></div>
+            <!-- Resumo Compacto (v4.06-Pro) -->
+            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; padding:16px; background:var(--surface-color); border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow-sm); position:relative; overflow:hidden">
+                ${p.urgente ? '<div style="position:absolute; top:0; left:0; right:0; height:4px; background:var(--red)"></div>' : ''}
+                
+                <div style="grid-column: span 3">
+                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Pedido / Cliente</label>
+                    <div style="font-weight:800; font-size:15px; color:var(--text-1)">
+                        <span style="color:var(--amber)">#${p.numero}</span> — ${p.cliente}
+                    </div>
                 </div>
-                <div style="grid-column: span 2; text-align:right">
-                     <div style="background:${p.urgente ? 'var(--red)' : 'var(--surface-3)'}; color:${p.urgente ? '#fff' : 'var(--text-3)'}; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block">
-                        ${p.urgente ? '🚩 PRIORIDADE MÁXIMA' : 'PADRÃO'}
+                <div style="text-align:right">
+                     <div style="background:${p.urgente ? 'var(--red)' : 'var(--surface-3)'}; color:${p.urgente ? '#fff' : 'var(--text-3)'}; padding:4px 8px; border-radius:4px; font-size:9px; font-weight:900; display:inline-block; text-transform:uppercase">
+                        ${p.urgente ? 'Prioridade' : 'Normal'}
                      </div>
                 </div>
                 
+                <div style="grid-column: span 2">
+                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Produto (${positionLabel})</label>
+                    <div style="font-weight:700; font-size:11px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${productLabel}</div>
+                </div>
                 <div>
                     <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Simulador ID</label>
-                    <div style="font-weight:700; font-size:11px; color:var(--text-2)">${p.dadosTecnicos?.simulationId || '--'}</div>
+                    <div style="font-weight:700; font-size:11px; color:var(--text-3)">${p.dadosTecnicos?.simulationId || 'N/A'}</div>
                 </div>
                 <div>
-                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Peças</label>
+                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Qtd</label>
                     <div style="font-weight:700">${p.quantidade} un</div>
                 </div>
-                <div>
-                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Data Pedido</label>
-                    <div style="font-weight:700">${p.dataCriacao}</div>
-                </div>
-                <div>
-                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Entrega</label>
-                    <div style="font-weight:800; color:var(--amber)">${p.prazo}</div>
+
+                <div style="grid-column: span 4; margin-top:4px; padding-top:10px; border-top:1px solid var(--border); display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center">
+                    <div>
+                        <label style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Datas (Ped / Ent)</label>
+                        <div style="font-size:11px; font-weight:600">${p.dataCriacao} <span style="color:var(--text-4)">→</span> <span style="color:var(--amber)">${p.prazo}</span></div>
+                    </div>
+                    <div style="text-align:right; display:flex; align-items:center; justify-content:flex-end; gap:8px">
+                         <div style="text-align:right">
+                            <div style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Status Prazo</div>
+                            <div style="font-size:10px; font-weight:900; color:${semaforoCor}">${semaforoLabel}</div>
+                         </div>
+                         <div style="width:10px; height:10px; border-radius:50%; background:${semaforoCor}; box-shadow:0 0 8px ${semaforoCor}66"></div>
+                    </div>
                 </div>
 
-                <div style="grid-column: span 4; margin-top:8px; padding-top:12px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
-                    <div>
-                        <span style="font-size:11px; color:var(--text-3)">Status:</span>
-                        <span style="font-weight:800; font-size:12px; color:${ETAPA_COLORS[p.etapa]}">${ETAPA_LABELS[p.etapa]}</span>
+                <div style="grid-column: span 4; background:var(--surface-2); margin:8px -16px -16px -16px; padding:10px 16px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+                    <div style="display:flex; align-items:center; gap:8px">
+                        <span style="font-size:11px; font-weight:700; color:var(--text-3)">ESTÁGIO ATUAL:</span>
+                        <span style="background:${ETAPA_COLORS[p.etapa]}20; color:${ETAPA_COLORS[p.etapa]}; padding:3px 10px; border-radius:12px; font-size:10px; font-weight:900; text-transform:uppercase">
+                            ${ETAPA_LABELS[p.etapa]}
+                        </span>
                     </div>
-                    <div style="display:flex; gap:6px">
-                        ${p.etapa === 'Pendencia' ? '<span style="color:var(--red); font-size:16px" title="Com Pendência">⚠️</span>' : '<span style="color:var(--green); font-size:16px" title="Validado">✅</span>'}
+                    <div>
+                        ${p.etapa === 'Pendencia' ? '<span style="color:var(--red); font-size:14px" title="Pendência Crítica">⚠️ BLOQUEADO</span>' : '<span style="color:var(--green); font-size:14px" title="Tudo OK">✅ VALIDADO</span>'}
                     </div>
                 </div>
             </div>
 
-            <!-- Arquivos e Links -->
-            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px">
-                <button class="btn btn-outline" style="font-size:10px; height:36px; gap:6px" onclick="window.open('${p.pdf || '#'}', '_blank')">📄 PDF Pedido</button>
-                <button class="btn btn-outline" style="font-size:10px; height:36px; gap:6px" onclick="window.open('${p.renders?.mockup || p.renders?.front || '#'}', '_blank')">🖼️ Mockup</button>
-                <button class="btn btn-outline" style="font-size:10px; height:36px; gap:6px" onclick="window.open('${p.emb || '#'}', '_blank')">🪡 Arquivo EMB</button>
+            <!-- Botões de Ação para Arquivos -->
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px">
+                <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.pdf || '#'}', '_blank')">📄 PDF OS</button>
+                <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.renders?.mockup || p.renders?.front || '#'}', '_blank')">🖼️ MOCKUP</button>
+                <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.emb || '#'}', '_blank')">🪡 ARQUIVO EMB</button>
             </div>
 
             <!-- Linha do Tempo de Produção (Histórico) -->
