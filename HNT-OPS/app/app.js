@@ -10,6 +10,7 @@ let ETAPA_COLORS = {};
 
 // ── State Data (Real) ─────────────────────────────────────
 let PEDIDOS = [];
+let MILESTONES = []; // Sequência oficial de etapas
 let OPERADORES = []; // Carregado via api.getOperadores()
 let ETAPA_DURACOES = {}; // SLA por etapa (dias úteis)
 const HISTORICO = {};
