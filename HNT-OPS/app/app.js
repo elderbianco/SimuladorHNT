@@ -235,16 +235,26 @@ function renderTable(data) {
             produtos.forEach((prod, idx) => {
                 const childTr = document.createElement('div');
                 childTr.className = 'table-row child';
-                const simId = prod.dadosTecnicos?.simulationId || '--';
-                const itemPendencia = prod.pendencia || hasPendencia; // Herda do pai se pai tiver pendencia global
+
+                // Separa o prefixo do pedido do ID do simulador se estiverem juntos
+                let displayOrder = p.numero;
+                let displaySimId = prod.dadosTecnicos?.simulationId || '--';
+
+                if (prod.numero && prod.numero.includes('-')) {
+                    const parts = prod.numero.split('-');
+                    displayOrder = parts[0]; // ex: 001000
+                    if (displaySimId === '--') {
+                        displaySimId = parts.slice(1).join('-'); // o resto
+                    }
+                }
 
                 childTr.innerHTML = `
-                    <div class="cell-order">
-                        <span class="tree-line"></span>
-                        <span style="font-size:10px; color:var(--text-3)">${prod.numero}</span>
-                    </div>
-                    <div class="cell-simid" title="${simId}" style="font-size:10px; color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${simId}</div>
-                    <div class="cell-pos" style="font-size:11px; color:var(--text-3)">${idx + 1}/${numProdutos}</div>
+                        <div class="cell-order">
+                            <span class="tree-line"></span>
+                            <span style="font-size:10px; color:var(--text-3)">${displayOrder}</span>
+                        </div>
+                        <div class="cell-simid" title="${displaySimId}" style="font-size:10px; color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displaySimId}</div>
+                        <div class="cell-pos" style="font-size:11px; color:var(--text-3)">${idx + 1}/${numProdutos}</div>
                     <div class="cell-prod" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                         <span class="sku-badge" style="background:#f0f0f0; border-color:#ccc; color:#666">${prod.sku}</span>
                     </div>
