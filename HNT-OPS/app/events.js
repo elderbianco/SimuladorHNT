@@ -321,7 +321,7 @@ function init() {
     if (prioEl) prioEl.addEventListener('change', function () { handleFilterPrioridade(prioEl.value); });
 
     // Bind drawer close
-    const btnClose = document.getElementById('btnCloseDrawer');
+    const btnClose = document.getElementById('drawerClose');
     if (btnClose) btnClose.addEventListener('click', closeDrawer);
     const overlay = document.getElementById('drawerOverlay');
     if (overlay) overlay.addEventListener('click', closeDrawer);
