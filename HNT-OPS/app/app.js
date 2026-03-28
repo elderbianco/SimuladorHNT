@@ -166,7 +166,9 @@ async function loadOrders() {
                     quantidade: o.quantidade_total || 1,
                     cores: coresMapped,
                     grade: gradeMapped,
-                    logos: logosMapped
+                    logos: logosMapped,
+                    texts: tech.texts || {},
+                    extras: tech.extras || {}
                 };
 
                 // The view dashboard_pedidos gives us flat, so order has 1 conceptual item based on its row
