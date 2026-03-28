@@ -3310,3 +3310,4 @@ async function sendChat() {
     const p = PEDIDOS.find(x => x.id.toString() == selectedId.toString());
     if (p) renderDrawerTab(p);
 }
+
