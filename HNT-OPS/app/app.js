@@ -4045,59 +4045,142 @@ function buscarStatus() {
             `;
         }
     });
-
     resultsWrap.innerHTML = html;
 }
 
 /**
- * renderStatusTab (v4.06)
- * Resumo geral do pedido e posição de cada item na produção.
+ * renderStatusTab (v4.06-Pro)
+ * Dashboard executivo do pedido com linha do tempo de produção e arquivos.
  */
-function renderStatusTab(p) {
+async function renderStatusTab(p) {
     const wrap = $('drawer-body');
-    const numProds = p.produtos ? p.produtos.length : 1;
     const items = p.produtos || [p];
+    const numItems = items.length;
 
+    // 1. Renderizar Estrutura Base (Shell)
     wrap.innerHTML = `
-        <div style="padding:20px">
-            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; margin-bottom:24px; padding:16px; background:var(--surface-color); border-radius:8px; border:1px solid var(--border)">
+        <div style="padding:16px; display:flex; flex-direction:column; gap:20px;">
+            
+            <!-- Resumo Compacto -->
+            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; padding:16px; background:var(--surface-color); border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow-sm)">
+                <div style="grid-column: span 2">
+                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Cliente / Pedido</label>
+                    <div style="font-weight:800; font-size:15px; color:var(--text-1)">${p.cliente} <span style="color:var(--gold)">#${p.numero}</span></div>
+                </div>
+                <div style="grid-column: span 2; text-align:right">
+                     <div style="background:${p.urgente ? 'var(--red)' : 'var(--surface-3)'}; color:${p.urgente ? '#fff' : 'var(--text-3)'}; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block">
+                        ${p.urgente ? '🚩 PRIORIDADE MÁXIMA' : 'PADRÃO'}
+                     </div>
+                </div>
+                
                 <div>
-                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Cliente</label>
-                    <div style="font-weight:700; color:var(--text-1)">${p.cliente || 'Não informado'}</div>
+                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Simulador ID</label>
+                    <div style="font-weight:700; font-size:11px; color:var(--text-2)">${p.dadosTecnicos?.simulationId || '--'}</div>
                 </div>
                 <div>
-                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Data do Pedido</label>
-                    <div style="font-weight:700; color:var(--text-1)">${p.dataCriacao}</div>
+                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Peças</label>
+                    <div style="font-weight:700">${p.quantidade} un</div>
                 </div>
                 <div>
-                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Entrega Estimada</label>
-                    <div style="font-weight:700; color:var(--amber)">${p.prazo}</div>
+                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Data Pedido</label>
+                    <div style="font-weight:700">${p.dataCriacao}</div>
                 </div>
                 <div>
-                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Total de Itens</label>
-                    <div style="font-weight:700; color:var(--text-1)">${numProds} produto(s) (${p.quantidade} un total)</div>
+                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Entrega</label>
+                    <div style="font-weight:800; color:var(--amber)">${p.prazo}</div>
+                </div>
+
+                <div style="grid-column: span 4; margin-top:8px; padding-top:12px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+                    <div>
+                        <span style="font-size:11px; color:var(--text-3)">Status:</span>
+                        <span style="font-weight:800; font-size:12px; color:${ETAPA_COLORS[p.etapa]}">${ETAPA_LABELS[p.etapa]}</span>
+                    </div>
+                    <div style="display:flex; gap:6px">
+                        ${p.etapa === 'Pendencia' ? '<span style="color:var(--red); font-size:16px" title="Com Pendência">⚠️</span>' : '<span style="color:var(--green); font-size:16px" title="Validado">✅</span>'}
+                    </div>
                 </div>
             </div>
 
-            <h4 style="margin-bottom:12px; font-size:13px; color:var(--text-2); border-left:4px solid var(--primary-color); padding-left:8px">Posição de Confecção</h4>
-            <div class="status-items-list" style="display:grid; gap:8px">
-                ${items.map(it => {
-        const etapaLabel = ETAPA_LABELS[it.etapa] || it.etapa || 'Pendente';
-        const color = ETAPA_COLORS[it.etapa] || '#666';
-        return `
-                        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:white; border:1px solid var(--border); border-radius:6px">
-                            <div style="display:flex; align-items:center; gap:12px">
-                                <span class="sku-badge">${it.sku}</span>
-                                <span style="font-size:13px; font-weight:600">${it.tipoProduto || it.sku}</span>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:8px">
-                                <span style="font-size:11px; color:var(--text-4)">Etapa Atual:</span>
-                                <span style="padding:4px 10px; border-radius:20px; background:${color}20; color:${color}; font-size:11px; font-weight:700; text-transform:uppercase">${etapaLabel}</span>
-                            </div>
-                        </div>
-                    `;
-    }).join('')}
+            <!-- Arquivos e Links -->
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px">
+                <button class="btn btn-outline" style="font-size:10px; height:36px; gap:6px" onclick="window.open('${p.pdf || '#'}', '_blank')">📄 PDF Pedido</button>
+                <button class="btn btn-outline" style="font-size:10px; height:36px; gap:6px" onclick="window.open('${p.renders?.mockup || p.renders?.front || '#'}', '_blank')">🖼️ Mockup</button>
+                <button class="btn btn-outline" style="font-size:10px; height:36px; gap:6px" onclick="window.open('${p.emb || '#'}', '_blank')">🪡 Arquivo EMB</button>
             </div>
+
+            <!-- Linha do Tempo de Produção (Histórico) -->
+            <div id="status-timeline-wrap" style="background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden">
+                <div style="padding:12px 16px; background:var(--surface-2); border-bottom:1px solid var(--border); font-weight:800; font-size:12px; color:var(--text-2); display:flex; justify-content:space-between; align-items:center">
+                    <span>TRACKING DE BIPAGEM (ENTRY/EXIT)</span>
+                    <span style="font-size:10px; font-weight:600; color:var(--text-4)">HISTÓRICO REALTIME</span>
+                </div>
+                <div id="status-timeline-loader" style="padding:40px; text-align:center; color:var(--text-4); font-size:12px">
+                    <div class="spinner" style="margin:0 auto 10px auto"></div>
+                    Carregando histórico de produção...
+                </div>
+                <div id="status-timeline-content" style="display:none">
+                    <div style="display:grid; grid-template-columns: 140px 100px 100px 1fr; gap:0; background:var(--surface-1); border-bottom:1px solid var(--border); padding:8px 16px">
+                        <span style="font-size:10px; font-weight:700; color:var(--text-3)">ETAPA</span>
+                        <span style="font-size:10px; font-weight:700; color:var(--text-3)">ENTRADA</span>
+                        <span style="font-size:10px; font-weight:700; color:var(--text-3)">SAÍDA</span>
+                        <span style="font-size:10px; font-weight:700; color:var(--text-3); text-align:right">DURAÇÃO</span>
+                    </div>
+                    <div id="history-rows-container"></div>
+                </div>
+            </div>
+
         </div>
     `;
+
+    // 2. Carregar Histórico Assincronamente
+    try {
+        const logs = await api.loadHistorico(p.id);
+        const container = $('history-rows-container');
+        const loader = $('status-timeline-loader');
+        const content = $('status-timeline-content');
+
+        // Mapear logs por etapa para facilitar busca
+        const logMap = {};
+        if (logs) {
+            logs.forEach(l => { logMap[l.etapa] = l; });
+        }
+
+        let rowsHtml = '';
+        ETAPAS.forEach(etapa => {
+            const log = logMap[etapa];
+            const entrou = log?.entrou_em ? new Date(log.entrou_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--';
+            const saiu = log?.saiu_em ? new Date(log.saiu_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--';
+
+            let duracao = '--';
+            if (log?.entrou_em && log?.saiu_em) {
+                const diff = (new Date(log.saiu_em) - new Date(log.entrou_em)) / (1000 * 60 * 60); // em horas
+                duracao = diff < 1 ? Math.round(diff * 60) + ' min' : diff.toFixed(1) + 'h';
+            } else if (log?.entrou_em && !log?.saiu_em) {
+                const diff = (new Date() - new Date(log.entrou_em)) / (1000 * 60 * 60);
+                duracao = diff < 1 ? '<1h' : diff.toFixed(1) + 'h*';
+            }
+
+            const isCurrent = p.etapa === etapa;
+
+            rowsHtml += `
+                <div style="display:grid; grid-template-columns: 140px 100px 100px 1fr; gap:0; padding:12px 16px; border-bottom:1px solid var(--border); background:${isCurrent ? 'var(--blue-dim)' : 'transparent'}; align-items:center">
+                    <div style="display:flex; align-items:center; gap:8px">
+                        <span style="font-size:14px">${ETAPA_ICONS[etapa]}</span>
+                        <span style="font-size:11px; font-weight:700; color:${isCurrent ? 'var(--blue)' : 'var(--text-2)'}">${ETAPA_LABELS[etapa]}</span>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-2)">${entrou}</div>
+                    <div style="font-size:11px; color:var(--text-2)">${saiu}</div>
+                    <div style="font-size:11px; font-weight:700; color:var(--text-3); text-align:right">${duracao}</div>
+                </div>
+            `;
+        });
+
+        loader.style.display = 'none';
+        content.style.display = 'block';
+        container.innerHTML = rowsHtml;
+
+    } catch (e) {
+        console.error("Erro ao carregar histórico:", e);
+        $('status-timeline-loader').textContent = "Erro ao carregar histórico de produção.";
+    }
 }
