@@ -206,20 +206,20 @@ function renderTable(data) {
                     <span class="order-num">${p.numero}</span>
                 </div>
             </div>
-            <div class="cell-simid" style="color:var(--text-4); font-size:10px;">--</div>
+            <div class="cell-simid">${isMulti ? '--' : (p.dadosTecnicos?.simulationId || '--')}</div>
             <div class="cell-pos" style="font-weight:700; color:var(--text-3)">${isMulti ? `(1/${numProdutos})` : '1/1'}</div>
-            <div class="cell-prod" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${skuSummary}</div>
+            <div class="cell-prod">${skuSummary}</div>
             <div class="cell-qty" style="font-weight:700">${p.quantidade}×</div>
             <div class="cell-date">${p.dataCriacao}</div>
-            <div class="cell-prazo" style="font-weight:700">${p.prazo}</div>
+            <div class="cell-entrega" style="font-weight:700">${p.prazo}</div>
             <div class="cell-etapa">
                 <span class="etapa-badge" style="background:${ETAPA_COLORS[p.etapa]}22; color:${ETAPA_COLORS[p.etapa]}; border: 1px solid ${ETAPA_COLORS[p.etapa]}">
                     <span class="etapa-icon">${ETAPA_ICONS[p.etapa] || '📋'}</span>${ETAPA_LABELS[p.etapa] || p.etapa}
                 </span>
             </div>
-            <div class="cell-sla">${slaPhaseInfo(p).label}</div>
+            <div class="cell-prazo">${slaPhaseInfo(p).label}</div>
             <div class="cell-status" style="text-align:center">${statusIcon}</div>
-            <div class="cell-pendencia" style="font-size:11px; color:${hasPendencia ? 'var(--red)' : 'var(--text-4)'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${pendenciaTexto}">${pendenciaTexto}</div>
+            <div class="cell-pendencia" style="font-size:11px; color:${hasPendencia ? 'var(--red)' : 'var(--text-4)'}" title="${pendenciaTexto}">${pendenciaTexto}</div>
             <div class="cell-prioridade" style="font-weight:800; color:${p.urgente ? 'var(--red)' : 'transparent'}">${p.urgente ? '🔴 URGENTE' : '--'}</div>
         `;
         parentTr.onclick = () => openDrawer(p.id);
