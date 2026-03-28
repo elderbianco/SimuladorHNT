@@ -35,10 +35,11 @@ let batchHtml5QrCode = null;
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Carregar Configuração de Etapas/Stages ANTES de tudo
     if (typeof api !== 'undefined') {
-        const { milestones } = await api.loadScheduleConfig();
-        if (milestones && milestones.length > 0) {
-            ETAPAS = milestones.map(m => m.etapa);
-            milestones.forEach(m => {
+        const configs = await api.loadScheduleConfig();
+        MILESTONES = configs.milestones || [];
+        if (MILESTONES && MILESTONES.length > 0) {
+            ETAPAS = MILESTONES.map(m => m.etapa);
+            MILESTONES.forEach(m => {
                 ETAPA_LABELS[m.etapa] = m.label || m.etapa;
                 ETAPA_ICONS[m.etapa] = m.icone || '📋';
                 ETAPA_COLORS[m.etapa] = m.cor || '#888';
@@ -4051,54 +4052,154 @@ function buscarStatus() {
 }
 
 /**
- * renderStatusTab (v4.06)
- * Resumo geral do pedido e posição de cada item na produção.
+ * renderStatusTab (v4.07 PRO)
+ * Painel executivo com Timeline de produção e links técnicos.
  */
 function renderStatusTab(p) {
     const wrap = $('drawer-body');
-    const numProds = p.produtos ? p.produtos.length : 1;
     const items = p.produtos || [p];
+    const isPriority = p.urgente || p.alerta === 'Vermelho';
+
+    // ── Asset Links ──
+    const dt = p.dadosTecnicos || {};
+    const links = [];
+    if (dt.pdfUrl) links.push(`<a href="${dt.pdfUrl}" target="_blank" class="asset-link pdf">📄 Abrir PDF Simulador</a>`);
+    if (dt.layoutUrl || dt.imagemUrl) links.push(`<a href="${dt.layoutUrl || dt.imagemUrl}" target="_blank" class="asset-link layout">🖼️ Ver Layout</a>`);
+    if (dt.embUrl) links.push(`<a href="${dt.embUrl}" target="_blank" class="asset-link emb">🧵 Arquivos EMB</a>`);
 
     wrap.innerHTML = `
-        <div style="padding:20px">
-            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; margin-bottom:24px; padding:16px; background:var(--surface-color); border-radius:8px; border:1px solid var(--border)">
+        <div class="status-pro-container" style="padding:20px; font-family:'Inter Tight', sans-serif">
+            
+            <!-- Executive Summary -->
+            <div class="summary-card" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:20px; padding:16px; background:var(--surface-color); border-radius:12px; border:2px solid ${isPriority ? 'var(--red)' : 'var(--border)'}; position:relative">
+                ${isPriority ? '<div style="position:absolute; top:-12px; right:12px; background:var(--red); color:white; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:900">🔥 PRIORIDADE A MÁXIMA</div>' : ''}
+                
                 <div>
-                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Cliente</label>
-                    <div style="font-weight:700; color:var(--text-1)">${p.cliente || 'Não informado'}</div>
+                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Pedido / ID</label>
+                    <div style="font-weight:800; color:var(--gold); font-size:14px">${p.numero} <span style="font-size:10px; color:var(--text-3); font-weight:400">#${dt.simulationId || '--'}</span></div>
                 </div>
                 <div>
-                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Data do Pedido</label>
-                    <div style="font-weight:700; color:var(--text-1)">${p.dataCriacao}</div>
+                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Cliente</label>
+                    <div style="font-weight:700; color:var(--text-1); font-size:12px">${p.cliente || 'Consumidor Final'}</div>
                 </div>
                 <div>
-                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Entrega Estimada</label>
-                    <div style="font-weight:700; color:var(--amber)">${p.prazo}</div>
+                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Posição</label>
+                    <div style="font-weight:700; color:var(--text-2); font-size:12px">${items.length > 1 ? `Múltiplos (1/${items.length})` : 'Order Única'}</div>
                 </div>
                 <div>
-                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Total de Itens</label>
-                    <div style="font-weight:700; color:var(--text-1)">${numProds} produto(s) (${p.quantidade} un total)</div>
+                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Data Pedido</label>
+                    <div style="font-weight:600; color:var(--text-1); font-size:12px">${p.dataCriacao}</div>
+                </div>
+                <div>
+                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Entrega Estimada</label>
+                    <div style="font-weight:800; color:var(--amber); font-size:12px">${p.prazo}</div>
+                </div>
+                <div>
+                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">SLA Prazo</label>
+                    <div style="font-weight:800; color:${slaPhaseInfo(p).label === 'VENCIDO' ? 'var(--red)' : 'var(--green)'}; font-size:12px">${slaPhaseInfo(p).label}</div>
                 </div>
             </div>
 
-            <h4 style="margin-bottom:12px; font-size:13px; color:var(--text-2); border-left:4px solid var(--primary-color); padding-left:8px">Posição de Confecção</h4>
-            <div class="status-items-list" style="display:grid; gap:8px">
-                ${items.map(it => {
-        const etapaLabel = ETAPA_LABELS[it.etapa] || it.etapa || 'Pendente';
-        const color = ETAPA_COLORS[it.etapa] || '#666';
-        return `
-                        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:white; border:1px solid var(--border); border-radius:6px">
-                            <div style="display:flex; align-items:center; gap:12px">
-                                <span class="sku-badge">${it.sku}</span>
-                                <span style="font-size:13px; font-weight:600">${it.tipoProduto || it.sku}</span>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:8px">
-                                <span style="font-size:11px; color:var(--text-4)">Etapa Atual:</span>
-                                <span style="padding:4px 10px; border-radius:20px; background:${color}20; color:${color}; font-size:11px; font-weight:700; text-transform:uppercase">${etapaLabel}</span>
-                            </div>
-                        </div>
-                    `;
-    }).join('')}
+            <!-- Asset Links -->
+            ${links.length > 0 ? `
+            <div class="assets-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; margin-bottom:24px">
+                ${links.join('')}
+            </div>` : ''}
+
+            <!-- Production Timeline (Asynchronous) -->
+            <h4 style="margin-bottom:16px; font-size:13px; color:var(--text-2); font-weight:800; display:flex; align-items:center; gap:8px">
+                <span style="display:inline-block; width:4px; height:16px; background:var(--gold); border-radius:2px"></span>
+                HISTÓRICO DE PRODUÇÃO (TIMELINE)
+            </h4>
+            
+            <div id="status-timeline-loader" style="padding:20px; text-align:center; color:var(--text-4); font-size:12px">
+                ⏳ Carregando linha do tempo...
             </div>
+            
+            <div id="status-timeline-wrap" style="display:none; position:relative; padding-left:24px; border-left:2px solid var(--border)">
+                <!-- Timeline items will be injected here -->
+            </div>
+
         </div>
     `;
+
+    // Trigger async load of history
+    loadStatusTimeline(p.id);
+}
+
+/**
+ * loadStatusTimeline
+ * Busca os eventos de rastreamento e popula a timeline no Drawer.
+ */
+async function loadStatusTimeline(pedidoId) {
+    try {
+        const history = await api.loadHistorico(pedidoId);
+        const wrap = $('status-timeline-wrap');
+        const loader = $('status-timeline-loader');
+
+        if (!wrap || !loader) return;
+        loader.style.display = 'none';
+        wrap.style.display = 'block';
+
+        if (!history || history.length === 0) {
+            wrap.innerHTML = '<div style="color:var(--text-4); font-style:italic">Nenhum evento registrado ainda.</div>';
+            return;
+        }
+
+        // Criar um mapa de eventos por etapa para facilitar a busca
+        const eventMap = {};
+        history.forEach(ev => eventMap[ev.etapa] = ev);
+
+        let timelineHtml = '';
+
+        // Usamos MILESTONES (global) para garantir a ordem correta das etapas
+        MILESTONES.forEach(m => {
+            const ev = eventMap[m.etapa];
+            const isCompleted = ev && ev.status === 'Concluído';
+            const isCurrent = ev && ev.status === 'Em Andamento';
+            const statusColor = isCompleted ? 'var(--green)' : (isCurrent ? 'var(--amber)' : 'var(--text-4)');
+
+            let durationStr = '--';
+            if (ev && ev.entrou_em && ev.saiu_em) {
+                const start = new Date(ev.entrou_em);
+                const end = new Date(ev.saiu_em);
+                const diffMs = end - start;
+                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffMins = Math.floor((diffMs / (1000 * 60)) % 60);
+                durationStr = `${diffHrs}h ${diffMins}m`;
+            } else if (isCurrent && ev.entrou_em) {
+                const start = new Date(ev.entrou_em);
+                const now = new Date();
+                const diffMs = now - start;
+                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                durationStr = `Andamento (${diffHrs}h...)`;
+            }
+
+            timelineHtml += `
+                <div class="timeline-step" style="position:relative; margin-bottom:24px">
+                    <span style="position:absolute; left:-33px; top:0; width:16px; height:16px; border-radius:50%; background:${statusColor}; border:3px solid white; box-shadow:0 0 0 2px ${statusColor}33"></span>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                        <div>
+                            <div style="font-weight:800; font-size:12px; color:var(--text-1); text-transform:uppercase">${ETAPA_LABELS[m.etapa] || m.etapa}</div>
+                            <div style="font-size:10px; color:var(--text-4); margin-top:2px">
+                                ${ev ? `Entrada: ${new Date(ev.entrou_em).toLocaleString('pt-BR')}` : 'Aguardando...'}
+                                ${isCompleted ? `<br>Saída: ${new Date(ev.saiu_em).toLocaleString('pt-BR')}` : ''}
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="font-size:10px; font-weight:700; color:${statusColor}">${isCompleted ? 'CONCLUÍDO' : (isCurrent ? 'EM ANDAMENTO' : 'PENDENTE')}</div>
+                            <div style="font-size:10px; color:var(--text-3); margin-top:2px">Tempo: ${durationStr}</div>
+                            ${ev && ev.operador ? `<div style="font-size:10px; color:var(--gold); font-weight:700; margin-top:2px">👤 ${ev.operador}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        wrap.innerHTML = timelineHtml;
+    } catch (e) {
+        console.error("Timeline Error:", e);
+        if ($('status-timeline-loader')) $('status-timeline-loader').textContent = "❌ Falha ao carregar timeline.";
+    }
 }
