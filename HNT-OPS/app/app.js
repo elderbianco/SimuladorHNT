@@ -881,38 +881,33 @@ function renderDrawerTab(p) {
     }
     else if (drawerTab === 'qualidade') {
         contentHtml = `
-            <div class="detail-section" style="margin-top:0;">
-                <div class="detail-section-title">✨ REVISÃO E QUALIDADE (CONSERVAÇÃO)</div>
-                
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
-                    <div>
-                        <div style="font-weight:800; font-size:11px; margin-bottom:10px; color:var(--text-3); text-transform:uppercase;">📸 GARANTIA DE QUALIDADE (FOTO)</div>
-                        <div style="width:100%; height:200px; background:var(--surface-2); border:2px dashed var(--border); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;" onclick="alert('Ativando Câmera...')">
-                            <div style="font-size:32px;">📷</div>
-                            <div style="font-size:12px; font-weight:700; color:var(--text-3); margin-top:5px;">Capturar Foto da Peça Pronta</div>
+            <div id="section-qualidade" class="collapsible-section" style="border:1px solid var(--border); border-radius:12px; overflow:hidden; background:white; margin-top:0">
+                <div class="section-header" onclick="toggleSection('section-qualidade')">
+                    <h4>✨ REVISÃO E QUALIDADE</h4>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="section-content" style="padding:16px">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+                        <div>
+                            <div style="font-weight:800; font-size:10px; margin-bottom:10px; color:var(--text-3); text-transform:uppercase;">📸 GARANTIA (FOTO)</div>
+                            <div style="width:100%; height:160px; background:var(--surface-2); border:2px dashed var(--border); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;" onclick="alert('Ativando Câmera...')">
+                                <div style="font-size:32px;">📷</div>
+                                <div style="font-size:11px; font-weight:700; color:var(--text-3); margin-top:5px;">Capturar Foto</div>
+                            </div>
                         </div>
-                        <p style="font-size:11px; color:var(--text-3); margin-top:8px;">*A foto será anexada ao histórico do pedido para auditoria.</p>
-                    </div>
-
-                    <div>
-                        <div style="font-weight:800; font-size:11px; margin-bottom:10px; color:var(--text-3); text-transform:uppercase;">📋 CHECKLIST DE CONFORMIDADE</div>
-                        <div style="display:flex; flex-direction:column; gap:8px;">
-                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--surface-2); border-radius:6px;">
-                                <input type="checkbox" style="width:16px; height:16px;">
-                                <span style="font-size:13px; font-weight:600;">Limpeza de linhas (Fios soltos)</span>
-                            </label>
-                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--surface-2); border-radius:6px;">
-                                <input type="checkbox" style="width:16px; height:16px;">
-                                <span style="font-size:13px; font-weight:600;">Simetria do Bordado</span>
-                            </label>
-                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--surface-2); border-radius:6px;">
-                                <input type="checkbox" style="width:16px; height:16px;">
-                                <span style="font-size:13px; font-weight:600;">Integridade do Tecido / Costura</span>
-                            </label>
-                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px; background:var(--surface-2); border-radius:6px;">
-                                <input type="checkbox" style="width:16px; height:16px;">
-                                <span style="font-size:13px; font-weight:600;">Etiquetas e Embalagem</span>
-                            </label>
+                        <div>
+                            <div style="font-weight:800; font-size:10px; margin-bottom:10px; color:var(--text-3); text-transform:uppercase;">📋 CHECKLIST</div>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:6px; background:var(--surface-1); border-radius:6px; font-size:12px;">
+                                    <input type="checkbox"> Limpeza de linhas
+                                </label>
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:6px; background:var(--surface-1); border-radius:6px; font-size:12px;">
+                                    <input type="checkbox"> Simetria / Bordado
+                                </label>
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:6px; background:var(--surface-1); border-radius:6px; font-size:12px;">
+                                    <input type="checkbox"> Integridade / Costura
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -921,61 +916,49 @@ function renderDrawerTab(p) {
             <div class="detail-section" style="margin-top:20px;">
                 <div class="detail-section-title">Decisão Final</div>
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn btn-outline" style="flex:1; border-color:var(--red); color:var(--red);" onclick="moverEtapa('${p.id}', 'Costura')">❌ REPROVAR (Voltar para Costura)</button>
-                    <button class="btn" style="flex:2; background:var(--blurple); color:white; font-weight:800;" onclick="moverEtapa('${p.id}', 'Expedicao')">✅ APROVADO (Mover para Expedição)</button>
+                    <button class="btn btn-outline" style="flex:1; border-color:var(--red); color:var(--red);" onclick="moverEtapa('${p.id}', 'Costura')">❌ REPROVAR</button>
+                    <button class="btn" style="flex:2; background:var(--blurple); color:white; font-weight:800;" onclick="moverEtapa('${p.id}', 'Expedicao')">✅ APROVADO</button>
                 </div>
             </div>
         `;
     }
     else if (drawerTab === 'expedicao') {
         contentHtml = `
-            <div class="detail-section" style="margin-top:0;">
-                <div class="detail-section-title">🚚 EXPEDIÇÃO E LOGÍSTICA</div>
-                
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px;">
-                    <div style="background:var(--surface-color); padding:15px; border-radius:8px; border:1px solid var(--border);">
-                        <div style="font-weight:800; font-size:11px; margin-bottom:12px; color:var(--text-3); text-transform:uppercase;">📦 DADOS DE ENVIO</div>
-                        <div class="detail-grid" style="grid-template-columns: 1fr; gap:10px;">
-                            <div class="detail-item">
-                                <div style="font-size:11px; color:var(--text-3);">Cliente:</div>
-                                <div style="font-weight:700;">${p.cliente || 'Consumidor Final'}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div style="font-size:11px; color:var(--text-3);">Endereço:</div>
-                                <div style="font-size:12px;">Rua Exemplo, 123 - São Paulo/SP</div>
-                            </div>
-                            <div style="margin-top:5px;">
-                                <div style="font-size:11px; color:var(--text-3); margin-bottom:5px;">Transportadora:</div>
-                                <select class="modal-input" style="width:100%;">
-                                    <option>Correios (PAC)</option>
-                                    <option>Correios (SEDEX)</option>
-                                    <option>Jadlog</option>
-                                    <option>Retirada Local</option>
-                                </select>
-                            </div>
+            <div id="section-expedicao-data" class="collapsible-section" style="border:1px solid var(--border); border-radius:12px; overflow:hidden; background:white; margin-top:0">
+                <div class="section-header" onclick="toggleSection('section-expedicao-data')">
+                    <h4>🚚 DADOS DE ENVIO</h4>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="section-content" style="padding:16px">
+                    <div style="display:grid; grid-template-columns: 1fr; gap:12px;">
+                        <div style="background:var(--surface-1); padding:10px; border-radius:8px;">
+                            <div style="font-size:10px; color:var(--text-3); text-transform:uppercase;">Cliente</div>
+                            <div style="font-weight:700; font-size:14px;">${p.cliente || 'Consumidor Final'}</div>
                         </div>
-                    </div>
-
-                    <div style="background:var(--surface-color); padding:15px; border-radius:8px; border:1px solid var(--border);">
-                        <div style="font-weight:800; font-size:11px; margin-bottom:12px; color:var(--text-3); text-transform:uppercase;">🎫 RASTREIO E NOTIFICAÇÃO</div>
-                        <div style="display:flex; flex-direction:column; gap:10px;">
-                            <input type="text" class="modal-input" placeholder="Código de Rastreio" style="width:100%;">
-                            
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-                                <button class="btn btn-outline" style="font-size:11px; padding:8px;" onclick="alert('Enviando WhatsApp...')">💬 WhatsApp</button>
-                                <button class="btn btn-outline" style="font-size:11px; padding:8px;" onclick="alert('Enviando E-mail...')">📧 E-mail</button>
-                            </div>
-                            
-                            <button class="btn" style="width:100%; height:45px; background:var(--blurple); color:white; font-size:12px; font-weight:700; gap:8px;" onclick="alert('Gerando Etiqueta...')">
-                                🖨️ Gerar Etiqueta de Envio
-                            </button>
+                        <div style="background:var(--surface-1); padding:10px; border-radius:8px;">
+                            <div style="font-size:10px; color:var(--text-3); text-transform:uppercase;">Transportadora</div>
+                            <select class="modal-input" style="width:100%; margin-top:5px;">
+                                <option>Correios (PAC/SEDEX)</option>
+                                <option>Jadlog</option>
+                                <option>Retirada Local</option>
+                            </select>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <div id="section-expedicao-label" class="collapsible-section" style="border:1px solid var(--border); border-radius:12px; overflow:hidden; background:white; margin-top:8px">
+                <div class="section-header" onclick="toggleSection('section-expedicao-label')">
+                    <h4>🎫 RASTREIO E ETIQUETA</h4>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="section-content" style="padding:16px">
+                    <input type="text" class="modal-input" placeholder="Código de Rastreio" style="width:100%; margin-bottom:10px">
+                    <button class="btn" style="width:100%; background:var(--blurple); color:white; height:40px; font-weight:700;" onclick="alert('Gerando Etiqueta...')">🖨️ Gerar Etiqueta de Envio</button>
+                </div>
+            </div>
+
             <div class="detail-section" style="margin-top:20px;">
-                <div class="detail-section-title">Finalizar Pedido</div>
                 <button class="btn" style="width:100%; height:56px; background:var(--green); color:#000; font-weight:900; font-size:16px;" onclick="moverEtapa('${p.id}', 'Finalizado')">🏁 CONCLUIR E BAIXAR ESTOQUE</button>
             </div>
         `;
