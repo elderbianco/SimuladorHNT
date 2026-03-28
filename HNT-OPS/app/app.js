@@ -171,7 +171,6 @@ function renderStats() {
 }
 
 // ── Table ─────────────────────────────────────────────────
-// ── Table ─────────────────────────────────────────────────
 function renderTable(data) {
     const tbody = $('table-body');
     tbody.innerHTML = '';
@@ -183,7 +182,7 @@ function renderTable(data) {
         const produtos = p.produtos || [p];
         const numProdutos = produtos.length;
         const isMulti = numProdutos > 1;
-        const hasPendencia = p.etapa === 'Pendencia' || p.etapa === 'Tendencia';
+        const hasPendencia = p.etapa === 'Pendencia' || p.etapa === 'Tendencia' || p.pendencia;
 
         // --- LINHA PAI (PEDIDO) ---
         const parentTr = document.createElement('div');
@@ -197,6 +196,8 @@ function renderTable(data) {
         const statusIcon = hasPendencia
             ? '<span style="color:var(--red); cursor:help" title="Pedido com Pendência">⚠️</span>'
             : '<span style="color:var(--green)" title="Validado">✅</span>';
+
+        const pendenciaTexto = hasPendencia ? (p.pendenciaMotivo || 'Aguardando Resolução') : '--';
 
         parentTr.innerHTML = `
             <div class="cell-order">
@@ -218,6 +219,7 @@ function renderTable(data) {
             </div>
             <div class="cell-sla">${slaPhaseInfo(p).label}</div>
             <div class="cell-status" style="text-align:center">${statusIcon}</div>
+            <div class="cell-pendencia" style="font-size:11px; color:${hasPendencia ? 'var(--red)' : 'var(--text-4)'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${pendenciaTexto}">${pendenciaTexto}</div>
             <div class="cell-prioridade" style="font-weight:800; color:${p.urgente ? 'var(--red)' : 'transparent'}">${p.urgente ? '🔴 URGENTE' : '--'}</div>
         `;
         parentTr.onclick = () => openDrawer(p.id);
@@ -234,6 +236,7 @@ function renderTable(data) {
                 const childTr = document.createElement('div');
                 childTr.className = 'table-row child';
                 const simId = prod.dadosTecnicos?.simulationId || '--';
+                const itemPendencia = prod.pendencia || hasPendencia; // Herda do pai se pai tiver pendencia global
 
                 childTr.innerHTML = `
                     <div class="cell-order">
@@ -246,13 +249,14 @@ function renderTable(data) {
                         <span class="sku-badge" style="background:#f0f0f0; border-color:#ccc; color:#666">${prod.sku}</span>
                     </div>
                     <div class="cell-qty">${prod.quantidade}× <span style="font-size:10px">${prod.tamanho}</span></div>
-                    <div class="cell-date" style="color:var(--text-4)">--</div>
-                    <div class="cell-prazo" style="color:var(--text-4)">--</div>
+                    <div class="cell-date" style="color:var(--text-4)">${p.dataCriacao}</div>
+                    <div class="cell-prazo" style="color:var(--text-4)">${p.prazo}</div>
                     <div class="cell-etapa">
                         <span style="font-size:10px; color:var(--text-3); text-transform:uppercase; font-weight:700;">${prod.tecnica}</span>
                     </div>
                     <div class="cell-sla" style="color:var(--text-4)">--</div>
-                    <div class="cell-status" style="text-align:center; opacity:0.5">${statusIcon}</div>
+                    <div class="cell-status" style="text-align:center; opacity:0.7">${statusIcon}</div>
+                    <div class="cell-pendencia" style="font-size:10px; color:var(--text-4); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${pendenciaTexto}</div>
                     <div class="cell-prioridade" style="color:var(--text-4)">--</div>
                 `;
                 childTr.onclick = (e) => {
