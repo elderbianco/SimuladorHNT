@@ -488,6 +488,11 @@ function renderDrawerFooter(p) {
 }
 
 function renderDrawerTab(p) {
+    if (drawerTab === 'status') {
+        renderStatusTab(p);
+        return;
+    }
+
     const body = $('drawer-body');
     let contentHtml = '';
     const produtos = p.produtos || [p];
