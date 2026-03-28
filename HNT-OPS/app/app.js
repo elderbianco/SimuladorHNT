@@ -1,5 +1,5 @@
 /* ============================================================
-   HNT-OPS — App Logic v3.02 (Layout Refined)
+   HNT-OPS — App Logic v4.03 (Final Production Release)
    ============================================================ */
 
 // ── State Data (Configurável via Admin) ──────────────────
@@ -922,6 +922,40 @@ function renderDrawerTab(p) {
             </div>
         `;
     }
+    else if (drawerTab === 'pendencia' || p.etapa === 'Pendencia') {
+        const info = p.pendenciaInfo || {};
+        contentHtml = `
+            <div class="detail-section" style="margin-top:0; border:2px solid var(--red); padding:20px; border-radius:12px; background:rgba(239, 68, 68, 0.05);">
+                <div class="detail-section-title" style="color:var(--red); display:flex; align-items:center; gap:10px;">
+                    <span>⚠️ PEDIDO EM PENDÊNCIA</span>
+                </div>
+                
+                <div style="margin-top:15px;">
+                    <div style="font-size:12px; color:var(--text-3); font-weight:800; text-transform:uppercase;">Motivo da Trava:</div>
+                    <div style="font-size:18px; font-weight:900; color:var(--red); margin-top:5px;">${info.motivo || 'Não especificado'}</div>
+                </div>
+
+                <div style="margin-top:20px;">
+                    <div style="font-size:12px; color:var(--text-3); font-weight:800; text-transform:uppercase;">Descrição / Observação:</div>
+                    <div style="font-size:14px; background:white; padding:15px; border-radius:8px; border:1px solid var(--border); margin-top:5px; line-height:1.5;">
+                        ${info.observacao || 'Sem descrição detalhada.'}
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-3);">
+                    <span>Identificado por: <b>${info.operador || 'Sistema'}</b></span>
+                    <span>Data: <b>${info.data ? new Date(info.data).toLocaleString() : '--'}</b></span>
+                </div>
+            </div>
+
+            <div style="margin-top:30px; text-align:center;">
+                <p style="font-size:13px; color:var(--text-2); margin-bottom:15px;">Após resolver o problema acima, clique no botão abaixo para retornar o pedido à sua etapa de origem (<b>${info.etapaAnterior || 'Preparação'}</b>).</p>
+                <button class="btn" style="width:100%; height:56px; background:var(--green); color:#000; font-weight:900; font-size:18px;" onclick="retomarPedido('${p.id}')">
+                    ✅ RESOLVIDO (Retomar Produção)
+                </button>
+            </div>
+        `;
+    }
     else {
         contentHtml = `<div style="padding:40px; text-align:center; color:var(--text-3);">
             <h3 style="margin-bottom:10px; color:var(--text-1); font-weight:800; font-size:18px;">Aba ${drawerTab.toUpperCase()}</h3>
@@ -1123,6 +1157,12 @@ async function sendChat() {
 async function moverEtapa(id, novaEtapa) {
     const p = PEDIDOS.find(x => x.id === id);
     if (!p || p.etapa === novaEtapa) return;
+
+    // Caso especial: Pendência (Abre Modal primeiro)
+    if (novaEtapa === 'Tendencia' || novaEtapa === 'Pendencia') {
+        openPendenciaModal(id);
+        return;
+    }
 
     // Se estivermos em um setor, vamos pedir quem é o operador (Opcional, mas bom para o BI)
     if (typeof openOpSelect === 'function' && !currentOperador) {
@@ -3793,4 +3833,161 @@ function renderArteDev() {
 
     html += `</div>`;
     body.innerHTML = html;
+}
+
+// ── GESTÃO DE PENDÊNCIAS (Módulo Transversal) ──────────────────
+
+const MOTIVOS_PENDENCIA = [
+    "Falta de Tecido", "Falta de Elástico", "Falta de Linha",
+    "Arte Pendente", "Arte Corrompida", "Erro de Máquina",
+    "Dúvida de Cliente", "Dúvida de Vendas", "Descrição Incompleta",
+    "Erro de Bordado", "Erro de Costura", "Erro de Expedição"
+];
+
+function openPendenciaModal(id) {
+    selectedId = id;
+    const p = PEDIDOS.find(x => x.id === id);
+    if (!p) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-backdrop';
+    modal.id = 'pendencia-modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:400px; padding:25px; border-radius:15px; border:2px solid var(--red);">
+            <h2 style="color:var(--red); margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+                ⚠️ Marcar Pendência
+            </h2>
+            <p style="font-size:13px; color:var(--text-3); margin-bottom:20px;">
+                O pedido <b>#${p.numero}</b> será bloqueado até que o problema seja resolvido.
+            </p>
+            
+            <div style="margin-bottom:15px;">
+                <label style="font-size:11px; font-weight:800; color:var(--text-3); text-transform:uppercase;">Motivo da Trava:</label>
+                <select class="modal-input" id="pendencia-motivo" style="width:100%; margin-top:5px;">
+                    ${MOTIVOS_PENDENCIA.map(m => `<option value="${m}">${m}</option>`).join('')}
+                    <option value="outro">+ Outro motivo...</option>
+                </select>
+                <input type="text" id="pendencia-outro" class="modal-input" placeholder="Especifique o motivo..." style="width:100%; margin-top:8px; display:none;">
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label style="font-size:11px; font-weight:800; color:var(--text-3); text-transform:uppercase;">Descrição Detalhada:</label>
+                <textarea class="modal-input" id="pendencia-obs" style="width:100%; height:80px; margin-top:5px;" placeholder="Explique o que aconteceu..."></textarea>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('pendencia-modal').remove()">Cancelar</button>
+                <button class="btn" style="flex:2; background:var(--red); color:white; font-weight:800;" onclick="confirmarPendencia('${id}')">BLOQUEAR PEDIDO</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    const select = $('pendencia-motivo');
+    const outro = $('pendencia-outro');
+    select.addEventListener('change', () => {
+        outro.style.display = select.value === 'outro' ? 'block' : 'none';
+    });
+}
+
+async function confirmarPendencia(id) {
+    const p = PEDIDOS.find(x => x.id === id);
+    const mSelect = $('pendencia-motivo');
+    const mOutro = $('pendencia-outro');
+    const motivo = mSelect.value === 'outro' ? mOutro.value : mSelect.value;
+    const obs = $('pendencia-obs').value;
+
+    if (!motivo || motivo === 'outro') return alert('Selecione um motivo válido.');
+
+    const info = {
+        etapaAnterior: p.etapa,
+        motivo: motivo,
+        observacao: obs,
+        data: new Date().toISOString(),
+        operador: currentOperador ? currentOperador.nome : 'Sistema'
+    };
+
+    // Salvar no estado local (e futuramente no DB)
+    p.pendenciaInfo = info;
+    p.alerta = 'Vermelho'; // Força alerta visual
+
+    await executeMove(id, 'Pendencia', p);
+    document.getElementById('pendencia-modal').remove();
+    alert(`Pedido #${p.numero} marcado como PENDENTE.`);
+}
+
+async function retomarPedido(id) {
+    const p = PEDIDOS.find(x => x.id === id);
+    if (!p || !p.pendenciaInfo) return;
+
+    const etapaDestino = p.pendenciaInfo.etapaAnterior || 'Preparacao';
+    delete p.pendenciaInfo;
+    p.alerta = 'Verde'; // Reset alerta
+
+    await executeMove(id, etapaDestino, p);
+    alert(`Pedido #${p.numero} retomado para a etapa ${etapaDestino}.`);
+}
+
+// ── CONSULTA DE STATUS (Cliente) ──────────────────────────────────
+
+function openStatusCheck() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-backdrop';
+    modal.id = 'status-modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:500px; padding:30px; border-radius:20px;">
+            <h2 style="margin-bottom:20px; font-weight:800;">🔍 Consultar Status do Pedido</h2>
+            <p style="font-size:14px; color:var(--text-3); margin-bottom:20px;">Insira o número do pedido para ver a etapa atual de produção.</p>
+            
+            <div style="display:flex; gap:10px; margin-bottom:25px;">
+                <input type="text" id="status-query" class="modal-input" placeholder="Ex: 54321 ou 54321, 54322" style="flex:1; font-size:16px;">
+                <button class="btn" style="background:var(--blurple); color:white; padding:0 25px;" onclick="buscarStatus()">BUSCAR</button>
+            </div>
+
+            <div id="status-results" style="max-height:300px; overflow-y:auto; border-radius:10px;">
+                <!-- Resultados aqui -->
+            </div>
+            
+            <button class="btn btn-outline" style="width:100%; margin-top:20px;" onclick="document.getElementById('status-modal').remove()">Fechar</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function buscarStatus() {
+    const query = $('status-query').value;
+    const resultsWrap = $('status-results');
+    if (!query) return;
+
+    const ids = query.split(/[, ]+/).map(s => s.trim()).filter(s => s);
+    let html = '';
+
+    ids.forEach(num => {
+        const p = PEDIDOS.find(x => x.numero == num);
+        if (p) {
+            const label = ETAPA_LABELS[p.etapa] || p.etapa;
+            const icon = ETAPA_ICONS[p.etapa] || '📦';
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:var(--surface-2); margin-bottom:8px; border-radius:10px; border:1px solid var(--border);">
+                    <div>
+                        <div style="font-weight:800; font-size:12px; color:var(--text-3);">PEDIDO #${p.numero}</div>
+                        <div style="font-weight:700; font-size:14px;">${p.cliente}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:20px;">${icon}</div>
+                        <div style="font-weight:900; font-size:11px; color:var(--blurple); text-transform:uppercase;">${label}</div>
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div style="padding:15px; background:var(--surface-color); margin-bottom:8px; border-radius:10px; border:1px solid var(--red); opacity:0.7;">
+                    <div style="font-weight:800; font-size:12px; color:var(--red);">#${num} - NÃO ENCONTRADO</div>
+                    <div style="font-size:12px; color:var(--text-3);">Verifique o número ou tente novamente mais tarde.</div>
+                </div>
+            `;
+        }
+    });
+
+    resultsWrap.innerHTML = html;
 }
