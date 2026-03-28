@@ -1,5 +1,5 @@
 /* ============================================================
-   HNT-OPS (v4.06 - Final Production Release)
+   HNT-OPS (v4.07 - Status PRO Release)
    ============================================================ */
 
 // ── State Data (Configurável via Admin) ──────────────────
