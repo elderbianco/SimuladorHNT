@@ -881,7 +881,7 @@ input {
 
 .table-header {
   display: grid;
-  grid-template-columns: 100px 180px 50px 130px 60px 100px 100px 150px 120px 60px 1fr;
+  grid-template-columns: 100px 160px 50px 120px 60px 100px 100px 140px 120px 40px 100px 1fr;
   gap: 0;
   padding: 0 16px;
   height: 36px;
@@ -924,7 +924,7 @@ input {
 
 .table-header {
   display: grid;
-  grid-template-columns: 100px 180px 50px 130px 60px 100px 100px 150px 120px 60px 1fr;
+  grid-template-columns: 100px 160px 50px 120px 60px 100px 100px 140px 120px 40px 100px 1fr;
   gap: 0;
   padding: 0 16px;
   height: 42px;
@@ -943,7 +943,7 @@ input {
 
 .table-row {
   display: grid;
-  grid-template-columns: 100px 180px 50px 130px 60px 100px 100px 150px 120px 60px 1fr;
+  grid-template-columns: 100px 160px 50px 120px 60px 100px 100px 140px 120px 40px 100px 1fr;
   gap: 0;
   padding: 0 16px;
   height: 48px;
@@ -4668,4 +4668,5 @@ input {
   color: var(--red);
   font-weight: 900;
 }
+
 
