@@ -126,6 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderStats();
     renderTable(PEDIDOS);
     renderKanban(PEDIDOS);
+    renderArteDev(); // Phase 3
     bindNav();
     bindTabs();
     bindQR();
@@ -351,8 +352,20 @@ function openDrawer(id) {
     const p = PEDIDOS.find(x => x.id.toString() == id.toString());
     if (!p) return;
     const produtos = p.produtos || [p];
-    // Abrir na aba inicial 'preparacao'
-    drawerTab = 'preparacao';
+
+    // Inteligência: Abrir na aba da Etapa atual (Phase 3)
+    const mapEtapaTab = {
+        'Preparação': 'preparacao',
+        'Separação': 'separacao',
+        'Arte': 'arte',
+        'Bordado': 'bordado',
+        'Costura': 'costura',
+        'Qualidade': 'qualidade',
+        'Expedição': 'expedicao',
+        'Pendencia': 'pendencia'
+    };
+    drawerTab = mapEtapaTab[p.etapa] || 'preparacao';
+
     renderDrawer(p);
     $('drawer-overlay').classList.add('open');
     $('drawer').classList.add('open');
@@ -424,25 +437,25 @@ function renderDrawerTab(p) {
     let contentHtml = '';
     const produtos = p.produtos || [p];
     const numProdutos = produtos.length;
-    
+
     // Status do Prazo SEMAÁFORO
     let pd = new Date();
     let prazo = new Date();
     if (p.data_entrada) pd = new Date(p.data_entrada);
     if (p.data_entrega) prazo = new Date(p.data_entrega);
-    
+
     const hj = new Date();
     const isLate = hj > prazo;
     const isWarning = (prazo - hj) < (3 * 24 * 60 * 60 * 1000) && !isLate;
     const semaforoCor = isLate ? 'var(--red)' : (isWarning ? 'var(--amber)' : 'var(--green)');
     const semaforoLabel = isLate ? 'ATRASADO' : (isWarning ? 'ATENÇÃO (VENCE EM BREVE)' : 'NO PRAZO');
-    
+
     if (drawerTab === 'preparacao') {
         const iconAtual = ETAPA_ICONS[p.etapa] || '📋';
-        
+
         let pendenciasHtml = '';
         if (p.etapa === 'Pendencia') {
-           pendenciasHtml = `
+            pendenciasHtml = `
              <div style="background:var(--red-dim); border-left:4px solid var(--red); padding:15px; border-radius:4px; margin-bottom:15px;">
                <h4 style="color:var(--red); font-weight:800; margin:0 0 10px 0;">⚠️ PEDIDO COM PENDÊNCIA</h4>
                <p style="margin:0; font-size:14px; color:var(--text-1);">Este pedido está travado e aguarda resolução. Entre em contato com o cliente.</p>
@@ -516,11 +529,175 @@ function renderDrawerTab(p) {
                 </div>
             </div>
         `;
-    } 
+    }
+    else if (drawerTab === 'separacao') {
+        const iconAtual = ETAPA_ICONS[p.etapa] || '📦';
+
+        let painelHexHtml = '';
+        let itensHtml = '';
+
+        produtos.forEach((prod, idx) => {
+            const indexLabel = numProdutos > 1 ? `<div style="font-weight:800; color:var(--blurple); margin-top:20px; text-transform:uppercase; font-size:12px">PRODUTO ${idx + 1}: ${prod.sku || p.sku}</div>` : '';
+
+            const dt = prod.dadosTecnicos || p.dadosTecnicos || {};
+            const gradeText = prod.tamanho || p.tamanho || 'Tamanho Único';
+            const partes = (dt.cores && typeof dt.cores === 'object') ? dt.cores : {};
+
+            let colorRows = '';
+            for (const [parte, hex] of Object.entries(partes)) {
+                if (hex && String(hex).startsWith('#')) {
+                    colorRows += `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                      <div class="color-swatch-hex" style="width:30px; height:30px; border-radius:4px; background:${hex}; border:1px solid #000; box-shadow:0 2px 4px rgba(0,0,0,0.1)"></div>
+                      <div style="font-size:13px; font-weight:600; text-transform:capitalize;">${PART_LABEL_MAP[parte] || parte.replace(/_/g, ' ')} <span style="color:var(--text-3); font-weight:400; font-size:11px;">(${hex})</span></div>
+                    </div>`;
+                }
+            }
+            if (!colorRows) colorRows = '<div style="font-size:12px;color:var(--text-3);">Nenhuma cor hexadecimal registrada no Simulador.</div>';
+
+            painelHexHtml += `
+                ${indexLabel}
+                <div style="background:var(--surface-color); padding:10px; border-radius:8px; border:1px solid var(--border); margin-top:10px;">
+                    ${colorRows}
+                </div>
+            `;
+
+            const maxPecas = parseInt(prod.quantidade || p.quantidade || 1);
+            let checkPecas = '';
+            for (let i = 1; i <= maxPecas; i++) {
+                checkPecas += `
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; margin-bottom:5px; background:var(--surface-color); border-radius:6px; border:1px solid var(--border);">
+                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex: 1;">
+                         <input type="checkbox" class="modal-input" style="width:18px; height:18px; margin:0;" onclick="this.parentNode.parentNode.style.opacity = this.checked ? '0.5' : '1'">
+                         <span style="font-weight:700; font-size:13px;">Peça ${i} de ${maxPecas}</span>
+                         <span style="font-size:11px; color:var(--text-3); background:var(--surface-2); padding:2px 6px; border-radius:4px;">${gradeText}</span>
+                     </label>
+                     <button class="btn btn-outline" style="font-size:10px; padding:4px 8px; border-color:var(--text-3);" onclick="alert('Gerando Etiqueta QR para Pedido ${p.numero} - Peça ${i}...')">
+                        🖨️ QR
+                     </button>
+                  </div>
+                `;
+            }
+
+            itensHtml += `
+                ${indexLabel}
+                <div style="margin-top:10px;">${checkPecas}</div>
+            `;
+        });
+
+        contentHtml = `
+            <div class="detail-section" style="margin-top:0;">
+                <div class="detail-section-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>📦 SEPARAÇÃO (Insumos e Estoque)</span>
+                    <span style="font-size:12px; font-weight:700; color:var(--text-3);">OS: ${p.numero}</span>
+                </div>
+                
+                <div class="detail-grid" style="margin-top:15px; grid-template-columns: 1fr;">
+                    <div class="detail-item full" style="border:1px solid var(--border); padding:15px; border-radius:8px; background:var(--surface-color);">
+                        <div style="font-weight:800; font-size:13px; margin-bottom:12px; color:var(--text-1);">📋 CHECKLIST DE INSUMOS GERAIS</div>
+                        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" style="width:16px; height:16px;"> <span style="font-weight:600;">Tecido Principal</span></label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" style="width:16px; height:16px;"> <span style="font-weight:600;">Linhas</span></label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" style="width:16px; height:16px;"> <span style="font-weight:600;">Elásticos/Aviamentos</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:15px; margin-top:20px; flex-wrap:wrap;">
+                    <div style="flex: 2; min-width:300px;">
+                        <div style="font-weight:800; font-size:13px; margin-bottom:12px; color:var(--text-2);">CONFERÊNCIA INDIVIDUAL DE PEÇAS</div>
+                        ${itensHtml}
+                        <button class="btn btn-outline" style="width:100%; margin-top:15px; border-color:var(--blurple); color:var(--blurple); font-weight:800;" onclick="alert('Lote de etiquetas enviado para impressão.')">🖨️ Imprimir Lote de Etiquetas (${numProdutos} itens)</button>
+                    </div>
+                    
+                    <div style="flex: 1; min-width:250px;">
+                        <div style="font-weight:800; font-size:13px; margin-bottom:12px; color:var(--text-2);">GUIA DE CORES HEX</div>
+                        ${painelHexHtml}
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section" style="margin-top:20px;">
+                <div class="detail-section-title">Validação da Etapa</div>
+                <label style="font-size:12px; font-weight:700; color:var(--text-3);">Observações de Separação (aparecem no PDF de saída):</label>
+                <textarea class="modal-input" placeholder="Ex: Tecido lote B, elástico 20mm..." id="input-separacao-obs" style="height:60px; margin:8px 0; border:1px solid var(--border);">${p.observacoes || ''}</textarea>
+                
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn btn-outline" style="flex:1; border-color:var(--red); color:var(--red);" onclick="moverEtapa('${p.id}', 'Pendencia')">🚩 MARCAR PENDÊNCIA</button>
+                    <button class="btn" style="flex:2; background:var(--green); color:#000; font-weight:800;" onclick="moverEtapa('${p.id}', 'Arte')">✅ ENVIAR PARA ARTE / DESENVOLVIMENTO</button>
+                </div>
+            </div>
+        `;
+    }
+    else if (drawerTab === 'arte') {
+        let artesHtml = '';
+
+        produtos.forEach((prod, idx) => {
+            const dt = prod.dadosTecnicos || p.dadosTecnicos || {};
+            const indexLabel = numProdutos > 1 ? `<div style="font-weight:800; color:var(--blurple); margin-top:20px; text-transform:uppercase; font-size:12px">ARTE DO PRODUTO ${idx + 1}</div>` : '';
+
+            // Textos e Fontes
+            let textosHtml = '';
+            if (dt.texts && dt.texts.length > 0) {
+                textosHtml = dt.texts.map(t => `<div style="padding:8px; background:var(--surface-2); border-radius:6px; margin-bottom:5px; border-left:3px solid var(--blurple)">
+                  <div style="font-size:10px; color:var(--text-3); text-transform:uppercase;">${t.position || 'Posição'}</div>
+                  <div style="font-weight:700; font-size:14px;">"${t.content || '-'}"</div>
+                  <div style="font-size:11px; color:var(--text-2)">Fonte: ${t.font || 'Padrão'}</div>
+               </div>`).join('');
+            } else {
+                textosHtml = '<div style="font-size:12px; color:var(--text-3)">Nenhum texto personalizado.</div>';
+            }
+
+            // Links de arquivos Enviados pelo Cliente e artes prontas (EMB)
+            const links = [
+                { label: 'Original/Referência', url: prod.mockupUrl || p.pdfUrl, icon: '🖼️' },
+                { label: 'Arquivo EMB (Bordado)', url: prod.emb || p.emb, icon: '🧵' }
+            ].filter(l => l.url);
+
+            artesHtml += `
+                ${indexLabel}
+                <div style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:200px;">
+                        <div style="font-weight:800; font-size:11px; margin-bottom:8px; color:var(--text-3);">REFERÊNCIAS & TEXTOS</div>
+                        ${textosHtml}
+                    </div>
+                    <div style="flex:1; min-width:200px;">
+                        <div style="font-weight:800; font-size:11px; margin-bottom:8px; color:var(--text-3);">ARQUIVOS TÉCNICOS</div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            ${links.map(l => `<button class="btn btn-outline" style="justify-content:flex-start; font-size:12px;" onclick="window.open('${l.url}', '_blank')">${l.icon} ${l.label}</button>`).join('')}
+                            <div style="border: 2px dashed var(--border); padding: 10px; border-radius: 6px; text-align: center; cursor: pointer; background: var(--surface-2);" onclick="alert('Upload de Vetor/Arte final em breve...')">
+                                <div style="font-size:18px;">📁</div>
+                                <div style="font-size:10px; font-weight:700; color:var(--text-3);">Anexar VETOR / FINAL</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        contentHtml = `
+            <div class="detail-section" style="margin-top:0;">
+                <div class="detail-section-title">✒️ DESENVOLVIMENTO DE ARTE</div>
+                ${artesHtml}
+            </div>
+
+            <div class="detail-section" style="margin-top:20px;">
+                <div class="detail-section-title">Status da Arte</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                   <button class="btn btn-outline" style="border-color:var(--amber); color:var(--amber);" onclick="alert('Status: Em Desenvolvimento')">🕒 Em Desenvolvimento</button>
+                   <button class="btn btn-outline" style="border-color:var(--green); color:var(--green);" onclick="alert('Status: Banco de Imagens (Pronta)')">🏛️ Banco de Imagens</button>
+                </div>
+                
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="btn btn-outline" style="flex:1; border-color:var(--red); color:var(--red);" onclick="moverEtapa('${p.id}', 'Pendencia')">🚩 Pendência de Arte</button>
+                    <button class="btn" style="flex:2; background:var(--blurple); color:white; font-weight:800;" onclick="moverEtapa('${p.id}', 'Bordado')">✅ ARTE APROVADA (Mover Bordado)</button>
+                </div>
+            </div>
+        `;
+    }
     else {
         contentHtml = `<div style="padding:40px; text-align:center; color:var(--text-3);">
             <h3 style="margin-bottom:10px; color:var(--text-1); font-weight:800; font-size:18px;">Aba ${drawerTab.toUpperCase()}</h3>
-            <p>Em desenvolvimento na próxima fase. Estamos refatorando por partes.</p>
+            <p>Aba em desenvolvimento para a etapa ${p.etapa}. Estamos refatorando o sistema de artes e separação primeiro.</p>
         </div>`;
     }
 
@@ -750,6 +927,9 @@ async function executeMove(id, novaEtapa, p) {
         renderDrawer(p);
         renderTable(filterData());
         renderKanban(filterData());
+        if (currentView === 'arte_dev') renderArteDev();
+        renderTable(filterData());
+        renderKanban(filterData());
         renderStats();
 
         setTimeout(() => {
@@ -895,7 +1075,13 @@ function switchView(el) {
     currentView = el.dataset.view;
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const target = $(currentView + '-view');
-    if (target) target.classList.add('active');
+    if (target) {
+        target.classList.add('active');
+        if (currentView === 'arte_dev') renderArteDev();
+        if (currentView === 'lista') renderTable(filterData());
+        if (currentView === 'kanban') renderKanban(PEDIDOS);
+        if (currentView === 'producao') renderProducao();
+    }
 }
 
 function showAdminAuth(targetView, onSuccess) {
@@ -3311,3 +3497,72 @@ async function sendChat() {
     if (p) renderDrawerTab(p);
 }
 
+
+/**
+ * ── Desenvolvimento de Arte Bordado ──────────────
+ * View lateral exclusiva solicitada na Phase 3
+ */
+function renderArteDev() {
+    const body = $('arte-dev-body');
+    if (!body) return;
+
+    // Filtra pedidos que estão na etapa de 'Arte'
+    const pedidosEmArte = PEDIDOS.filter(p => p.etapa === 'Arte');
+
+    if (pedidosEmArte.length === 0) {
+        body.innerHTML = `
+            <div style="text-align:center; padding:60px; color:var(--text-3);">
+                <div style="font-size:64px; margin-bottom:15px; opacity:0.3">✒️</div>
+                <div style="font-weight:700; color:var(--text-2); font-size:20px;">Fila de artes vazia</div>
+                <p>Nenhum pedido aguarda desenvolvimento de arte no momento.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `
+        <div style="margin-bottom:20px; font-size:14px; color:var(--text-2); display:flex; justify-content:space-between; align-items:center;">
+            <span><b>Fila de Produção:</b> ${pedidosEmArte.length} pedidos aguardando desenhos ou aprovação de bordado.</span>
+            <button class="btn btn-ghost" onclick="renderArteDev()">🔄 Atualizar Fila</button>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:15px;">
+    `;
+
+    pedidosEmArte.forEach(p => {
+        const d = p.produtos ? p.produtos[0] : p;
+        const dt = d.dadosTecnicos || {};
+
+        // Coleta miniaturas (mockups ou links de cliente)
+        let miniSet = [];
+        if (d.mockupUrl) miniSet.push(d.mockupUrl);
+        if (dt.uploads && dt.uploads.length > 0) {
+            dt.uploads.forEach(u => miniSet.push(u.url));
+        }
+        miniSet = miniSet.slice(0, 4);
+
+        html += `
+            <div class="order-card" onclick="openDrawer('${p.id}')" style="cursor:pointer; transition: transform 0.2s; border:1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:10px; color:var(--text-3); font-weight:800; text-transform:uppercase;">PEDIDO #${p.numero}</div>
+                        <div style="font-weight:900; font-size:18px; color:var(--blurple);">${p.cliente}</div>
+                    </div>
+                     <span style="background:var(--blurple-dim); color:var(--blurple); padding:4px 10px; border-radius:12px; font-size:11px; font-weight:900;">${p.tecnica || 'Bordado'}</span>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;">
+                    ${miniSet.map(url => `<img src="${url}" style="width:60px; height:60px; border-radius:6px; object-fit:cover; border:1px solid var(--border); background:white;">`).join('')}
+                    ${miniSet.length === 0 ? `<div style="width:60px; height:60px; border-radius:6px; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; color:var(--text-3); font-size:10px; text-align:center;">S/ Img Cliente</div>` : ''}
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <button class="btn btn-outline" style="flex:1; font-size:11px; padding:8px; font-weight:800;" onclick="event.stopPropagation(); window.open('${p.pdf || '#'}', '_blank')">📑 Abrir PDF</button>
+                    <button class="btn" style="flex:1.2; font-size:11px; padding:8px; background:var(--green); color:#000; font-weight:900;" onclick="event.stopPropagation(); openDrawer('${p.id}'); drawerTab='arte'; renderDrawerTab(PEDIDOS.find(x=>x.id==='${p.id}'));">✒️ Ir p/ Arte</button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    body.innerHTML = html;
+}
