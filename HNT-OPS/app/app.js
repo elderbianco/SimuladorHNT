@@ -869,10 +869,63 @@ function renderDrawerTab(p) {
             </div>
         `;
     }
+    else if (drawerTab === 'expedicao') {
+        contentHtml = `
+            <div class="detail-section" style="margin-top:0;">
+                <div class="detail-section-title">🚚 EXPEDIÇÃO E LOGÍSTICA</div>
+                
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px;">
+                    <div style="background:var(--surface-color); padding:15px; border-radius:8px; border:1px solid var(--border);">
+                        <div style="font-weight:800; font-size:11px; margin-bottom:12px; color:var(--text-3); text-transform:uppercase;">📦 DADOS DE ENVIO</div>
+                        <div class="detail-grid" style="grid-template-columns: 1fr; gap:10px;">
+                            <div class="detail-item">
+                                <div style="font-size:11px; color:var(--text-3);">Cliente:</div>
+                                <div style="font-weight:700;">${p.cliente || 'Consumidor Final'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div style="font-size:11px; color:var(--text-3);">Endereço:</div>
+                                <div style="font-size:12px;">Rua Exemplo, 123 - São Paulo/SP</div>
+                            </div>
+                            <div style="margin-top:5px;">
+                                <div style="font-size:11px; color:var(--text-3); margin-bottom:5px;">Transportadora:</div>
+                                <select class="modal-input" style="width:100%;">
+                                    <option>Correios (PAC)</option>
+                                    <option>Correios (SEDEX)</option>
+                                    <option>Jadlog</option>
+                                    <option>Retirada Local</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--surface-color); padding:15px; border-radius:8px; border:1px solid var(--border);">
+                        <div style="font-weight:800; font-size:11px; margin-bottom:12px; color:var(--text-3); text-transform:uppercase;">🎫 RASTREIO E NOTIFICAÇÃO</div>
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <input type="text" class="modal-input" placeholder="Código de Rastreio" style="width:100%;">
+                            
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                                <button class="btn btn-outline" style="font-size:11px; padding:8px;" onclick="alert('Enviando WhatsApp...')">💬 WhatsApp</button>
+                                <button class="btn btn-outline" style="font-size:11px; padding:8px;" onclick="alert('Enviando E-mail...')">📧 E-mail</button>
+                            </div>
+                            
+                            <button class="btn" style="width:100%; height:45px; background:var(--blurple); color:white; font-size:12px; font-weight:700; gap:8px;" onclick="alert('Gerando Etiqueta...')">
+                                🖨️ Gerar Etiqueta de Envio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section" style="margin-top:20px;">
+                <div class="detail-section-title">Finalizar Pedido</div>
+                <button class="btn" style="width:100%; height:56px; background:var(--green); color:#000; font-weight:900; font-size:16px;" onclick="moverEtapa('${p.id}', 'Finalizado')">🏁 CONCLUIR E BAIXAR ESTOQUE</button>
+            </div>
+        `;
+    }
     else {
         contentHtml = `<div style="padding:40px; text-align:center; color:var(--text-3);">
             <h3 style="margin-bottom:10px; color:var(--text-1); font-weight:800; font-size:18px;">Aba ${drawerTab.toUpperCase()}</h3>
-            <p>Aba em desenvolvimento para a etapa ${p.etapa}. Estamos finalizando a expedição na próxima subfase.</p>
+            <p>Aba de detalhes gerais para o pedido ${p.numero}.</p>
         </div>`;
     }
 
