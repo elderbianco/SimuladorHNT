@@ -351,8 +351,8 @@ function openDrawer(id) {
     const p = PEDIDOS.find(x => x.id.toString() == id.toString());
     if (!p) return;
     const produtos = p.produtos || [p];
-    // Abrir na aba 'itens' se houver mais de 1 produto; senão 'ficha' (Ficha Técnica)
-    drawerTab = produtos.length > 1 ? 'itens' : 'ficha';
+    // Abrir na aba inicial 'preparacao'
+    drawerTab = 'preparacao';
     renderDrawer(p);
     $('drawer-overlay').classList.add('open');
     $('drawer').classList.add('open');
