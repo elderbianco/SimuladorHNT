@@ -4749,3 +4749,40 @@ input {
   white-space: nowrap;
   padding: 0 4px;
 }
+
+/* --- Collapsible Sections (Drawer Status) --- */
+.collapsible-section {
+  margin-bottom: 8px;
+}
+
+.collapsible-section .section-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 10px 16px;
+  background: var(--surface-2);
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.collapsible-section .section-header h4 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-2);
+}
+
+.collapsible-section .section-header .chevron {
+  font-size: 10px;
+  color: var(--text-3);
+  transition: transform 0.2s ease;
+}
+
+.collapsible-section.collapsed .section-content {
+  display: none;
+}
+
+.collapsible-section.collapsed .chevron {
+  transform: rotate(-90deg);
+}
