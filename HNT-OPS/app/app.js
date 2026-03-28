@@ -1,5 +1,5 @@
 /* ============================================================
-   HNT-OPS — App Logic v4.03 (Final Production Release)
+   HNT-OPS (v4.06 - Final Production Release)
    ============================================================ */
 
 // ── State Data (Configurável via Admin) ──────────────────
