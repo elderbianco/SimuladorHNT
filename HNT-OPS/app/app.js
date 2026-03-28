@@ -4087,20 +4087,20 @@ function renderStatusTab(p) {
                 ${items.map(it => {
         const etapaLabel = ETAPA_LABELS[it.etapa] || it.etapa || 'Pendente';
         const color = ETAPA_COLORS[it.etapa] || '#666';
-        return \`
+        return `
                         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:white; border:1px solid var(--border); border-radius:6px">
                             <div style="display:flex; align-items:center; gap:12px">
-                                <span class="sku-badge">\${it.sku}</span>
-                                <span style="font-size:13px; font-weight:600">\${it.tipoProduto || it.sku}</span>
+                                <span class="sku-badge">${it.sku}</span>
+                                <span style="font-size:13px; font-weight:600">${it.tipoProduto || it.sku}</span>
                             </div>
                             <div style="display:flex; align-items:center; gap:8px">
                                 <span style="font-size:11px; color:var(--text-4)">Etapa Atual:</span>
-                                <span style="padding:4px 10px; border-radius:20px; background:\${color}20; color:\${color}; font-size:11px; font-weight:700; text-transform:uppercase">\${etapaLabel}</span>
+                                <span style="padding:4px 10px; border-radius:20px; background:${color}20; color:${color}; font-size:11px; font-weight:700; text-transform:uppercase">${etapaLabel}</span>
                             </div>
                         </div>
-                    \`;
-                }).join('')}
+                    `;
+    }).join('')}
             </div>
         </div>
     `;
-    }
+}
