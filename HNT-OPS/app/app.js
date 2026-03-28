@@ -1,5 +1,5 @@
 /* ============================================================
-   HNT-OPS (v4.07 - Status PRO Release)
+   HNT-OPS (v4.08 - Status PRO Ultra-Dense)
    ============================================================ */
 
 // ── State Data (Configurável via Admin) ──────────────────
@@ -4047,89 +4047,121 @@ function buscarStatus() {
             `;
         }
     });
-
     resultsWrap.innerHTML = html;
 }
 
 /**
- * renderStatusTab (v4.07 PRO)
- * Painel executivo com Timeline de produção e links técnicos.
+ * renderStatusTab (v4.08 PRO Ultra-Dense)
+ * Painel bi-coluna para visibilidade total em uma tela.
  */
 function renderStatusTab(p) {
     const wrap = $('drawer-body');
     const items = p.produtos || [p];
     const isPriority = p.urgente || p.alerta === 'Vermelho';
+    const dt = p.dadosTecnicos || {};
 
     // ── Asset Links ──
-    const dt = p.dadosTecnicos || {};
     const links = [];
-    if (dt.pdfUrl) links.push(`<a href="${dt.pdfUrl}" target="_blank" class="asset-link pdf">📄 Abrir PDF Simulador</a>`);
-    if (dt.layoutUrl || dt.imagemUrl) links.push(`<a href="${dt.layoutUrl || dt.imagemUrl}" target="_blank" class="asset-link layout">🖼️ Ver Layout</a>`);
-    if (dt.embUrl) links.push(`<a href="${dt.embUrl}" target="_blank" class="asset-link emb">🧵 Arquivos EMB</a>`);
+    if (dt.pdfUrl) links.push(`<a href="${dt.pdfUrl}" target="_blank" class="asset-link pdf" style="margin-bottom:6px">📄 PDF Simulador</a>`);
+    if (dt.layoutUrl || dt.imagemUrl) links.push(`<a href="${dt.layoutUrl || dt.imagemUrl}" target="_blank" class="asset-link layout" style="margin-bottom:6px">🖼️ Layout/Img</a>`);
+    if (dt.embUrl) links.push(`<a href="${dt.embUrl}" target="_blank" class="asset-link emb" style="margin-bottom:6px">🧵 Arq. EMB</a>`);
 
     wrap.innerHTML = `
-        <div class="status-pro-container" style="padding:20px; font-family:'Inter Tight', sans-serif">
+        <div class="status-pro-container" style="display:grid; grid-template-columns: 1fr 280px; gap:20px; padding:20px; font-family:'Inter Tight', sans-serif; height:100%; box-sizing:border-box">
             
-            <!-- Executive Summary -->
-            <div class="summary-card" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:20px; padding:16px; background:var(--surface-color); border-radius:12px; border:2px solid ${isPriority ? 'var(--red)' : 'var(--border)'}; position:relative">
-                ${isPriority ? '<div style="position:absolute; top:-12px; right:12px; background:var(--red); color:white; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:900">🔥 PRIORIDADE A MÁXIMA</div>' : ''}
+            <!-- COLUNA ESQUERDA: Resumo e Produtos -->
+            <div class="status-main-col">
                 
-                <div>
-                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Pedido / ID</label>
-                    <div style="font-weight:800; color:var(--gold); font-size:14px">${p.numero} <span style="font-size:10px; color:var(--text-3); font-weight:400">#${dt.simulationId || '--'}</span></div>
+                <!-- Executive Summary Grid -->
+                <div class="summary-card-dense" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:15px; padding:12px; background:var(--surface-color); border-radius:10px; border:1px solid ${isPriority ? 'var(--red)' : 'var(--border)'}; position:relative">
+                    ${isPriority ? '<div style="position:absolute; top:-10px; right:10px; background:var(--red); color:white; padding:2px 10px; border-radius:10px; font-size:9px; font-weight:900">🔥 URGENTE</div>' : ''}
+                    
+                    <div>
+                        <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Pedido/SimID</label>
+                        <div style="font-weight:800; color:var(--gold); font-size:13px">${p.numero} <small style="font-weight:400; color:var(--text-4)">#${dt.simulationId || '--'}</small></div>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Cliente</label>
+                        <div style="font-weight:700; color:var(--text-1); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${p.cliente || 'Consumidor'}</div>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Entrega Estimada</label>
+                        <div style="font-weight:800; color:var(--amber); font-size:12px">${p.prazo}</div>
+                    </div>
+                    <div style="grid-column: span 3; border-top:1px solid var(--border); padding-top:8px; display:flex; gap:15px">
+                        <div>
+                            <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase">Data Pedido</label>
+                            <span style="font-weight:600; font-size:11px">${p.dataCriacao}</span>
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase">SLA Prazo</label>
+                            <span style="font-weight:800; font-size:11px; color:${slaPhaseInfo(p).label === 'VENCIDO' ? 'var(--red)' : 'var(--green)'}">${slaPhaseInfo(p).label}</span>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Cliente</label>
-                    <div style="font-weight:700; color:var(--text-1); font-size:12px">${p.cliente || 'Consumidor Final'}</div>
+
+                <!-- Product Table (Compact) -->
+                <div class="mini-prod-table-wrap" style="background:white; border:1px solid var(--border); border-radius:8px; overflow:hidden">
+                    <table class="mini-prod-table" style="width:100%; border-collapse:collapse; font-size:11px">
+                        <thead style="background:var(--surface-color); color:var(--text-4); text-transform:uppercase; font-size:9px">
+                            <tr>
+                                <th style="padding:8px; text-align:left">Produto</th>
+                                <th style="padding:8px; text-align:center">Qtd</th>
+                                <th style="padding:8px; text-align:center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map(it => {
+        const stageColor = ETAPA_COLORS[it.etapa] || '#888';
+        return `
+                                <tr style="border-top:1px solid var(--border)">
+                                    <td style="padding:8px">
+                                        <div style="font-weight:700; color:var(--text-1)">${it.tipoProduto || 'Produto'}</div>
+                                        <div style="font-size:9px; color:var(--text-4)">SKU: ${it.sku}</div>
+                                    </td>
+                                    <td style="padding:8px; text-align:center; font-weight:700">${it.quantidade || 1}</td>
+                                    <td style="padding:8px; text-align:center">
+                                        <span style="padding:2px 8px; border-radius:10px; background:${stageColor}15; color:${stageColor}; font-weight:800; font-size:9px; text-transform:uppercase">
+                                            ${ETAPA_LABELS[it.etapa] || it.etapa}
+                                        </span>
+                                    </td>
+                                </tr>
+                                `;
+    }).join('')}
+                        </tbody>
+                    </table>
                 </div>
-                <div>
-                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Posição</label>
-                    <div style="font-weight:700; color:var(--text-2); font-size:12px">${items.length > 1 ? `Múltiplos (1/${items.length})` : 'Order Única'}</div>
-                </div>
-                <div>
-                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Data Pedido</label>
-                    <div style="font-weight:600; color:var(--text-1); font-size:12px">${p.dataCriacao}</div>
-                </div>
-                <div>
-                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Entrega Estimada</label>
-                    <div style="font-weight:800; color:var(--amber); font-size:12px">${p.prazo}</div>
-                </div>
-                <div>
-                    <label style="display:block; font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">SLA Prazo</label>
-                    <div style="font-weight:800; color:${slaPhaseInfo(p).label === 'VENCIDO' ? 'var(--red)' : 'var(--green)'}; font-size:12px">${slaPhaseInfo(p).label}</div>
-                </div>
+
             </div>
 
-            <!-- Asset Links -->
-            ${links.length > 0 ? `
-            <div class="assets-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; margin-bottom:24px">
-                ${links.join('')}
-            </div>` : ''}
+            <!-- COLUNA DIREITA: Timeline & Assets -->
+            <div class="status-sidebar" style="border-left:1px solid var(--border); padding-left:15px; display:flex; flex-direction:column">
+                
+                <h5 style="margin:0 0 12px 0; font-size:11px; color:var(--text-4); text-transform:uppercase; letter-spacing:1px">Rastreamento</h5>
+                
+                <div id="status-timeline-loader" style="padding:10px; text-align:center; color:var(--text-4); font-size:10px">⏳ Carregando...</div>
+                
+                <div id="status-timeline-wrap" style="flex:1; overflow-y:auto; position:relative; padding-left:15px; border-left:1px solid var(--border); margin-left:5px">
+                    <!-- Timeline items injected here -->
+                </div>
 
-            <!-- Production Timeline (Asynchronous) -->
-            <h4 style="margin-bottom:16px; font-size:13px; color:var(--text-2); font-weight:800; display:flex; align-items:center; gap:8px">
-                <span style="display:inline-block; width:4px; height:16px; background:var(--gold); border-radius:2px"></span>
-                HISTÓRICO DE PRODUÇÃO (TIMELINE)
-            </h4>
-            
-            <div id="status-timeline-loader" style="padding:20px; text-align:center; color:var(--text-4); font-size:12px">
-                ⏳ Carregando linha do tempo...
-            </div>
-            
-            <div id="status-timeline-wrap" style="display:none; position:relative; padding-left:24px; border-left:2px solid var(--border)">
-                <!-- Timeline items will be injected here -->
+                <!-- Asset Hub -->
+                <div class="assets-footer" style="margin-top:15px; padding-top:15px; border-top:1px dotted var(--border); display:flex; flex-direction:column">
+                    ${links.join('')}
+                    ${links.length === 0 ? '<div style="font-size:10px; color:var(--text-4); text-align:center">Sem arquivos anexos</div>' : ''}
+                </div>
+
             </div>
 
         </div>
     `;
 
-    // Trigger async load of history
     loadStatusTimeline(p.id);
 }
 
 /**
- * loadStatusTimeline
- * Busca os eventos de rastreamento e popula a timeline no Drawer.
+ * loadStatusTimeline (v4.08)
+ * Popula a sidebar com uma timeline ultra-compacta.
  */
 async function loadStatusTimeline(pedidoId) {
     try {
@@ -4139,60 +4171,39 @@ async function loadStatusTimeline(pedidoId) {
 
         if (!wrap || !loader) return;
         loader.style.display = 'none';
-        wrap.style.display = 'block';
 
         if (!history || history.length === 0) {
-            wrap.innerHTML = '<div style="color:var(--text-4); font-style:italic">Nenhum evento registrado ainda.</div>';
+            wrap.innerHTML = '<div style="font-size:10px; color:var(--text-4); font-style:italic">Iniciando produção...</div>';
             return;
         }
 
-        // Criar um mapa de eventos por etapa para facilitar a busca
         const eventMap = {};
         history.forEach(ev => eventMap[ev.etapa] = ev);
 
         let timelineHtml = '';
-
-        // Usamos MILESTONES (global) para garantir a ordem correta das etapas
         MILESTONES.forEach(m => {
             const ev = eventMap[m.etapa];
             const isCompleted = ev && ev.status === 'Concluído';
             const isCurrent = ev && ev.status === 'Em Andamento';
-            const statusColor = isCompleted ? 'var(--green)' : (isCurrent ? 'var(--amber)' : 'var(--text-4)');
+            const statusColor = isCompleted ? 'var(--green)' : (isCurrent ? 'var(--gold)' : '#eee');
+            const dotOpacity = (isCompleted || isCurrent) ? '1' : '0.3';
 
-            let durationStr = '--';
+            let durationStr = '';
             if (ev && ev.entrou_em && ev.saiu_em) {
-                const start = new Date(ev.entrou_em);
-                const end = new Date(ev.saiu_em);
-                const diffMs = end - start;
-                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-                const diffMins = Math.floor((diffMs / (1000 * 60)) % 60);
-                durationStr = `${diffHrs}h ${diffMins}m`;
-            } else if (isCurrent && ev.entrou_em) {
-                const start = new Date(ev.entrou_em);
-                const now = new Date();
-                const diffMs = now - start;
-                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-                durationStr = `Andamento (${diffHrs}h...)`;
+                const diffMs = new Date(ev.saiu_em) - new Date(ev.entrou_em);
+                const hrs = Math.floor(diffMs / 3600000);
+                const mins = Math.floor((diffMs % 3600000) / 60000);
+                durationStr = hrs > 0 ? `${hrs}h${mins}m` : `${mins}m`;
             }
 
             timelineHtml += `
-                <div class="timeline-step" style="position:relative; margin-bottom:24px">
-                    <span style="position:absolute; left:-33px; top:0; width:16px; height:16px; border-radius:50%; background:${statusColor}; border:3px solid white; box-shadow:0 0 0 2px ${statusColor}33"></span>
-                    
+                <div class="micro-step" style="position:relative; margin-bottom:12px; opacity:${dotOpacity}">
+                    <span style="position:absolute; left:-21px; top:3px; width:10px; height:10px; border-radius:50%; background:${statusColor}; border:2px solid white; box-shadow:0 0 0 1px ${statusColor}44"></span>
                     <div style="display:flex; justify-content:space-between; align-items:flex-start">
-                        <div>
-                            <div style="font-weight:800; font-size:12px; color:var(--text-1); text-transform:uppercase">${ETAPA_LABELS[m.etapa] || m.etapa}</div>
-                            <div style="font-size:10px; color:var(--text-4); margin-top:2px">
-                                ${ev ? `Entrada: ${new Date(ev.entrou_em).toLocaleString('pt-BR')}` : 'Aguardando...'}
-                                ${isCompleted ? `<br>Saída: ${new Date(ev.saiu_em).toLocaleString('pt-BR')}` : ''}
-                            </div>
-                        </div>
-                        <div style="text-align:right">
-                            <div style="font-size:10px; font-weight:700; color:${statusColor}">${isCompleted ? 'CONCLUÍDO' : (isCurrent ? 'EM ANDAMENTO' : 'PENDENTE')}</div>
-                            <div style="font-size:10px; color:var(--text-3); margin-top:2px">Tempo: ${durationStr}</div>
-                            ${ev && ev.operador ? `<div style="font-size:10px; color:var(--gold); font-weight:700; margin-top:2px">👤 ${ev.operador}</div>` : ''}
-                        </div>
+                        <div style="font-size:10px; font-weight:700; color:${isCurrent ? 'var(--gold)' : 'var(--text-2)'}">${ETAPA_LABELS[m.etapa] || m.etapa}</div>
+                        <div style="font-size:9px; color:var(--text-4); text-align:right">${durationStr || ''}</div>
                     </div>
+                    ${ev ? `<div style="font-size:8px; color:var(--text-4)">${new Date(ev.entrou_em).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' }).split(', ')[1]}</div>` : ''}
                 </div>
             `;
         });
@@ -4200,6 +4211,5 @@ async function loadStatusTimeline(pedidoId) {
         wrap.innerHTML = timelineHtml;
     } catch (e) {
         console.error("Timeline Error:", e);
-        if ($('status-timeline-loader')) $('status-timeline-loader').textContent = "❌ Falha ao carregar timeline.";
     }
 }
