@@ -4644,3 +4644,10 @@ input {
 .setor-pendencia::before {
   background: var(--red);
 }
+/* -- Phase 3: Separação & Arte Styles -- */
+.color-swatch-hex { transition: transform 0.2s, box-shadow 0.2s; cursor: crosshair; }
+.color-swatch-hex:hover { transform: scale(1.15); box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10; }
+.order-card:hover { border-color: var(--blurple) !important; box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.order-card div::-webkit-scrollbar { height: 4px; }
+.order-card div::-webkit-scrollbar-track { background: var(--surface-2); }
+.order-card div::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
