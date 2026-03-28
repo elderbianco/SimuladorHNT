@@ -881,8 +881,8 @@ input {
 
 .table-header {
   display: grid;
-  /* Pedido(85), SimId(140), Pos(50), Prod(120), Qty(80), Date(105), Delivery(105), Stage(130), Deadline(105), Status(60), Pend(150), Prio(1fr) */
-  grid-template-columns: 85px 140px 50px 120px 80px 105px 105px 130px 105px 60px 150px 1fr;
+  /* Pedido(85), SimId(140), Pos(50), Prod(120), Qty(70), Date(110), Delivery(110), Stage(130), Deadline(110), Status(60), Pend(150), Prio(1fr) */
+  grid-template-columns: 85px 140px 50px 120px 70px 110px 110px 130px 110px 60px 150px 1fr;
   gap: 0;
   padding: 0 16px;
   height: 42px;
@@ -942,7 +942,7 @@ input {
 
 .table-row {
   display: grid;
-  grid-template-columns: 85px 140px 50px 120px 80px 105px 105px 130px 105px 60px 150px 1fr;
+  grid-template-columns: 85px 140px 50px 120px 70px 110px 110px 130px 110px 60px 150px 1fr;
   gap: 0;
   padding: 0 16px;
   min-height: 48px;
