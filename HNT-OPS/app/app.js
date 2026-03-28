@@ -317,7 +317,7 @@ function renderKanban(data) {
             const skuLabel = numProds > 1 ? `${numProds} Itens` : p.sku;
             const targetTab = mapEtapaTab[etapa] || 'status';
             return `
-          <div class="kanban-card ${p.alerta}${isPendencia ? ' pendencia-card' : ''}" data-id="${p.id}" onclick="openDrawer('${p.id}', '${targetTab}')" draggable="true">
+          <div class="kanban-card ${p.alerta}${isPendencia ? ' pendencia-card' : ''}" data-id="${p.id}" onclick="openDrawer('${p.id}')" draggable="true">
             <div class="kanban-num">${p.numero}</div>
             <div class="kanban-sku">${skuLabel} · ${p.tamanho} · ${p.quantidade}×</div>
             <div class="kanban-footer">
@@ -3866,7 +3866,7 @@ function renderArteDev() {
 
                 <div style="display:flex; gap:10px; margin-top:5px;">
                     <button class="btn btn-outline" style="flex:1; font-size:11px; padding:8px; font-weight:800;" onclick="event.stopPropagation(); window.open('${p.pdf || '#'}', '_blank')">📑 Abrir PDF</button>
-                    <button class="btn" style="flex:1.2; font-size:11px; padding:8px; background:var(--green); color:#000; font-weight:900;" onclick="event.stopPropagation(); openDrawer('${p.id}'); drawerTab='arte'; renderDrawerTab(PEDIDOS.find(x=>x.id==='${p.id}'));">✒️ Ir p/ Arte</button>
+                    <button class="btn" style="flex:1.2; font-size:11px; padding:8px; background:var(--green); color:#000; font-weight:900;" onclick="event.stopPropagation(); openDrawer('${p.id}');">✒️ Abrir Status</button>
                 </div>
             </div>
         `;
