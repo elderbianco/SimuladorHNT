@@ -318,6 +318,7 @@ function renderKanban(data) {
             const ph = slaPhaseInfo(p);
             const numProds = p.produtos ? p.produtos.length : 1;
             const mapEtapaTab = { 'Preparação': 'preparacao', 'Separação': 'separacao', 'Arte': 'arte', 'Bordado': 'bordado', 'Costura': 'costura', 'Qualidade': 'qualidade', 'Expedição': 'expedicao', 'Pendencia': 'pendencia' };
+            const skuLabel = numProds > 1 ? `${numProds} Itens` : p.sku;
             const targetTab = mapEtapaTab[etapa] || 'status';
             return `
           <div class="kanban-card ${p.alerta}${isPendencia ? ' pendencia-card' : ''}" data-id="${p.id}" onclick="openDrawer('${p.id}', '${targetTab}')" draggable="true">
