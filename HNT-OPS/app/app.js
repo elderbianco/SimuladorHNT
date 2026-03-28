@@ -317,9 +317,10 @@ function renderKanban(data) {
         ${cards.map(p => {
             const ph = slaPhaseInfo(p);
             const numProds = p.produtos ? p.produtos.length : 1;
-            const skuLabel = numProds > 1 ? `<span style="color:var(--amber);font-weight:700">📦 ${numProds} Itens</span>` : p.sku;
+            const mapEtapaTab = { 'Preparação': 'preparacao', 'Separação': 'separacao', 'Arte': 'arte', 'Bordado': 'bordado', 'Costura': 'costura', 'Qualidade': 'qualidade', 'Expedição': 'expedicao', 'Pendencia': 'pendencia' };
+            const targetTab = mapEtapaTab[etapa] || 'status';
             return `
-          <div class="kanban-card ${p.alerta}${isPendencia ? ' pendencia-card' : ''}" data-id="${p.id}" onclick="openDrawer('${p.id}')" draggable="true">
+          <div class="kanban-card ${p.alerta}${isPendencia ? ' pendencia-card' : ''}" data-id="${p.id}" onclick="openDrawer('${p.id}', '${targetTab}')" draggable="true">
             <div class="kanban-num">${p.numero}</div>
             <div class="kanban-sku">${skuLabel} · ${p.tamanho} · ${p.quantidade}×</div>
             <div class="kanban-footer">
@@ -408,24 +409,17 @@ function validarAvanco(id, novaEtapa) {
 }
 
 // ── Drawer ────────────────────────────────────────────────
-function openDrawer(id) {
+function openDrawer(id, forcedTab = null) {
     selectedId = id;
     const p = PEDIDOS.find(x => x.id.toString() == id.toString());
     if (!p) return;
-    const produtos = p.produtos || [p];
 
-    // Inteligência: Abrir na aba da Etapa atual (Phase 3)
-    const mapEtapaTab = {
-        'Preparação': 'preparacao',
-        'Separação': 'separacao',
-        'Arte': 'arte',
-        'Bordado': 'bordado',
-        'Costura': 'costura',
-        'Qualidade': 'qualidade',
-        'Expedição': 'expedicao',
-        'Pendencia': 'pendencia'
-    };
-    drawerTab = mapEtapaTab[p.etapa] || 'preparacao';
+    // v4.06: Se houver aba forçada (Kanban), usa ela. Se não, Status é a padrão.
+    if (forcedTab) {
+        drawerTab = forcedTab;
+    } else {
+        drawerTab = 'status';
+    }
 
     renderDrawer(p);
     $('drawer-overlay').classList.add('open');
