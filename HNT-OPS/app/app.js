@@ -106,14 +106,71 @@ async function loadOrders() {
         // If it comes with "dados_tecnicos_full", we might need to parse it if it's a string, 
         // but PostgREST usually returns JSON fields as objects already.
         state.orders = (data || []).map(o => {
-            // Ensure items is an array even if data is flattened
-            if (!o.items && o.dados_tecnicos_full) {
-                try {
-                    const tech = typeof o.dados_tecnicos_full === 'string'
-                        ? JSON.parse(o.dados_tecnicos_full)
-                        : o.dados_tecnicos_full;
-                    o.items = tech.items || [tech];
-                } catch (e) { o.items = []; }
+            // Reconstruir o objeto de itens se ele não existir nativamente
+            if (!o.items) {
+                let tech = null;
+                if (o.dados_tecnicos_full) {
+                    try {
+                        tech = typeof o.dados_tecnicos_full === 'string'
+                            ? JSON.parse(o.dados_tecnicos_full)
+                            : o.dados_tecnicos_full;
+                    } catch (e) { tech = {}; }
+                } else {
+                    tech = {};
+                }
+
+                const parts = tech.parts || {};
+                const sizes = tech.sizes || tech.tamanhos || {};
+                const links = typeof o.link_renders === 'string' ? JSON.parse(o.link_renders || '{}') : (o.link_renders || {});
+
+                // Mapear Cores
+                const coresMapped = {};
+                Object.entries(parts).forEach(([k, v]) => {
+                    coresMapped[k] = {
+                        hex: v?.hex || '#ccc',
+                        nome: v?.value || v || 'Indefinida'
+                    };
+                });
+                // Fallbacks do DB se parts estiver vazio
+                if (Object.keys(coresMapped).length === 0) {
+                    if (o.cor_centro) coresMapped['Centro'] = { hex: '#ccc', nome: o.cor_centro };
+                    if (o.cor_laterais) coresMapped['Laterais'] = { hex: '#ccc', nome: o.cor_laterais };
+                    if (o.cor_filete) coresMapped['Filete'] = { hex: '#ccc', nome: o.cor_filete };
+                }
+
+                // Mapear Grade de tamanhos
+                const gradeMapped = {};
+                if (Object.keys(sizes).length > 0) {
+                    Object.assign(gradeMapped, sizes);
+                } else if (o.tamanho) {
+                    // "1x M, 2x G" -> parse string
+                    if (o.tamanho.includes('x')) {
+                        o.tamanho.split(',').forEach(p => {
+                            const [q, t] = p.split('x').map(s => s.trim());
+                            if (t) gradeMapped[t] = parseInt(q) || 1;
+                        });
+                    } else {
+                        gradeMapped[o.tamanho] = o.quantidade_total || 1;
+                    }
+                }
+
+                // Mapear Logos/Renders
+                const logosMapped = {};
+                if (links.frente) logosMapped['Frente'] = links.frente;
+                if (links.costas) logosMapped['Costas'] = links.costas;
+                if (links.lateral) logosMapped['Lateral'] = links.lateral;
+                if (tech.logoPunho) logosMapped['Logo Punho'] = tech.logoPunho;
+
+                const reconstructedItem = {
+                    sku: o.sku_produto || o.modelo || 'Produto Customizado',
+                    quantidade: o.quantidade_total || 1,
+                    cores: coresMapped,
+                    grade: gradeMapped,
+                    logos: logosMapped
+                };
+
+                // The view dashboard_pedidos gives us flat, so order has 1 conceptual item based on its row
+                o.items = tech.items || [reconstructedItem];
             }
             return o;
         });
