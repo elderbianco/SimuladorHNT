@@ -424,6 +424,11 @@ function openDrawer(id, forcedTab = null) {
     isEditing = false;
 }
 
+function toggleSection(id) {
+    const el = $(id);
+    if (el) el.classList.toggle('collapsed');
+}
+
 function closeDrawer() {
     $('drawer-overlay').classList.remove('open');
     $('drawer').classList.remove('open');
@@ -4077,89 +4082,104 @@ async function renderStatusTab(p) {
 
     // 1. Renderizar Estrutura Base (Shell)
     wrap.innerHTML = `
-        <div style="padding:16px; display:flex; flex-direction:column; gap:16px;">
+        <div style="padding:16px; display:flex; flex-direction:column; gap:8px;">
             
-            <!-- Resumo Compacto (v4.06-Pro) -->
-            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; padding:16px; background:var(--surface-color); border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow-sm); position:relative; overflow:hidden">
-                ${p.urgente ? '<div style="position:absolute; top:0; left:0; right:0; height:4px; background:var(--red)"></div>' : ''}
-                
-                <div style="grid-column: span 3">
-                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Pedido / Cliente</label>
-                    <div style="font-weight:800; font-size:15px; color:var(--text-1)">
-                        <span style="color:var(--amber)">#${p.numero}</span> — ${p.cliente}
-                    </div>
+            <!-- Resumo (Collapsible) -->
+            <div id="section-resumo" class="collapsible-section" style="border:1px solid var(--border); border-radius:12px; overflow:hidden; background:white">
+                <div class="section-header" onclick="toggleSection('section-resumo')">
+                    <h4>📦 RESUMO GERAL</h4>
+                    <span class="chevron">▼</span>
                 </div>
-                <div style="text-align:right">
-                     <div style="background:${p.urgente ? 'var(--red)' : 'var(--surface-3)'}; color:${p.urgente ? '#fff' : 'var(--text-3)'}; padding:4px 8px; border-radius:4px; font-size:9px; font-weight:900; display:inline-block; text-transform:uppercase">
-                        ${p.urgente ? 'Prioridade' : 'Normal'}
-                     </div>
-                </div>
-                
-                <div style="grid-column: span 2">
-                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Produto (${positionLabel})</label>
-                    <div style="font-weight:700; font-size:11px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${productLabel}</div>
-                </div>
-                <div>
-                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Simulador ID</label>
-                    <div style="font-weight:700; font-size:11px; color:var(--text-3)">${p.dadosTecnicos?.simulationId || 'N/A'}</div>
-                </div>
-                <div>
-                    <label style="font-size:10px; color:var(--text-4); text-transform:uppercase; font-weight:700">Qtd</label>
-                    <div style="font-weight:700">${p.quantidade} un</div>
-                </div>
+                <div class="section-content">
+                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; padding:16px; background:var(--surface-color); position:relative">
+                        ${p.urgente ? '<div style="position:absolute; top:0; left:0; right:0; height:4px; background:var(--red)"></div>' : ''}
+                        
+                        <div style="grid-column: span 3">
+                            <label style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Pedido / Cliente</label>
+                            <div style="font-weight:800; font-size:14px; color:var(--text-1)">
+                                <span style="color:var(--amber)">#${p.numero}</span> — ${p.cliente}
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                             <div style="background:${p.urgente ? 'var(--red)' : 'var(--surface-3)'}; color:${p.urgente ? '#fff' : 'var(--text-3)'}; padding:4px 8px; border-radius:4px; font-size:9px; font-weight:900; display:inline-block; text-transform:uppercase">
+                                ${p.urgente ? 'Prioridade' : 'Normal'}
+                             </div>
+                        </div>
+                        
+                        <div style="grid-column: span 2">
+                            <label style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Produto (${positionLabel})</label>
+                            <div style="font-weight:700; font-size:11px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${productLabel}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Simulador ID</label>
+                            <div style="font-weight:700; font-size:11px; color:var(--text-3)">${p.dadosTecnicos?.simulationId || 'N/A'}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Qtd</label>
+                            <div style="font-weight:700">${p.quantidade} un</div>
+                        </div>
 
-                <div style="grid-column: span 4; margin-top:4px; padding-top:10px; border-top:1px solid var(--border); display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center">
-                    <div>
-                        <label style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Datas (Ped / Ent)</label>
-                        <div style="font-size:11px; font-weight:600">${p.dataCriacao} <span style="color:var(--text-4)">→</span> <span style="color:var(--amber)">${p.prazo}</span></div>
-                    </div>
-                    <div style="text-align:right; display:flex; align-items:center; justify-content:flex-end; gap:8px">
-                         <div style="text-align:right">
-                            <div style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Status Prazo</div>
-                            <div style="font-size:10px; font-weight:900; color:${semaforoCor}">${semaforoLabel}</div>
-                         </div>
-                         <div style="width:10px; height:10px; border-radius:50%; background:${semaforoCor}; box-shadow:0 0 8px ${semaforoCor}66"></div>
-                    </div>
-                </div>
-
-                <div style="grid-column: span 4; background:var(--surface-2); margin:8px -16px -16px -16px; padding:10px 16px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
-                    <div style="display:flex; align-items:center; gap:8px">
-                        <span style="font-size:11px; font-weight:700; color:var(--text-3)">ESTÁGIO ATUAL:</span>
-                        <span style="background:${ETAPA_COLORS[p.etapa]}20; color:${ETAPA_COLORS[p.etapa]}; padding:3px 10px; border-radius:12px; font-size:10px; font-weight:900; text-transform:uppercase">
-                            ${ETAPA_LABELS[p.etapa]}
-                        </span>
-                    </div>
-                    <div>
-                        ${p.etapa === 'Pendencia' ? '<span style="color:var(--red); font-size:14px" title="Pendência Crítica">⚠️ BLOQUEADO</span>' : '<span style="color:var(--green); font-size:14px" title="Tudo OK">✅ VALIDADO</span>'}
+                        <div style="grid-column: span 4; margin-top:4px; padding-top:10px; border-top:1px solid var(--border); display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center">
+                            <div>
+                                <label style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Datas (Ped / Ent)</label>
+                                <div style="font-size:11px; font-weight:600">${p.dataCriacao} <span style="color:var(--text-4)">→</span> <span style="color:var(--amber)">${p.prazo}</span></div>
+                            </div>
+                            <div style="text-align:right; display:flex; align-items:center; justify-content:flex-end; gap:8px">
+                                 <div style="text-align:right">
+                                    <div style="font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Status Prazo</div>
+                                    <div style="font-size:10px; font-weight:900; color:${semaforoCor}">${semaforoLabel}</div>
+                                 </div>
+                                 <div style="width:10px; height:10px; border-radius:50%; background:${semaforoCor}; box-shadow:0 0 8px ${semaforoCor}66"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="grid-column: span 4; background:var(--surface-1); margin:8px -16px -16px -16px; padding:10px 16px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+                            <div style="display:flex; align-items:center; gap:8px">
+                                <span style="font-size:10px; font-weight:700; color:var(--text-3)">ESTÁGIO ATUAL:</span>
+                                <span style="background:${ETAPA_COLORS[p.etapa]}20; color:${ETAPA_COLORS[p.etapa]}; padding:3px 10px; border-radius:12px; font-size:10px; font-weight:900; text-transform:uppercase">
+                                    ${ETAPA_LABELS[p.etapa]}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Botões de Ação para Arquivos -->
-            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px">
-                <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.pdf || '#'}', '_blank')">📄 PDF OS</button>
-                <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${currentItem.renders?.mockup || currentItem.renders?.front || '#'}', '_blank')">🖼️ MOCKUP</button>
-                <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.emb || '#'}', '_blank')">🪡 ARQUIVO EMB</button>
+            <!-- Arquivos (Collapsible) -->
+            <div id="section-files" class="collapsible-section" style="border:1px solid var(--border); border-radius:12px; overflow:hidden; background:white">
+                <div class="section-header" onclick="toggleSection('section-files')">
+                    <h4>📁 ARQUIVOS E LINKS</h4>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="section-content">
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; padding:16px">
+                        <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.pdf || '#'}', '_blank')">📄 PDF OS</button>
+                        <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${currentItem.renders?.mockup || currentItem.renders?.front || '#'}', '_blank')">🖼️ MOCKUP</button>
+                        <button class="btn btn-ghost" style="font-size:10px; height:40px; border:1px solid var(--border); background:#fff; gap:6px" onclick="window.open('${p.emb || '#'}', '_blank')">🪡 ARQUIVO EMB</button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Linha do Tempo de Produção (Histórico) -->
-            <div id="status-timeline-wrap" style="background:#fff; border-radius:12px; border:1px solid var(--border); overflow:hidden; box-shadow:var(--shadow-sm)">
-                <div style="padding:12px 16px; background:var(--surface-2); border-bottom:1px solid var(--border); font-weight:800; font-size:12px; color:var(--text-2); display:flex; justify-content:space-between; align-items:center">
-                    <span>TRACKING DE BIPAGEM (ENTRY/EXIT)</span>
-                    <span style="font-size:10px; font-weight:600; color:var(--text-4)">HISTÓRICO REALTIME</span>
+            <!-- Linha do Tempo (Collapsible) -->
+            <div id="section-history" class="collapsible-section" style="border:1px solid var(--border); border-radius:12px; overflow:hidden; background:white">
+                <div class="section-header" onclick="toggleSection('section-history')">
+                    <h4>🕒 LINHA DO TEMPO (BIPAGEM)</h4>
+                    <span class="chevron">▼</span>
                 </div>
-                <div id="status-timeline-loader" style="padding:40px; text-align:center; color:var(--text-4); font-size:12px">
-                    <div class="spinner" style="margin:0 auto 10px auto"></div>
-                    Carregando histórico de produção...
-                </div>
-                <div id="status-timeline-content" style="display:none">
-                    <div style="display:grid; grid-template-columns: 140px 100px 100px 1fr; gap:0; background:var(--surface-1); border-bottom:1px solid var(--border); padding:8px 16px">
-                        <span style="font-size:10px; font-weight:700; color:var(--text-3)">ETAPA</span>
-                        <span style="font-size:10px; font-weight:700; color:var(--text-3)">ENTRADA</span>
-                        <span style="font-size:10px; font-weight:700; color:var(--text-3)">SAÍDA</span>
-                        <span style="font-size:10px; font-weight:700; color:var(--text-3); text-align:right">DURAÇÃO</span>
+                <div class="section-content">
+                    <div id="status-timeline-loader" style="padding:40px; text-align:center; color:var(--text-4); font-size:12px">
+                        <div class="spinner" style="margin:0 auto 10px auto"></div>
+                        Carregando histórico...
                     </div>
-                    <div id="history-rows-container"></div>
+                    <div id="status-timeline-content" style="display:none">
+                        <div style="display:grid; grid-template-columns: 140px 100px 100px 1fr; gap:0; background:var(--surface-1); border-bottom:1px solid var(--border); padding:8px 16px">
+                            <span style="font-size:10px; font-weight:700; color:var(--text-3)">ETAPA</span>
+                            <span style="font-size:10px; font-weight:700; color:var(--text-3)">ENTRADA</span>
+                            <span style="font-size:10px; font-weight:700; color:var(--text-3)">SAÍDA</span>
+                            <span style="font-size:10px; font-weight:700; color:var(--text-3); text-align:right">DURAÇÃO</span>
+                        </div>
+                        <div id="history-rows-container"></div>
+                    </div>
                 </div>
             </div>
 
