@@ -881,13 +881,29 @@ input {
 
 .table-header {
   display: grid;
+  /* Pedido(85), SimId(140), Pos(50), Prod(120), Qty(80), Date(105), Delivery(105), Stage(130), Deadline(105), Status(60), Pend(150), Prio(1fr) */
   grid-template-columns: 85px 140px 50px 120px 80px 105px 105px 130px 105px 60px 150px 1fr;
   gap: 0;
   padding: 0 16px;
-  height: 36px;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--border);
+  height: 42px;
   align-items: center;
+  background: var(--surface-2);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table-header span {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 8px;
 }
 
 .header-shortcut-btn {
@@ -922,36 +938,29 @@ input {
   box-shadow: var(--shadow-sm);
 }
 
-.table-header {
-  display: grid;
-  grid-template-columns: 85px 140px 50px 120px 80px 105px 105px 130px 105px 60px 150px 1fr;
-  gap: 0;
-  padding: 0 16px;
-  height: 42px;
-  align-items: center;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--border);
-}
-
-.table-header span {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
+/* Header styles moved above */
 
 .table-row {
   display: grid;
   grid-template-columns: 85px 140px 50px 120px 80px 105px 105px 130px 105px 60px 150px 1fr;
   gap: 0;
   padding: 0 16px;
-  height: 48px;
+  min-height: 48px;
   align-items: center;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
+  transition: all 0.2s ease;
   position: relative;
+  background: var(--surface);
+}
+
+.table-row div {
+  font-size: 11.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 12px;
 }
 
 .table-row:last-child {
@@ -4644,19 +4653,80 @@ input {
 .setor-pendencia::before {
   background: var(--red);
 }
+
 /* -- Phase 3: Separa��o & Arte Styles -- */
-.color-swatch-hex { transition: transform 0.2s, box-shadow 0.2s; cursor: crosshair; }
-.color-swatch-hex:hover { transform: scale(1.15); box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10; }
-.order-card:hover { border-color: var(--blurple) !important; box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.order-card div::-webkit-scrollbar { height: 4px; }
-.order-card div::-webkit-scrollbar-track { background: var(--surface-2); }
-.order-card div::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.color-swatch-hex {
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: crosshair;
+}
+
+.color-swatch-hex:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.order-card:hover {
+  border-color: var(--blurple) !important;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.order-card div::-webkit-scrollbar {
+  height: 4px;
+}
+
+.order-card div::-webkit-scrollbar-track {
+  background: var(--surface-2);
+}
+
+.order-card div::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
 
 /* --- Estilos de Pendencia --- */
-.kanban-card.pendencia-card { border: 2px solid var(--red) !important; animation: pulse-border-red 2s infinite; }
-@keyframes pulse-border-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-.pendencia-fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--red); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000; transition: transform 0.2s; }
-.pendencia-fab:hover { transform: scale(1.1); }
+.kanban-card.pendencia-card {
+  border: 2px solid var(--red) !important;
+  animation: pulse-border-red 2s infinite;
+}
+
+@keyframes pulse-border-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.pendencia-fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: var(--red);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  z-index: 1000;
+  transition: transform 0.2s;
+}
+
+.pendencia-fab:hover {
+  transform: scale(1.1);
+}
 
 
 /* Highlighting for Pendencies in Table */
@@ -4664,6 +4734,7 @@ input {
   background-color: rgba(239, 68, 68, 0.05) !important;
   border-left: 4px solid var(--red) !important;
 }
+
 .table-row.row-pendencia .order-num {
   color: var(--red);
   font-weight: 900;
@@ -4671,10 +4742,10 @@ input {
 
 
 
-.table-header span, .table-row > div {
+.table-header span,
+.table-row>div {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   padding: 0 4px;
 }
-
