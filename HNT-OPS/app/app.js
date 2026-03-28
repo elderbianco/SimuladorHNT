@@ -101,8 +101,23 @@ function toast(msg, type = 'info') {
 // ── SUPABASE HELPERS ────────────────────────────────────────
 async function loadOrders() {
     try {
-        const data = await getAllOrders();
-        state.orders = (data || []);
+        const data = await api.loadDashboard();
+        // The view "dashboard_pedidos" already returns a flattened or structured object.
+        // If it comes with "dados_tecnicos_full", we might need to parse it if it's a string, 
+        // but PostgREST usually returns JSON fields as objects already.
+        state.orders = (data || []).map(o => {
+            // Ensure items is an array even if data is flattened
+            if (!o.items && o.dados_tecnicos_full) {
+                try {
+                    const tech = typeof o.dados_tecnicos_full === 'string'
+                        ? JSON.parse(o.dados_tecnicos_full)
+                        : o.dados_tecnicos_full;
+                    o.items = tech.items || [tech];
+                } catch (e) { o.items = []; }
+            }
+            return o;
+        });
+
         updateStats();
         renderCurrentView();
         updateTabCounts();
@@ -112,9 +127,10 @@ async function loadOrders() {
         toast('Erro ao carregar pedidos. Verificar conexão.', 'error');
     }
 }
+
 async function updateOrderStage(orderId, novaEtapa) {
     try {
-        await moveOrderToStage(orderId, novaEtapa, state.currentUser?.name || 'Sistema');
+        await api.updateEtapa(orderId, novaEtapa);
         await loadOrders();
         toast(`Pedido movido → ${novaEtapa}`, 'success');
         return true;

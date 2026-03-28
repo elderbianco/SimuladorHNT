@@ -312,6 +312,10 @@ function init() {
     const searchEl = document.getElementById('searchInput');
     if (searchEl) searchEl.addEventListener('input', function () { handleSearch(searchEl.value); });
 
+    // Sync Btn
+    const syncBtn = document.getElementById('btnSyncHeader');
+    if (syncBtn) syncBtn.onclick = () => loadOrders();
+
     // Bind priority filter
     const prioEl = document.getElementById('filterPrioridade');
     if (prioEl) prioEl.addEventListener('change', function () { handleFilterPrioridade(prioEl.value); });
