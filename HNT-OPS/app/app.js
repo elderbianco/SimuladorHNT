@@ -340,10 +340,46 @@ function bindKanbanEvents() {
             const id = e.dataTransfer.getData('text/plain');
             const novaEtapa = col.dataset.etapa;
             if (id && novaEtapa) {
-                moverEtapa(id, novaEtapa);
+                // Validação antes de mover
+                if (validarAvanco(id, novaEtapa)) {
+                    moverEtapa(id, novaEtapa);
+                }
             }
         });
     });
+}
+
+function validarAvanco(id, novaEtapa) {
+    const p = PEDIDOS.find(x => x.id === id);
+    if (!p) return false;
+
+    // Se estiver pendente, não pode mover para lugar nenhum via drag & drop (exceto se for para Pendência de novo, o que é redundante)
+    if (p.etapa === 'Pendencia' && novaEtapa !== 'Pendencia') {
+        alert(`Pedido #${p.numero} está BLOQUEADO por pendência. Resolva no Drawer antes de mover.`);
+        return false;
+    }
+
+    // Regras de negócio por etapa (Campos Obrigatórios)
+    if (p.etapa === 'Preparacao' && novaEtapa === 'Separacao') {
+        if (!p.pdfUrl && !p.pdf) {
+            alert("Erro: O pedido precisa de um PDF de referência para ir para Separação.");
+            return false;
+        }
+    }
+
+    if (p.etapa === 'Arte' && novaEtapa === 'Bordado') {
+        if (!p.emb && !p.link_arquivo_bordado) {
+            alert("Erro: É obrigatório anexar o arquivo .EMB (Bordado) antes de avançar.");
+            return false;
+        }
+    }
+
+    // Se retornar para uma etapa anterior, permite sem restrição
+    const indexAtual = ETAPAS.indexOf(p.etapa);
+    const indexNova = ETAPAS.indexOf(novaEtapa);
+    if (indexNova < indexAtual && novaEtapa !== 'Pendencia') return true;
+
+    return true;
 }
 
 // ── Drawer ────────────────────────────────────────────────
