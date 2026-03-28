@@ -451,6 +451,9 @@ function renderDrawer(p) {
         }
         t.classList.toggle('active', t.dataset.tab === drawerTab);
     });
+
+    renderDrawerTab(p);
+    renderDrawerFooter(p);
 }
 
 function switchDrawerTab(tabId) {
@@ -4038,6 +4041,8 @@ function buscarStatus() {
  */
 async function renderStatusTab(p) {
     const wrap = $('drawer-body');
+    if (!wrap) return;
+    wrap.innerHTML = `<div class="spinner-wrap" style="padding:40px; text-align:center"><div class="spinner"></div></div>`;
     const items = p.produtos || [p];
     const numItems = items.length;
 
