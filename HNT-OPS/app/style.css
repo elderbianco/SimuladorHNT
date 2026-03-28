@@ -4768,6 +4768,41 @@ input {
   color: #ff4da6;
 }
 
+.summary-card-dense {
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.mini-prod-table th {
+  border-bottom: 2px solid var(--border);
+}
+
+.mini-prod-table tr:hover {
+  background: var(--surface-2);
+}
+
+.status-sidebar {
+  height: 100%;
+  overflow: hidden;
+}
+
+.micro-step {
+  transition: transform 0.2s ease;
+}
+
+.micro-step:hover {
+  transform: translateX(4px);
+}
+
+#status-timeline-wrap::-webkit-scrollbar {
+  width: 4px;
+}
+
+#status-timeline-wrap::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
 .timeline-step:last-child {
   margin-bottom: 0 !important;
 }
