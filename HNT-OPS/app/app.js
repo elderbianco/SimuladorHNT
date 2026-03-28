@@ -768,10 +768,11 @@ function renderDrawerTab(p) {
     else if (drawerTab === 'bordado') {
         let bordadosHtml = '';
         produtos.forEach((prod, idx) => {
+            const sectionId = `bord-item-${idx}`;
             const dt = prod.dadosTecnicos || p.dadosTecnicos || {};
-            const indexLabel = numProdutos > 1 ? `<div style="font-weight:800; color:var(--blurple); margin-top:20px; text-transform:uppercase; font-size:12px">BORDADO ITEM ${idx + 1}</div>` : '';
+            const productTitle = prod.sku || p.sku || 'Produto';
+            const indexLabel = numProdutos > 1 ? `BORDADO DO ITEM ${idx + 1}: ${productTitle}` : `DETALHES DO BORDADO`;
 
-            // Simulação de Mapa de Localização baseado nos dados técnicos
             const localizacao = dt.localizacao || "Perna Esquerda / Cós";
             const arquivos = [
                 { name: 'Arte_Bordado_v1.DST', type: 'DST' },
@@ -779,37 +780,35 @@ function renderDrawerTab(p) {
             ];
 
             bordadosHtml += `
-                ${indexLabel}
-                <div style="display:flex; gap:20px; margin-top:10px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:250px; background:var(--surface-color); padding:15px; border-radius:8px; border:1px solid var(--border);">
-                        <div style="font-weight:800; font-size:11px; margin-bottom:10px; color:var(--text-3); text-transform:uppercase;">🧵 MAPA TÉCNICO & CORES</div>
-                        <div style="margin-bottom:15px;">
-                            <div style="font-size:12px; color:var(--text-3);">Localização Exata:</div>
-                            <div style="font-weight:700; font-size:15px; color:var(--text-1);">${localizacao}</div>
-                        </div>
-                        <div style="margin-bottom:15px;">
-                            <div style="font-size:12px; color:var(--text-3);">Cores de Linha:</div>
-                            <div style="display:flex; gap:8px; margin-top:5px;">
-                                <div style="display:flex; align-items:center; gap:5px; background:var(--surface-2); padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; border:1px solid var(--border);">
-                                    <div style="width:10px; height:10px; border-radius:50%; background:#fff; border:1px solid #ccc;"></div> Branca (Poliviscose)
-                                </div>
-                                <div style="display:flex; align-items:center; gap:5px; background:var(--surface-2); padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; border:1px solid var(--border);">
-                                    <div style="width:10px; height:10px; border-radius:50%; background:#000;"></div> Preta (Resistente)
+                <div id="${sectionId}" class="collapsible-section ${idx > 0 ? 'collapsed' : ''}" style="margin-bottom:10px; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:white">
+                    <div class="section-header" onclick="toggleSection('${sectionId}')">
+                        <h4>${indexLabel}</h4>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="section-content" style="padding:12px">
+                        <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:200px; background:var(--surface-color); padding:12px; border-radius:8px; border:1px solid var(--border);">
+                                <div style="font-weight:800; font-size:10px; margin-bottom:8px; color:var(--text-3); text-transform:uppercase;">🧵 MAPA TÉCNICO</div>
+                                <div style="font-size:11px; color:var(--text-3);">Localização:</div>
+                                <div style="font-weight:700; font-size:13px; color:var(--text-1); margin-bottom:10px;">${localizacao}</div>
+                                
+                                <div style="font-size:11px; color:var(--text-3);">Linhas:</div>
+                                <div style="display:flex; gap:6px; margin-top:4px;">
+                                    <div style="width:12px; height:12px; border-radius:50%; background:#fff; border:1px solid #ccc;" title="Branca"></div>
+                                    <div style="width:12px; height:12px; border-radius:50%; background:#000;" title="Preta"></div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div style="flex:1; min-width:250px;">
-                        <div style="font-weight:800; font-size:11px; margin-bottom:10px; color:var(--text-3); text-transform:uppercase;">📁 ARQUIVOS DE MÁQUINA</div>
-                        <div style="display:grid; grid-template-columns: 1fr; gap:8px;">
-                            ${arquivos.map(arq => `
-                                <button class="btn btn-outline" style="justify-content:space-between; font-size:12px;" onclick="alert('Baixando ${arq.name}...')">
-                                   <span>📄 ${arq.name}</span>
-                                   <span style="font-size:9px; background:var(--blurple-dim); color:var(--blurple); padding:2px 4px; border-radius:3px;">${arq.type}</span>
-                                </button>
-                            `).join('')}
-                            <button class="btn btn-outline" style="justify-content:flex-start; font-size:12px; border-color:var(--red); color:var(--red);" onclick="window.open('${prod.mockupUrl || '#'}', '_blank')">📑 Ver PDF da Arte</button>
+                            <div style="flex:1; min-width:200px;">
+                                <div style="font-weight:800; font-size:10px; margin-bottom:8px; color:var(--text-3); text-transform:uppercase;">📁 ARQUIVOS</div>
+                                <div style="display:grid; grid-template-columns: 1fr; gap:6px;">
+                                    ${arquivos.map(arq => `
+                                        <button class="btn btn-ghost" style="justify-content:space-between; font-size:11px; border:1px solid var(--border); height:32px" onclick="alert('Baixando ${arq.name}...')">
+                                           <span>📄 ${arq.name}</span>
+                                           <span style="font-size:8px; background:var(--blurple-dim); color:var(--blurple); padding:2px 4px; border-radius:3px;">${arq.type}</span>
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -835,52 +834,40 @@ function renderDrawerTab(p) {
         `;
     }
     else if (drawerTab === 'costura') {
-        const indexLabel = numProdutos > 1 ? `<div style="font-weight:800; color:var(--blurple); margin-bottom:15px; text-transform:uppercase; font-size:12px">DETALHES DE MONTAGEM (${numProdutos} itens)</div>` : '';
+        const costuraHtml = produtos.map((prod, idx) => {
+            const sectionId = `costura-item-${idx}`;
+            const productTitle = prod.sku || p.sku || 'Produto';
 
-        contentHtml = `
-            <div class="detail-section" style="margin-top:0;">
-                <div class="detail-section-title">✂️ MONTAGEM FINAL (COSTURA)</div>
-                ${indexLabel}
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px;">
-                    <div style="background:var(--surface-color); padding:15px; border-radius:8px; border:1px solid var(--border);">
-                        <div style="font-weight:800; font-size:11px; margin-bottom:12px; color:var(--text-3); text-transform:uppercase;">📝 GUIA DE ESTILO</div>
-                        <div class="detail-grid" style="grid-template-columns: 1fr; gap:10px;">
-                            <div class="detail-item">
-                                <div style="font-size:11px; color:var(--text-3);">Modelo / Corte:</div>
-                                <div style="font-weight:700;">Short Muay Thai (Tradicional)</div>
-                            </div>
-                            <div class="detail-item">
-                                <div style="font-size:11px; color:var(--text-3);">Cor Costuras:</div>
-                                <div style="font-weight:700;">Preto Carbono (Linha 40)</div>
-                            </div>
-                            <div class="detail-item">
-                                <div style="font-size:11px; color:var(--text-3);">Etiquetas:</div>
-                                <div style="font-weight:700;">HNT Premium (Cós Central)</div>
-                            </div>
-                        </div>
-                        <button class="btn btn-outline" style="width:100%; margin-top:15px; font-size:12px;" onclick="alert('Abrindo Guia de Montagem...')">🗺️ Abrir Exploded View (Diagrama)</button>
+            return `
+                <div id="${sectionId}" class="collapsible-section ${idx > 0 ? 'collapsed' : ''}" style="margin-bottom:10px; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:white">
+                    <div class="section-header" onclick="toggleSection('${sectionId}')">
+                        <h4>ITEM ${idx + 1}: ${productTitle}</h4>
+                        <span class="chevron">▼</span>
                     </div>
-
-                    <div style="background:var(--surface-color); padding:15px; border-radius:8px; border:1px solid var(--border);">
-                        <div style="font-weight:800; font-size:11px; margin-bottom:12px; color:var(--text-3); text-transform:uppercase;">⚙️ CONTROLE DE PROCESSOS</div>
-                        <div style="display:flex; flex-direction:column; gap:10px;">
-                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; background:var(--surface-2); padding:10px; border-radius:6px;">
-                                <input type="checkbox" style="width:18px; height:18px;">
-                                <span style="font-weight:700; font-size:13px;">Etiquetas Inseridas</span>
-                            </label>
-                            
-                            <div style="margin-top:5px;">
-                                <div style="font-size:11px; color:var(--text-3); margin-bottom:5px;">Costureiro(a) Responsável:</div>
-                                <select class="modal-input" style="width:100%;" id="select-costureiro">
-                                    <option value="">Selecione...</option>
-                                    <option value="Maria">Maria Silva</option>
-                                    <option value="Joao">João Santos</option>
-                                    <option value="Ana">Ana Oliveira</option>
-                                </select>
+                    <div class="section-content" style="padding:15px">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">
+                            <div style="background:var(--surface-color); padding:12px; border-radius:8px; border:1px solid var(--border);">
+                                <div style="font-weight:800; font-size:10px; margin-bottom:8px; color:var(--text-3); text-transform:uppercase;">📝 GUIA DE ESTILO</div>
+                                <div style="font-size:11px; color:var(--text-2); margin-bottom:4px;">Modelo: <b>Short Muay Thai</b></div>
+                                <div style="font-size:11px; color:var(--text-2); margin-bottom:4px;">Corte: <b>Tradicional</b></div>
+                                <div style="font-size:11px; color:var(--text-2);">Linhas: <b>Poliviscose 40</b></div>
+                            </div>
+                            <div style="background:var(--surface-color); padding:12px; border-radius:8px; border:1px solid var(--border);">
+                                <div style="font-weight:800; font-size:10px; margin-bottom:8px; color:var(--text-3); text-transform:uppercase;">⚙️ PROCESSOS</div>
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; font-weight:700;">
+                                    <input type="checkbox" style="width:16px; height:16px;"> Etiquetas OK
+                                </label>
                             </div>
                         </div>
                     </div>
                 </div>
+            `;
+        }).join('');
+
+        contentHtml = `
+            <div class="detail-section" style="margin-top:0;">
+                <div class="detail-section-title">✂️ MONTAGEM FINAL (COSTURA)</div>
+                ${costuraHtml}
             </div>
 
             <div class="detail-section" style="margin-top:20px;">
