@@ -599,7 +599,9 @@ function renderDrawerTab(p) {
         let itensHtml = '';
 
         produtos.forEach((prod, idx) => {
-            const indexLabel = numProdutos > 1 ? `<div style="font-weight:800; color:var(--blurple); margin-top:20px; text-transform:uppercase; font-size:12px">PRODUTO ${idx + 1}: ${prod.sku || p.sku}</div>` : '';
+            const sectionId = `sep-item-${idx}`;
+            const productTitle = prod.sku || p.sku || 'Produto';
+            const indexLabel = numProdutos > 1 ? `PRODUTO ${idx + 1}: ${productTitle}` : `DETALHES DO PRODUTO`;
 
             const dt = prod.dadosTecnicos || p.dadosTecnicos || {};
             const gradeText = prod.tamanho || p.tamanho || 'Tamanho Único';
@@ -614,14 +616,7 @@ function renderDrawerTab(p) {
                     </div>`;
                 }
             }
-            if (!colorRows) colorRows = '<div style="font-size:12px;color:var(--text-3);">Nenhuma cor hexadecimal registrada no Simulador.</div>';
-
-            painelHexHtml += `
-                ${indexLabel}
-                <div style="background:var(--surface-color); padding:10px; border-radius:8px; border:1px solid var(--border); margin-top:10px;">
-                    ${colorRows}
-                </div>
-            `;
+            if (!colorRows) colorRows = '<div style="font-size:12px;color:var(--text-3);">Nenhuma cor hexadecimal registrada.</div>';
 
             const maxPecas = parseInt(prod.quantidade || p.quantidade || 1);
             let checkPecas = '';
@@ -633,16 +628,25 @@ function renderDrawerTab(p) {
                          <span style="font-weight:700; font-size:13px;">Peça ${i} de ${maxPecas}</span>
                          <span style="font-size:11px; color:var(--text-3); background:var(--surface-2); padding:2px 6px; border-radius:4px;">${gradeText}</span>
                      </label>
-                     <button class="btn btn-outline" style="font-size:10px; padding:4px 8px; border-color:var(--text-3);" onclick="alert('Gerando Etiqueta QR para Pedido ${p.numero} - Peça ${i}...')">
-                        🖨️ QR
-                     </button>
                   </div>
                 `;
             }
 
             itensHtml += `
-                ${indexLabel}
-                <div style="margin-top:10px;">${checkPecas}</div>
+                <div id="${sectionId}" class="collapsible-section ${idx > 0 ? 'collapsed' : ''}" style="margin-bottom:10px; border:1px solid var(--border); border-radius:8px; overflow:hidden">
+                    <div class="section-header" onclick="toggleSection('${sectionId}')">
+                        <h4>${indexLabel}</h4>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="section-content" style="padding:12px">
+                        <div style="font-weight:800; font-size:11px; margin-bottom:8px; color:var(--text-2);">GUIA DE CORES</div>
+                        <div style="background:var(--surface-color); padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:15px;">
+                            ${colorRows}
+                        </div>
+                        <div style="font-weight:800; font-size:11px; margin-bottom:8px; color:var(--text-2);">CONFERÊNCIA DE PEÇAS</div>
+                        ${checkPecas}
+                    </div>
+                </div>
             `;
         });
 
@@ -694,8 +698,10 @@ function renderDrawerTab(p) {
         let artesHtml = '';
 
         produtos.forEach((prod, idx) => {
+            const sectionId = `arte-item-${idx}`;
             const dt = prod.dadosTecnicos || p.dadosTecnicos || {};
-            const indexLabel = numProdutos > 1 ? `<div style="font-weight:800; color:var(--blurple); margin-top:20px; text-transform:uppercase; font-size:12px">ARTE DO PRODUTO ${idx + 1}</div>` : '';
+            const productTitle = prod.sku || p.sku || 'Produto';
+            const indexLabel = numProdutos > 1 ? `ARTE DO PRODUTO ${idx + 1}: ${productTitle}` : `DETALHES DA ARTE`;
 
             // Textos e Fontes
             let textosHtml = '';
@@ -709,26 +715,29 @@ function renderDrawerTab(p) {
                 textosHtml = '<div style="font-size:12px; color:var(--text-3)">Nenhum texto personalizado.</div>';
             }
 
-            // Links de arquivos Enviados pelo Cliente e artes prontas (EMB)
+            // Links de arquivos
             const links = [
                 { label: 'Original/Referência', url: prod.mockupUrl || p.pdfUrl, icon: '🖼️' },
                 { label: 'Arquivo EMB (Bordado)', url: prod.emb || p.emb, icon: '🧵' }
             ].filter(l => l.url);
 
             artesHtml += `
-                ${indexLabel}
-                <div style="display:flex; gap:15px; margin-top:10px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:200px;">
-                        <div style="font-weight:800; font-size:11px; margin-bottom:8px; color:var(--text-3);">REFERÊNCIAS & TEXTOS</div>
-                        ${textosHtml}
+                <div id="${sectionId}" class="collapsible-section ${idx > 0 ? 'collapsed' : ''}" style="margin-bottom:10px; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:white">
+                    <div class="section-header" onclick="toggleSection('${sectionId}')">
+                        <h4>${indexLabel}</h4>
+                        <span class="chevron">▼</span>
                     </div>
-                    <div style="flex:1; min-width:200px;">
-                        <div style="font-weight:800; font-size:11px; margin-bottom:8px; color:var(--text-3);">ARQUIVOS TÉCNICOS</div>
-                        <div style="display:flex; flex-direction:column; gap:8px;">
-                            ${links.map(l => `<button class="btn btn-outline" style="justify-content:flex-start; font-size:12px;" onclick="window.open('${l.url}', '_blank')">${l.icon} ${l.label}</button>`).join('')}
-                            <div style="border: 2px dashed var(--border); padding: 10px; border-radius: 6px; text-align: center; cursor: pointer; background: var(--surface-2);" onclick="alert('Upload de Vetor/Arte final em breve...')">
-                                <div style="font-size:18px;">📁</div>
-                                <div style="font-size:10px; font-weight:700; color:var(--text-3);">Anexar VETOR / FINAL</div>
+                    <div class="section-content" style="padding:12px">
+                        <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:200px;">
+                                <div style="font-weight:800; font-size:11px; margin-bottom:8px; color:var(--text-3);">REFERÊNCIAS & TEXTOS</div>
+                                ${textosHtml}
+                            </div>
+                            <div style="flex:1; min-width:200px;">
+                                <div style="font-weight:800; font-size:11px; margin-bottom:8px; color:var(--text-3);">ARQUIVOS TÉCNICOS</div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    ${links.map(l => `<button class="btn btn-ghost" style="justify-content:flex-start; font-size:11px; border:1px solid var(--border); height:36px" onclick="window.open('${l.url}', '_blank')">${l.icon} ${l.label}</button>`).join('')}
+                                </div>
                             </div>
                         </div>
                     </div>
