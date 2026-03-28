@@ -1,5 +1,5 @@
 /* ============================================================
-   HNT-OPS (v4.08 - Status PRO Ultra-Dense)
+   HNT-OPS (v4.06 - Final Production Release)
    ============================================================ */
 
 // ── State Data (Configurável via Admin) ──────────────────
@@ -10,7 +10,6 @@ let ETAPA_COLORS = {};
 
 // ── State Data (Real) ─────────────────────────────────────
 let PEDIDOS = [];
-let MILESTONES = []; // Sequência oficial de etapas
 let OPERADORES = []; // Carregado via api.getOperadores()
 let ETAPA_DURACOES = {}; // SLA por etapa (dias úteis)
 const HISTORICO = {};
@@ -35,11 +34,10 @@ let batchHtml5QrCode = null;
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Carregar Configuração de Etapas/Stages ANTES de tudo
     if (typeof api !== 'undefined') {
-        const configs = await api.loadScheduleConfig();
-        MILESTONES = configs.milestones || [];
-        if (MILESTONES && MILESTONES.length > 0) {
-            ETAPAS = MILESTONES.map(m => m.etapa);
-            MILESTONES.forEach(m => {
+        const { milestones } = await api.loadScheduleConfig();
+        if (milestones && milestones.length > 0) {
+            ETAPAS = milestones.map(m => m.etapa);
+            milestones.forEach(m => {
                 ETAPA_LABELS[m.etapa] = m.label || m.etapa;
                 ETAPA_ICONS[m.etapa] = m.icone || '📋';
                 ETAPA_COLORS[m.etapa] = m.cor || '#888';
@@ -4047,169 +4045,59 @@ function buscarStatus() {
             `;
         }
     });
+
     resultsWrap.innerHTML = html;
 }
 
 /**
- * renderStatusTab (v4.08 PRO Ultra-Dense)
- * Painel bi-coluna para visibilidade total em uma tela.
+ * renderStatusTab (v4.06)
+ * Resumo geral do pedido e posição de cada item na produção.
  */
 function renderStatusTab(p) {
     const wrap = $('drawer-body');
+    const numProds = p.produtos ? p.produtos.length : 1;
     const items = p.produtos || [p];
-    const isPriority = p.urgente || p.alerta === 'Vermelho';
-    const dt = p.dadosTecnicos || {};
-
-    // ── Asset Links ──
-    const links = [];
-    if (dt.pdfUrl) links.push(`<a href="${dt.pdfUrl}" target="_blank" class="asset-link pdf" style="margin-bottom:6px">📄 PDF Simulador</a>`);
-    if (dt.layoutUrl || dt.imagemUrl) links.push(`<a href="${dt.layoutUrl || dt.imagemUrl}" target="_blank" class="asset-link layout" style="margin-bottom:6px">🖼️ Layout/Img</a>`);
-    if (dt.embUrl) links.push(`<a href="${dt.embUrl}" target="_blank" class="asset-link emb" style="margin-bottom:6px">🧵 Arq. EMB</a>`);
 
     wrap.innerHTML = `
-        <div class="status-pro-container" style="display:grid; grid-template-columns: 1fr 280px; gap:20px; padding:20px; font-family:'Inter Tight', sans-serif; height:100%; box-sizing:border-box">
-            
-            <!-- COLUNA ESQUERDA: Resumo e Produtos -->
-            <div class="status-main-col">
-                
-                <!-- Executive Summary Grid -->
-                <div class="summary-card-dense" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:15px; padding:12px; background:var(--surface-color); border-radius:10px; border:1px solid ${isPriority ? 'var(--red)' : 'var(--border)'}; position:relative">
-                    ${isPriority ? '<div style="position:absolute; top:-10px; right:10px; background:var(--red); color:white; padding:2px 10px; border-radius:10px; font-size:9px; font-weight:900">🔥 URGENTE</div>' : ''}
-                    
-                    <div>
-                        <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Pedido/SimID</label>
-                        <div style="font-weight:800; color:var(--gold); font-size:13px">${p.numero} <small style="font-weight:400; color:var(--text-4)">#${dt.simulationId || '--'}</small></div>
-                    </div>
-                    <div>
-                        <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Cliente</label>
-                        <div style="font-weight:700; color:var(--text-1); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${p.cliente || 'Consumidor'}</div>
-                    </div>
-                    <div>
-                        <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase; font-weight:700">Entrega Estimada</label>
-                        <div style="font-weight:800; color:var(--amber); font-size:12px">${p.prazo}</div>
-                    </div>
-                    <div style="grid-column: span 3; border-top:1px solid var(--border); padding-top:8px; display:flex; gap:15px">
-                        <div>
-                            <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase">Data Pedido</label>
-                            <span style="font-weight:600; font-size:11px">${p.dataCriacao}</span>
-                        </div>
-                        <div>
-                            <label style="display:block; font-size:9px; color:var(--text-4); text-transform:uppercase">SLA Prazo</label>
-                            <span style="font-weight:800; font-size:11px; color:${slaPhaseInfo(p).label === 'VENCIDO' ? 'var(--red)' : 'var(--green)'}">${slaPhaseInfo(p).label}</span>
-                        </div>
-                    </div>
+        <div style="padding:20px">
+            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; margin-bottom:24px; padding:16px; background:var(--surface-color); border-radius:8px; border:1px solid var(--border)">
+                <div>
+                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Cliente</label>
+                    <div style="font-weight:700; color:var(--text-1)">${p.cliente || 'Não informado'}</div>
                 </div>
+                <div>
+                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Data do Pedido</label>
+                    <div style="font-weight:700; color:var(--text-1)">${p.dataCriacao}</div>
+                </div>
+                <div>
+                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Entrega Estimada</label>
+                    <div style="font-weight:700; color:var(--amber)">${p.prazo}</div>
+                </div>
+                <div>
+                    <label style="display:block; font-size:11px; color:var(--text-4); text-transform:uppercase; margin-bottom:4px">Total de Itens</label>
+                    <div style="font-weight:700; color:var(--text-1)">${numProds} produto(s) (${p.quantidade} un total)</div>
+                </div>
+            </div>
 
-                <!-- Product Table (Compact) -->
-                <div class="mini-prod-table-wrap" style="background:white; border:1px solid var(--border); border-radius:8px; overflow:hidden">
-                    <table class="mini-prod-table" style="width:100%; border-collapse:collapse; font-size:11px">
-                        <thead style="background:var(--surface-color); color:var(--text-4); text-transform:uppercase; font-size:9px">
-                            <tr>
-                                <th style="padding:8px; text-align:left">Produto</th>
-                                <th style="padding:8px; text-align:center">Qtd</th>
-                                <th style="padding:8px; text-align:center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${items.map(it => {
-        const stageColor = ETAPA_COLORS[it.etapa] || '#888';
+            <h4 style="margin-bottom:12px; font-size:13px; color:var(--text-2); border-left:4px solid var(--primary-color); padding-left:8px">Posição de Confecção</h4>
+            <div class="status-items-list" style="display:grid; gap:8px">
+                ${items.map(it => {
+        const etapaLabel = ETAPA_LABELS[it.etapa] || it.etapa || 'Pendente';
+        const color = ETAPA_COLORS[it.etapa] || '#666';
         return `
-                                <tr style="border-top:1px solid var(--border)">
-                                    <td style="padding:8px">
-                                        <div style="font-weight:700; color:var(--text-1)">${it.tipoProduto || 'Produto'}</div>
-                                        <div style="font-size:9px; color:var(--text-4)">SKU: ${it.sku}</div>
-                                    </td>
-                                    <td style="padding:8px; text-align:center; font-weight:700">${it.quantidade || 1}</td>
-                                    <td style="padding:8px; text-align:center">
-                                        <span style="padding:2px 8px; border-radius:10px; background:${stageColor}15; color:${stageColor}; font-weight:800; font-size:9px; text-transform:uppercase">
-                                            ${ETAPA_LABELS[it.etapa] || it.etapa}
-                                        </span>
-                                    </td>
-                                </tr>
-                                `;
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; background:white; border:1px solid var(--border); border-radius:6px">
+                            <div style="display:flex; align-items:center; gap:12px">
+                                <span class="sku-badge">${it.sku}</span>
+                                <span style="font-size:13px; font-weight:600">${it.tipoProduto || it.sku}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px">
+                                <span style="font-size:11px; color:var(--text-4)">Etapa Atual:</span>
+                                <span style="padding:4px 10px; border-radius:20px; background:${color}20; color:${color}; font-size:11px; font-weight:700; text-transform:uppercase">${etapaLabel}</span>
+                            </div>
+                        </div>
+                    `;
     }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
-
-            <!-- COLUNA DIREITA: Timeline & Assets -->
-            <div class="status-sidebar" style="border-left:1px solid var(--border); padding-left:15px; display:flex; flex-direction:column">
-                
-                <h5 style="margin:0 0 12px 0; font-size:11px; color:var(--text-4); text-transform:uppercase; letter-spacing:1px">Rastreamento</h5>
-                
-                <div id="status-timeline-loader" style="padding:10px; text-align:center; color:var(--text-4); font-size:10px">⏳ Carregando...</div>
-                
-                <div id="status-timeline-wrap" style="flex:1; overflow-y:auto; position:relative; padding-left:15px; border-left:1px solid var(--border); margin-left:5px">
-                    <!-- Timeline items injected here -->
-                </div>
-
-                <!-- Asset Hub -->
-                <div class="assets-footer" style="margin-top:15px; padding-top:15px; border-top:1px dotted var(--border); display:flex; flex-direction:column">
-                    ${links.join('')}
-                    ${links.length === 0 ? '<div style="font-size:10px; color:var(--text-4); text-align:center">Sem arquivos anexos</div>' : ''}
-                </div>
-
-            </div>
-
         </div>
     `;
-
-    loadStatusTimeline(p.id);
-}
-
-/**
- * loadStatusTimeline (v4.08)
- * Popula a sidebar com uma timeline ultra-compacta.
- */
-async function loadStatusTimeline(pedidoId) {
-    try {
-        const history = await api.loadHistorico(pedidoId);
-        const wrap = $('status-timeline-wrap');
-        const loader = $('status-timeline-loader');
-
-        if (!wrap || !loader) return;
-        loader.style.display = 'none';
-
-        if (!history || history.length === 0) {
-            wrap.innerHTML = '<div style="font-size:10px; color:var(--text-4); font-style:italic">Iniciando produção...</div>';
-            return;
-        }
-
-        const eventMap = {};
-        history.forEach(ev => eventMap[ev.etapa] = ev);
-
-        let timelineHtml = '';
-        MILESTONES.forEach(m => {
-            const ev = eventMap[m.etapa];
-            const isCompleted = ev && ev.status === 'Concluído';
-            const isCurrent = ev && ev.status === 'Em Andamento';
-            const statusColor = isCompleted ? 'var(--green)' : (isCurrent ? 'var(--gold)' : '#eee');
-            const dotOpacity = (isCompleted || isCurrent) ? '1' : '0.3';
-
-            let durationStr = '';
-            if (ev && ev.entrou_em && ev.saiu_em) {
-                const diffMs = new Date(ev.saiu_em) - new Date(ev.entrou_em);
-                const hrs = Math.floor(diffMs / 3600000);
-                const mins = Math.floor((diffMs % 3600000) / 60000);
-                durationStr = hrs > 0 ? `${hrs}h${mins}m` : `${mins}m`;
-            }
-
-            timelineHtml += `
-                <div class="micro-step" style="position:relative; margin-bottom:12px; opacity:${dotOpacity}">
-                    <span style="position:absolute; left:-21px; top:3px; width:10px; height:10px; border-radius:50%; background:${statusColor}; border:2px solid white; box-shadow:0 0 0 1px ${statusColor}44"></span>
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start">
-                        <div style="font-size:10px; font-weight:700; color:${isCurrent ? 'var(--gold)' : 'var(--text-2)'}">${ETAPA_LABELS[m.etapa] || m.etapa}</div>
-                        <div style="font-size:9px; color:var(--text-4); text-align:right">${durationStr || ''}</div>
-                    </div>
-                    ${ev ? `<div style="font-size:8px; color:var(--text-4)">${new Date(ev.entrou_em).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' }).split(', ')[1]}</div>` : ''}
-                </div>
-            `;
-        });
-
-        wrap.innerHTML = timelineHtml;
-    } catch (e) {
-        console.error("Timeline Error:", e);
-    }
 }
