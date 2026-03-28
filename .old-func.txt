@@ -1,0 +1,224 @@
+function renderDrawerTab(p) {
+    const body = $('drawer-body');
+    let contentHtml = '';
+    const produtos = p.produtos || [p];
+    const numProdutos = produtos.length;
+
+    if (drawerTab === 'detalhes') {
+        const iconAtual = ETAPA_ICONS[p.etapa] || '📋';
+        const labelAtual = ETAPA_LABELS[p.etapa] || p.etapa;
+
+        if (isEditing) {
+            contentHtml = `
+                <div class="detail-section" style="margin-top:0">
+                    <div class="detail-section-title">📝 Editar Informações do Pedido</div>
+                    <div class="edit-form" style="display:grid; gap:15px; padding:10px;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div class="detail-item">
+                                <label class="detail-item-label">Número do Pedido</label>
+                                <input type="text" id="edit-numero" class="modal-input" value="${p.numero}" style="margin:5px 0">
+                            </div>
+                            <div class="detail-item">
+                                <label class="detail-item-label">SKU Principal</label>
+                                <input type="text" id="edit-sku" class="modal-input" value="${p.sku}" style="margin:5px 0">
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div class="detail-item">
+                                <label class="detail-item-label">Quantidade Total</label>
+                                <input type="number" id="edit-qtd" class="modal-input" value="${p.quantidade}" style="margin:5px 0">
+                            </div>
+                            <div class="detail-item">
+                                <label class="detail-item-label">Tamanho Ref.</label>
+                                <input type="text" id="edit-tam" class="modal-input" value="${p.tamanho}" style="margin:5px 0">
+                            </div>
+                        </div>
+                        <div class="detail-item full">
+                            <label class="detail-item-label">Observações de Produção</label>
+                            <textarea id="edit-obs" class="modal-input" style="height:80px; margin:5px 0; padding:10px;">${p.observacoes || ''}</textarea>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn btn-primary" onclick="saveEdicao()" style="flex:1; height:44px;">💾 Salvar Alterações</button>
+                            <button class="btn btn-ghost" onclick="toggleEdicao()" style="height:44px;">Voltar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Resumo do pedido
+            const valorFmt = p.valor ? `R$ ${parseFloat(p.valor).toFixed(2).replace('.', ',')}` : '—';
+            contentHtml = `
+                <div class="detail-section" style="margin-top:0">
+                    <div class="detail-section-title">📦 Resumo do Pedido</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-item-label">Número</div><div class="detail-item-value prod-num">${p.numero}</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Produtos</div><div class="detail-item-value">${numProdutos} produto(s)</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Etapa Atual</div><div class="detail-item-value"><span class="etapa-badge" style="background:${ETAPA_COLORS[p.etapa]}22;color:${ETAPA_COLORS[p.etapa]};border:1px solid ${ETAPA_COLORS[p.etapa]}"><span class="etapa-icon">${iconAtual}</span>${labelAtual}</span></div></div>
+                        <div class="detail-item"><div class="detail-item-label">Prazo Final</div><div class="detail-item-value">${p.prazo}</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Data Entrada</div><div class="detail-item-value">${p.dataCriacao}</div></div>
+                        <div class="detail-item"><div class="detail-item-label">Valor Total</div><div class="detail-item-value" style="color:var(--gold);font-weight:700">${valorFmt}</div></div>
+                        ${p.observacoes ? `<div class="detail-item full obs-destaque"><div class="detail-item-label">📝 Observações</div><div class="detail-item-value">${p.observacoes}</div></div>` : ''}
+                    </div>
+                </div>
+            `;
+            if (numProdutos === 1) {
+                // Produto único: exibir ficha técnica completa na aba detalhes
+                contentHtml += renderProdutoFicha(produtos[0], false);
+            } else {
+                contentHtml += `
+                    <div style="padding:32px 20px; text-align:center; background:rgba(212,175,55,0.05); border-radius:12px; border:1px dashed var(--gold); margin-top:20px;">
+                        <div style="font-size:2rem; margin-bottom:12px;">🛒</div>
+                        <h3 style="color:var(--gold); margin-bottom:8px;">Pedido com ${numProdutos} Produtos</h3>
+                        <p style="color:var(--text-3); font-size:0.875rem; max-width:380px; margin:0 auto 18px;">Veja a ficha técnica completa de cada produto na aba abaixo.</p>
+                        <button class="btn btn-primary" onclick="switchDrawerTab('itens')">📋 Ver Todos os Produtos</button>
+                    </div>
+                `;
+            }
+        }
+    } else if (drawerTab === 'itens') {
+        contentHtml = `
+            <div class="detail-section" style="margin-top:0">
+                <div class="detail-section-title">🛒 Produtos do Pedido (${numProdutos})</div>
+                <div style="display:flex; flex-direction:column; gap:14px; margin-top:14px;">
+                    ${produtos.map((prod, index) => `
+                        <div class="item-card" id="item-card-${index}">
+                            <div class="item-card-header" onclick="toggleItemCard(${index})">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div class="item-card-num">${index + 1}</div>
+                                    <div>
+                                        <div style="font-weight:700; font-size:1rem; color:var(--text-1)">${prod.sku}</div>
+                                        <div style="font-size:0.85rem; color:var(--text-3)">${prod.quantidade} un. · ${prod.tamanho} · ${prod.tecnica}</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    ${prod.pdf ? `<span style="font-size:12px;color:var(--green)">📄 PDF</span>` : ''}
+                                    <svg class="toggle-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:16px;height:16px;color:var(--text-3)">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="item-card-body">
+                                <div style="padding:16px; border-top:1px dashed var(--border)">
+                                    ${renderProdutoFicha(prod, true)}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else if (drawerTab === 'cliente') {
+        contentHtml = `
+      <div class="detail-section" style="margin-top:0">
+        <div class="detail-section-title">👤 Informações do Cliente</div>
+        <div class="detail-grid">
+          <div class="detail-item full"><div class="detail-item-label">Nome Completo</div><div class="detail-item-value">${p.cliente}</div></div>
+          <div class="detail-item"><div class="detail-item-label">CPF / CNPJ</div><div class="detail-item-value">${p.cpf}</div></div>
+          <div class="detail-item"><div class="detail-item-label">Celular</div><div class="detail-item-value">${p.celular}</div></div>
+          <div class="detail-item full"><div class="detail-item-label">E-mail</div><div class="detail-item-value">${p.email}</div></div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">📦 Endereço de Entrega/Faturamento</div>
+        <div class="detail-grid">
+           <div class="detail-item full"><div class="detail-item-label">Endereço</div><div class="detail-item-value" style="color:var(--text-3); font-style:italic">Integrado com Bling na NF-e</div></div>
+        </div>
+      </div>
+    `;
+    } else if (drawerTab === 'historico') {
+
+        const pId = p.id;
+        body.innerHTML = `<div style="padding:20px;text-align:center"><div class="loading-spinner"></div> Carregando timeline...</div>`;
+
+        // Busca do DB se API disponível
+        (async () => {
+            let hist = HISTORICO[pId] || [];
+            if (typeof api !== 'undefined') {
+                const realHist = await api.loadHistorico(pId);
+                if (realHist) {
+                    hist = realHist.map(h => ({
+                        etapa: h.etapa,
+                        status: h.status === 'Concluido' ? 'done' : 'current',
+                        op: h.operador || 'Sistema',
+                        entrou: h.entrou_em ? new Date(h.entrou_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--',
+                        saiu: h.saiu_em ? new Date(h.saiu_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null,
+                        duracao: h.tempo_na_etapa_dias ? h.tempo_na_etapa_dias.toFixed(1) + 'd' : null
+                    }));
+                }
+            }
+
+            body.innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">⏱ Timeline de Produção</div>
+                    <div class="timeline">
+                    ${ETAPAS.filter(e => e !== 'Pendencia').map(etapa => {
+                const h = hist.find(x => x.etapa === etapa);
+                const isDone = h && h.status === 'done';
+                const isCurrent = h && h.status === 'current';
+                return `
+                        <div class="timeline-item">
+                            <div class="timeline-dot ${isDone ? 'done' : isCurrent ? 'current' : ''}">
+                            ${isDone
+                        ? '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>'
+                        : `<span style="font-size:13px">${ETAPA_ICONS[etapa]}</span>`}
+                            </div>
+                            <div class="timeline-content">
+                            <span class="timeline-stage">${ETAPA_ICONS[etapa]} ${ETAPA_LABELS[etapa]}</span>
+                            ${h ? `<div class="timeline-meta">
+                                ${h.op} · ${h.entrou}${h.saiu ? ' → ' + h.saiu : ' <span style="color:var(--amber);font-weight:700">em andamento</span>'}
+                                ${h.duracao ? `<span class="timeline-duration">${h.duracao}</span>` : ''}
+                            </div>` : `<div class="timeline-meta" style="color:var(--text-3)">Não iniciado</div>`}
+                            </div>
+                        </div>`;
+            }).join('')}
+                    </div>
+                </div>`;
+        })();
+
+    } else if (drawerTab === 'ficha') {
+        contentHtml = renderFichaTecnicaDrawer(p);
+
+    } else if (drawerTab === 'chat') {
+        const pId = p.id;
+        body.innerHTML = `<div style="padding:20px;text-align:center"><div class="loading-spinner"></div> Carregando mensagens...</div>`;
+
+        (async () => {
+            let msgs = CHAT_MSGS[pId] || [];
+            if (typeof api !== 'undefined') {
+                const realChat = await api.loadChat(pId);
+                if (realChat) {
+                    msgs = realChat.map(m => ({
+                        autor: m.autor,
+                        iniciais: m.autor.slice(0, 2).toUpperCase(),
+                        texto: m.texto,
+                        hora: new Date(m.enviado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+                        mine: currentOperador && m.autor === currentOperador.nome
+                    }));
+                }
+            }
+
+            body.innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">💬 Chat de Setores</div>
+                    ${msgs.length === 0 ? `<div style="text-align:center;color:var(--text-3);font-size:13px;padding:20px 0">Sem mensagens ainda.</div>` : ''}
+                    <div class="chat-wrap">
+                    ${msgs.map(m => `
+                        <div class="chat-bubble ${m.mine ? 'mine' : ''}">
+                        <div class="chat-avatar" title="${m.autor}">${m.iniciais}</div>
+                        <div class="chat-msg-wrap">
+                            <div class="chat-who">${m.autor} · ${m.hora}</div>
+                            <div class="chat-text">${m.texto}</div>
+                        </div>
+                        </div>`).join('')}
+                </div>`;
+            setTimeout(() => {
+                const cw = $('.chat-wrap');
+                if (cw) cw.scrollTop = cw.scrollHeight;
+            }, 100);
+        })();
+    }
+
+    if (contentHtml !== '') {
+        body.innerHTML = contentHtml;
+    }
+}
